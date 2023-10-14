@@ -123,7 +123,7 @@ def run_discord_bot():
         await interaction.response.send_message('Thinking... :robot:')
         for attempt in range(1000):
             try:
-                response = responses.apicall_wave1tendency(playername, 50)
+                response = responses.apicall_wave1tendency(playername)
                 if len(response) > 0:
                     await interaction.edit_original_response(content=response)
                     break
@@ -153,12 +153,12 @@ def run_discord_bot():
             except discord.NotFound as e:
                 print(e)
                 break
-            except IndexError as e:
-                print(e)
-                await interaction.edit_original_response(content='Bot error. :sob:')
-                break
-            else:
-                break
+            # except IndexError as e:
+            #     print(e)
+            #     await interaction.edit_original_response(content='Bot error. :sob:')
+            #     break
+            # else:
+            #     break
         else:
             await interaction.edit_original_response(content='Bot timeout.')
 

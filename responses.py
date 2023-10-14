@@ -131,7 +131,7 @@ def apicall_matchhistoryelogain(playername, playerid):
     return output
 
 
-def apicall_wave1tendency(playername, games):
+def apicall_wave1tendency(playername):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + 'not found.'
@@ -143,21 +143,25 @@ def apicall_wave1tendency(playername, games):
     kingup_regen_count = 0
     kingup_spell_count = 0
     save_count = 0
-    games_limit = games*2
-    history_raw = apicall_getmatchistory(playerid, games, 0)
-    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 2))
-    snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 2))
-    kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 2))
+    games_limit = 400
+    try:
+        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50)
+    except TypeError as e:
+        print(e)
+        return playername + ' has not played enough games.'
+    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
+    snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
+    kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
     gameid = extract_values(history_raw, '_id')
     queue_type = extract_values(history_raw, 'queueType')
     playercount = extract_values(history_raw, 'playerCount')
     while count < games_limit:
         if str(queue_type[1][queue_count]) == 'Normal':
             print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
-            print(playernames[count] + playernames[count+1])
-            playernames_ranked = playernames[count] + playernames[count+1]
-            snail_ranked = snail[count] + snail[count+1]
-            kingup_ranked = kingup[count] + kingup[count+1]
+            playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
+            print(playernames_ranked)
+            snail_ranked = snail[count] + snail[count + 1] + snail[count + 2] + snail[count + 3]
+            kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
             for i, x in enumerate(playernames_ranked):
                 if str(x).lower() == str(playername).lower():
                     if len(snail_ranked[i][0]) > 0:
@@ -183,23 +187,28 @@ def apicall_wave1tendency(playername, games):
                         save_count = save_count + 1
                         break
 
-            count = count + 2
+            count = count + 4
             queue_count = queue_count + 1
             ranked_count = ranked_count + 1
 
-        elif playercount[1][queue_count] > 4:
-            count = count + 4
+        elif playercount[1][queue_count] == 8:
+            count = count + 8
             queue_count = queue_count + 1
-            games_limit = games_limit + 2
+            games_limit = games_limit + 4
             print('Skip 8 player game: ' + str(count))
         elif playercount[1][queue_count] == 2:
+            count = count + 2
+            queue_count = queue_count + 1
+            games_limit = games_limit - 2
+            print('Skip 2 player game: ' + str(count))
+        elif playercount[1][queue_count] == 1:
             count = count + 1
             queue_count = queue_count + 1
-            games_limit = games_limit - 1
-            print('Skip 2 player game: ' + str(count))
+            games_limit = games_limit - 3
+            print('Skip 1 player game: ' + str(count))
         else:
             queue_count = queue_count + 1
-            count = count + 2
+            count = count + 4
             print('Skip 4 player game: ' + str(count))
     if kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count > 4:
         return (playername).capitalize() + "'s Wave 1 stats: (Last " + str(kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count) + " ranked games)\nKingup: " + \
@@ -225,8 +234,10 @@ def apicall_elcringo(playername):
     worker_10_list = []
     mythium_list = []
     mythium_list_pergame = []
+    kinghp_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) + apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150)
+        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) + \
+                      apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -235,6 +246,8 @@ def apicall_elcringo(playername):
     snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
     kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 1))
+    kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
+    kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
     gameid = extract_values(history_raw, '_id')
     queue_type = extract_values(history_raw, 'queueType')
     playercount = extract_values(history_raw, 'playerCount')
@@ -249,7 +262,6 @@ def apicall_elcringo(playername):
             workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
             mythium_list_pergame.clear()
             for i, x in enumerate(playernames_ranked):
-                print(snail_ranked[i])
                 if str(x).lower() == str(playername).lower():
                     for n, s in enumerate(snail_ranked[i]):
                         small_send = 0
@@ -260,17 +272,18 @@ def apicall_elcringo(playername):
                                 worker_adjusted = workers_ranked[i][n] - 5
                                 small_send = worker_adjusted / 5 * 20
                             if send <= small_send:
-                                print('Saved mythium on wave ' + str(n + 1))
                                 save_count_pre10 += 1
                         elif n > 9:
                             worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
                             small_send = worker_adjusted / 5 * 20
                             if send <= small_send:
-                                print('Saved mythium on wave ' + str(n + 1))
                                 save_count += 1
                     mythium_list.append(sum(mythium_list_pergame))
-                    print(workers_ranked)
                     worker_10_list.append(workers_ranked[i][9])
+                    if i == 0 or 1:
+                        kinghp_list.append(kinghp_left[1][queue_count][9])
+                    else:
+                        kinghp_list.append(kinghp_right[1][queue_count][9])
             save_count_pre10_list.append(save_count_pre10)
             save_count_list.append(save_count)
             save_count_pre10 = 0
@@ -298,12 +311,16 @@ def apicall_elcringo(playername):
             queue_count = queue_count + 1
             count = count + 4
             print('Skip 4 player game: ' + str(count))
+    waves_post10 = round(sum(ending_wave_list) / len(ending_wave_list), 2) - 10
+    saves_pre10 = round(sum(save_count_pre10_list) / len(save_count_pre10_list), 2)
+    saves_post10 = round(sum(save_count_list) / len(save_count_list), 2)
+    king_hp_10 = sum(kinghp_list) / len(kinghp_list)
     if ranked_count > 0:
-        return (playername).capitalize() + "'s elcringo stats(Average from last " + str(ranked_count) +" ranked games):<:GK:1161013811927601192>\nMythium saved first 10 waves:  "\
-            + str(round(sum(save_count_pre10_list) / len(save_count_pre10_list),2))  + ' waves.' +\
-            '\nMythium saved after wave 10:  ' + str(round(sum(save_count_list) / len(save_count_list),2)) + ' waves.\n'\
-            'End wave:  ' + str(round(sum(ending_wave_list) / len(ending_wave_list), 2)) + "\n"\
-            'Worker on wave 10:  ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n"\
+        return (playername).capitalize() + "'s elcringo stats(Average from last " + str(ranked_count) +" ranked games):<:GK:1161013811927601192>\n" \
+            'Saves first 10:  ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +\
+            'Saves after 10:  ' + str(saves_post10)+'/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n'\
+            'Worker on 10:  ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n"\
+            'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n'\
             'Mythium sent per game:  ' + str(round(sum(mythium_list) / len(mythium_list), 2))
     else:
         return 'Not enough ranked data'
