@@ -153,12 +153,12 @@ def run_discord_bot():
             except discord.NotFound as e:
                 print(e)
                 break
-            # except IndexError as e:
-            #     print(e)
-            #     await interaction.edit_original_response(content='Bot error. :sob:')
-            #     break
-            # else:
-            #     break
+            except IndexError as e:
+                print(e)
+                await interaction.edit_original_response(content='Bot error. :sob:')
+                break
+            else:
+                break
         else:
             await interaction.edit_original_response(content='Bot timeout.')
 
