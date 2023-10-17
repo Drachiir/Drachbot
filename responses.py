@@ -259,7 +259,6 @@ def apicall_elcringo(playername):
             ending_wave_list.append(endingwaves[1][queue_count])
             print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
             playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
-            print(playernames_ranked)
             snail_ranked = snail[count] + snail[count + 1] + snail[count + 2] + snail[count + 3]
             kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
             workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
