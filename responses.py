@@ -211,10 +211,12 @@ def apicall_wave1tendency(playername):
             queue_count = queue_count + 1
             count = count + 4
             print('Skip 4 player game: ' + str(count))
-    if kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count > 4:
-        return (playername).capitalize() + "'s Wave 1 stats: (Last " + str(kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count) + " ranked games)\nKingup: " + \
-        str(kingup_atk_count+kingup_regen_count+kingup_spell_count) + ' (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
-        ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + '\nSave: ' + str(save_count)
+    send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
+    kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
+    if send_total > 4:
+        return (playername).capitalize() + "'s Wave 1 stats: (Last " + str(send_total) + " ranked games)\nKingup: " + \
+            str(kingup_total) + ' (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
+            ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + '\nSave: ' + str(save_count)
     else:
         return 'Not enough ranked data'
 
@@ -342,24 +344,22 @@ def apicall_elo(playername, rank):
             for i, key in enumerate(new_dict.keys()):
                 if key == playerid:
                     index = i
-                    output = str(playername).capitalize() + ' is rank ' + str(index + 1) + ' with ' + str(
+                    return str(playername).capitalize() + ' is rank ' + str(index + 1) + ' with ' + str(
                         stats['overallElo']) + ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + ') and ' + str(
                         round(playtime_hours)) + ' in game hours.\nThey have won ' + \
                         str(apicall_matchhistorywins(playername, playerid)) + ' out of their last 10 games. (Elo change: ' + \
                         str(apicall_matchhistoryelogain(playername, playerid)) + ')'
-                    break
             else:
-                output = str(playername).capitalize() + ' has ' + str(stats['overallElo']) + ' elo (Peak: ' + str(
+                return str(playername).capitalize() + ' has ' + str(stats['overallElo']) + ' elo (Peak: ' + str(
                     stats['overallPeakEloThisSeason']) + ') with ' + str(round(playtime_hours)) + ' in game hours.\n' \
                     'They have won ' + str(apicall_matchhistorywins(playername, playerid)) + ' out of their last 10 games. ' \
                     '(Elo change: ' + str(apicall_matchhistoryelogain(playername, playerid)) + ')'
         else:
-            output = str(playername).capitalize() + ' is rank ' + str(rank) + ' with ' + str(
+            return str(playername).capitalize() + ' is rank ' + str(rank) + ' with ' + str(
                 stats['overallElo']) + ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + ') and ' + str(
                 round(playtime_hours)) + ' in game hours.\nThey have won ' + \
                 str(apicall_matchhistorywins(playername, playerid)) + ' out of their last 10 games. (Elo change: ' + \
                 str(apicall_matchhistoryelogain(playername, playerid)) + ')'
-    return output
 
 
 def apicall_bestie(playername):
