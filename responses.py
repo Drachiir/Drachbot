@@ -252,6 +252,8 @@ def apicall_elcringo(playername):
     kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
     kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
     gameid = extract_values(history_raw, '_id')
+    gameelo = extract_values(history_raw, 'gameElo')
+    gameelo_list = []
     queue_type = extract_values(history_raw, 'queueType')
     playercount = extract_values(history_raw, 'playerCount')
     while count < games_limit:
@@ -263,6 +265,7 @@ def apicall_elcringo(playername):
             kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
             workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
             mythium_list_pergame.clear()
+            gameelo_list.append(gameelo[1][queue_count])
             for i, x in enumerate(playernames_ranked):
                 if str(x).lower() == str(playername).lower():
                     for n, s in enumerate(snail_ranked[i]):
@@ -317,12 +320,14 @@ def apicall_elcringo(playername):
     saves_pre10 = round(sum(save_count_pre10_list) / len(save_count_pre10_list), 2)
     saves_post10 = round(sum(save_count_list) / len(save_count_list), 2)
     king_hp_10 = sum(kinghp_list) / len(kinghp_list)
+    avg_gameelo = sum(gameelo_list) / len(gameelo_list)
     if ranked_count > 0:
-        return (playername).capitalize() + "'s elcringo stats(Average from last " + str(ranked_count) +" ranked games):<:GK:1161013811927601192>\n" \
+        return (playername).capitalize() + "'s elcringo stats(Averages from last " + str(ranked_count) +" ranked games):<:GK:1161013811927601192>\n" \
             'Saves first 10:  ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +\
             'Saves after 10:  ' + str(saves_post10)+'/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n'\
             'Worker on 10:  ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n"\
-            'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n'\
+            'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n' + \
+            'Game elo:  ' + str(round(avg_gameelo)) + '\n' + \
             'Mythium sent per game:  ' + str(round(sum(mythium_list) / len(mythium_list), 2))
     else:
         return 'Not enough ranked data'
