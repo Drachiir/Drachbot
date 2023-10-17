@@ -5,6 +5,7 @@ with open('Secrets.json') as f:
     secret_file = json.load(f)
     header = {'x-api-key': secret_file.get('apikey')}
 
+
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
@@ -36,6 +37,7 @@ def count_value(playername, value, player_names, data):
             value_count = value_count + 1
     return value_count
 
+
 def count_mythium(send):
     mercs = {"Snail": 20, "Giant Snail": 20, "Lizard": 40, "Dragon Turtle": 40, "Brute": 60, "Fiend": 60, "Dino": 80,
              "Hermit": 80, "Cannoneer": 100, "Imp": 100, "Safety Mole": 120, "Drake": 120, "Pack Leader": 160,
@@ -45,7 +47,6 @@ def count_mythium(send):
     for x in send:
         send_amount = send_amount + mercs.get(x)
     return send_amount
-
 
 
 def count_elochange(playername, player_names, data):
