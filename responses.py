@@ -135,7 +135,7 @@ def apicall_matchhistoryelogain(playername, playerid):
 def apicall_wave1tendency(playername):
     playerid = apicall_getid(playername)
     if playerid == 0:
-        return 'Player ' + playername + 'not found.'
+        return 'Player ' + playername + ' not found.'
     count = 0
     ranked_count = 0
     queue_count = 0
@@ -224,10 +224,10 @@ def apicall_wave1tendency(playername):
 def apicall_winrate(playername, playername2, bool):
     playerid = apicall_getid(playername)
     if playerid == 0:
-        return 'Player ' + playername + 'not found.'
+        return 'Player ' + playername + ' not found.'
     playerid2 = apicall_getid(playername2)
     if playerid2 == 0:
-        return 'Player ' + playername2 + 'not found.'
+        return 'Player ' + playername2 + ' not found.'
     count = 0
     win_count = 0
     game_count = 0
@@ -341,7 +341,7 @@ def apicall_winrate(playername, playername2, bool):
         '% winrate)'
     except ZeroDivisionError as e:
         print(e)
-        return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played against each other recently.'
+        return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + output + ' each other recently.'
 
 
 def apicall_elcringo(playername):
