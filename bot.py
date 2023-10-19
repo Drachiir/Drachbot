@@ -28,140 +28,102 @@ def run_discord_bot():
     @app_commands.describe(playername='Enter the playername.')
     async def elo(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
-        for attempt in range(1000):
-            print(attempt)
-            try:
-                response = responses.apicall_elo(playername, 0)
-                if len(response) > 0:
-                    await interaction.edit_original_response(content=response)
-                    break
-            except discord.NotFound as e:
-                print(e)
-                break
-            else:
-                break
-        else:
-            await interaction.edit_original_response(content='Bot timeout.')
+        try:
+            response = responses.apicall_elo(playername, 0)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
 
     @tree.command(name="bestie", description="Shows your bestie.", guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter the playername.')
     async def bestie(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
-        for attempt in range(1000):
-            try:
-                response = responses.apicall_bestie(playername)
-                if len(response) > 0:
-                    await interaction.edit_original_response(content=response)
-                    break
-            except discord.NotFound as e:
-                print(e)
-                break
-            else:
-                break
-        else:
-            await interaction.edit_original_response(content='Bot timeout.')
+        try:
+            response = responses.apicall_bestie(playername)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
 
     @tree.command(name="rank", description="Shows player info of a certain rank.", guild=discord.Object(id=serverid))
     @app_commands.describe(rank='Enter a rank(number).')
     async def rank(interaction: discord.Interaction, rank: int):
         await interaction.response.send_message('Thinking... :robot:')
-        for attempt in range(1000):
-            try:
-                response = responses.apicall_rank(rank)
-                if len(response) > 0:
-                    await interaction.edit_original_response(content=response)
-                    break
-            except discord.NotFound as e:
-                print(e)
-                break
-            else:
-                break
-        else:
-            await interaction.edit_original_response(content='Bot timeout.')
+        try:
+            response = responses.apicall_rank(rank)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
 
     @tree.command(name="gamestats", description="Shows player stats.", guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter the playername.')
     async def gamestats(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
-        for attempt in range(1000):
-            try:
-                response = responses.apicall_gamestats(playername)
-                if len(response) > 0:
-                    await interaction.edit_original_response(content=response)
-                    break
-            except discord.NotFound as e:
-                print(e)
-                break
-            else:
-                break
-        else:
-            await interaction.edit_original_response(content='Bot timeout.')
+        try:
+            response = responses.apicall_gamestats(playername)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
 
     @tree.command(name="showlove", description="Shows how many games both players have played together.", guild=discord.Object(id=serverid))
     @app_commands.describe(playername1='Enter playername 1.', playername2='Enter playername 2')
     async def showlove(interaction: discord.Interaction, playername1: str, playername2: str):
         await interaction.response.send_message('Thinking... :robot:')
-        for attempt in range(1000):
-            try:
-                response = responses.apicall_showlove(playername1, playername2)
-                if len(response) > 0:
-                    await interaction.edit_original_response(content=response)
-                    break
-            except discord.NotFound as e:
-                print(e)
-                break
-            else:
-                break
-        else:
-            await interaction.edit_original_response(content='Bot timeout.')
-
+        try:
+            response = responses.apicall_showlove(playername1, playername2)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
 
     @tree.command(name="wave1", description="Shows Wave 1 tendency",
                   guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername.')
     async def wave1(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
-        for attempt in range(1000):
-            try:
-                response = responses.apicall_wave1tendency(playername)
-                if len(response) > 0:
-                    await interaction.edit_original_response(content=response)
-                    break
-            except discord.NotFound as e:
-                print(e)
-                break
-            except IndexError as e:
-                print(e)
-                await interaction.edit_original_response(content='Bot error. :sob:')
-                break
-            else:
-                break
-        else:
-            await interaction.edit_original_response(content='Bot timeout.')
+        try:
+            response = responses.apicall_wave1tendency(playername)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
+
 
     @tree.command(name="elcringo", description="Shows how cringe someone is.",
                   guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername.')
     async def wave1(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
-        for attempt in range(1000):
-            try:
-                response = responses.apicall_elcringo(playername)
-                if len(response) > 0:
-                    await interaction.edit_original_response(content=response)
-                    break
-            except discord.NotFound as e:
-                print(e)
-                break
-            except IndexError as e:
-                print(e)
-                await interaction.edit_original_response(content='Bot error. :sob:')
-                break
-            else:
-                break
-        else:
-            await interaction.edit_original_response(content='Bot timeout.')
+        try:
+            response = responses.apicall_elcringo(playername)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
 
+    @tree.command(name="winrate", description="Shows player1's winrate against player2",
+                  guild=discord.Object(id=serverid))
+    @app_commands.describe(playername='Enter playername1 and playername 2.')
+    async def wave1(interaction: discord.Interaction, playername: str, playername2: str):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.apicall_winrate(playername, playername2)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
 
     @client.event
     async def on_ready():

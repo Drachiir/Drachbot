@@ -221,6 +221,102 @@ def apicall_wave1tendency(playername):
         return 'Not enough ranked data'
 
 
+def apicall_winrate(playername, playername2):
+    playerid = apicall_getid(playername)
+    if playerid == 0:
+        return 'Player ' + playername + 'not found.'
+    playerid2 = apicall_getid(playername2)
+    if playerid2 == 0:
+        return 'Player ' + playername2 + 'not found.'
+    count = 0
+    win_count = 0
+    game_count = 0
+    ranked_count = 0
+    queue_count = 0
+    games_limit = 1600
+    try:
+        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) +\
+            apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150) + \
+            apicall_getmatchistory(playerid, 50, 200) + apicall_getmatchistory(playerid, 50, 250) + \
+            apicall_getmatchistory(playerid, 50, 300) + apicall_getmatchistory(playerid, 50, 350)
+            # apicall_getmatchistory(playerid, 50, 400) + apicall_getmatchistory(playerid, 50, 450) + \
+            # apicall_getmatchistory(playerid, 50, 500) + apicall_getmatchistory(playerid, 50, 550) + \
+            # apicall_getmatchistory(playerid, 50, 600) + apicall_getmatchistory(playerid, 50, 650) + \
+            # apicall_getmatchistory(playerid, 50, 700) + apicall_getmatchistory(playerid, 50, 750)
+
+    except TypeError as e:
+        print(e)
+        return playername + ' has not played enough games.'
+    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
+    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
+    gameid = extract_values(history_raw, '_id')
+    queue_type = extract_values(history_raw, 'queueType')
+    playercount = extract_values(history_raw, 'playerCount')
+    while count < games_limit:
+        if str(queue_type[1][queue_count]) == 'Normal':
+            print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
+            playernames_ranked_west = playernames[count] + playernames[count + 1]
+            playernames_ranked_east = playernames[count + 2] + playernames[count + 3]
+            gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
+            gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
+            print(playernames_ranked_west, playernames_ranked_east)
+            for i, x in enumerate(playernames_ranked_west):
+                if str(x).lower() == str(playername).lower():
+                    if playernames_ranked_east[0].lower() == playername2.lower():
+                        game_count += 1
+                        print(gameresult_ranked_west[i])
+                        if gameresult_ranked_west[i] == 'won':
+                            win_count += 1
+                    elif playernames_ranked_east[1].lower() == playername2.lower():
+                        game_count += 1
+                        print(gameresult_ranked_west[i])
+                        if gameresult_ranked_west[i] == 'won':
+                            win_count += 1
+            for i, x in enumerate(playernames_ranked_east):
+                if str(x).lower() == str(playername).lower():
+                    if playernames_ranked_west[0].lower() == playername2.lower():
+                        game_count += 1
+                        print(gameresult_ranked_east[i])
+                        if gameresult_ranked_east[i] == 'won':
+                            win_count += 1
+                    elif playernames_ranked_west[1].lower() == playername2.lower():
+                        game_count += 1
+                        print(gameresult_ranked_east[i])
+                        if gameresult_ranked_east[i] == 'won':
+                            win_count += 1
+
+            count = count + 4
+            queue_count = queue_count + 1
+            ranked_count = ranked_count + 1
+
+        elif playercount[1][queue_count] == 8:
+            count = count + 8
+            queue_count = queue_count + 1
+            games_limit = games_limit + 4
+            print('Skip 8 player game: ' + str(count))
+        elif playercount[1][queue_count] == 2:
+            count = count + 2
+            queue_count = queue_count + 1
+            games_limit = games_limit - 2
+            print('Skip 2 player game: ' + str(count))
+        elif playercount[1][queue_count] == 1:
+            count = count + 1
+            queue_count = queue_count + 1
+            games_limit = games_limit - 3
+            print('Skip 1 player game: ' + str(count))
+        else:
+            queue_count = queue_count + 1
+            count = count + 4
+            print('Skip 4 player game: ' + str(count))
+
+    try: return str(playername).capitalize() + ' winrate against ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
+        str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\
+        '% winrate)'
+    except ZeroDivisionError as e:
+        print(e)
+        return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played against each other recently.'
+
+
 def apicall_elcringo(playername):
     playerid = apicall_getid(playername)
     if playerid == 0:
