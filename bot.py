@@ -110,13 +110,13 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="winrate", description="Shows player1's winrate against player2",
+    @tree.command(name="winrate", description="Shows player1's winrate against/with player2",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername1 and playername 2.')
-    async def wave1(interaction: discord.Interaction, playername: str, playername2: str):
+    @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2.', boolean= 'True for winrate *against*, False for winrate *with*')
+    async def wave1(interaction: discord.Interaction, playername1: str, playername2: str, boolean: bool):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_winrate(playername, playername2)
+            response = responses.apicall_winrate(playername1, playername2, boolean)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
