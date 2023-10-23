@@ -132,7 +132,7 @@ def apicall_matchhistoryelogain(playername, playerid):
     return output
 
 
-def apicall_wave1tendency(playername):
+def apicall_wave1tendency(playername, bool):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
@@ -151,8 +151,12 @@ def apicall_wave1tendency(playername):
         print(e)
         return playername + ' has not played enough games.'
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
-    snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
-    kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
+    if bool:
+        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
+        kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
+    else:
+        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesReceivedPerWave')[1], 1))
+        kingup = list(divide_chunks(extract_values(history_raw, 'opponentKingUpgradesPerWave')[1], 1))
     gameid = extract_values(history_raw, '_id')
     queue_type = extract_values(history_raw, 'queueType')
     playercount = extract_values(history_raw, 'playerCount')

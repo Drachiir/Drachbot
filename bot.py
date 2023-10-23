@@ -81,11 +81,11 @@ def run_discord_bot():
 
     @tree.command(name="wave1", description="Shows Wave 1 tendency",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername.')
-    async def wave1(interaction: discord.Interaction, playername: str):
+    @app_commands.describe(playername='Enter playername.', boolean= 'True for *sent*, False for *received*')
+    async def wave1(interaction: discord.Interaction, playername: str, boolean: bool):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_wave1tendency(playername)
+            response = responses.apicall_wave1tendency(playername, boolean)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
