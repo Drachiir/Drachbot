@@ -132,7 +132,7 @@ def apicall_matchhistoryelogain(playername, playerid):
     return output
 
 
-def apicall_wave1tendency(playername, bool):
+def apicall_wave1tendency(playername, option):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
@@ -151,10 +151,10 @@ def apicall_wave1tendency(playername, bool):
         print(e)
         return playername + ' has not played enough games.'
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
-    if bool:
+    if option == 0:
         snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
         kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
-    else:
+    elif option == 1:
         snail = list(divide_chunks(extract_values(history_raw, 'mercenariesReceivedPerWave')[1], 1))
         kingup = list(divide_chunks(extract_values(history_raw, 'opponentKingUpgradesPerWave')[1], 1))
     gameid = extract_values(history_raw, '_id')
@@ -217,9 +217,9 @@ def apicall_wave1tendency(playername, bool):
             print('Skip 4 player game: ' + str(count))
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
-    if bool:
+    if option == 0:
         output = 'send'
-    else:
+    elif option == 1:
         output = 'received'
     if send_total > 4:
         return (playername).capitalize() + "'s Wave 1 " + output + " stats: (Last " + str(send_total) + " ranked games)\nKingup: " + \
@@ -229,7 +229,7 @@ def apicall_wave1tendency(playername, bool):
         return 'Not enough ranked data'
 
 
-def apicall_winrate(playername, playername2, bool):
+def apicall_winrate(playername, playername2, option):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
@@ -270,7 +270,7 @@ def apicall_winrate(playername, playername2, bool):
             print(playernames_ranked_west, playernames_ranked_east)
             for i, x in enumerate(playernames_ranked_west):
                 if str(x).lower() == str(playername).lower():
-                    if bool:
+                    if option == 0:
                         if playernames_ranked_east[0].lower() == playername2.lower():
                             game_count += 1
                             print(gameresult_ranked_west[i])
@@ -281,7 +281,7 @@ def apicall_winrate(playername, playername2, bool):
                             print(gameresult_ranked_west[i])
                             if gameresult_ranked_west[i] == 'won':
                                 win_count += 1
-                    else:
+                    elif option == 1:
                         if playernames_ranked_west[0].lower() == playername2.lower():
                             game_count += 1
                             print(gameresult_ranked_west[i])
@@ -294,7 +294,7 @@ def apicall_winrate(playername, playername2, bool):
                                 win_count += 1
             for i, x in enumerate(playernames_ranked_east):
                 if str(x).lower() == str(playername).lower():
-                    if bool:
+                    if option == 0:
                         if playernames_ranked_west[0].lower() == playername2.lower():
                             game_count += 1
                             print(gameresult_ranked_east[i])
@@ -305,7 +305,7 @@ def apicall_winrate(playername, playername2, bool):
                             print(gameresult_ranked_east[i])
                             if gameresult_ranked_east[i] == 'won':
                                 win_count += 1
-                    else:
+                    elif option == 1:
                         if playernames_ranked_east[0].lower() == playername2.lower():
                             game_count += 1
                             print(gameresult_ranked_east[i])
@@ -340,9 +340,9 @@ def apicall_winrate(playername, playername2, bool):
             queue_count = queue_count + 1
             count = count + 4
             print('Skip 4 player game: ' + str(count))
-    if bool:
+    if option == 0:
         output = 'against'
-    else:
+    elif option == 1:
         output = 'with'
     try: return str(playername).capitalize() + "'s winrate " + output + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
         str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\

@@ -81,11 +81,15 @@ def run_discord_bot():
 
     @tree.command(name="wave1", description="Shows Wave 1 tendency",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername.', boolean= 'True for *sent*, False for *received*')
-    async def wave1(interaction: discord.Interaction, playername: str, boolean: bool):
+    @app_commands.describe(playername='Enter playername.', option='Send or received?')
+    @app_commands.choices(option=[
+        discord.app_commands.Choice(name='send', value=0),
+        discord.app_commands.Choice(name='received', value=1)
+    ])
+    async def wave1(interaction: discord.Interaction, playername: str, option: discord.app_commands.Choice[int]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_wave1tendency(playername, boolean)
+            response = responses.apicall_wave1tendency(playername, option.value)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -112,11 +116,15 @@ def run_discord_bot():
 
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2.', boolean= 'True for winrate *against*, False for winrate *with*')
-    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, boolean: bool):
+    @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2.', option='Against or with?')
+    @app_commands.choices(option=[
+        discord.app_commands.Choice(name='against', value=0),
+        discord.app_commands.Choice(name='with', value=1)
+    ])
+    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[int]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_winrate(playername1, playername2, boolean)
+            response = responses.apicall_winrate(playername1, playername2, option.value)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
