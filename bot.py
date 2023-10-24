@@ -6,7 +6,7 @@ from discord import app_commands
 
 with open('Secrets.json') as f:
     secret_file = json.load(f)
-serverid = secret_file.get('test_id')
+serverid = secret_file.get('id')
 
 async def send_message(message, user_message, is_private):
     try:
@@ -18,7 +18,7 @@ async def send_message(message, user_message, is_private):
 
 
 def run_discord_bot():
-    TOKEN = secret_file.get('testtoken')
+    TOKEN = secret_file.get('token')
     intents = discord.Intents.default()
     intents.message_content = True
     client = discord.Client(intents=intents)
@@ -98,7 +98,7 @@ def run_discord_bot():
     @tree.command(name="elcringo", description="Shows how cringe someone is.",
                   guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername.')
-    async def wave1(interaction: discord.Interaction, playername: str):
+    async def elcringo(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
         try:
             response = responses.apicall_elcringo(playername)
@@ -113,7 +113,7 @@ def run_discord_bot():
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2",
                   guild=discord.Object(id=serverid))
     @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2.', boolean= 'True for winrate *against*, False for winrate *with*')
-    async def wave1(interaction: discord.Interaction, playername1: str, playername2: str, boolean: bool):
+    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, boolean: bool):
         await interaction.response.send_message('Thinking... :robot:')
         try:
             response = responses.apicall_winrate(playername1, playername2, boolean)

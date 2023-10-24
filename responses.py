@@ -217,8 +217,12 @@ def apicall_wave1tendency(playername, bool):
             print('Skip 4 player game: ' + str(count))
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
+    if bool:
+        output = 'send'
+    else:
+        output = 'received'
     if send_total > 4:
-        return (playername).capitalize() + "'s Wave 1 stats: (Last " + str(send_total) + " ranked games)\nKingup: " + \
+        return (playername).capitalize() + "'s Wave 1 " + output + " stats: (Last " + str(send_total) + " ranked games)\nKingup: " + \
             str(kingup_total) + ' (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
             ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + '\nSave: ' + str(save_count)
     else:
