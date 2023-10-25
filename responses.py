@@ -546,6 +546,10 @@ def apicall_mmstats(playername):
     mm2_openers = []
     mm3_openers = []
     mm4_openers = []
+    mm1_results = []
+    mm2_results = []
+    mm3_results = []
+    mm4_results = []
     for x in masterminds_dict:
         if len(mm1) == 0:
             mm1.append(x)
@@ -615,6 +619,7 @@ def apicall_mmstats(playername):
 
     for i, x in enumerate(masterminds_list):
         if x == mm1[0]:
+            mm1_results.append(gameresult_list[i])
             if ',' in opener_list[i]:
                 string = opener_list[i]
                 commas = string.count(',')
@@ -622,6 +627,7 @@ def apicall_mmstats(playername):
             else:
                 mm1_openers.append(opener_list[i])
         if x == mm2[0]:
+            mm2_results.append(gameresult_list[i])
             if ',' in opener_list[i]:
                 string = opener_list[i]
                 commas = string.count(',')
@@ -629,6 +635,7 @@ def apicall_mmstats(playername):
             else:
                 mm2_openers.append(opener_list[i])
         if x == mm3[0]:
+            mm3_results.append(gameresult_list[i])
             if ',' in opener_list[i]:
                 string = opener_list[i]
                 commas = string.count(',')
@@ -636,6 +643,7 @@ def apicall_mmstats(playername):
             else:
                 mm3_openers.append(opener_list[i])
         if x == mm4[0]:
+            mm4_results.append(gameresult_list[i])
             if ',' in opener_list[i]:
                 string = opener_list[i]
                 commas = string.count(',')
@@ -650,13 +658,13 @@ def apicall_mmstats(playername):
     def most_common(list):
         data = Counter(list)
         return data.most_common(1)[0][0]
-    def get_open_wrpr(list, list2):
+    def get_open_wrpr(list, list2, list3):
         wins = 0
         count = 0
         for i, x in enumerate(list2):
             if most_common(list2) in x:
                 count += 1
-                if gameresult_list[i] == 'won':
+                if list3[i] == 'won':
                     wins += 1
         return str(count) + ' Games, ' + str(round(wins / count * 100, 2)) + '% Winrate, ' + str(round(count / list[1] * 100, 2)) + '% Playrate'
     emojis = {"LockIn": "<:LockIn:1166779254554497095>", "Greed": "<:Greed:1166779251257790645>", "Redraw": "<:Redraw:1166779258073530368>",
@@ -667,16 +675,16 @@ def apicall_mmstats(playername):
         if len(mm1) > 0:
             output = str(playername).capitalize() + "'s Mastermind stats(From last " + str(ranked_count) + ' games):\n' +\
             emojis.get(mm1[0]) + mm1[0] + ' (' + str(mm1[1]) + ' Games, ' + str(calc_wr(mm1)) + '% Winrate, ' + str(calc_pr(mm1)) + '% Pickrate, Worker on 10: ' + str(round(mm1[3] / mm1[1], 2)) + ')\n' +\
-            '-Fav. opener: ' + most_common(mm1_openers) + ' (' + str(get_open_wrpr(mm1, mm1_openers)) + ')\n'
+            '-Fav. opener: ' + most_common(mm1_openers) + ' (' + str(get_open_wrpr(mm1, mm1_openers, mm1_results)) + ')\n'
         if len(mm2) > 0:
             output = output + emojis.get(mm2[0]) + mm2[0] + ' (' + str(mm2[1]) + ' Games, ' + str(calc_wr(mm2)) + '% Winrate, ' + str(calc_pr(mm2)) + '% Pickrate, Worker on 10: ' + str(round(mm2[3] / mm2[1], 2)) + ')\n' + \
-            '-Fav. opener: ' + most_common(mm2_openers) + ' (' + str(get_open_wrpr(mm2, mm2_openers)) + ')\n'
+            '-Fav. opener: ' + most_common(mm2_openers) + ' (' + str(get_open_wrpr(mm2, mm2_openers, mm2_results)) + ')\n'
         if len(mm3) > 0:
             output = output + emojis.get(mm3[0]) + mm3[0] + ' (' + str(mm3[1]) + ' Games, ' + str(calc_wr(mm3)) + '% Winrate, ' + str(calc_pr(mm3)) + '% Pickrate, Worker on 10: ' + str(round(mm3[3] / mm3[1], 2)) + ')\n' + \
-            '-Fav. opener: ' + most_common(mm3_openers) + ' (' + str(get_open_wrpr(mm3, mm3_openers)) + ')\n'
+            '-Fav. opener: ' + most_common(mm3_openers) + ' (' + str(get_open_wrpr(mm3, mm3_openers, mm3_results)) + ')\n'
         if len(mm4) > 4:
             output = output + emojis.get(mm4[0]) + mm4[0] + ' (' + str(mm4[1]) + ' Games, ' + str(calc_wr(mm4)) + '% Winrate, ' + str(calc_pr(mm4)) + '% Pickrate, Worker on 10: ' + str(round(mm4[3] / mm4[1], 2)) + ')\n' + \
-            '-Fav. opener: ' + most_common(mm4_openers) + ' (' + str(get_open_wrpr(mm4, mm4_openers)) + ')\n'
+            '-Fav. opener: ' + most_common(mm4_openers) + ' (' + str(get_open_wrpr(mm4, mm4_openers, mm4_results)) + ')\n'
         return output
     else:
         return 'Not enough ranked data'
