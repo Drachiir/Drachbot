@@ -505,10 +505,8 @@ def apicall_mmstats(playername):
             gameresult_ranked = gameresult[count] + gameresult[count + 1] + gameresult[count + 2] + gameresult[count + 3]
             workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
             opener_ranked = opener[count] + opener[count + 1] + opener[count + 2] + opener[count + 3]
-            print(playernames_ranked)
             for i, x in enumerate(playernames_ranked):
                 if str(x).lower() == str(playername).lower():
-                    print(masterminds_ranked)
                     masterminds_dict[masterminds_ranked[i]]["Count"] += 1
                     if gameresult_ranked[i] == 'won':
                         masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
@@ -548,7 +546,6 @@ def apicall_mmstats(playername):
     mm2_openers = []
     mm3_openers = []
     mm4_openers = []
-    print(masterminds_dict)
     for x in masterminds_dict:
         if len(mm1) == 0:
             mm1.append(x)
@@ -662,7 +659,6 @@ def apicall_mmstats(playername):
                 if gameresult_list[i] == 'won':
                     wins += 1
         return str(count) + ' Games, ' + str(round(wins / count * 100, 2)) + '% Winrate, ' + str(round(count / list[1] * 100, 2)) + '% Playrate'
-    print(mm2_openers)
     emojis = {"LockIn": "<:LockIn:1166779254554497095>", "Greed": "<:Greed:1166779251257790645>", "Redraw": "<:Redraw:1166779258073530368>",
               "Yolo": "<:Yolo:1166779261353476207>", "Fiesta": "<:Fiesta:1166779247768129617>", "CashOut": "<:CashOut:1166779238519681216>",
               "Castle": "<:Castle:1166779242013524091>", "Cartel": "<:Cartel:1166779236028252282>", "Chaos": "<:Chaos:1166779245247336458>"}
