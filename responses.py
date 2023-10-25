@@ -662,7 +662,7 @@ def apicall_mmstats(playername):
                 if gameresult_list[i] == 'won':
                     wins += 1
         return str(count) + ' Games, ' + str(round(wins / count * 100, 2)) + '% Winrate, ' + str(round(count / list[1] * 100, 2)) + '% Playrate'
-
+    print(mm2_openers)
     emojis = {"LockIn": "<:LockIn:1166779254554497095>", "Greed": "<:Greed:1166779251257790645>", "Redraw": "<:Redraw:1166779258073530368>",
               "Yolo": "<:Yolo:1166779261353476207>", "Fiesta": "<:Fiesta:1166779247768129617>", "CashOut": "<:CashOut:1166779238519681216>",
               "Castle": "<:Castle:1166779242013524091>", "Cartel": "<:Cartel:1166779236028252282>", "Chaos": "<:Chaos:1166779245247336458>"}
@@ -670,11 +670,11 @@ def apicall_mmstats(playername):
         return str(playername).capitalize() + "'s Mastermind stats(From last " + str(ranked_count) + ' games):\n' +\
             emojis.get(mm1[0]) + mm1[0] + ' (' + str(mm1[1]) + ' Games, ' + str(calc_wr(mm1)) + '% Winrate, ' + str(calc_pr(mm1)) + '% Pickrate, Worker on 10: ' + str(round(mm1[3] / mm1[1], 2)) + ')\n' +\
             '-Fav. opener: ' + most_common(mm1_openers) + ' (' + str(get_open_wrpr(mm1, mm1_openers)) + ')\n' + \
-            emojis.get(mm2[0]) + mm2[0] + ' (' + str(mm2[1]) + ' Games, ' + str(calc_wr(mm2)) + '% Winrate, ' + str(calc_pr(mm2)) + '% Pickrate, Worker 10: ' + str(round(mm2[3] / mm2[1], 2)) + ')\n' + \
+            emojis.get(mm2[0]) + mm2[0] + ' (' + str(mm2[1]) + ' Games, ' + str(calc_wr(mm2)) + '% Winrate, ' + str(calc_pr(mm2)) + '% Pickrate, Worker on 10: ' + str(round(mm2[3] / mm2[1], 2)) + ')\n' + \
             '-Fav. opener: ' + most_common(mm2_openers) + ' (' + str(get_open_wrpr(mm2, mm2_openers)) + ')\n' + \
-            emojis.get(mm3[0]) + mm3[0] + ' (' + str(mm3[1]) + ' Games, ' + str(calc_wr(mm3)) + '% Winrate, ' + str(calc_pr(mm3)) + '% Pickrate, Worker 10: ' + str(round(mm3[3] / mm3[1], 2)) + ')\n' + \
+            emojis.get(mm3[0]) + mm3[0] + ' (' + str(mm3[1]) + ' Games, ' + str(calc_wr(mm3)) + '% Winrate, ' + str(calc_pr(mm3)) + '% Pickrate, Worker on 10: ' + str(round(mm3[3] / mm3[1], 2)) + ')\n' + \
             '-Fav. opener: ' + most_common(mm3_openers) + ' (' + str(get_open_wrpr(mm3, mm3_openers)) + ')\n' + \
-            emojis.get(mm4[0]) + mm4[0] + ' (' + str(mm4[1]) + ' Games, ' + str(calc_wr(mm4)) + '% Winrate, ' + str(calc_pr(mm4)) + '% Pickrate, Worker 10: ' + str(round(mm4[3] / mm4[1], 2)) + ')\n' + \
+            emojis.get(mm4[0]) + mm4[0] + ' (' + str(mm4[1]) + ' Games, ' + str(calc_wr(mm4)) + '% Winrate, ' + str(calc_pr(mm4)) + '% Pickrate, Worker on 10: ' + str(round(mm4[3] / mm4[1], 2)) + ')\n' + \
             '-Fav. opener: ' + most_common(mm4_openers) + ' (' + str(get_open_wrpr(mm4, mm4_openers)) + ')\n'
     else:
         return 'Not enough ranked data'
