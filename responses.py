@@ -555,6 +555,7 @@ def apicall_mmstats(playername):
             mm1.append(masterminds_dict[x]['Count'])
             mm1.append(masterminds_dict[x]['Wins'])
             mm1.append(masterminds_dict[x]['W10'])
+            continue
         elif masterminds_dict[x]['Count'] > mm1[1]:
             mm2_copy = mm2.copy()
             mm3_copy = mm3.copy()
@@ -575,6 +576,7 @@ def apicall_mmstats(playername):
             mm2.append(masterminds_dict[x]['Count'])
             mm2.append(masterminds_dict[x]['Wins'])
             mm2.append(masterminds_dict[x]['W10'])
+            continue
         elif masterminds_dict[x]['Count'] > mm2[1]:
             mm3_copy = mm3.copy()
             mm3 = mm2.copy()
@@ -591,6 +593,7 @@ def apicall_mmstats(playername):
             mm3.append(masterminds_dict[x]['Count'])
             mm3.append(masterminds_dict[x]['Wins'])
             mm3.append(masterminds_dict[x]['W10'])
+            continue
         elif masterminds_dict[x]['Count'] > mm3[1]:
             mm4.clear()
             mm4 = mm3.copy()
@@ -605,6 +608,7 @@ def apicall_mmstats(playername):
             mm4.append(masterminds_dict[x]['Count'])
             mm4.append(masterminds_dict[x]['Wins'])
             mm4.append(masterminds_dict[x]['W10'])
+            continue
         elif masterminds_dict[x]['Count'] > mm4[1]:
             mm4.clear()
             mm4.append(x)
@@ -620,27 +624,28 @@ def apicall_mmstats(playername):
                 mm1_openers.append(string.split(',',commas)[commas])
             else:
                 mm1_openers.append(opener_list[i])
-        elif x == mm2[0]:
+        if x == mm2[0]:
             if ',' in opener_list[i]:
                 string = opener_list[i]
                 commas = string.count(',')
                 mm2_openers.append(string.split(',', commas)[commas])
             else:
                 mm2_openers.append(opener_list[i])
-        elif x == mm3[0]:
+        if x == mm3[0]:
             if ',' in opener_list[i]:
                 string = opener_list[i]
                 commas = string.count(',')
                 mm3_openers.append(string.split(',', commas)[commas])
             else:
                 mm3_openers.append(opener_list[i])
-        elif x == mm4[0]:
+        if x == mm4[0]:
             if ',' in opener_list[i]:
                 string = opener_list[i]
                 commas = string.count(',')
                 mm4_openers.append(string.split(',', commas)[commas])
             else:
                 mm4_openers.append(opener_list[i])
+
     def calc_wr(list):
         return str(round(list[2] / list[1] * 100, 2))
     def calc_pr(list):
@@ -651,12 +656,13 @@ def apicall_mmstats(playername):
     def get_open_wrpr(list, list2):
         wins = 0
         count = 0
-        for i, x in enumerate(opener_list):
+        for i, x in enumerate(list2):
             if most_common(list2) in x:
                 count += 1
                 if gameresult_list[i] == 'won':
                     wins += 1
         return str(count) + ' Games, ' + str(round(wins / count * 100, 2)) + '% Winrate, ' + str(round(count / list[1] * 100, 2)) + '% Playrate'
+
     emojis = {"LockIn": "<:LockIn:1166779254554497095>", "Greed": "<:Greed:1166779251257790645>", "Redraw": "<:Redraw:1166779258073530368>",
               "Yolo": "<:Yolo:1166779261353476207>", "Fiesta": "<:Fiesta:1166779247768129617>", "CashOut": "<:CashOut:1166779238519681216>",
               "Castle": "<:Castle:1166779242013524091>", "Cartel": "<:Cartel:1166779236028252282>", "Chaos": "<:Chaos:1166779245247336458>"}

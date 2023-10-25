@@ -125,9 +125,9 @@ def run_discord_bot():
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
             print(e)
-        except IndexError as e:
-            print(e)
-            await interaction.edit_original_response(content='Bot error. :sob:')
+        # except IndexError as e:
+        #     print(e)
+        #     await interaction.edit_original_response(content='Bot error. :sob:')
 
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2",
                   guild=discord.Object(id=serverid))
