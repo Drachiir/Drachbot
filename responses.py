@@ -672,17 +672,17 @@ def apicall_mmstats(playername):
               "Castle": "<:Castle:1166779242013524091>", "Cartel": "<:Cartel:1166779236028252282>", "Chaos": "<:Chaos:1166779245247336458>"}
     output = ''
     if ranked_count > 5:
-        if len(mm1) > 0:
-            output = str(playername).capitalize() + "'s Mastermind stats(From last " + str(ranked_count) + ' games):\n' +\
+        if mm1[1] > 0:
+            output = str(playername).capitalize() + "'s Mastermind stats(From last " + str(ranked_count) + ' ranked games):\n' +\
             emojis.get(mm1[0]) + mm1[0] + ' (' + str(mm1[1]) + ' Games, ' + str(calc_wr(mm1)) + '% Winrate, ' + str(calc_pr(mm1)) + '% Pickrate, Worker on 10: ' + str(round(mm1[3] / mm1[1], 2)) + ')\n' +\
             '-Fav. opener: ' + most_common(mm1_openers) + ' (' + str(get_open_wrpr(mm1, mm1_openers, mm1_results)) + ')\n'
-        if len(mm2) > 0:
+        if mm2[1] > 0:
             output = output + emojis.get(mm2[0]) + mm2[0] + ' (' + str(mm2[1]) + ' Games, ' + str(calc_wr(mm2)) + '% Winrate, ' + str(calc_pr(mm2)) + '% Pickrate, Worker on 10: ' + str(round(mm2[3] / mm2[1], 2)) + ')\n' + \
             '-Fav. opener: ' + most_common(mm2_openers) + ' (' + str(get_open_wrpr(mm2, mm2_openers, mm2_results)) + ')\n'
-        if len(mm3) > 0:
+        if mm3[1] > 0:
             output = output + emojis.get(mm3[0]) + mm3[0] + ' (' + str(mm3[1]) + ' Games, ' + str(calc_wr(mm3)) + '% Winrate, ' + str(calc_pr(mm3)) + '% Pickrate, Worker on 10: ' + str(round(mm3[3] / mm3[1], 2)) + ')\n' + \
             '-Fav. opener: ' + most_common(mm3_openers) + ' (' + str(get_open_wrpr(mm3, mm3_openers, mm3_results)) + ')\n'
-        if len(mm4) > 4:
+        if mm4[1] > 0:
             output = output + emojis.get(mm4[0]) + mm4[0] + ' (' + str(mm4[1]) + ' Games, ' + str(calc_wr(mm4)) + '% Winrate, ' + str(calc_pr(mm4)) + '% Pickrate, Worker on 10: ' + str(round(mm4[3] / mm4[1], 2)) + ')\n' + \
             '-Fav. opener: ' + most_common(mm4_openers) + ' (' + str(get_open_wrpr(mm4, mm4_openers, mm4_results)) + ')\n'
         return output
