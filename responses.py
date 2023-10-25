@@ -1,5 +1,6 @@
 import requests
 import json
+from collections import Counter
 
 with open('Secrets.json') as f:
     secret_file = json.load(f)
@@ -460,6 +461,215 @@ def apicall_elcringo(playername):
             'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n' + \
             'Game elo:  ' + str(round(avg_gameelo)) + '\n' + \
             'Mythium sent per game:  ' + str(round(sum(mythium_list) / len(mythium_list), 2))
+    else:
+        return 'Not enough ranked data'
+
+
+def apicall_mmstats(playername):
+    playerid = apicall_getid(playername)
+    if playerid == 0:
+        return 'Player ' + playername + ' not found.'
+    count = 0
+    ranked_count = 0
+    queue_count = 0
+    mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos']
+    masterminds_dict = {"LockIn": {"Count": 0, "Wins": 0, "W10": 0}, "Greed": {"Count": 0, "Wins": 0, "W10": 0},
+                        "Redraw": {"Count": 0, "Wins": 0, "W10": 0}, "Yolo": {"Count": 0, "Wins": 0, "W10": 0},
+                        "Fiesta": {"Count": 0, "Wins": 0, "W10": 0}, "CashOut": {"Count": 0, "Wins": 0, "W10": 0},
+                        "Castle": {"Count": 0, "Wins": 0, "W10": 0}, "Cartel": {"Count": 0, "Wins": 0, "W10": 0},
+                        "Chaos": {"Count": 0, "Wins": 0, "W10": 0}}
+    opener_list = []
+    masterminds_list = []
+    gameresult_list = []
+    games_limit = 800
+    try:
+        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) + \
+                      apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150)
+    except TypeError as e:
+        print(e)
+        return playername + ' has not played enough games.'
+    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
+    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 1))
+    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
+    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 1))
+    opener = list(divide_chunks(extract_values(history_raw, 'firstWaveFighters')[1], 1))
+    gameid = extract_values(history_raw, '_id')
+    queue_type = extract_values(history_raw, 'queueType')
+    playercount = extract_values(history_raw, 'playerCount')
+    endingwaves = extract_values(history_raw, 'endingWave')
+    while count < games_limit:
+        if str(queue_type[1][queue_count]) == 'Normal' and endingwaves[1][queue_count] >= 10:
+            print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
+            playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
+            masterminds_ranked = masterminds[count] + masterminds[count + 1] + masterminds[count + 2] + masterminds[count + 3]
+            gameresult_ranked = gameresult[count] + gameresult[count + 1] + gameresult[count + 2] + gameresult[count + 3]
+            workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
+            opener_ranked = opener[count] + opener[count + 1] + opener[count + 2] + opener[count + 3]
+            print(playernames_ranked)
+            for i, x in enumerate(playernames_ranked):
+                if str(x).lower() == str(playername).lower():
+                    print(masterminds_ranked)
+                    masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                    if gameresult_ranked[i] == 'won':
+                        masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                    masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
+                    opener_list.append(opener_ranked[i])
+                    masterminds_list.append(masterminds_ranked[i])
+                    gameresult_list.append(gameresult_ranked[i])
+            count = count + 4
+            queue_count = queue_count + 1
+            ranked_count = ranked_count + 1
+
+        elif playercount[1][queue_count] == 8:
+            count = count + 8
+            queue_count = queue_count + 1
+            games_limit = games_limit + 4
+            print('Skip 8 player game: ' + str(count))
+        elif playercount[1][queue_count] == 2:
+            count = count + 2
+            queue_count = queue_count + 1
+            games_limit = games_limit - 2
+            print('Skip 2 player game: ' + str(count))
+        elif playercount[1][queue_count] == 1:
+            count = count + 1
+            queue_count = queue_count + 1
+            games_limit = games_limit - 3
+            print('Skip 1 player game: ' + str(count))
+        else:
+            queue_count = queue_count + 1
+            count = count + 4
+            print('Skip 4 player game: ' + str(count))
+
+    mm1 = []
+    mm2 = []
+    mm3 = []
+    mm4 = []
+    mm1_openers = []
+    mm2_openers = []
+    mm3_openers = []
+    mm4_openers = []
+    print(masterminds_dict)
+    for x in masterminds_dict:
+        if len(mm1) == 0:
+            mm1.append(x)
+            mm1.append(masterminds_dict[x]['Count'])
+            mm1.append(masterminds_dict[x]['Wins'])
+            mm1.append(masterminds_dict[x]['W10'])
+        elif masterminds_dict[x]['Count'] > mm1[1]:
+            mm2_copy = mm2.copy()
+            mm3_copy = mm3.copy()
+            mm2.clear()
+            mm2 = mm1.copy()
+            mm3.clear()
+            mm3 = mm2_copy
+            mm4.clear()
+            mm4 = mm3_copy
+            mm1.clear()
+            mm1.append(x)
+            mm1.append(masterminds_dict[x]['Count'])
+            mm1.append(masterminds_dict[x]['Wins'])
+            mm1.append(masterminds_dict[x]['W10'])
+            continue
+        if len(mm2) == 0:
+            mm2.append(x)
+            mm2.append(masterminds_dict[x]['Count'])
+            mm2.append(masterminds_dict[x]['Wins'])
+            mm2.append(masterminds_dict[x]['W10'])
+        elif masterminds_dict[x]['Count'] > mm2[1]:
+            mm3_copy = mm3.copy()
+            mm3 = mm2.copy()
+            mm4.clear()
+            mm4 = mm3_copy
+            mm2.clear()
+            mm2.append(x)
+            mm2.append(masterminds_dict[x]['Count'])
+            mm2.append(masterminds_dict[x]['Wins'])
+            mm2.append(masterminds_dict[x]['W10'])
+            continue
+        if len(mm3) == 0:
+            mm3.append(x)
+            mm3.append(masterminds_dict[x]['Count'])
+            mm3.append(masterminds_dict[x]['Wins'])
+            mm3.append(masterminds_dict[x]['W10'])
+        elif masterminds_dict[x]['Count'] > mm3[1]:
+            mm4.clear()
+            mm4 = mm3.copy()
+            mm3.clear()
+            mm3.append(x)
+            mm3.append(masterminds_dict[x]['Count'])
+            mm3.append(masterminds_dict[x]['Wins'])
+            mm3.append(masterminds_dict[x]['W10'])
+            continue
+        if len(mm4) == 0:
+            mm4.append(x)
+            mm4.append(masterminds_dict[x]['Count'])
+            mm4.append(masterminds_dict[x]['Wins'])
+            mm4.append(masterminds_dict[x]['W10'])
+        elif masterminds_dict[x]['Count'] > mm4[1]:
+            mm4.clear()
+            mm4.append(x)
+            mm4.append(masterminds_dict[x]['Count'])
+            mm4.append(masterminds_dict[x]['Wins'])
+            mm4.append(masterminds_dict[x]['W10'])
+
+    for i, x in enumerate(masterminds_list):
+        if x == mm1[0]:
+            if ',' in opener_list[i]:
+                string = opener_list[i]
+                commas = string.count(',')
+                mm1_openers.append(string.split(',',commas)[commas])
+            else:
+                mm1_openers.append(opener_list[i])
+        elif x == mm2[0]:
+            if ',' in opener_list[i]:
+                string = opener_list[i]
+                commas = string.count(',')
+                mm2_openers.append(string.split(',', commas)[commas])
+            else:
+                mm2_openers.append(opener_list[i])
+        elif x == mm3[0]:
+            if ',' in opener_list[i]:
+                string = opener_list[i]
+                commas = string.count(',')
+                mm3_openers.append(string.split(',', commas)[commas])
+            else:
+                mm3_openers.append(opener_list[i])
+        elif x == mm4[0]:
+            if ',' in opener_list[i]:
+                string = opener_list[i]
+                commas = string.count(',')
+                mm4_openers.append(string.split(',', commas)[commas])
+            else:
+                mm4_openers.append(opener_list[i])
+    def calc_wr(list):
+        return str(round(list[2] / list[1] * 100, 2))
+    def calc_pr(list):
+        return str(round(list[1] / ranked_count * 100, 2))
+    def most_common(list):
+        data = Counter(list)
+        return data.most_common(1)[0][0]
+    def get_open_wrpr(list, list2):
+        wins = 0
+        count = 0
+        for i, x in enumerate(opener_list):
+            if most_common(list2) in x:
+                count += 1
+                if gameresult_list[i] == 'won':
+                    wins += 1
+        return str(count) + ' Games, ' + str(round(wins / count * 100, 2)) + '% Winrate, ' + str(round(count / list[1] * 100, 2)) + '% Playrate'
+    emojis = {"LockIn": "<:LockIn:1166779254554497095>", "Greed": "<:Greed:1166779251257790645>", "Redraw": "<:Redraw:1166779258073530368>",
+              "Yolo": "<:Yolo:1166779261353476207>", "Fiesta": "<:Fiesta:1166779247768129617>", "CashOut": "<:CashOut:1166779238519681216>",
+              "Castle": "<:Castle:1166779242013524091>", "Cartel": "<:Cartel:1166779236028252282>", "Chaos": "<:Chaos:1166779245247336458>"}
+    if ranked_count > 5:
+        return str(playername).capitalize() + "'s Mastermind stats(From last " + str(ranked_count) + ' games):\n' +\
+            emojis.get(mm1[0]) + mm1[0] + ' (' + str(mm1[1]) + ' Games, ' + str(calc_wr(mm1)) + '% Winrate, ' + str(calc_pr(mm1)) + '% Pickrate, Worker on 10: ' + str(round(mm1[3] / mm1[1], 2)) + ')\n' +\
+            '-Fav. opener: ' + most_common(mm1_openers) + ' (' + str(get_open_wrpr(mm1, mm1_openers)) + ')\n' + \
+            emojis.get(mm2[0]) + mm2[0] + ' (' + str(mm2[1]) + ' Games, ' + str(calc_wr(mm2)) + '% Winrate, ' + str(calc_pr(mm2)) + '% Pickrate, Worker 10: ' + str(round(mm2[3] / mm2[1], 2)) + ')\n' + \
+            '-Fav. opener: ' + most_common(mm2_openers) + ' (' + str(get_open_wrpr(mm2, mm2_openers)) + ')\n' + \
+            emojis.get(mm3[0]) + mm3[0] + ' (' + str(mm3[1]) + ' Games, ' + str(calc_wr(mm3)) + '% Winrate, ' + str(calc_pr(mm3)) + '% Pickrate, Worker 10: ' + str(round(mm3[3] / mm3[1], 2)) + ')\n' + \
+            '-Fav. opener: ' + most_common(mm3_openers) + ' (' + str(get_open_wrpr(mm3, mm3_openers)) + ')\n' + \
+            emojis.get(mm4[0]) + mm4[0] + ' (' + str(mm4[1]) + ' Games, ' + str(calc_wr(mm4)) + '% Winrate, ' + str(calc_pr(mm4)) + '% Pickrate, Worker 10: ' + str(round(mm4[3] / mm4[1], 2)) + ')\n' + \
+            '-Fav. opener: ' + most_common(mm4_openers) + ' (' + str(get_open_wrpr(mm4, mm4_openers)) + ')\n'
     else:
         return 'Not enough ranked data'
 
