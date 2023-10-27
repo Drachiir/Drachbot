@@ -234,25 +234,23 @@ def apicall_winrate(playername, playername2, option):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
-    playerid2 = apicall_getid(playername2)
-    if playerid2 == 0:
-        return 'Player ' + playername2 + ' not found.'
+    if playername2.lower() != 'all':
+        playerid2 = apicall_getid(playername2)
+        if playerid2 == 0:
+            return 'Player ' + playername2 + ' not found.'
     count = 0
     win_count = 0
     game_count = 0
     ranked_count = 0
     queue_count = 0
     games_limit = 1600
+    playername2_list = []
+    gameresults = []
     try:
         history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) +\
             apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150) + \
             apicall_getmatchistory(playerid, 50, 200) + apicall_getmatchistory(playerid, 50, 250) + \
             apicall_getmatchistory(playerid, 50, 300) + apicall_getmatchistory(playerid, 50, 350)
-            # apicall_getmatchistory(playerid, 50, 400) + apicall_getmatchistory(playerid, 50, 450) + \
-            # apicall_getmatchistory(playerid, 50, 500) + apicall_getmatchistory(playerid, 50, 550) + \
-            # apicall_getmatchistory(playerid, 50, 600) + apicall_getmatchistory(playerid, 50, 650) + \
-            # apicall_getmatchistory(playerid, 50, 700) + apicall_getmatchistory(playerid, 50, 750)
-
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -269,55 +267,84 @@ def apicall_winrate(playername, playername2, option):
             gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
             gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
             print(playernames_ranked_west, playernames_ranked_east)
-            for i, x in enumerate(playernames_ranked_west):
-                if str(x).lower() == str(playername).lower():
-                    if option == 0:
-                        if playernames_ranked_east[0].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_west[i])
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_east[1].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_west[i])
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-                    elif option == 1:
-                        if playernames_ranked_west[0].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_west[i])
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_west[1].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_west[i])
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-            for i, x in enumerate(playernames_ranked_east):
-                if str(x).lower() == str(playername).lower():
-                    if option == 0:
-                        if playernames_ranked_west[0].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_east[i])
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_west[1].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_east[i])
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-                    elif option == 1:
-                        if playernames_ranked_east[0].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_east[i])
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_east[1].lower() == playername2.lower():
-                            game_count += 1
-                            print(gameresult_ranked_east[i])
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-
+            if playername2 != 'all':
+                for i, x in enumerate(playernames_ranked_west):
+                    if str(x).lower() == str(playername).lower():
+                        if option == 0:
+                            if playernames_ranked_east[0].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_west[i])
+                                if gameresult_ranked_west[i] == 'won':
+                                    win_count += 1
+                            elif playernames_ranked_east[1].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_west[i])
+                                if gameresult_ranked_west[i] == 'won':
+                                    win_count += 1
+                        elif option == 1:
+                            if playernames_ranked_west[0].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_west[i])
+                                if gameresult_ranked_west[i] == 'won':
+                                    win_count += 1
+                            elif playernames_ranked_west[1].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_west[i])
+                                if gameresult_ranked_west[i] == 'won':
+                                    win_count += 1
+                for i, x in enumerate(playernames_ranked_east):
+                    if str(x).lower() == str(playername).lower():
+                        if option == 0:
+                            if playernames_ranked_west[0].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_east[i])
+                                if gameresult_ranked_east[i] == 'won':
+                                    win_count += 1
+                            elif playernames_ranked_west[1].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_east[i])
+                                if gameresult_ranked_east[i] == 'won':
+                                    win_count += 1
+                        elif option == 1:
+                            if playernames_ranked_east[0].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_east[i])
+                                if gameresult_ranked_east[i] == 'won':
+                                    win_count += 1
+                            elif playernames_ranked_east[1].lower() == playername2.lower():
+                                game_count += 1
+                                print(gameresult_ranked_east[i])
+                                if gameresult_ranked_east[i] == 'won':
+                                    win_count += 1
+            else:
+                for i, x in enumerate(playernames_ranked_west):
+                    if str(x).lower() == str(playername).lower():
+                        if option == 0:
+                            playername2_list.append(playernames_ranked_east[0])
+                            gameresults.append(gameresult_ranked_west[i])
+                            playername2_list.append(playernames_ranked_east[1])
+                            gameresults.append(gameresult_ranked_west[i])
+                        elif option == 1:
+                            if playernames_ranked_west[0].lower() != playername.lower():
+                                playername2_list.append(playernames_ranked_west[0])
+                                gameresults.append(gameresult_ranked_west[i])
+                            elif playernames_ranked_west[1].lower() != playername.lower():
+                                playername2_list.append(playernames_ranked_west[1])
+                                gameresults.append(gameresult_ranked_west[i])
+                for i, x in enumerate(playernames_ranked_east):
+                    if str(x).lower() == str(playername).lower():
+                        if option == 0:
+                            playername2_list.append(playernames_ranked_west[0])
+                            gameresults.append(gameresult_ranked_east[i])
+                            playername2_list.append(playernames_ranked_west[1])
+                            gameresults.append(gameresult_ranked_east[i])
+                        elif option == 1:
+                            if playernames_ranked_east[0].lower() != playername.lower():
+                                playername2_list.append(playernames_ranked_east[0])
+                                gameresults.append(gameresult_ranked_east[i])
+                            elif playernames_ranked_east[1].lower() != playername.lower():
+                                playername2_list.append(playernames_ranked_east[1])
+                                gameresults.append(gameresult_ranked_east[i])
             count = count + 4
             queue_count = queue_count + 1
             ranked_count = ranked_count + 1
@@ -345,12 +372,33 @@ def apicall_winrate(playername, playername2, option):
         output = 'against'
     elif option == 1:
         output = 'with'
-    try: return str(playername).capitalize() + "'s winrate " + output + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
-        str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\
-        '% winrate)'
-    except ZeroDivisionError as e:
-        print(e)
-        return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + output + ' each other recently.'
+    if playername2.lower() == 'all':
+        most_common_mates = Counter(playername2_list).most_common(6)
+        print(most_common_mates)
+        winrates = []
+        for i, x in enumerate(most_common_mates):
+            counter = 0
+            for c, v in enumerate(playername2_list):
+                if v == x[0]:
+                    if gameresults[c] == 'won':
+                        counter += 1
+            winrates.append(round(counter / x[1] * 100, 2))
+            winrates.append(counter)
+        print(winrates)
+        return str(playername).capitalize() + "'s winrate " + output + ' any players (From ' + str(ranked_count) + ' ranked games)\n' +\
+            most_common_mates[0][0] + ': ' + str(winrates[1]) + ' win - ' + str(most_common_mates[0][1] - winrates[1]) + ' lose (' + str(winrates[0]) + '% winrate)\n' + \
+            most_common_mates[1][0] + ': ' + str(winrates[3]) + ' win - ' + str(most_common_mates[1][1] - winrates[3]) + ' lose (' + str(winrates[2]) + '% winrate)\n' + \
+            most_common_mates[2][0] + ': ' + str(winrates[5]) + ' win - ' + str(most_common_mates[2][1] - winrates[5]) + ' lose (' + str(winrates[4]) + '% winrate)\n' + \
+            most_common_mates[3][0] + ': ' + str(winrates[7]) + ' win - ' + str(most_common_mates[3][1] - winrates[7]) + ' lose (' + str(winrates[6]) + '% winrate)\n' + \
+            most_common_mates[4][0] + ': ' + str(winrates[9]) + ' win - ' + str(most_common_mates[4][1] - winrates[9]) + ' lose (' + str(winrates[8]) + '% winrate)\n' + \
+            most_common_mates[5][0] + ': ' + str(winrates[11]) + ' win - ' + str(most_common_mates[5][1] - winrates[11]) + ' lose (' + str(winrates[10]) + '% winrate)'
+    else:
+        try: return str(playername).capitalize() + "'s winrate " + output + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
+            str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\
+            '% winrate)'
+        except ZeroDivisionError as e:
+            print(e)
+            return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + output + ' each other recently.'
 
 
 def apicall_elcringo(playername):
@@ -485,7 +533,7 @@ def apicall_mmstats(playername):
     try:
         history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) + \
                       apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150)
-    except TypeError as e:
+    except TypeError as e:  
         print(e)
         return playername + ' has not played enough games.'
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
