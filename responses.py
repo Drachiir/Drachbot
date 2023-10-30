@@ -1,6 +1,12 @@
 import requests
 import json
 from collections import Counter
+import pathlib
+from pathlib import Path
+import datetime
+import os
+import glob
+from tkinter import Tcl
 
 with open('Secrets.json') as f:
     secret_file = json.load(f)
@@ -91,11 +97,11 @@ def apicall_getid(playername):
         return playerid['_id']
 
 
-def apicall_getname(playerid):
+def apicall_getprofile(playerid):
     url = 'https://apiv2.legiontd2.com/players/byId/' + playerid
     api_response = requests.get(url, headers=header)
     playername = json.loads(api_response.text)
-    return playername['playerName']
+    return playername
 
 
 def apicall_getstats(playerid):
@@ -105,33 +111,112 @@ def apicall_getstats(playerid):
     stats = json.loads(api_response.text)
     return stats
 
+def get_games_saved_count(playername):
+    path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/gamedata/"
+    if Path(Path(str(path))).is_dir():
+        json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
+        if len(json_files) < 400:
+            return 400
+        else:
+            return len(json_files)
+    else:
+        return 400
 
-def apicall_getmatchistory(playerid, games, offset):
-    request_type = 'players/matchHistory/' + str(playerid) + '?limit=' + str(games) +'&offset=' + str(offset) + '&countResults=false'
-    url = 'https://apiv2.legiontd2.com/' + request_type
+def apicall_pullgamedata(playerid, offset, path):
+    ranked_count = 0
+    games_count = 0
+    output = []
+    url = 'https://apiv2.legiontd2.com/players/matchHistory/' + str(playerid) + '?limit=' + str(50) + '&offset=' + str(offset) + '&countResults=false'
+    print('Pulling ' + str(50) + ' games from API...')
     api_response = requests.get(url, headers=header)
-    history_raw = json.loads(api_response.text)
-    return history_raw
+    raw_data = json.loads(api_response.text)
+    print('Saving ranked games.')
+    for x in raw_data:
+        if (x['queueType'] == 'Normal') and (x['endingWave'] >= 10):
+            date = str(x['date']).replace(':', '')
+            date = date.replace('.', '')
+            if Path(Path(str(path + 'gamedata/') + date + '_' + str(x['_id']) + ".json")).is_file():
+                print('File already there, breaking loop.')
+                break
+            ranked_count += 1
+            with open(str(path + 'gamedata/') + date + '_' + str(x['_id']) + ".json", "w") as f:
+                json.dump(x, f)
+        games_count += 1
+    output.append(ranked_count)
+    output.append(games_count)
+    return output
 
+def get_games_loop(playerid, offset, path, expected):
+    data = apicall_pullgamedata(playerid, offset, path)
+    count = data[0]
+    games_count = data[1]
+    while count < expected:
+        offset += 50
+        data = apicall_pullgamedata(playerid, offset, path)
+        count += data[0]
+        games_count += data[1]
+    else:
+        print('All required games pulled.')
+    return games_count
 
-def apicall_matchhistorywins(playername, playerid):
-    history_raw = apicall_getmatchistory(playerid, 10, 0)
+def apicall_getmatchistory(playerid, games):
+    games_count = 0
+    playername = apicall_getprofile(playerid)['playerName']
+    path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/"
+    if not Path(Path(str(path))).is_dir():
+        print(playername + ' profile not found, creating new folder...')
+        Path(str(path+'gamedata/')).mkdir(parents=True, exist_ok=True)
+        with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
+            data = get_games_loop(playerid, 0, path, games)
+            playerstats = apicall_getstats(playerid)
+            ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+            lines = [str(ranked_games), str(data)]
+            f.write('\n'.join(lines))
+    else:
+        for file in glob.glob(path + '*.txt'):
+            file_path = file
+        with open(file, 'r') as f:
+            txt = f.readlines()
+            ranked_games_old = int(txt[0])
+            games_amount_old = int(txt[1])
+        playerstats = apicall_getstats(playerid)
+        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+        games_diff = ranked_games - ranked_games_old
+        if ranked_games < ranked_games_old:
+            games_count += get_games_loop(playerid, 0, path, games_diff)
+        json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
+        if len(json_files) < games:
+            games_count += get_games_loop(playerid, games_amount_old, path, games-len(json_files))
+        with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
+            f.truncate(0)
+            lines = [str(ranked_games), str(games_amount_old+games_count)]
+            f.write('\n'.join(lines))
+    raw_data = []
+    json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
+    sorted_json_files = Tcl().call('lsort', '-decreasing', json_files)
+    for i, x in enumerate(sorted_json_files):
+        if i > games-1:
+            break
+        with open(path+'/gamedata/'+x) as f:
+            raw_data_partial = json.load(f)
+            raw_data.append(raw_data_partial)
+    return raw_data
+
+def apicall_matchhistorydetails(playerid):
+    playername = apicall_getprofile(playerid)['playerName']
+    history_raw = apicall_getmatchistory(playerid, 10)
     player_names = extract_values(history_raw, 'playerName')
     game_results = extract_values(history_raw, 'gameResult')
     wins = count_value(str(playername).lower(), 'won', player_names, game_results)
-    return wins
-
-
-def apicall_matchhistoryelogain(playername, playerid):
-    history_raw = apicall_getmatchistory(playerid, 10, 0)
-    player_names = extract_values(history_raw, 'playerName')
     elochanges = extract_values(history_raw, 'eloChange')
     elochange_final = count_elochange(str(playername).lower(), player_names, elochanges)
-    output = elochange_final
+    output = []
     if elochange_final > 0:
-        output = '+' + str(elochange_final)
+        output.append('+' + str(elochange_final))
+    else:
+        output.append(elochange_final)
+    output.append(wins)
     return output
-
 
 def apicall_wave1tendency(playername, option):
     playerid = apicall_getid(playername)
@@ -145,9 +230,10 @@ def apicall_wave1tendency(playername, option):
     kingup_regen_count = 0
     kingup_spell_count = 0
     save_count = 0
-    games_limit = 400
+    games = 100
+    games_limit = games * 4
     try:
-        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50)
+        history_raw = apicall_getmatchistory(playerid, games)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -243,14 +329,12 @@ def apicall_winrate(playername, playername2, option):
     game_count = 0
     ranked_count = 0
     queue_count = 0
-    games_limit = 1600
+    games = get_games_saved_count(playername)
+    games_limit = games * 4
     playername2_list = []
     gameresults = []
     try:
-        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) +\
-            apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150) + \
-            apicall_getmatchistory(playerid, 50, 200) + apicall_getmatchistory(playerid, 50, 250) + \
-            apicall_getmatchistory(playerid, 50, 300) + apicall_getmatchistory(playerid, 50, 350)
+        history_raw = apicall_getmatchistory(playerid, games)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -266,30 +350,25 @@ def apicall_winrate(playername, playername2, option):
             playernames_ranked_east = playernames[count + 2] + playernames[count + 3]
             gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
             gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
-            print(playernames_ranked_west, playernames_ranked_east)
-            if playername2 != 'all':
+            if playername2.lower() != 'all':
                 for i, x in enumerate(playernames_ranked_west):
                     if str(x).lower() == str(playername).lower():
                         if option == 0:
                             if playernames_ranked_east[0].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_west[i])
                                 if gameresult_ranked_west[i] == 'won':
                                     win_count += 1
                             elif playernames_ranked_east[1].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_west[i])
                                 if gameresult_ranked_west[i] == 'won':
                                     win_count += 1
                         elif option == 1:
                             if playernames_ranked_west[0].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_west[i])
                                 if gameresult_ranked_west[i] == 'won':
                                     win_count += 1
                             elif playernames_ranked_west[1].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_west[i])
                                 if gameresult_ranked_west[i] == 'won':
                                     win_count += 1
                 for i, x in enumerate(playernames_ranked_east):
@@ -297,23 +376,19 @@ def apicall_winrate(playername, playername2, option):
                         if option == 0:
                             if playernames_ranked_west[0].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_east[i])
                                 if gameresult_ranked_east[i] == 'won':
                                     win_count += 1
                             elif playernames_ranked_west[1].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_east[i])
                                 if gameresult_ranked_east[i] == 'won':
                                     win_count += 1
                         elif option == 1:
                             if playernames_ranked_east[0].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_east[i])
                                 if gameresult_ranked_east[i] == 'won':
                                     win_count += 1
                             elif playernames_ranked_east[1].lower() == playername2.lower():
                                 game_count += 1
-                                print(gameresult_ranked_east[i])
                                 if gameresult_ranked_east[i] == 'won':
                                     win_count += 1
             else:
@@ -374,7 +449,6 @@ def apicall_winrate(playername, playername2, option):
         output = 'with'
     if playername2.lower() == 'all':
         most_common_mates = Counter(playername2_list).most_common(6)
-        print(most_common_mates)
         winrates = []
         for i, x in enumerate(most_common_mates):
             counter = 0
@@ -384,7 +458,6 @@ def apicall_winrate(playername, playername2, option):
                         counter += 1
             winrates.append(round(counter / x[1] * 100, 2))
             winrates.append(counter)
-        print(winrates)
         return str(playername).capitalize() + "'s winrate " + output + ' any players (From ' + str(ranked_count) + ' ranked games)\n' +\
             most_common_mates[0][0] + ': ' + str(winrates[1]) + ' win - ' + str(most_common_mates[0][1] - winrates[1]) + ' lose (' + str(winrates[0]) + '% winrate)\n' + \
             most_common_mates[1][0] + ': ' + str(winrates[3]) + ' win - ' + str(most_common_mates[1][1] - winrates[3]) + ' lose (' + str(winrates[2]) + '% winrate)\n' + \
@@ -408,7 +481,8 @@ def apicall_elcringo(playername):
     count = 0
     ranked_count = 0
     queue_count = 0
-    games_limit = 800
+    games = get_games_saved_count(playername)
+    games_limit = games * 4
     save_count_list = []
     save_count_pre10_list = []
     save_count = 0
@@ -419,8 +493,7 @@ def apicall_elcringo(playername):
     mythium_list_pergame = []
     kinghp_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) + \
-                      apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150)
+        history_raw = apicall_getmatchistory(playerid, games)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -529,11 +602,11 @@ def apicall_mmstats(playername):
     opener_list = []
     masterminds_list = []
     gameresult_list = []
-    games_limit = 800
+    games = get_games_saved_count(playername)
+    games_limit = games * 4
     try:
-        history_raw = apicall_getmatchistory(playerid, 50, 0) + apicall_getmatchistory(playerid, 50, 50) + \
-                      apicall_getmatchistory(playerid, 50, 100) + apicall_getmatchistory(playerid, 50, 150)
-    except TypeError as e:  
+        history_raw = apicall_getmatchistory(playerid, games)
+    except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
@@ -748,6 +821,7 @@ def apicall_elo(playername, rank):
         url = 'https://apiv2.legiontd2.com/players/stats?limit=100&sortBy=overallElo&sortDirection=-1'
         api_response = requests.get(url, headers=header)
         leaderboard = json.loads(api_response.text)
+        history_details = apicall_matchhistorydetails(playerid)
         new_dict = {item['_id']: item['_id'] for item in leaderboard}
         if rank == 0:
             for i, key in enumerate(new_dict.keys()):
@@ -756,19 +830,19 @@ def apicall_elo(playername, rank):
                     return str(playername).capitalize() + ' is rank ' + str(index + 1) + ' with ' + str(
                         stats['overallElo']) + ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + ') and ' + str(
                         round(playtime_hours)) + ' in game hours.\nThey have won ' + \
-                        str(apicall_matchhistorywins(playername, playerid)) + ' out of their last 10 games. (Elo change: ' + \
-                        str(apicall_matchhistoryelogain(playername, playerid)) + ')'
+                        str(history_details[1]) + ' out of their last 10 games. (Elo change: ' + \
+                        str(history_details[0]) + ')'
             else:
                 return str(playername).capitalize() + ' has ' + str(stats['overallElo']) + ' elo (Peak: ' + str(
                     stats['overallPeakEloThisSeason']) + ') with ' + str(round(playtime_hours)) + ' in game hours.\n' \
-                    'They have won ' + str(apicall_matchhistorywins(playername, playerid)) + ' out of their last 10 games. ' \
-                    '(Elo change: ' + str(apicall_matchhistoryelogain(playername, playerid)) + ')'
+                    'They have won ' + str(history_details[1]) + ' out of their last 10 games. ' \
+                    '(Elo change: ' + str(history_details[0]) + ')'
         else:
             return str(playername).capitalize() + ' is rank ' + str(rank) + ' with ' + str(
                 stats['overallElo']) + ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + ') and ' + str(
                 round(playtime_hours)) + ' in game hours.\nThey have won ' + \
-                str(apicall_matchhistorywins(playername, playerid)) + ' out of their last 10 games. (Elo change: ' + \
-                str(apicall_matchhistoryelogain(playername, playerid)) + ')'
+                str(history_details[1]) + ' out of their last 10 games. (Elo change: ' + \
+                str(history_details[0]) + ')'
 
 
 def apicall_bestie(playername):
@@ -828,9 +902,8 @@ def apicall_rank(rank):
         int(rank) - 1) + '&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=header)
     player_info = json.loads(api_response.text)
-    print(player_info[0]['_id'])
-    name = apicall_getname(player_info[0]['_id'])
-    return apicall_elo(str(name).lower(), rank)
+    name = apicall_getprofile(player_info[0]['_id'])
+    return apicall_elo(str(name['playerName']).lower(), rank)
 
 
 def apicall_gamestats(playername):

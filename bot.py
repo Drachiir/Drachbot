@@ -131,7 +131,7 @@ def run_discord_bot():
 
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2.', option='Against or with?')
+    @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2 or all for 6 most common players', option='Against or with?')
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='against', value=0),
         discord.app_commands.Choice(name='with', value=1)
