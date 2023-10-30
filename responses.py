@@ -6,12 +6,11 @@ from pathlib import Path
 import datetime
 import os
 import glob
-from tkinter import Tcl
+import re
 
 with open('Secrets.json') as f:
     secret_file = json.load(f)
     header = {'x-api-key': secret_file.get('apikey')}
-
 
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
@@ -193,8 +192,8 @@ def apicall_getmatchistory(playerid, games):
             f.write('\n'.join(lines))
     raw_data = []
     json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
-    sorted_json_files = Tcl().call('lsort', '-decreasing', json_files)
-    for i, x in enumerate(sorted_json_files):
+    #sorted_json_files = Tcl().call('lsort', '-decreasing', json_files)
+    for i, x in enumerate(sorted(json_files, reverse=True)):
         if i > games-1:
             break
         with open(path+'/gamedata/'+x) as f:
