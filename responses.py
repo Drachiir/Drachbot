@@ -110,16 +110,27 @@ def apicall_getstats(playerid):
     stats = json.loads(api_response.text)
     return stats
 
-def get_games_saved_count(playername):
-    path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/gamedata/"
-    if Path(Path(str(path))).is_dir():
-        json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
-        if len(json_files) < 400:
-            return 400
-        else:
-            return len(json_files)
+def get_games_saved_count(playerid):
+    if playerid == 'all':
+        count = 0
+        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
+        playernames = os.listdir(path1)
+        for i, x in enumerate(playernames):
+            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + "/gamedata/"
+            json_files = [pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json')]
+            count += len(json_files)
+        return count
     else:
-        return 400
+        playername = apicall_getprofile(playerid)['playerName']
+        path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/gamedata/"
+        if Path(Path(str(path))).is_dir():
+            json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
+            if len(json_files) < 400:
+                return 400
+            else:
+                return len(json_files)
+        else:
+            return 400
 
 def apicall_pullgamedata(playerid, offset, path):
     ranked_count = 0
@@ -160,45 +171,61 @@ def get_games_loop(playerid, offset, path, expected):
 
 def apicall_getmatchistory(playerid, games):
     games_count = 0
-    playername = apicall_getprofile(playerid)['playerName']
-    path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/"
-    if not Path(Path(str(path))).is_dir():
-        print(playername + ' profile not found, creating new folder...')
-        Path(str(path+'gamedata/')).mkdir(parents=True, exist_ok=True)
-        with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
-            data = get_games_loop(playerid, 0, path, games)
+    if playerid != 'all':
+        playername = apicall_getprofile(playerid)['playerName']
+        path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/"
+        if not Path(Path(str(path))).is_dir():
+            print(playername + ' profile not found, creating new folder...')
+            Path(str(path+'gamedata/')).mkdir(parents=True, exist_ok=True)
+            with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
+                data = get_games_loop(playerid, 0, path, games)
+                playerstats = apicall_getstats(playerid)
+                ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+                lines = [str(ranked_games), str(data)]
+                f.write('\n'.join(lines))
+        else:
+            for file in glob.glob(path + '*.txt'):
+                file_path = file
+            with open(file, 'r') as f:
+                txt = f.readlines()
+                ranked_games_old = int(txt[0])
+                games_amount_old = int(txt[1])
             playerstats = apicall_getstats(playerid)
             ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
-            lines = [str(ranked_games), str(data)]
-            f.write('\n'.join(lines))
-    else:
-        for file in glob.glob(path + '*.txt'):
-            file_path = file
-        with open(file, 'r') as f:
-            txt = f.readlines()
-            ranked_games_old = int(txt[0])
-            games_amount_old = int(txt[1])
-        playerstats = apicall_getstats(playerid)
-        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
-        games_diff = ranked_games - ranked_games_old
-        if ranked_games < ranked_games_old:
-            games_count += get_games_loop(playerid, 0, path, games_diff)
+            games_diff = ranked_games - ranked_games_old
+            if ranked_games < ranked_games_old:
+                games_count += get_games_loop(playerid, 0, path, games_diff)
+            json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
+            if len(json_files) < games:
+                games_count += get_games_loop(playerid, games_amount_old, path, games-len(json_files))
+            with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
+                f.truncate(0)
+                lines = [str(ranked_games), str(games_amount_old+games_count)]
+                f.write('\n'.join(lines))
+        raw_data = []
         json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
-        if len(json_files) < games:
-            games_count += get_games_loop(playerid, games_amount_old, path, games-len(json_files))
-        with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
-            f.truncate(0)
-            lines = [str(ranked_games), str(games_amount_old+games_count)]
-            f.write('\n'.join(lines))
-    raw_data = []
-    json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
-    #sorted_json_files = Tcl().call('lsort', '-decreasing', json_files)
-    for i, x in enumerate(sorted(json_files, reverse=True)):
-        if i > len(json_files)-1:
-            break
-        with open(path+'/gamedata/'+x) as f:
-            raw_data_partial = json.load(f)
-            raw_data.append(raw_data_partial)
+        for i, x in enumerate(sorted(json_files, reverse=True)):
+            if i > len(json_files) - 1:
+                break
+            with open(path + '/gamedata/' + x) as f:
+                raw_data_partial = json.load(f)
+                raw_data.append(raw_data_partial)
+    else:
+        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
+        playernames = os.listdir(path1)
+        print(playernames)
+        raw_data = []
+        for i, x in enumerate(playernames):
+            json_files = []
+            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + "/gamedata/"
+            json_files.extend([pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json')])
+            for c, y in enumerate(sorted(json_files, reverse=True)):
+                if c > len(json_files)-1:
+                    break
+                with open(path2+y) as f:
+                    raw_data_partial = json.load(f)
+                    if raw_data_partial not in raw_data:
+                        raw_data.append(raw_data_partial)
     return raw_data
 
 def apicall_matchhistorydetails(playerid):
@@ -328,7 +355,7 @@ def apicall_winrate(playername, playername2, option):
     game_count = 0
     ranked_count = 0
     queue_count = 0
-    games = get_games_saved_count(playername)
+    games = get_games_saved_count(playerid)
     games_limit = games * 4
     playername2_list = []
     gameresults = []
@@ -337,7 +364,7 @@ def apicall_winrate(playername, playername2, option):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    games = get_games_saved_count(playername)
+    games = get_games_saved_count(playerid)
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
@@ -482,7 +509,7 @@ def apicall_elcringo(playername):
     count = 0
     ranked_count = 0
     queue_count = 0
-    games = get_games_saved_count(playername)
+    games = get_games_saved_count(playerid)
     games_limit = games * 4
     save_count_list = []
     save_count_pre10_list = []
@@ -498,7 +525,7 @@ def apicall_elcringo(playername):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    games = get_games_saved_count(playername)
+    games = get_games_saved_count(playerid)
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     endingwaves = extract_values(history_raw, 'endingWave')
@@ -589,10 +616,13 @@ def apicall_elcringo(playername):
         return 'Not enough ranked data'
 
 
-def apicall_mmstats(playername):
-    playerid = apicall_getid(playername)
-    if playerid == 0:
-        return 'Player ' + playername + ' not found.'
+def apicall_mmstats(playername, page):
+    if playername == 'all':
+        playerid = 'all'
+    else:
+        playerid = apicall_getid(playername)
+        if playerid == 0:
+            return 'Player ' + playername + ' not found.'
     count = 0
     ranked_count = 0
     queue_count = 0
@@ -605,14 +635,16 @@ def apicall_mmstats(playername):
     opener_list = []
     masterminds_list = []
     gameresult_list = []
-    games = get_games_saved_count(playername)
+    gameelo_list = []
+    games = get_games_saved_count(playerid)
+    print(games)
     games_limit = games * 4
     try:
         history_raw = apicall_getmatchistory(playerid, games)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    games = get_games_saved_count(playername)
+    games = len(history_raw)
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 1))
@@ -623,6 +655,7 @@ def apicall_mmstats(playername):
     queue_type = extract_values(history_raw, 'queueType')
     playercount = extract_values(history_raw, 'playerCount')
     endingwaves = extract_values(history_raw, 'endingWave')
+    gameelo = extract_values(history_raw, 'gameElo')
     while count < games_limit:
         if str(queue_type[1][queue_count]) == 'Normal' and endingwaves[1][queue_count] >= 10:
             print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
@@ -632,7 +665,7 @@ def apicall_mmstats(playername):
             workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
             opener_ranked = opener[count] + opener[count + 1] + opener[count + 2] + opener[count + 3]
             for i, x in enumerate(playernames_ranked):
-                if str(x).lower() == str(playername).lower():
+                if playerid == 'all':
                     masterminds_dict[masterminds_ranked[i]]["Count"] += 1
                     if gameresult_ranked[i] == 'won':
                         masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
@@ -640,6 +673,16 @@ def apicall_mmstats(playername):
                     opener_list.append(opener_ranked[i])
                     masterminds_list.append(masterminds_ranked[i])
                     gameresult_list.append(gameresult_ranked[i])
+                    gameelo_list.append(gameelo[1][queue_count])
+                elif str(x).lower() == str(playername).lower():
+                    masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                    if gameresult_ranked[i] == 'won':
+                        masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                    masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
+                    opener_list.append(opener_ranked[i])
+                    masterminds_list.append(masterminds_ranked[i])
+                    gameresult_list.append(gameresult_ranked[i])
+                    gameelo_list.append(gameelo[1][queue_count])
             count = count + 4
             queue_count = queue_count + 1
             ranked_count = ranked_count + 1
@@ -676,72 +719,63 @@ def apicall_mmstats(playername):
     mm2_results = []
     mm3_results = []
     mm4_results = []
-    for x in masterminds_dict:
-        if len(mm1) == 0:
-            mm1.append(x)
-            mm1.append(masterminds_dict[x]['Count'])
-            mm1.append(masterminds_dict[x]['Wins'])
-            mm1.append(masterminds_dict[x]['W10'])
-            continue
-        elif masterminds_dict[x]['Count'] > mm1[1]:
-            mm2_copy = mm2.copy()
-            mm3_copy = mm3.copy()
-            mm2.clear()
-            mm2 = mm1.copy()
-            mm3.clear()
-            mm3 = mm2_copy
-            mm4.clear()
-            mm4 = mm3_copy
-            mm1.clear()
-            mm1.append(x)
-            mm1.append(masterminds_dict[x]['Count'])
-            mm1.append(masterminds_dict[x]['Wins'])
-            mm1.append(masterminds_dict[x]['W10'])
-            continue
-        if len(mm2) == 0:
-            mm2.append(x)
-            mm2.append(masterminds_dict[x]['Count'])
-            mm2.append(masterminds_dict[x]['Wins'])
-            mm2.append(masterminds_dict[x]['W10'])
-            continue
-        elif masterminds_dict[x]['Count'] > mm2[1]:
-            mm3_copy = mm3.copy()
-            mm3 = mm2.copy()
-            mm4.clear()
-            mm4 = mm3_copy
-            mm2.clear()
-            mm2.append(x)
-            mm2.append(masterminds_dict[x]['Count'])
-            mm2.append(masterminds_dict[x]['Wins'])
-            mm2.append(masterminds_dict[x]['W10'])
-            continue
-        if len(mm3) == 0:
-            mm3.append(x)
-            mm3.append(masterminds_dict[x]['Count'])
-            mm3.append(masterminds_dict[x]['Wins'])
-            mm3.append(masterminds_dict[x]['W10'])
-            continue
-        elif masterminds_dict[x]['Count'] > mm3[1]:
-            mm4.clear()
-            mm4 = mm3.copy()
-            mm3.clear()
-            mm3.append(x)
-            mm3.append(masterminds_dict[x]['Count'])
-            mm3.append(masterminds_dict[x]['Wins'])
-            mm3.append(masterminds_dict[x]['W10'])
-            continue
-        if len(mm4) == 0:
-            mm4.append(x)
-            mm4.append(masterminds_dict[x]['Count'])
-            mm4.append(masterminds_dict[x]['Wins'])
-            mm4.append(masterminds_dict[x]['W10'])
-            continue
-        elif masterminds_dict[x]['Count'] > mm4[1]:
-            mm4.clear()
-            mm4.append(x)
-            mm4.append(masterminds_dict[x]['Count'])
-            mm4.append(masterminds_dict[x]['Wins'])
-            mm4.append(masterminds_dict[x]['W10'])
+    newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
+    masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
+    for i, x in enumerate(masterminds_dict):
+        if page == 1:
+            if i == 0:
+                mm1.append(x)
+                mm1.append(masterminds_dict[x]['Count'])
+                mm1.append(masterminds_dict[x]['Wins'])
+                mm1.append(masterminds_dict[x]['W10'])
+            elif i == 1:
+                mm2.append(x)
+                mm2.append(masterminds_dict[x]['Count'])
+                mm2.append(masterminds_dict[x]['Wins'])
+                mm2.append(masterminds_dict[x]['W10'])
+            elif i == 2:
+                mm3.append(x)
+                mm3.append(masterminds_dict[x]['Count'])
+                mm3.append(masterminds_dict[x]['Wins'])
+                mm3.append(masterminds_dict[x]['W10'])
+            elif i == 3:
+                mm4.append(x)
+                mm4.append(masterminds_dict[x]['Count'])
+                mm4.append(masterminds_dict[x]['Wins'])
+                mm4.append(masterminds_dict[x]['W10'])
+        elif page == 2:
+            if i == 4:
+                mm1.append(x)
+                mm1.append(masterminds_dict[x]['Count'])
+                mm1.append(masterminds_dict[x]['Wins'])
+                mm1.append(masterminds_dict[x]['W10'])
+            elif i == 5:
+                mm2.append(x)
+                mm2.append(masterminds_dict[x]['Count'])
+                mm2.append(masterminds_dict[x]['Wins'])
+                mm2.append(masterminds_dict[x]['W10'])
+            elif i == 6:
+                mm3.append(x)
+                mm3.append(masterminds_dict[x]['Count'])
+                mm3.append(masterminds_dict[x]['Wins'])
+                mm3.append(masterminds_dict[x]['W10'])
+            elif i == 7:
+                mm4.append(x)
+                mm4.append(masterminds_dict[x]['Count'])
+                mm4.append(masterminds_dict[x]['Wins'])
+                mm4.append(masterminds_dict[x]['W10'])
+        else:
+            if i == 8:
+                mm1.append(x)
+                mm1.append(masterminds_dict[x]['Count'])
+                mm1.append(masterminds_dict[x]['Wins'])
+                mm1.append(masterminds_dict[x]['W10'])
+                mm2.append('lol')
+                mm3.append('lol')
+                mm4.append('lol')
+                mm2.append(0)
+                mm3.append(0)
+                mm4.append(0)
 
     for i, x in enumerate(masterminds_list):
         if x == mm1[0]:
@@ -797,11 +831,17 @@ def apicall_mmstats(playername):
               "Yolo": "<:Yolo:1166779261353476207>", "Fiesta": "<:Fiesta:1166779247768129617>", "CashOut": "<:CashOut:1166779238519681216>",
               "Castle": "<:Castle:1166779242013524091>", "Cartel": "<:Cartel:1166779236028252282>", "Chaos": "<:Chaos:1166779245247336458>"}
     output = ''
+    if playerid == 'all':
+        all_v = ""
+    else:
+        all_v = "'s"
     if ranked_count > 5:
         if mm1[1] > 0:
-            output = str(playername).capitalize() + "'s Mastermind stats(From last " + str(ranked_count) + ' ranked games):\n' +\
+            output = str(playername).capitalize() + all_v + " Mastermind stats(From " + str(ranked_count) + ' ranked games, Avg elo: ' + str(round(sum(gameelo_list)/len(gameelo_list))) + '):\n' +\
             emojis.get(mm1[0]) + mm1[0] + ' (' + str(mm1[1]) + ' Games, ' + str(calc_wr(mm1)) + '% Winrate, ' + str(calc_pr(mm1)) + '% Pickrate, Worker on 10: ' + str(round(mm1[3] / mm1[1], 2)) + ')\n' +\
             '-Fav. opener: ' + most_common(mm1_openers) + ' (' + str(get_open_wrpr(mm1, mm1_openers, mm1_results)) + ')\n'
+        else:
+            output = 'No data'
         if mm2[1] > 0:
             output = output + emojis.get(mm2[0]) + mm2[0] + ' (' + str(mm2[1]) + ' Games, ' + str(calc_wr(mm2)) + '% Winrate, ' + str(calc_pr(mm2)) + '% Pickrate, Worker on 10: ' + str(round(mm2[3] / mm2[1], 2)) + ')\n' + \
             '-Fav. opener: ' + most_common(mm2_openers) + ' (' + str(get_open_wrpr(mm2, mm2_openers, mm2_results)) + ')\n'
