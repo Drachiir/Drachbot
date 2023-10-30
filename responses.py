@@ -194,7 +194,7 @@ def apicall_getmatchistory(playerid, games):
     json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
     #sorted_json_files = Tcl().call('lsort', '-decreasing', json_files)
     for i, x in enumerate(sorted(json_files, reverse=True)):
-        if i > games-1:
+        if i > len(json_files)-1:
             break
         with open(path+'/gamedata/'+x) as f:
             raw_data_partial = json.load(f)
@@ -337,6 +337,8 @@ def apicall_winrate(playername, playername2, option):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    games = get_games_saved_count(playername)
+    games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
     gameid = extract_values(history_raw, '_id')
@@ -496,6 +498,8 @@ def apicall_elcringo(playername):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    games = get_games_saved_count(playername)
+    games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     endingwaves = extract_values(history_raw, 'endingWave')
     snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
@@ -608,6 +612,8 @@ def apicall_mmstats(playername):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    games = get_games_saved_count(playername)
+    games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 1))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
