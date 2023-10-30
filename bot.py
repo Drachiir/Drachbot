@@ -9,12 +9,12 @@ with open('Secrets.json') as f:
 serverid = secret_file.get('id')
 
 async def send_message(message, user_message, is_private):
-    try:
-        response = responses.handle_response(user_message)
-        await message.author.send(response) if is_private else await message.channel.send(response)
+    #try:
+    response = responses.handle_response(user_message)
+    await message.author.send(response) if is_private else await message.channel.send(response)
 
-    except Exception as e:
-        print(e)
+    # except Exception as e:
+    #     print(e)
 
 
 def run_discord_bot():
@@ -117,22 +117,17 @@ def run_discord_bot():
     @tree.command(name="mmstats", description="Mastermind stats.",
                   guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername or "all" for all available data.')
-    @app_commands.choices(page=[
-        discord.app_commands.Choice(name='1', value=1),
-        discord.app_commands.Choice(name='2', value=2),
-        discord.app_commands.Choice(name='redraw', value=3)
-    ])
-    async def mmstats(interaction: discord.Interaction, playername: str, page: discord.app_commands.Choice[int]):
+    async def mmstats(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_mmstats(str(playername).lower(), page.value)
+            response = responses.apicall_mmstats(str(playername).lower())
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
             print(e)
-        # except IndexError as e:
-        #     print(e)
-        #     await interaction.edit_original_response(content='Bot error. :sob:')
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
 
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2",
                   guild=discord.Object(id=serverid))

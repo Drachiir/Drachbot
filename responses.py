@@ -7,14 +7,106 @@ import datetime
 import os
 import glob
 import re
+import PIL
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+from imgurpython import ImgurClient
 
 with open('Secrets.json') as f:
     secret_file = json.load(f)
     header = {'x-api-key': secret_file.get('apikey')}
+    imgur_client = ImgurClient(secret_file.get('imgur'), secret_file.get('imgurcs'))
 
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
+
+def create_image_mmstats(dict, ranked_count, playerid, avgelo):
+    if playerid != 'all':
+        playername = apicall_getprofile(playerid)['playerName']
+    else:
+        playername = 'All'
+    def calc_wr(dict, mm):
+        try:
+            return str(round(dict[mm]['Wins']/dict[mm]['Count'] * 100, 1))
+        except ZeroDivisionError as e:
+            return '0'
+    def calc_pr(dict, mm):
+        try:
+            return str(round(dict[mm]['Count'] / ranked_count * 100, 1))
+        except ZeroDivisionError as e:
+            return '0'
+    def most_common(dict, mm):
+        try:
+            data = Counter(dict[mm]['Opener'])
+            return data.most_common(1)[0][0]
+        except IndexError as e:
+            return 'No data'
+    def get_open_wrpr(dict, mm):
+        wins = 0
+        count = 0
+        for i, x in enumerate(dict[mm]['Opener']):
+            if most_common(dict, mm) in x:
+                count += 1
+                if dict[mm]['Results'][i] == 'won':
+                    wins += 1
+        try:
+            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1)]
+        except ZeroDivisionError as e:
+            return '000'
+    def get_w10(dict, i):
+        try:
+            return round(dict[i]['W10'] / dict[i]['Count'], 1)
+        except ZeroDivisionError as e:
+            return 'No data'
+    keys = ['Games:', 'Winrate:', 'Pickrate:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:']
+    url = 'https://cdn.legiontd2.com/icons/Items/'
+    url2 = 'https://cdn.legiontd2.com/icons/'
+    im = PIL.Image.new(mode="RGB", size=(1040, 665), color=(47,49,54))
+    im2 = PIL.Image.new(mode="RGB", size=(88, 665), color=(25,25,25))
+    im3 = PIL.Image.new(mode="RGB", size=(1020, 4), color=(169, 169, 169))
+    I1 = ImageDraw.Draw(im)
+    fontsize = 20
+    ttf = 'Arial Bold.ttf'
+    myFont = ImageFont.truetype(ttf, fontsize)
+    myFont_title = ImageFont.truetype(ttf, 24)
+    if playername == 'All':
+        string = ''
+    else:
+        string = "'s"
+    I1.text((96, 40), str(playername)+string+" Mastermind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, fill=(255, 255, 255))
+    x = 106
+    y = 220
+    for i in dict:
+        im.paste(im2, (x-12, 88))
+        url_new = url + i + '.png'
+        response = requests.get(url_new)
+        mm_image = Image.open(BytesIO(response.content))
+        im.paste(mm_image, (x, 100))
+        if i == 'CashOut':
+            I1.text((x-10, 175), i, font=myFont, fill=(255, 255, 255))
+        else:
+            I1.text((x, 175), i, font=myFont, fill=(255, 255, 255))
+        I1.text((x, 220), str(dict[i]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 270), str(calc_wr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 320), str(calc_pr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 370), str(get_w10(dict, i)), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 520), str(get_open_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 570), str(get_open_wrpr(dict, i)[1])+'%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 620), str(get_open_wrpr(dict, i)[2])+'%', font=myFont, fill=(255, 255, 255))
+        url_new = url2 + str(most_common(dict, i)).replace(' ', '') + '.png'
+        response = requests.get(url_new)
+        mm_image = Image.open(BytesIO(response.content))
+        im.paste(mm_image, (x, 420))
+        x += 106
+    for k in keys:
+        if (k != 'Open:') and (k != ''):
+            im.paste(im3, (10, y+24))
+        I1.text((10, y), k, font=myFont, fill=(255, 255, 255))
+        y += 50
+    im.save('output.png')
+    image_upload = imgur_client.upload_from_path('output.png')
+    return image_upload['link']
 
 
 def extract_values(obj, key):
@@ -77,6 +169,8 @@ def handle_response(message) -> str:
         return ':eggplant:'
     if 'widderson' in p_message:
         return ':banana:'
+    if '!test' in p_message:
+        return create_image()
     if '!github' in p_message:
         return 'https://github.com/Drachiir/Legion-Elo-Bot'
 
@@ -616,7 +710,7 @@ def apicall_elcringo(playername):
         return 'Not enough ranked data'
 
 
-def apicall_mmstats(playername, page):
+def apicall_mmstats(playername):
     if playername == 'all':
         playerid = 'all'
     else:
@@ -627,11 +721,11 @@ def apicall_mmstats(playername, page):
     ranked_count = 0
     queue_count = 0
     mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos']
-    masterminds_dict = {"LockIn": {"Count": 0, "Wins": 0, "W10": 0}, "Greed": {"Count": 0, "Wins": 0, "W10": 0},
-                        "Redraw": {"Count": 0, "Wins": 0, "W10": 0}, "Yolo": {"Count": 0, "Wins": 0, "W10": 0},
-                        "Fiesta": {"Count": 0, "Wins": 0, "W10": 0}, "CashOut": {"Count": 0, "Wins": 0, "W10": 0},
-                        "Castle": {"Count": 0, "Wins": 0, "W10": 0}, "Cartel": {"Count": 0, "Wins": 0, "W10": 0},
-                        "Chaos": {"Count": 0, "Wins": 0, "W10": 0}}
+    masterminds_dict = {"LockIn": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}, "Greed": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []},
+                        "Redraw": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}, "Yolo": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []},
+                        "Fiesta": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}, "CashOut": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []},
+                        "Castle": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}, "Cartel": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []},
+                        "Chaos": {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}}
     opener_list = []
     masterminds_list = []
     gameresult_list = []
@@ -707,153 +801,20 @@ def apicall_mmstats(playername, page):
             count = count + 4
             print('Skip 4 player game: ' + str(count))
 
-    mm1 = []
-    mm2 = []
-    mm3 = []
-    mm4 = []
-    mm1_openers = []
-    mm2_openers = []
-    mm3_openers = []
-    mm4_openers = []
-    mm1_results = []
-    mm2_results = []
-    mm3_results = []
-    mm4_results = []
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
-    for i, x in enumerate(masterminds_dict):
-        if page == 1:
-            if i == 0:
-                mm1.append(x)
-                mm1.append(masterminds_dict[x]['Count'])
-                mm1.append(masterminds_dict[x]['Wins'])
-                mm1.append(masterminds_dict[x]['W10'])
-            elif i == 1:
-                mm2.append(x)
-                mm2.append(masterminds_dict[x]['Count'])
-                mm2.append(masterminds_dict[x]['Wins'])
-                mm2.append(masterminds_dict[x]['W10'])
-            elif i == 2:
-                mm3.append(x)
-                mm3.append(masterminds_dict[x]['Count'])
-                mm3.append(masterminds_dict[x]['Wins'])
-                mm3.append(masterminds_dict[x]['W10'])
-            elif i == 3:
-                mm4.append(x)
-                mm4.append(masterminds_dict[x]['Count'])
-                mm4.append(masterminds_dict[x]['Wins'])
-                mm4.append(masterminds_dict[x]['W10'])
-        elif page == 2:
-            if i == 4:
-                mm1.append(x)
-                mm1.append(masterminds_dict[x]['Count'])
-                mm1.append(masterminds_dict[x]['Wins'])
-                mm1.append(masterminds_dict[x]['W10'])
-            elif i == 5:
-                mm2.append(x)
-                mm2.append(masterminds_dict[x]['Count'])
-                mm2.append(masterminds_dict[x]['Wins'])
-                mm2.append(masterminds_dict[x]['W10'])
-            elif i == 6:
-                mm3.append(x)
-                mm3.append(masterminds_dict[x]['Count'])
-                mm3.append(masterminds_dict[x]['Wins'])
-                mm3.append(masterminds_dict[x]['W10'])
-            elif i == 7:
-                mm4.append(x)
-                mm4.append(masterminds_dict[x]['Count'])
-                mm4.append(masterminds_dict[x]['Wins'])
-                mm4.append(masterminds_dict[x]['W10'])
-        else:
-            if i == 8:
-                mm1.append(x)
-                mm1.append(masterminds_dict[x]['Count'])
-                mm1.append(masterminds_dict[x]['Wins'])
-                mm1.append(masterminds_dict[x]['W10'])
-                mm2.append('lol')
-                mm3.append('lol')
-                mm4.append('lol')
-                mm2.append(0)
-                mm3.append(0)
-                mm4.append(0)
-
     for i, x in enumerate(masterminds_list):
-        if x == mm1[0]:
-            mm1_results.append(gameresult_list[i])
-            if ',' in opener_list[i]:
-                string = opener_list[i]
-                commas = string.count(',')
-                mm1_openers.append(string.split(',',commas)[commas])
-            else:
-                mm1_openers.append(opener_list[i])
-        if x == mm2[0]:
-            mm2_results.append(gameresult_list[i])
-            if ',' in opener_list[i]:
-                string = opener_list[i]
-                commas = string.count(',')
-                mm2_openers.append(string.split(',', commas)[commas])
-            else:
-                mm2_openers.append(opener_list[i])
-        if x == mm3[0]:
-            mm3_results.append(gameresult_list[i])
-            if ',' in opener_list[i]:
-                string = opener_list[i]
-                commas = string.count(',')
-                mm3_openers.append(string.split(',', commas)[commas])
-            else:
-                mm3_openers.append(opener_list[i])
-        if x == mm4[0]:
-            mm4_results.append(gameresult_list[i])
-            if ',' in opener_list[i]:
-                string = opener_list[i]
-                commas = string.count(',')
-                mm4_openers.append(string.split(',', commas)[commas])
-            else:
-                mm4_openers.append(opener_list[i])
-
-    def calc_wr(list):
-        return str(round(list[2] / list[1] * 100, 2))
-    def calc_pr(list):
-        return str(round(list[1] / ranked_count * 100, 2))
-    def most_common(list):
-        data = Counter(list)
-        return data.most_common(1)[0][0]
-    def get_open_wrpr(list, list2, list3):
-        wins = 0
-        count = 0
-        for i, x in enumerate(list2):
-            if most_common(list2) in x:
-                count += 1
-                if list3[i] == 'won':
-                    wins += 1
-        return str(count) + ' Games, ' + str(round(wins / count * 100, 2)) + '% Winrate, ' + str(round(count / list[1] * 100, 2)) + '% Playrate'
-    emojis = {"LockIn": "<:LockIn:1166779254554497095>", "Greed": "<:Greed:1166779251257790645>", "Redraw": "<:Redraw:1166779258073530368>",
-              "Yolo": "<:Yolo:1166779261353476207>", "Fiesta": "<:Fiesta:1166779247768129617>", "CashOut": "<:CashOut:1166779238519681216>",
-              "Castle": "<:Castle:1166779242013524091>", "Cartel": "<:Cartel:1166779236028252282>", "Chaos": "<:Chaos:1166779245247336458>"}
-    output = ''
-    if playerid == 'all':
-        all_v = ""
-    else:
-        all_v = "'s"
-    if ranked_count > 5:
-        if mm1[1] > 0:
-            output = str(playername).capitalize() + all_v + " Mastermind stats(From " + str(ranked_count) + ' ranked games, Avg elo: ' + str(round(sum(gameelo_list)/len(gameelo_list))) + '):\n' +\
-            emojis.get(mm1[0]) + mm1[0] + ' (' + str(mm1[1]) + ' Games, ' + str(calc_wr(mm1)) + '% Winrate, ' + str(calc_pr(mm1)) + '% Pickrate, Worker on 10: ' + str(round(mm1[3] / mm1[1], 2)) + ')\n' +\
-            '-Fav. opener: ' + most_common(mm1_openers) + ' (' + str(get_open_wrpr(mm1, mm1_openers, mm1_results)) + ')\n'
-        else:
-            output = 'No data'
-        if mm2[1] > 0:
-            output = output + emojis.get(mm2[0]) + mm2[0] + ' (' + str(mm2[1]) + ' Games, ' + str(calc_wr(mm2)) + '% Winrate, ' + str(calc_pr(mm2)) + '% Pickrate, Worker on 10: ' + str(round(mm2[3] / mm2[1], 2)) + ')\n' + \
-            '-Fav. opener: ' + most_common(mm2_openers) + ' (' + str(get_open_wrpr(mm2, mm2_openers, mm2_results)) + ')\n'
-        if mm3[1] > 0:
-            output = output + emojis.get(mm3[0]) + mm3[0] + ' (' + str(mm3[1]) + ' Games, ' + str(calc_wr(mm3)) + '% Winrate, ' + str(calc_pr(mm3)) + '% Pickrate, Worker on 10: ' + str(round(mm3[3] / mm3[1], 2)) + ')\n' + \
-            '-Fav. opener: ' + most_common(mm3_openers) + ' (' + str(get_open_wrpr(mm3, mm3_openers, mm3_results)) + ')\n'
-        if mm4[1] > 0:
-            output = output + emojis.get(mm4[0]) + mm4[0] + ' (' + str(mm4[1]) + ' Games, ' + str(calc_wr(mm4)) + '% Winrate, ' + str(calc_pr(mm4)) + '% Pickrate, Worker on 10: ' + str(round(mm4[3] / mm4[1], 2)) + ')\n' + \
-            '-Fav. opener: ' + most_common(mm4_openers) + ' (' + str(get_open_wrpr(mm4, mm4_openers, mm4_results)) + ')\n'
-        return output
-    else:
-        return 'Not enough ranked data'
+        for m in masterminds_dict:
+            if x == m:
+                masterminds_dict[m]['Results'].append(gameresult_list[i])
+                if ',' in opener_list[i]:
+                    string = opener_list[i]
+                    commas = string.count(',')
+                    masterminds_dict[m]['Opener'].append(string.split(',',commas)[commas])
+                else:
+                    masterminds_dict[m]['Opener'].append(opener_list[i])
+    avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
+    return create_image_mmstats(masterminds_dict, ranked_count, playerid, avg_gameelo)
 
 def apicall_elo(playername, rank):
     playerid = apicall_getid(playername)
