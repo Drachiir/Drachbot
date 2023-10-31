@@ -150,7 +150,7 @@ def run_discord_bot():
 
     @client.event
     async def on_ready():
-        await tree.sync(guild=discord.Object(id=serverid))
+        # await tree.sync(guild=discord.Object(id=serverid))
         print(f'{client.user} is now running!')
 
     @client.event
