@@ -4,17 +4,17 @@ import discord
 import responses
 from discord import app_commands
 
-with open('Secrets.json') as f:
+with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
 serverid = secret_file.get('id')
 
-async def send_message(message, user_message, is_private):
-    #try:
-    response = responses.handle_response(user_message)
-    await message.author.send(response) if is_private else await message.channel.send(response)
 
-    # except Exception as e:
-    #     print(e)
+async def send_message(message, user_message, is_private):
+    try:
+        response = responses.handle_response(user_message)
+        await message.author.send(response) if is_private else await message.channel.send(response)
+    except Exception as e:
+        print(e)
 
 
 def run_discord_bot():
@@ -101,11 +101,25 @@ def run_discord_bot():
 
     @tree.command(name="elcringo", description="Shows how cringe someone is.",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername.')
-    async def elcringo(interaction: discord.Interaction, playername: str):
+    @app_commands.describe(playername='Enter playername.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)')
+    async def elcringo(interaction: discord.Interaction, playername: str, games: int):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_elcringo(playername)
+            response = responses.apicall_elcringo(playername, games)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        # except IndexError as e:
+        #     print(e)
+        #     await interaction.edit_original_response(content='Bot error. :sob:')
+
+    @tree.command(name="mmstats", description="Mastermind stats.",guild=discord.Object(id=serverid))
+    @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)')
+    async def mmstats(interaction: discord.Interaction, playername: str, games: int):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.apicall_mmstats(str(playername).lower(), games)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -114,32 +128,16 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="mmstats", description="Mastermind stats.",
-                  guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername or "all" for all available data.')
-    async def mmstats(interaction: discord.Interaction, playername: str):
-        await interaction.response.send_message('Thinking... :robot:')
-        try:
-            response = responses.apicall_mmstats(str(playername).lower())
-            if len(response) > 0:
-                await interaction.edit_original_response(content=response)
-        except discord.NotFound as e:
-            print(e)
-        except IndexError as e:
-            print(e)
-            await interaction.edit_original_response(content='Bot error. :sob:')
-
-    @tree.command(name="winrate", description="Shows player1's winrate against/with player2",
-                  guild=discord.Object(id=serverid))
-    @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2 or all for 6 most common players', option='Against or with?')
+    @tree.command(name="winrate", description="Shows player1's winrate against/with player2",guild=discord.Object(id=serverid))
+    @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2 or all for 6 most common players', option='Against or with?', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)')
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='against', value=0),
         discord.app_commands.Choice(name='with', value=1)
     ])
-    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[int]):
+    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[int], games: int):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_winrate(playername1, playername2, option.value)
+            response = responses.apicall_winrate(playername1, playername2, option.value, games)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -150,7 +148,7 @@ def run_discord_bot():
 
     @client.event
     async def on_ready():
-        # await tree.sync(guild=discord.Object(id=serverid))
+        await tree.sync(guild=discord.Object(id=serverid))
         print(f'{client.user} is now running!')
 
     @client.event

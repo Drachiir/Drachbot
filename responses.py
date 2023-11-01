@@ -11,8 +11,9 @@ import PIL
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from imgurpython import ImgurClient
+import numpy as np
 
-with open('Secrets.json') as f:
+with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
     header = {'x-api-key': secret_file.get('apikey')}
     imgur_client = ImgurClient(secret_file.get('imgur'), secret_file.get('imgurcs'))
@@ -20,6 +21,10 @@ with open('Secrets.json') as f:
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
+
+def im_has_alpha(img_arr):
+    h,w,c = img_arr.shape
+    return True if c ==4 else False
 
 def create_image_mmstats(dict, ranked_count, playerid, avgelo):
     if playerid != 'all':
@@ -68,7 +73,7 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo):
     im3 = PIL.Image.new(mode="RGB", size=(1040, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
     fontsize = 25
-    ttf = 'RobotoCondensed-Regular.ttf'
+    ttf = 'Files/RobotoCondensed-Regular.ttf'
     myFont = ImageFont.truetype(ttf, fontsize)
     myFont_title = ImageFont.truetype(ttf, 30)
     if playername == 'All':
@@ -78,8 +83,11 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo):
         avatar_url = 'https://cdn.legiontd2.com/' + avatar
         avatar_response = requests.get(avatar_url)
         av_image = Image.open(BytesIO(avatar_response.content))
-        gold_border = Image.open('gold_64.png')
-        im.paste(av_image, (24, 100))
+        gold_border = Image.open('Files/gold_64.png')
+        if im_has_alpha(np.array(av_image)):
+            im.paste(av_image, (24, 100), mask=av_image)
+        else:
+            im.paste(av_image, (24, 100))
         im.paste(gold_border, (24, 100), mask=gold_border)
     I1.text((10, 30), str(playername)+string+" Mastermind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     x = 126
@@ -111,10 +119,10 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo):
             im.paste(im3, (10, y+30))
         I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
         y += 50
-    #im.save('output.png')
-    im.show()
-    #image_upload = imgur_client.upload_from_path('output.png')
-    return #image_upload['link']
+    im.save('Files/output.png')
+    image_upload = imgur_client.upload_from_path('Files/output.png')
+    print('Uploading output.png to Imgur...')
+    return image_upload['link']
 
 
 def extract_values(obj, key):
@@ -227,12 +235,12 @@ def get_games_saved_count(playerid):
         path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/gamedata/"
         if Path(Path(str(path))).is_dir():
             json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
-            if len(json_files) < 400:
-                return 400
+            if len(json_files) == 0:
+                return 200
             else:
                 return len(json_files)
         else:
-            return 400
+            return 200
 
 def apicall_pullgamedata(playerid, offset, path):
     ranked_count = 0
@@ -244,6 +252,8 @@ def apicall_pullgamedata(playerid, offset, path):
     raw_data = json.loads(api_response.text)
     print('Saving ranked games.')
     for x in raw_data:
+        if raw_data == {'message': 'Internal server error'}:
+            break
         if (x['queueType'] == 'Normal') and (x['endingWave'] >= 10):
             date = str(x['date']).replace(':', '')
             date = date.replace('.', '')
@@ -268,7 +278,7 @@ def get_games_loop(playerid, offset, path, expected):
         count += data[0]
         games_count += data[1]
     else:
-        print('All required games pulled.')
+        print('All '+str(expected)+' required games pulled.')
     return games_count
 
 def apicall_getmatchistory(playerid, games):
@@ -279,7 +289,7 @@ def apicall_getmatchistory(playerid, games):
         if not Path(Path(str(path))).is_dir():
             print(playername + ' profile not found, creating new folder...')
             Path(str(path+'gamedata/')).mkdir(parents=True, exist_ok=True)
-            with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
+            with open(str(path) + "gamecount_" + playername + ".txt", "w") as f:
                 data = get_games_loop(playerid, 0, path, games)
                 playerstats = apicall_getstats(playerid)
                 ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
@@ -295,19 +305,19 @@ def apicall_getmatchistory(playerid, games):
             playerstats = apicall_getstats(playerid)
             ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
             games_diff = ranked_games - ranked_games_old
-            if ranked_games < ranked_games_old:
+            if ranked_games_old < ranked_games:
                 games_count += get_games_loop(playerid, 0, path, games_diff)
             json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
             if len(json_files) < games:
                 games_count += get_games_loop(playerid, games_amount_old, path, games-len(json_files))
-            with open(str(path) + "gamecount_" + playername + "_" + str(datetime.date.today()) + ".txt", "w") as f:
+            with open(str(path) + "gamecount_" + playername + ".txt", "w") as f:
                 f.truncate(0)
                 lines = [str(ranked_games), str(games_amount_old+games_count)]
                 f.write('\n'.join(lines))
         raw_data = []
         json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
         for i, x in enumerate(sorted(json_files, reverse=True)):
-            if i > len(json_files) - 1:
+            if i > games - 1:
                 break
             with open(path + '/gamedata/' + x) as f:
                 raw_data_partial = json.load(f)
@@ -316,18 +326,24 @@ def apicall_getmatchistory(playerid, games):
         path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
         playernames = os.listdir(path1)
         print(playernames)
+        json_files_path = []
         raw_data = []
+        json_counter = 0
+        print(games)
         for i, x in enumerate(playernames):
             json_files = []
             path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + "/gamedata/"
             json_files.extend([pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json')])
-            for c, y in enumerate(json_files):
-                if c > len(json_files)-1:
-                    break
-                with open(path2+y) as f:
-                    raw_data_partial = json.load(f)
-                    if raw_data_partial not in raw_data:
-                        raw_data.append(raw_data_partial)
+            for c, y in enumerate(sorted(json_files, reverse=True)):
+                json_files_path.append(path2+y)
+        for i, x in enumerate(sorted(json_files_path, reverse=True)):
+            if json_counter > games - 1:
+                break
+            with open(x) as f:
+                raw_data_partial = json.load(f)
+                if raw_data_partial not in raw_data:
+                    raw_data.append(raw_data_partial)
+                    json_counter += 1
     return raw_data
 
 def apicall_matchhistorydetails(playerid):
@@ -351,85 +367,49 @@ def apicall_wave1tendency(playername, option):
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
     count = 0
-    ranked_count = 0
-    queue_count = 0
     snail_count = 0
     kingup_atk_count = 0
     kingup_regen_count = 0
     kingup_spell_count = 0
     save_count = 0
     games = 100
-    games_limit = games * 4
     try:
         history_raw = apicall_getmatchistory(playerid, games)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
+    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 4))
     if option == 0:
-        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
-        kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
+        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
+        kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
     elif option == 1:
-        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesReceivedPerWave')[1], 1))
-        kingup = list(divide_chunks(extract_values(history_raw, 'opponentKingUpgradesPerWave')[1], 1))
+        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesReceivedPerWave')[1], 4))
+        kingup = list(divide_chunks(extract_values(history_raw, 'opponentKingUpgradesPerWave')[1], 4))
     gameid = extract_values(history_raw, '_id')
-    queue_type = extract_values(history_raw, 'queueType')
-    playercount = extract_values(history_raw, 'playerCount')
-    while count < games_limit:
-        if str(queue_type[1][queue_count]) == 'Normal':
-            print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
-            playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
-            print(playernames_ranked)
-            snail_ranked = snail[count] + snail[count + 1] + snail[count + 2] + snail[count + 3]
-            kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
-            for i, x in enumerate(playernames_ranked):
-                if str(x).lower() == str(playername).lower():
-                    if len(snail_ranked[i][0]) > 0:
-                        if str(snail_ranked[i][0][0]) == 'Snail':
-                            print(str(x) + ' sent: ' + str(snail_ranked[i][0][0]))
-                            snail_count = snail_count + 1
-                            break
-                    elif len(kingup_ranked[i][0]) > 0:
-                        if str(kingup_ranked[i][0][0]) == 'Upgrade King Attack':
-                            print(str(x) + ' sent: ' + str(kingup_ranked[i][0][0]))
-                            kingup_atk_count = kingup_atk_count + 1
-                            break
-                        if str(kingup_ranked[i][0][0]) == 'Upgrade King Regen':
-                            print(str(x) + ' sent: ' + str(kingup_ranked[i][0][0]))
-                            kingup_regen_count = kingup_regen_count + 1
-                            break
-                        if str(kingup_ranked[i][0][0]) == 'Upgrade King Spell':
-                            print(str(x) + ' sent: ' + str(kingup_ranked[i][0][0]))
-                            kingup_spell_count = kingup_spell_count + 1
-                            break
-                    else:
-                        print(str(x) + ' saved Mythium')
-                        save_count = save_count + 1
+    while count < games:
+        playernames_ranked = playernames[count]
+        snail_ranked = snail[count]
+        kingup_ranked = kingup[count]
+        for i, x in enumerate(playernames_ranked):
+            if str(x).lower() == str(playername).lower():
+                if len(snail_ranked[i][0]) > 0:
+                    if str(snail_ranked[i][0][0]) == 'Snail':
+                        snail_count = snail_count + 1
                         break
-
-            count = count + 4
-            queue_count = queue_count + 1
-            ranked_count = ranked_count + 1
-
-        elif playercount[1][queue_count] == 8:
-            count = count + 8
-            queue_count = queue_count + 1
-            games_limit = games_limit + 4
-            print('Skip 8 player game: ' + str(count))
-        elif playercount[1][queue_count] == 2:
-            count = count + 2
-            queue_count = queue_count + 1
-            games_limit = games_limit - 2
-            print('Skip 2 player game: ' + str(count))
-        elif playercount[1][queue_count] == 1:
-            count = count + 1
-            queue_count = queue_count + 1
-            games_limit = games_limit - 3
-            print('Skip 1 player game: ' + str(count))
-        else:
-            queue_count = queue_count + 1
-            count = count + 4
-            print('Skip 4 player game: ' + str(count))
+                elif len(kingup_ranked[i][0]) > 0:
+                    if str(kingup_ranked[i][0][0]) == 'Upgrade King Attack':
+                        kingup_atk_count = kingup_atk_count + 1
+                        break
+                    if str(kingup_ranked[i][0][0]) == 'Upgrade King Regen':
+                        kingup_regen_count = kingup_regen_count + 1
+                        break
+                    if str(kingup_ranked[i][0][0]) == 'Upgrade King Spell':
+                        kingup_spell_count = kingup_spell_count + 1
+                        break
+                else:
+                    save_count = save_count + 1
+                    break
+        count += 1
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
     if option == 0:
@@ -444,7 +424,7 @@ def apicall_wave1tendency(playername, option):
         return 'Not enough ranked data'
 
 
-def apicall_winrate(playername, playername2, option):
+def apicall_winrate(playername, playername2, option, games):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
@@ -452,12 +432,17 @@ def apicall_winrate(playername, playername2, option):
         playerid2 = apicall_getid(playername2)
         if playerid2 == 0:
             return 'Player ' + playername2 + ' not found.'
+    playerstats = apicall_getstats(playerid)
+    ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+    if games == 0:
+        games = get_games_saved_count(playerid)
+    elif games > ranked_games:
+        return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
     win_count = 0
     game_count = 0
     ranked_count = 0
     queue_count = 0
-    games = get_games_saved_count(playerid)
     games_limit = games * 4
     playername2_list = []
     gameresults = []
@@ -466,113 +451,88 @@ def apicall_winrate(playername, playername2, option):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    games = get_games_saved_count(playerid)
+    games = len(history_raw)
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
     gameid = extract_values(history_raw, '_id')
-    queue_type = extract_values(history_raw, 'queueType')
-    playercount = extract_values(history_raw, 'playerCount')
     while count < games_limit:
-        if str(queue_type[1][queue_count]) == 'Normal':
-            print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
-            playernames_ranked_west = playernames[count] + playernames[count + 1]
-            playernames_ranked_east = playernames[count + 2] + playernames[count + 3]
-            gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
-            gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
-            if playername2.lower() != 'all':
-                for i, x in enumerate(playernames_ranked_west):
-                    if str(x).lower() == str(playername).lower():
-                        if option == 0:
-                            if playernames_ranked_east[0].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_west[i] == 'won':
-                                    win_count += 1
-                            elif playernames_ranked_east[1].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_west[i] == 'won':
-                                    win_count += 1
-                        elif option == 1:
-                            if playernames_ranked_west[0].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_west[i] == 'won':
-                                    win_count += 1
-                            elif playernames_ranked_west[1].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_west[i] == 'won':
-                                    win_count += 1
-                for i, x in enumerate(playernames_ranked_east):
-                    if str(x).lower() == str(playername).lower():
-                        if option == 0:
-                            if playernames_ranked_west[0].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_east[i] == 'won':
-                                    win_count += 1
-                            elif playernames_ranked_west[1].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_east[i] == 'won':
-                                    win_count += 1
-                        elif option == 1:
-                            if playernames_ranked_east[0].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_east[i] == 'won':
-                                    win_count += 1
-                            elif playernames_ranked_east[1].lower() == playername2.lower():
-                                game_count += 1
-                                if gameresult_ranked_east[i] == 'won':
-                                    win_count += 1
-            else:
-                for i, x in enumerate(playernames_ranked_west):
-                    if str(x).lower() == str(playername).lower():
-                        if option == 0:
-                            playername2_list.append(playernames_ranked_east[0])
-                            gameresults.append(gameresult_ranked_west[i])
-                            playername2_list.append(playernames_ranked_east[1])
-                            gameresults.append(gameresult_ranked_west[i])
-                        elif option == 1:
-                            if playernames_ranked_west[0].lower() != playername.lower():
-                                playername2_list.append(playernames_ranked_west[0])
-                                gameresults.append(gameresult_ranked_west[i])
-                            elif playernames_ranked_west[1].lower() != playername.lower():
-                                playername2_list.append(playernames_ranked_west[1])
-                                gameresults.append(gameresult_ranked_west[i])
-                for i, x in enumerate(playernames_ranked_east):
-                    if str(x).lower() == str(playername).lower():
-                        if option == 0:
-                            playername2_list.append(playernames_ranked_west[0])
-                            gameresults.append(gameresult_ranked_east[i])
-                            playername2_list.append(playernames_ranked_west[1])
-                            gameresults.append(gameresult_ranked_east[i])
-                        elif option == 1:
-                            if playernames_ranked_east[0].lower() != playername.lower():
-                                playername2_list.append(playernames_ranked_east[0])
-                                gameresults.append(gameresult_ranked_east[i])
-                            elif playernames_ranked_east[1].lower() != playername.lower():
-                                playername2_list.append(playernames_ranked_east[1])
-                                gameresults.append(gameresult_ranked_east[i])
-            count = count + 4
-            queue_count = queue_count + 1
-            ranked_count = ranked_count + 1
-
-        elif playercount[1][queue_count] == 8:
-            count = count + 8
-            queue_count = queue_count + 1
-            games_limit = games_limit + 4
-            print('Skip 8 player game: ' + str(count))
-        elif playercount[1][queue_count] == 2:
-            count = count + 2
-            queue_count = queue_count + 1
-            games_limit = games_limit - 2
-            print('Skip 2 player game: ' + str(count))
-        elif playercount[1][queue_count] == 1:
-            count = count + 1
-            queue_count = queue_count + 1
-            games_limit = games_limit - 3
-            print('Skip 1 player game: ' + str(count))
+        playernames_ranked_west = playernames[count] + playernames[count + 1]
+        playernames_ranked_east = playernames[count + 2] + playernames[count + 3]
+        gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
+        gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
+        if playername2.lower() != 'all':
+            for i, x in enumerate(playernames_ranked_west):
+                if str(x).lower() == str(playername).lower():
+                    if option == 0:
+                        if playernames_ranked_east[0].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+                        elif playernames_ranked_east[1].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+                    elif option == 1:
+                        if playernames_ranked_west[0].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+                        elif playernames_ranked_west[1].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+            for i, x in enumerate(playernames_ranked_east):
+                if str(x).lower() == str(playername).lower():
+                    if option == 0:
+                        if playernames_ranked_west[0].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
+                        elif playernames_ranked_west[1].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
+                    elif option == 1:
+                        if playernames_ranked_east[0].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
+                        elif playernames_ranked_east[1].lower() == playername2.lower():
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
         else:
-            queue_count = queue_count + 1
-            count = count + 4
-            print('Skip 4 player game: ' + str(count))
+            for i, x in enumerate(playernames_ranked_west):
+                if str(x).lower() == str(playername).lower():
+                    if option == 0:
+                        playername2_list.append(playernames_ranked_east[0])
+                        gameresults.append(gameresult_ranked_west[i])
+                        playername2_list.append(playernames_ranked_east[1])
+                        gameresults.append(gameresult_ranked_west[i])
+                    elif option == 1:
+                        if playernames_ranked_west[0].lower() != playername.lower():
+                            playername2_list.append(playernames_ranked_west[0])
+                            gameresults.append(gameresult_ranked_west[i])
+                        elif playernames_ranked_west[1].lower() != playername.lower():
+                            playername2_list.append(playernames_ranked_west[1])
+                            gameresults.append(gameresult_ranked_west[i])
+            for i, x in enumerate(playernames_ranked_east):
+                if str(x).lower() == str(playername).lower():
+                    if option == 0:
+                        playername2_list.append(playernames_ranked_west[0])
+                        gameresults.append(gameresult_ranked_east[i])
+                        playername2_list.append(playernames_ranked_west[1])
+                        gameresults.append(gameresult_ranked_east[i])
+                    elif option == 1:
+                        if playernames_ranked_east[0].lower() != playername.lower():
+                            playername2_list.append(playernames_ranked_east[0])
+                            gameresults.append(gameresult_ranked_east[i])
+                        elif playernames_ranked_east[1].lower() != playername.lower():
+                            playername2_list.append(playernames_ranked_east[1])
+                            gameresults.append(gameresult_ranked_east[i])
+        count += 4
+        ranked_count += 1
     if option == 0:
         output = 'against'
     elif option == 1:
@@ -604,14 +564,19 @@ def apicall_winrate(playername, playername2, option):
             return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + output + ' each other recently.'
 
 
-def apicall_elcringo(playername):
+def apicall_elcringo(playername, games):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
     count = 0
     ranked_count = 0
     queue_count = 0
-    games = get_games_saved_count(playerid)
+    playerstats = apicall_getstats(playerid)
+    ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+    if games == 0:
+        games = get_games_saved_count(playerid)
+    elif games > ranked_games:
+        return playername + ' has not played ' + str(games) + ' ranked games this season.'
     games_limit = games * 4
     save_count_list = []
     save_count_pre10_list = []
@@ -627,10 +592,11 @@ def apicall_elcringo(playername):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    games = get_games_saved_count(playerid)
+    games = len(history_raw)
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     endingwaves = extract_values(history_raw, 'endingWave')
+    print(endingwaves)
     snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
     kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 1))
@@ -639,68 +605,45 @@ def apicall_elcringo(playername):
     gameid = extract_values(history_raw, '_id')
     gameelo = extract_values(history_raw, 'gameElo')
     gameelo_list = []
-    queue_type = extract_values(history_raw, 'queueType')
-    playercount = extract_values(history_raw, 'playerCount')
     while count < games_limit:
-        if str(queue_type[1][queue_count]) == 'Normal' and endingwaves[1][queue_count] >= 10:
-            ending_wave_list.append(endingwaves[1][queue_count])
-            print('Ranked game: ' + str(ranked_count + 1) + ' | Gameid: ' + str(gameid[1][queue_count]))
-            playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
-            snail_ranked = snail[count] + snail[count + 1] + snail[count + 2] + snail[count + 3]
-            kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
-            workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
-            mythium_list_pergame.clear()
-            gameelo_list.append(gameelo[1][queue_count])
-            for i, x in enumerate(playernames_ranked):
-                if str(x).lower() == str(playername).lower():
-                    for n, s in enumerate(snail_ranked[i]):
-                        small_send = 0
-                        send = count_mythium(snail_ranked[i][n]) + len(kingup_ranked[i][n]) * 20
-                        mythium_list_pergame.append(send)
-                        if n <= 9:
-                            if workers_ranked[i][n] > 5:
-                                worker_adjusted = workers_ranked[i][n] - 5
-                                small_send = worker_adjusted / 5 * 20
-                            if send <= small_send:
-                                save_count_pre10 += 1
-                        elif n > 9:
-                            worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
+        print(count, games_limit)
+        ending_wave_list.append(endingwaves[1][queue_count])
+        playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
+        snail_ranked = snail[count] + snail[count + 1] + snail[count + 2] + snail[count + 3]
+        kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
+        workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
+        mythium_list_pergame.clear()
+        gameelo_list.append(gameelo[1][queue_count])
+        for i, x in enumerate(playernames_ranked):
+            if str(x).lower() == str(playername).lower():
+                for n, s in enumerate(snail_ranked[i]):
+                    small_send = 0
+                    send = count_mythium(snail_ranked[i][n]) + len(kingup_ranked[i][n]) * 20
+                    mythium_list_pergame.append(send)
+                    if n <= 9:
+                        if workers_ranked[i][n] > 5:
+                            worker_adjusted = workers_ranked[i][n] - 5
                             small_send = worker_adjusted / 5 * 20
-                            if send <= small_send:
-                                save_count += 1
-                    mythium_list.append(sum(mythium_list_pergame))
-                    worker_10_list.append(workers_ranked[i][9])
-                    if i == 0 or 1:
-                        kinghp_list.append(kinghp_left[1][queue_count][9])
-                    else:
-                        kinghp_list.append(kinghp_right[1][queue_count][9])
-            save_count_pre10_list.append(save_count_pre10)
-            save_count_list.append(save_count)
-            save_count_pre10 = 0
-            save_count = 0
-            count = count + 4
-            queue_count = queue_count + 1
-            ranked_count = ranked_count + 1
-
-        elif playercount[1][queue_count] == 8:
-            count = count + 8
-            queue_count = queue_count + 1
-            games_limit = games_limit + 4
-            print('Skip 8 player game: ' + str(count))
-        elif playercount[1][queue_count] == 2:
-            count = count + 2
-            queue_count = queue_count + 1
-            games_limit = games_limit - 2
-            print('Skip 2 player game: ' + str(count))
-        elif playercount[1][queue_count] == 1:
-            count = count + 1
-            queue_count = queue_count + 1
-            games_limit = games_limit - 3
-            print('Skip 1 player game: ' + str(count))
-        else:
-            queue_count = queue_count + 1
-            count = count + 4
-            print('Skip 4 player game: ' + str(count))
+                        if send <= small_send:
+                            save_count_pre10 += 1
+                    elif n > 9:
+                        worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
+                        small_send = worker_adjusted / 5 * 20
+                        if send <= small_send:
+                            save_count += 1
+                mythium_list.append(sum(mythium_list_pergame))
+                worker_10_list.append(workers_ranked[i][9])
+                if i == 0 or 1:
+                    kinghp_list.append(kinghp_left[1][queue_count][9])
+                else:
+                    kinghp_list.append(kinghp_right[1][queue_count][9])
+        save_count_pre10_list.append(save_count_pre10)
+        save_count_list.append(save_count)
+        save_count_pre10 = 0
+        save_count = 0
+        count = count + 4
+        queue_count = queue_count + 1
+        ranked_count = ranked_count + 1
     waves_post10 = round(sum(ending_wave_list) / len(ending_wave_list), 2) - 10
     saves_pre10 = round(sum(save_count_pre10_list) / len(save_count_pre10_list), 2)
     saves_post10 = round(sum(save_count_list) / len(save_count_list), 2)
@@ -718,20 +661,27 @@ def apicall_elcringo(playername):
         return 'Not enough ranked data'
 
 
-def apicall_mmstats(playername):
+def apicall_mmstats(playername, games):
     if playername == 'all':
         playerid = 'all'
+        if games == 0:
+            games = get_games_saved_count(playerid)
     else:
         playerid = apicall_getid(playername)
         if playerid == 0:
             return 'Player ' + playername + ' not found.'
+        playerstats = apicall_getstats(playerid)
+        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+        if games == 0:
+            games = get_games_saved_count(playerid)
+        elif games > ranked_games:
+            return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
     mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos']
     masterminds_dict = {}
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}
     gameelo_list = []
-    games = get_games_saved_count(playerid)
     try:
         history_raw = apicall_getmatchistory(playerid, games)
     except TypeError as e:
@@ -782,7 +732,6 @@ def apicall_mmstats(playername):
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
     avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
-    print('success!')
     return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo)
 
 def apicall_elo(playername, rank):
