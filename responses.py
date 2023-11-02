@@ -45,14 +45,15 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
     def most_common(dict, mm):
         try:
             data = Counter(dict[mm]['Opener'])
-            return data.most_common(1)[0][0]
+            data2 = Counter(dict[mm]['Spell'])
+            return [data.most_common(1)[0][0], data2.most_common(1)[0][0]]
         except IndexError as e:
             return 'No data'
     def get_open_wrpr(dict, mm):
         wins = 0
         count = 0
         for i, x in enumerate(dict[mm]['Opener']):
-            if most_common(dict, mm) in x:
+            if most_common(dict, mm)[0] in x:
                 count += 1
                 if dict[mm]['Results'][i] == 'won':
                     wins += 1
@@ -65,11 +66,23 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
             return round(dict[i]['W10'] / dict[i]['Count'], 1)
         except ZeroDivisionError as e:
             return '0'
-    keys = ['Games:', 'Winrate:', 'Pickrate:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:']
+    def get_spell_wrpr(dict, mm):
+        wins = 0
+        count = 0
+        for i, x in enumerate(dict[mm]['Spell']):
+            if most_common(dict, mm)[1] in x:
+                count += 1
+                if dict[mm]['Results'][i] == 'won':
+                    wins += 1
+        try:
+            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1)]
+        except ZeroDivisionError as e:
+            return '000'
+    keys = ['Games:', 'Winrate:', 'Pickrate:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spells:', '', 'Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    im = PIL.Image.new(mode="RGB", size=(1080, 665), color=(49,51,56))
-    im2 = PIL.Image.new(mode="RGB", size=(88, 665), color=(25,25,25))
+    im = PIL.Image.new(mode="RGB", size=(1070, 920), color=(49,51,56))
+    im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
     im3 = PIL.Image.new(mode="RGB", size=(1040, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
@@ -90,7 +103,7 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
             im.paste(av_image, (24, 100))
         im.paste(gold_border, (24, 100), mask=gold_border)
     I1.text((10, 15), str(playername)+string+" Mastermind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-    I1.text((10, 55), 'Patches: ' + ', '.join(patch).replace('v', ''), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     x = 126
     y = 220
     for i in dict:
@@ -110,13 +123,21 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
         I1.text((x, 520), str(get_open_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
         I1.text((x, 570), str(get_open_wrpr(dict, i)[1])+'%', font=myFont, fill=(255, 255, 255))
         I1.text((x, 620), str(get_open_wrpr(dict, i)[2])+'%', font=myFont, fill=(255, 255, 255))
-        url_new = url2 + str(most_common(dict, i)).replace(' ', '') + '.png'
+        I1.text((x, 770), str(get_spell_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 820), str(get_spell_wrpr(dict, i)[1]) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 870), str(get_spell_wrpr(dict, i)[2]) + '%', font=myFont, fill=(255, 255, 255))
+        url_new = url2 + str(most_common(dict, i)[0]).replace(' ', '') + '.png'
         response = requests.get(url_new)
         unit_image = Image.open(BytesIO(response.content))
         im.paste(unit_image, (x, 430))
+        url_new = url2 + str(most_common(dict, i)[1]).replace(' ', '') + '.png'
+        print(url_new)
+        response = requests.get(url_new)
+        spell_image = Image.open(BytesIO(response.content))
+        im.paste(spell_image, (x, 680))
         x += 106
     for k in keys:
-        if (k != 'Open:') and (k != ''):
+        if (k != 'Open:') and (k != 'Spells:') and (k != ''):
             im.paste(im3, (10, y+30))
         I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
         y += 50
@@ -253,17 +274,18 @@ def apicall_pullgamedata(playerid, offset, path):
     raw_data = json.loads(api_response.text)
     print('Saving ranked games.')
     for x in raw_data:
-        if raw_data == {'message': 'Internal server error'}:
+        if (raw_data == {'message': 'Internal server error'}) or (raw_data == {'err': 'Entry not found.'}):
             break
-        if (x['queueType'] == 'Normal') and (x['endingWave'] >= 10):
-            date = str(x['date']).replace(':', '')
-            date = date.replace('.', '')
-            if Path(Path(str(path + 'gamedata/') + date + '_' + str(x['_id']) + ".json")).is_file():
-                print('File already there, breaking loop.')
-                break
+        if (x['queueType'] == 'Normal'):
             ranked_count += 1
-            with open(str(path + 'gamedata/') + date + '_' + str(x['_id']) + ".json", "w") as f:
-                json.dump(x, f)
+            if (x['endingWave'] >= 10):
+                date = str(x['date']).replace(':', '')
+                date = date.replace('.', '')
+                if Path(Path(str(path + 'gamedata/') + date + '_' + str(x['_id']) + ".json")).is_file():
+                    print('File already there, breaking loop.')
+                    break
+                with open(str(path + 'gamedata/') + date + '_' + str(x['_id']) + ".json", "w") as f:
+                    json.dump(x, f)
         games_count += 1
     output.append(ranked_count)
     output.append(games_count)
@@ -283,7 +305,8 @@ def get_games_loop(playerid, offset, path, expected):
     return games_count
 
 def apicall_getmatchistory(playerid, games, min_elo=0, patch=0):
-    patch_list = patch.split(',')
+    if patch != 0:
+        patch_list = patch.split(',')
     games_count = 0
     if playerid != 'all':
         playername = apicall_getprofile(playerid)['playerName']
@@ -318,18 +341,22 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch=0):
                 f.write('\n'.join(lines))
         raw_data = []
         json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
+        count = 0
         for i, x in enumerate(sorted(json_files, reverse=True)):
-            if i > games - 1:
-                break
             with (open(path + '/gamedata/' + x) as f):
                 raw_data_partial = json.load(f)
                 if raw_data_partial['gameElo'] > min_elo:
                     if patch == 0:
+                        if i > games - 1:
+                            break
                         raw_data.append(raw_data_partial)
                     else:
+                        if count > games - 1:
+                            break
                         for x in patch_list:
                             if x in raw_data_partial['version']:
                                 raw_data.append(raw_data_partial)
+                                count += 1
     else:
         path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
         playernames = os.listdir(path1)
@@ -337,6 +364,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch=0):
         json_files_path = []
         raw_data = []
         json_counter = 0
+        count = 0
         print(games)
         for i, x in enumerate(playernames):
             json_files = []
@@ -345,12 +373,20 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch=0):
             for c, y in enumerate(sorted(json_files, reverse=True)):
                 json_files_path.append(path2+y)
         for i, x in enumerate(sorted(json_files_path, reverse=True)):
-            if json_counter > games - 1:
-                break
             with open(x) as f:
                 raw_data_partial = json.load(f)
                 if (raw_data_partial not in raw_data) and (raw_data_partial['gameElo'] > min_elo):
-                    raw_data.append(raw_data_partial)
+                    if patch == 0:
+                        if json_counter > games - 1:
+                            break
+                        raw_data.append(raw_data_partial)
+                    else:
+                        if count > games - 1:
+                            break
+                        for x in patch_list:
+                            if x in raw_data_partial['version']:
+                                raw_data.append(raw_data_partial)
+                                count += 1
                     json_counter += 1
     return raw_data
 
@@ -428,7 +464,7 @@ def apicall_wave1tendency(playername, option):
         return 'Not enough ranked data'
 
 
-def apicall_winrate(playername, playername2, option, games):
+def apicall_winrate(playername, playername2, option, games, patch):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
@@ -451,15 +487,25 @@ def apicall_winrate(playername, playername2, option, games):
     playername2_list = []
     gameresults = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games)
+        history_raw = apicall_getmatchistory(playerid, games, 0, patch)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
     games = len(history_raw)
+    if games == 0:
+        return 'No games found.'
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
     gameid = extract_values(history_raw, '_id')
+    patches = extract_values(history_raw, 'version')
+    patches = list(dict.fromkeys(patches[1]))
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
     while count < games_limit:
         playernames_ranked_west = playernames[count] + playernames[count + 1]
         playernames_ranked_east = playernames[count + 2] + playernames[count + 3]
@@ -554,17 +600,18 @@ def apicall_winrate(playername, playername2, option, games):
             most_common_mates[2][0] + ': ' + str(winrates[5]) + ' win - ' + str(most_common_mates[2][1] - winrates[5]) + ' lose (' + str(winrates[4]) + '% winrate)\n' + \
             most_common_mates[3][0] + ': ' + str(winrates[7]) + ' win - ' + str(most_common_mates[3][1] - winrates[7]) + ' lose (' + str(winrates[6]) + '% winrate)\n' + \
             most_common_mates[4][0] + ': ' + str(winrates[9]) + ' win - ' + str(most_common_mates[4][1] - winrates[9]) + ' lose (' + str(winrates[8]) + '% winrate)\n' + \
-            most_common_mates[5][0] + ': ' + str(winrates[11]) + ' win - ' + str(most_common_mates[5][1] - winrates[11]) + ' lose (' + str(winrates[10]) + '% winrate)'
+            most_common_mates[5][0] + ': ' + str(winrates[11]) + ' win - ' + str(most_common_mates[5][1] - winrates[11]) + ' lose (' + str(winrates[10]) + '% winrate)\n' + \
+            'Patches: ' + ', '.join(patches)
     else:
-        try: return str(playername).capitalize() + "'s winrate " + output + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
+        try: return str(playername).capitalize() + "'s winrate " + option + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
             str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\
             '% winrate)'
         except ZeroDivisionError as e:
             print(e)
-            return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + output + ' each other recently.'
+            return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + option + ' each other recently.'
 
 
-def apicall_elcringo(playername, games):
+def apicall_elcringo(playername, games, patch):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
@@ -588,11 +635,13 @@ def apicall_elcringo(playername, games):
     mythium_list_pergame = []
     kinghp_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games)
+        history_raw = apicall_getmatchistory(playerid, games, 0, patch)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
     games = len(history_raw)
+    if games == 0:
+        return 'No games found.'
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     endingwaves = extract_values(history_raw, 'endingWave')
@@ -604,6 +653,14 @@ def apicall_elcringo(playername, games):
     gameid = extract_values(history_raw, '_id')
     gameelo = extract_values(history_raw, 'gameElo')
     gameelo_list = []
+    patches = extract_values(history_raw, 'version')
+    patches = list(dict.fromkeys(patches[1]))
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
     while count < games_limit:
         ending_wave_list.append(endingwaves[1][queue_count])
         playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
@@ -654,7 +711,7 @@ def apicall_elcringo(playername, games):
             'Worker on 10:  ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n"\
             'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n' + \
             'Game elo:  ' + str(round(avg_gameelo)) + '\n' + \
-            'Mythium sent per game:  ' + str(round(sum(mythium_list) / len(mythium_list), 2))
+            'Patches:  ' + ', '.join(patches)
     else:
         return 'Not enough ranked data'
 
@@ -662,8 +719,6 @@ def apicall_elcringo(playername, games):
 def apicall_mmstats(playername, games, min_elo, patch):
     if playername == 'all':
         playerid = 'all'
-        if min_elo < 2800:
-            min_elo = 2800
         if games == 0:
             games = get_games_saved_count(playerid)
     else:
@@ -680,19 +735,22 @@ def apicall_mmstats(playername, games, min_elo, patch):
     mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos']
     masterminds_dict = {}
     for x in mmnames_list:
-        masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}
+        masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": [], 'Spell': []}
     gameelo_list = []
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    if len(history_raw) == 0:
+        return 'No games found.'
     games = len(history_raw)
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 4))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
     opener = list(divide_chunks(extract_values(history_raw, 'firstWaveFighters')[1], 4))
+    spell = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
     gameid = extract_values(history_raw, '_id')
     gameelo = extract_values(history_raw, 'gameElo')
     patches = extract_values(history_raw, 'version')
@@ -701,9 +759,8 @@ def apicall_mmstats(playername, games, min_elo, patch):
     for x in patches:
         string = x
         periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0]+'.'+string.split('.', periods)[1].replace('v', ''))
+        new_patches.append(string.split('.', periods)[0].replace('v', '')+'.'+string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
-    print(patches)
     print('Starting mmstats command...')
     while count < games:
         playernames_ranked = playernames[count]
@@ -711,6 +768,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
         gameresult_ranked = gameresult[count]
         workers_ranked = workers[count]
         opener_ranked = opener[count]
+        spell_ranked = spell[count]
         gameelo_list.append(gameelo[1][count])
         for i, x in enumerate(playernames_ranked):
             if playerid == 'all':
@@ -719,6 +777,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
                     masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
                 masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
                 masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
+                masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
                 if ',' in opener_ranked[i]:
                     string = opener_ranked[i]
                     commas = string.count(',')
@@ -731,6 +790,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
                     masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
                 masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
                 masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
+                masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
                 if ',' in opener_ranked[i]:
                     string = opener_ranked[i]
                     commas = string.count(',')
@@ -740,10 +800,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
         count += 1
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
-    try:
-        avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
-    except ZeroDivisionError:
-        return 'No games found.'
+    avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
     return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches)
 
 def apicall_elo(playername, rank):
