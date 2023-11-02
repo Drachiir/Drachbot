@@ -26,7 +26,7 @@ def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
     return True if c ==4 else False
 
-def create_image_mmstats(dict, ranked_count, playerid, avgelo):
+def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
     if playerid != 'all':
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
@@ -72,9 +72,9 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo):
     im2 = PIL.Image.new(mode="RGB", size=(88, 665), color=(25,25,25))
     im3 = PIL.Image.new(mode="RGB", size=(1040, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
-    fontsize = 25
     ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont = ImageFont.truetype(ttf, fontsize)
+    myFont_small = ImageFont.truetype(ttf, 20)
+    myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
     if playername == 'All':
         string = ''
@@ -89,7 +89,8 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo):
         else:
             im.paste(av_image, (24, 100))
         im.paste(gold_border, (24, 100), mask=gold_border)
-    I1.text((10, 30), str(playername)+string+" Mastermind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    I1.text((10, 15), str(playername)+string+" Mastermind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    I1.text((10, 55), 'Patches: ' + ', '.join(patch).replace('v', ''), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     x = 126
     y = 220
     for i in dict:
@@ -185,8 +186,8 @@ def handle_response(message) -> str:
         return ':eggplant:'
     if 'widderson' in p_message:
         return ':banana:'
-    if '!test' in p_message:
-        return create_image()
+    # if '!test' in p_message:
+    #     return create_image()
     if '!github' in p_message:
         return 'https://github.com/Drachiir/Legion-Elo-Bot'
 
@@ -281,7 +282,8 @@ def get_games_loop(playerid, offset, path, expected):
         print('All '+str(expected)+' required games pulled.')
     return games_count
 
-def apicall_getmatchistory(playerid, games):
+def apicall_getmatchistory(playerid, games, min_elo=0, patch=0):
+    patch_list = patch.split(',')
     games_count = 0
     if playerid != 'all':
         playername = apicall_getprofile(playerid)['playerName']
@@ -319,9 +321,15 @@ def apicall_getmatchistory(playerid, games):
         for i, x in enumerate(sorted(json_files, reverse=True)):
             if i > games - 1:
                 break
-            with open(path + '/gamedata/' + x) as f:
+            with (open(path + '/gamedata/' + x) as f):
                 raw_data_partial = json.load(f)
-                raw_data.append(raw_data_partial)
+                if raw_data_partial['gameElo'] > min_elo:
+                    if patch == 0:
+                        raw_data.append(raw_data_partial)
+                    else:
+                        for x in patch_list:
+                            if x in raw_data_partial['version']:
+                                raw_data.append(raw_data_partial)
     else:
         path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
         playernames = os.listdir(path1)
@@ -341,7 +349,7 @@ def apicall_getmatchistory(playerid, games):
                 break
             with open(x) as f:
                 raw_data_partial = json.load(f)
-                if raw_data_partial not in raw_data:
+                if (raw_data_partial not in raw_data) and (raw_data_partial['gameElo'] > min_elo):
                     raw_data.append(raw_data_partial)
                     json_counter += 1
     return raw_data
@@ -372,17 +380,17 @@ def apicall_wave1tendency(playername, option):
     kingup_regen_count = 0
     kingup_spell_count = 0
     save_count = 0
-    games = 100
+    games = 5
     try:
         history_raw = apicall_getmatchistory(playerid, games)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 4))
-    if option == 0:
+    if option == 'send':
         snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
         kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
-    elif option == 1:
+    elif option == 'received':
         snail = list(divide_chunks(extract_values(history_raw, 'mercenariesReceivedPerWave')[1], 4))
         kingup = list(divide_chunks(extract_values(history_raw, 'opponentKingUpgradesPerWave')[1], 4))
     gameid = extract_values(history_raw, '_id')
@@ -412,12 +420,8 @@ def apicall_wave1tendency(playername, option):
         count += 1
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
-    if option == 0:
-        output = 'send'
-    elif option == 1:
-        output = 'received'
     if send_total > 4:
-        return (playername).capitalize() + "'s Wave 1 " + output + " stats: (Last " + str(send_total) + " ranked games)\nKingup: " + \
+        return (playername).capitalize() + "'s Wave 1 " + option + " stats: (Last " + str(send_total) + " ranked games)\nKingup: " + \
             str(kingup_total) + ' (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
             ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + '\nSave: ' + str(save_count)
     else:
@@ -464,7 +468,7 @@ def apicall_winrate(playername, playername2, option, games):
         if playername2.lower() != 'all':
             for i, x in enumerate(playernames_ranked_west):
                 if str(x).lower() == str(playername).lower():
-                    if option == 0:
+                    if option == 'against':
                         if playernames_ranked_east[0].lower() == playername2.lower():
                             game_count += 1
                             if gameresult_ranked_west[i] == 'won':
@@ -473,7 +477,7 @@ def apicall_winrate(playername, playername2, option, games):
                             game_count += 1
                             if gameresult_ranked_west[i] == 'won':
                                 win_count += 1
-                    elif option == 1:
+                    elif option == 'with':
                         if playernames_ranked_west[0].lower() == playername2.lower():
                             game_count += 1
                             if gameresult_ranked_west[i] == 'won':
@@ -484,7 +488,7 @@ def apicall_winrate(playername, playername2, option, games):
                                 win_count += 1
             for i, x in enumerate(playernames_ranked_east):
                 if str(x).lower() == str(playername).lower():
-                    if option == 0:
+                    if option == 'against':
                         if playernames_ranked_west[0].lower() == playername2.lower():
                             game_count += 1
                             if gameresult_ranked_east[i] == 'won':
@@ -493,7 +497,7 @@ def apicall_winrate(playername, playername2, option, games):
                             game_count += 1
                             if gameresult_ranked_east[i] == 'won':
                                 win_count += 1
-                    elif option == 1:
+                    elif option == 'with':
                         if playernames_ranked_east[0].lower() == playername2.lower():
                             game_count += 1
                             if gameresult_ranked_east[i] == 'won':
@@ -505,12 +509,12 @@ def apicall_winrate(playername, playername2, option, games):
         else:
             for i, x in enumerate(playernames_ranked_west):
                 if str(x).lower() == str(playername).lower():
-                    if option == 0:
+                    if option == 'against':
                         playername2_list.append(playernames_ranked_east[0])
                         gameresults.append(gameresult_ranked_west[i])
                         playername2_list.append(playernames_ranked_east[1])
                         gameresults.append(gameresult_ranked_west[i])
-                    elif option == 1:
+                    elif option == 'with':
                         if playernames_ranked_west[0].lower() != playername.lower():
                             playername2_list.append(playernames_ranked_west[0])
                             gameresults.append(gameresult_ranked_west[i])
@@ -519,12 +523,12 @@ def apicall_winrate(playername, playername2, option, games):
                             gameresults.append(gameresult_ranked_west[i])
             for i, x in enumerate(playernames_ranked_east):
                 if str(x).lower() == str(playername).lower():
-                    if option == 0:
+                    if option == 'against':
                         playername2_list.append(playernames_ranked_west[0])
                         gameresults.append(gameresult_ranked_east[i])
                         playername2_list.append(playernames_ranked_west[1])
                         gameresults.append(gameresult_ranked_east[i])
-                    elif option == 1:
+                    elif option == 'with':
                         if playernames_ranked_east[0].lower() != playername.lower():
                             playername2_list.append(playernames_ranked_east[0])
                             gameresults.append(gameresult_ranked_east[i])
@@ -533,10 +537,6 @@ def apicall_winrate(playername, playername2, option, games):
                             gameresults.append(gameresult_ranked_east[i])
         count += 4
         ranked_count += 1
-    if option == 0:
-        output = 'against'
-    elif option == 1:
-        output = 'with'
     if playername2.lower() == 'all':
         most_common_mates = Counter(playername2_list).most_common(6)
         winrates = []
@@ -548,7 +548,7 @@ def apicall_winrate(playername, playername2, option, games):
                         counter += 1
             winrates.append(round(counter / x[1] * 100, 2))
             winrates.append(counter)
-        return str(playername).capitalize() + "'s winrate " + output + ' any players (From ' + str(ranked_count) + ' ranked games)\n' +\
+        return str(playername).capitalize() + "'s winrate " + option + ' any players (From ' + str(ranked_count) + ' ranked games)\n' +\
             most_common_mates[0][0] + ': ' + str(winrates[1]) + ' win - ' + str(most_common_mates[0][1] - winrates[1]) + ' lose (' + str(winrates[0]) + '% winrate)\n' + \
             most_common_mates[1][0] + ': ' + str(winrates[3]) + ' win - ' + str(most_common_mates[1][1] - winrates[3]) + ' lose (' + str(winrates[2]) + '% winrate)\n' + \
             most_common_mates[2][0] + ': ' + str(winrates[5]) + ' win - ' + str(most_common_mates[2][1] - winrates[5]) + ' lose (' + str(winrates[4]) + '% winrate)\n' + \
@@ -596,7 +596,6 @@ def apicall_elcringo(playername, games):
     games_limit = games * 4
     playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
     endingwaves = extract_values(history_raw, 'endingWave')
-    print(endingwaves)
     snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
     kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 1))
@@ -606,7 +605,6 @@ def apicall_elcringo(playername, games):
     gameelo = extract_values(history_raw, 'gameElo')
     gameelo_list = []
     while count < games_limit:
-        print(count, games_limit)
         ending_wave_list.append(endingwaves[1][queue_count])
         playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
         snail_ranked = snail[count] + snail[count + 1] + snail[count + 2] + snail[count + 3]
@@ -661,9 +659,11 @@ def apicall_elcringo(playername, games):
         return 'Not enough ranked data'
 
 
-def apicall_mmstats(playername, games):
+def apicall_mmstats(playername, games, min_elo, patch):
     if playername == 'all':
         playerid = 'all'
+        if min_elo < 2800:
+            min_elo = 2800
         if games == 0:
             games = get_games_saved_count(playerid)
     else:
@@ -683,7 +683,7 @@ def apicall_mmstats(playername, games):
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": []}
     gameelo_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -695,6 +695,15 @@ def apicall_mmstats(playername, games):
     opener = list(divide_chunks(extract_values(history_raw, 'firstWaveFighters')[1], 4))
     gameid = extract_values(history_raw, '_id')
     gameelo = extract_values(history_raw, 'gameElo')
+    patches = extract_values(history_raw, 'version')
+    patches = list(dict.fromkeys(patches[1]))
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0]+'.'+string.split('.', periods)[1].replace('v', ''))
+    patches = list(dict.fromkeys(new_patches))
+    print(patches)
     print('Starting mmstats command...')
     while count < games:
         playernames_ranked = playernames[count]
@@ -731,8 +740,11 @@ def apicall_mmstats(playername, games):
         count += 1
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
-    avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
-    return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo)
+    try:
+        avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
+    except ZeroDivisionError:
+        return 'No games found.'
+    return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches)
 
 def apicall_elo(playername, rank):
     playerid = apicall_getid(playername)
