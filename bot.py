@@ -131,6 +131,23 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
+    @tree.command(name="openstats", description="Opener stats.", guild=discord.Object(id=serverid))
+    @app_commands.describe(playername='Enter playername or "all" for all available data.',
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           min_elo='Enter minium average game elo to include in the data set',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
+    async def openstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.apicall_openstats(str(playername).lower(), games, min_elo, patch)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
+
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2",guild=discord.Object(id=serverid))
     @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2 or all for 6 most common players', option='Against or with?', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
