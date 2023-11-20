@@ -9,13 +9,12 @@ with open('Files/Secrets.json') as f:
 serverid = secret_file.get('id')
 
 
-async def send_message(message, user_message, is_private):
+async def send_message(message, user_message, is_private, username):
     try:
-        response = responses.handle_response(user_message)
+        response = responses.handle_response(user_message, username)
         await message.author.send(response) if is_private else await message.channel.send(response)
     except Exception as e:
         print(e)
-
 
 def run_discord_bot():
     TOKEN = secret_file.get('token')
@@ -81,15 +80,15 @@ def run_discord_bot():
 
     @tree.command(name="wave1", description="Shows Wave 1 tendency",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername.', option='Send or received?')
+    @app_commands.describe(playername='Enter playername.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)', option='Send or received?')
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='send', value='send'),
         discord.app_commands.Choice(name='received', value='received')
     ])
-    async def wave1(interaction: discord.Interaction, playername: str, option: discord.app_commands.Choice[str]):
+    async def wave1(interaction: discord.Interaction, playername: str, games: int, option: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_wave1tendency(playername, option.value)
+            response = responses.apicall_wave1tendency(playername, option.value, games)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -101,12 +100,12 @@ def run_discord_bot():
 
     @tree.command(name="elcringo", description="Shows how cringe someone is.",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
-                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
-    async def elcringo(interaction: discord.Interaction, playername: str, games: int, patch: str):
+    @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.', min_elo='Enter minium average game elo to include in the data set',)
+    async def elcringo(interaction: discord.Interaction, playername: str, games: int, patch: str, min_elo: int):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_elcringo(playername, games, patch)
+            response = responses.apicall_elcringo(playername, games, patch, min_elo)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -188,7 +187,7 @@ def run_discord_bot():
             user_message = user_message[1:]
             await send_message(message, user_message, is_private=True)
         else:
-            await send_message(message, user_message, is_private=False)
+            await send_message(message, user_message, False, username)
 
     client.run(TOKEN)
 
