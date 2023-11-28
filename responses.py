@@ -392,8 +392,10 @@ def apicall_getid(playername):
     print(request_type)
     try:
         api_response = requests.get(url, headers=header)
+        if 'Limit Exceeded' in api_response.text:
+            return 1
         api_response.raise_for_status()
-    except requests.exceptions.HTTPError as err:
+    except requests.exceptions.HTTPError:
         return 0
     else:
         playerid = json.loads(api_response.text)
@@ -466,13 +468,19 @@ def apicall_pullgamedata(playerid, offset, path, expected):
     output.append(games_count)
     return output
 
-def get_games_loop(playerid, offset, path, expected):
+def get_games_loop(playerid, offset, path, expected, timeout_limit = 5):
     data = apicall_pullgamedata(playerid, offset, path, expected)
     count = data[0]
     games_count = data[1]
+    timeout = 0
     while count < expected:
+        if timeout == timeout_limit:
+            print('Timeout while pulling games.')
+            break
         offset += 50
         data = apicall_pullgamedata(playerid, offset, path, expected)
+        if data[0] + data[1] == 0:
+            timeout += 1
         count += data[0]
         games_count += data[1]
     else:
@@ -544,34 +552,32 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0):
         raw_data = []
         json_files = []
         json_counter = 0
-        count = 0
         for i, x in enumerate(playernames):
             path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + "/gamedata/"
             if patch != '0':
                 for y in patch_list:
-                    json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v'+y.replace('.', '-'))])
+                    json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v'+y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
             else:
-                json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json')])
+                json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
         sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1],"%Y-%m-%d-%H-%M-%S")), reverse=True)
+        count = 0
         for i, x in enumerate(sorted_json_files):
-            count += 1
-            if i == games and games != 0:
+            if count == games and games != 0:
                 break
-            if int(x.split('_')[-2]) < min_elo:
-                continue
             with open(x) as f:
                 raw_data_partial = json.load(f)
                 f.close()
                 # print(x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
                 # os.rename(x, x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
-                if (raw_data_partial not in raw_data): #and (raw_data_partial['gameElo'] > min_elo):
+                if (raw_data_partial not in raw_data):
+                    count += 1
                     raw_data.append(raw_data_partial)
     if update == 0:
         print(len(raw_data))
         return raw_data
     else:
         if new_profile:
-            return 100
+            return 200
         else:
             return games_diff
 
@@ -583,7 +589,12 @@ def ladder_update():
     games_count = 0
     for x in new_list:
         print(apicall_getprofile(x)['playerName'])
-        games_count += apicall_getmatchistory(x, 200, 0, '0', 1)
+        playerstats = apicall_getstats(x)
+        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+        if ranked_games >= 200:
+            games_count += apicall_getmatchistory(x, 200, 0, '0', 1)
+        else:
+            games_count += apicall_getmatchistory(x, ranked_games, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top 100.'
 
 def apicall_matchhistorydetails(playerid):
@@ -606,6 +617,8 @@ def apicall_wave1tendency(playername, option, games):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
+    if playerid == 1:
+        return 'API limit reached.'
     if games == 0:
         games = get_games_saved_count(playerid)
     count = 0
@@ -685,6 +698,8 @@ def apicall_winrate(playername, playername2, option, games, patch):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
+    if playerid == 1:
+        return 'API limit reached.'
     if playername2.lower() != 'all':
         playerid2 = apicall_getid(playername2)
         if playerid2 == 0:
@@ -701,7 +716,7 @@ def apicall_winrate(playername, playername2, option, games, patch):
     ranked_count = 0
     queue_count = 0
     games_limit = games * 4
-    playername2_list = []
+    playerid2_list = []
     gameresults = []
     try:
         history_raw = apicall_getmatchistory(playerid, games, 0, patch)
@@ -712,112 +727,121 @@ def apicall_winrate(playername, playername2, option, games, patch):
     if games == 0:
         return 'No games found.'
     games_limit = games * 4
-    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 1))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
     gameid = extract_values(history_raw, '_id')
-    patches = extract_values(history_raw, 'version')
-    patches = list(dict.fromkeys(patches[1]))
+    patches = extract_values(history_raw, 'version')[1]
+    patches_list = []
+    while count < games_limit:
+        gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
+        gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
+        playerids_ranked_west = playerids[count] + playerids[count + 1]
+        playerids_ranked_east = playerids[count + 2] + playerids[count + 3]
+        if playername2.lower() != 'all':
+            for i, x in enumerate(playerids_ranked_west):
+                if x == playerid:
+                    if option == 'against':
+                        if playerids_ranked_east[0] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+                        elif playerids_ranked_east[1] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+                    elif option == 'with':
+                        if playerids_ranked_west[0] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+                        elif playerids_ranked_west[1] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_west[i] == 'won':
+                                win_count += 1
+            for i, x in enumerate(playerids_ranked_east):
+                if x == playerid:
+                    if option == 'against':
+                        if playerids_ranked_west[0] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
+                        elif playerids_ranked_west[1] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
+                    elif option == 'with':
+                        if playerids_ranked_east[0] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
+                        elif playerids_ranked_east[1] == playerid2:
+                            patches_list.append(patches[ranked_count])
+                            game_count += 1
+                            if gameresult_ranked_east[i] == 'won':
+                                win_count += 1
+        else:
+            patches_list.append(patches[ranked_count])
+            for i, x in enumerate(playerids_ranked_west):
+                if x == playerid:
+                    if option == 'against':
+                        playerid2_list.append(playerids_ranked_east[0])
+                        gameresults.append(gameresult_ranked_west[i])
+                        playerid2_list.append(playerids_ranked_east[1])
+                        gameresults.append(gameresult_ranked_west[i])
+                    elif option == 'with':
+                        if playerids_ranked_west[0] != playerid:
+                            playerid2_list.append(playerids_ranked_west[0])
+                            gameresults.append(gameresult_ranked_west[i])
+                        elif playerids_ranked_west[1] != playerid:
+                            playerid2_list.append(playerids_ranked_west[1])
+                            gameresults.append(gameresult_ranked_west[i])
+            for i, x in enumerate(playerids_ranked_east):
+                if x == playerid:
+                    if option == 'against':
+                        playerid2_list.append(playerids_ranked_west[0])
+                        gameresults.append(gameresult_ranked_east[i])
+                        playerid2_list.append(playerids_ranked_west[1])
+                        gameresults.append(gameresult_ranked_east[i])
+                    elif option == 'with':
+                        if playerids_ranked_east[0] != playerid:
+                            playerid2_list.append(playerids_ranked_east[0])
+                            gameresults.append(gameresult_ranked_east[i])
+                        elif playerids_ranked_east[1] != playerid:
+                            playerid2_list.append(playerids_ranked_east[1])
+                            gameresults.append(gameresult_ranked_east[i])
+        count += 4
+        ranked_count += 1
+    patches = list(dict.fromkeys(patches_list))
     new_patches = []
     for x in patches:
         string = x
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
-    while count < games_limit:
-        playernames_ranked_west = playernames[count] + playernames[count + 1]
-        playernames_ranked_east = playernames[count + 2] + playernames[count + 3]
-        gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
-        gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
-        if playername2.lower() != 'all':
-            for i, x in enumerate(playernames_ranked_west):
-                if str(x).lower() == str(playername).lower():
-                    if option == 'against':
-                        if playernames_ranked_east[0].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_east[1].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-                    elif option == 'with':
-                        if playernames_ranked_west[0].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_west[1].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-            for i, x in enumerate(playernames_ranked_east):
-                if str(x).lower() == str(playername).lower():
-                    if option == 'against':
-                        if playernames_ranked_west[0].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_west[1].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-                    elif option == 'with':
-                        if playernames_ranked_east[0].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-                        elif playernames_ranked_east[1].lower() == playername2.lower():
-                            game_count += 1
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-        else:
-            for i, x in enumerate(playernames_ranked_west):
-                if str(x).lower() == str(playername).lower():
-                    if option == 'against':
-                        playername2_list.append(playernames_ranked_east[0])
-                        gameresults.append(gameresult_ranked_west[i])
-                        playername2_list.append(playernames_ranked_east[1])
-                        gameresults.append(gameresult_ranked_west[i])
-                    elif option == 'with':
-                        if playernames_ranked_west[0].lower() != playername.lower():
-                            playername2_list.append(playernames_ranked_west[0])
-                            gameresults.append(gameresult_ranked_west[i])
-                        elif playernames_ranked_west[1].lower() != playername.lower():
-                            playername2_list.append(playernames_ranked_west[1])
-                            gameresults.append(gameresult_ranked_west[i])
-            for i, x in enumerate(playernames_ranked_east):
-                if str(x).lower() == str(playername).lower():
-                    if option == 'against':
-                        playername2_list.append(playernames_ranked_west[0])
-                        gameresults.append(gameresult_ranked_east[i])
-                        playername2_list.append(playernames_ranked_west[1])
-                        gameresults.append(gameresult_ranked_east[i])
-                    elif option == 'with':
-                        if playernames_ranked_east[0].lower() != playername.lower():
-                            playername2_list.append(playernames_ranked_east[0])
-                            gameresults.append(gameresult_ranked_east[i])
-                        elif playernames_ranked_east[1].lower() != playername.lower():
-                            playername2_list.append(playernames_ranked_east[1])
-                            gameresults.append(gameresult_ranked_east[i])
-        count += 4
-        ranked_count += 1
     if playername2.lower() == 'all':
-        most_common_mates = Counter(playername2_list).most_common(6)
+        most_common_mates = Counter(playerid2_list).most_common(5)
         winrates = []
         for i, x in enumerate(most_common_mates):
             counter = 0
-            for c, v in enumerate(playername2_list):
+            for c, v in enumerate(playerid2_list):
                 if v == x[0]:
                     if gameresults[c] == 'won':
                         counter += 1
             winrates.append(round(counter / x[1] * 100, 2))
             winrates.append(counter)
         return str(playername).capitalize() + "'s winrate " + option + ' any players (From ' + str(ranked_count) + ' ranked games)\n' +\
-            most_common_mates[0][0] + ': ' + str(winrates[1]) + ' win - ' + str(most_common_mates[0][1] - winrates[1]) + ' lose (' + str(winrates[0]) + '% winrate)\n' + \
-            most_common_mates[1][0] + ': ' + str(winrates[3]) + ' win - ' + str(most_common_mates[1][1] - winrates[3]) + ' lose (' + str(winrates[2]) + '% winrate)\n' + \
-            most_common_mates[2][0] + ': ' + str(winrates[5]) + ' win - ' + str(most_common_mates[2][1] - winrates[5]) + ' lose (' + str(winrates[4]) + '% winrate)\n' + \
-            most_common_mates[3][0] + ': ' + str(winrates[7]) + ' win - ' + str(most_common_mates[3][1] - winrates[7]) + ' lose (' + str(winrates[6]) + '% winrate)\n' + \
-            most_common_mates[4][0] + ': ' + str(winrates[9]) + ' win - ' + str(most_common_mates[4][1] - winrates[9]) + ' lose (' + str(winrates[8]) + '% winrate)\n' + \
-            most_common_mates[5][0] + ': ' + str(winrates[11]) + ' win - ' + str(most_common_mates[5][1] - winrates[11]) + ' lose (' + str(winrates[10]) + '% winrate)\n' + \
+            apicall_getprofile(most_common_mates[0][0])['playerName'] + ': ' + str(winrates[1]) + ' win - ' + str(most_common_mates[0][1] - winrates[1]) + ' lose (' + str(winrates[0]) + '% winrate)\n' + \
+            apicall_getprofile(most_common_mates[1][0])['playerName'] + ': ' + str(winrates[3]) + ' win - ' + str(most_common_mates[1][1] - winrates[3]) + ' lose (' + str(winrates[2]) + '% winrate)\n' + \
+            apicall_getprofile(most_common_mates[2][0])['playerName'] + ': ' + str(winrates[5]) + ' win - ' + str(most_common_mates[2][1] - winrates[5]) + ' lose (' + str(winrates[4]) + '% winrate)\n' + \
+            apicall_getprofile(most_common_mates[3][0])['playerName'] + ': ' + str(winrates[7]) + ' win - ' + str(most_common_mates[3][1] - winrates[7]) + ' lose (' + str(winrates[6]) + '% winrate)\n' + \
+            apicall_getprofile(most_common_mates[4][0])['playerName'] + ': ' + str(winrates[9]) + ' win - ' + str(most_common_mates[4][1] - winrates[9]) + ' lose (' + str(winrates[8]) + '% winrate)\n' + \
             'Patches: ' + ', '.join(patches)
     else:
         try: return str(playername).capitalize() + "'s winrate " + option + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
@@ -840,6 +864,8 @@ def apicall_elcringo(playername, games, patch, min_elo):
         playerid = apicall_getid(playername)
         if playerid == 0:
             return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached, you can still use "all" commands.'
         suffix = "'s"
         playerstats = apicall_getstats(playerid)
         ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
@@ -870,7 +896,7 @@ def apicall_elcringo(playername, games, patch, min_elo):
     if games == 0:
         return 'No games found.'
     games_limit = games * 4
-    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 1))
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 1))
     endingwaves = extract_values(history_raw, 'endingWave')
     snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 1))
     kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
@@ -892,15 +918,15 @@ def apicall_elcringo(playername, games, patch, min_elo):
     print('starting elcringo command...')
     while count < games_limit:
         ending_wave_list.append(endingwaves[1][queue_count])
-        playernames_ranked = playernames[count] + playernames[count + 1] + playernames[count + 2] + playernames[count + 3]
+        playerids_ranked = playerids[count] + playerids[count + 1] + playerids[count + 2] + playerids[count + 3]
         snail_ranked = snail[count] + snail[count + 1] + snail[count + 2] + snail[count + 3]
         kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
         workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
         income_ranked = income[count] + income[count + 1] + income[count + 2] + income[count + 3]
         mythium_list_pergame.clear()
         gameelo_list.append(gameelo[1][queue_count])
-        for i, x in enumerate(playernames_ranked):
-            if str(x).lower() == str(playername).lower() or playerid == 'all':
+        for i, x in enumerate(playerids_ranked):
+            if x == playerid or playerid == 'all':
                 for n, s in enumerate(snail_ranked[i]):
                     small_send = 0
                     send = count_mythium(snail_ranked[i][n]) + len(kingup_ranked[i][n]) * 20
@@ -962,6 +988,8 @@ def apicall_openstats(playername, games, min_elo, patch):
         playerid = apicall_getid(playername)
         if playerid == 0:
             return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached, you can still use "all" commands.'
         playerstats = apicall_getstats(playerid)
         ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
         if games == 0:
@@ -988,7 +1016,7 @@ def apicall_openstats(playername, games, min_elo, patch):
             string = string.replace(' unit id', '')
             unit_dict[string] = {'Count': 0,'OpenWins': 0,'W4': 0,'OpenWith': {},'MMs': {},'Spells': {}}
     unit_dict['pack rat nest'] = {'Count': 0, 'OpenWins': 0,'W4': 0, 'OpenWith': {},'MMs': {},'Spells': {}}
-    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 4))
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
@@ -1007,15 +1035,15 @@ def apicall_openstats(playername, games, min_elo, patch):
     patches = list(dict.fromkeys(new_patches))
     print('Starting openstats command...')
     while count < games:
-        playernames_ranked = playernames[count]
+        playerids_ranked = playerids[count]
         masterminds_ranked = masterminds[count]
         gameresult_ranked = gameresult[count]
         workers_ranked = workers[count]
         spell_ranked = spell[count]
         gameelo_list.append(gameelo[1][count])
-        if playername != 'all':
-            for i, x in enumerate(playernames_ranked):
-                if str(x).lower() == playername.lower():
+        if playername.lower() != 'all':
+            for i, x in enumerate(playerids_ranked):
+                if x == playerid:
                     opener_ranked_raw = [fighters[count][i][0],fighters[count][i][1],fighters[count][i][2],fighters[count][i][3]]
                     player_num = i
                     break
@@ -1109,6 +1137,8 @@ def apicall_mmstats(playername, games, min_elo, patch):
         playerid = apicall_getid(playername)
         if playerid == 0:
             return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached, you can still use "all" commands.'
         playerstats = apicall_getstats(playerid)
         ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
         if games == 0:
@@ -1129,8 +1159,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
-    print(games)
-    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 4))
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
@@ -1149,7 +1178,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
     patches = list(dict.fromkeys(new_patches))
     print('Starting mmstats command...')
     while count < games:
-        playernames_ranked = playernames[count]
+        playerids_ranked = playerids[count]
         masterminds_ranked = masterminds[count]
         gameresult_ranked = gameresult[count]
         workers_ranked = workers[count]
@@ -1157,7 +1186,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
         spell_ranked = spell[count]
         elo_ranked = elo[count]
         gameelo_list.append(gameelo[1][count])
-        for i, x in enumerate(playernames_ranked):
+        for i, x in enumerate(playerids_ranked):
             if playerid == 'all':
                 # if 'Angler' in opener_ranked[i] and 'LockIn' in masterminds_ranked[i]:
                 #     print(x)
@@ -1176,7 +1205,7 @@ def apicall_mmstats(playername, games, min_elo, patch):
                     masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',',commas)[commas])
                 else:
                     masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
-            elif str(x).lower() == str(playername).lower():
+            elif x == playerid:
                 masterminds_dict[masterminds_ranked[i]]["Count"] += 1
                 if gameresult_ranked[i] == 'won':
                     masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
@@ -1200,6 +1229,8 @@ def apicall_elo(playername, rank):
     playerid = apicall_getid(playername)
     if playerid == 0:
         output = 'Player ' + str(playername) + ' not found.'
+    if playerid == 1:
+        return 'API limit reached.'
     else:
         stats = apicall_getstats(playerid)
         playtime_minutes = stats['secondsPlayed'] / 60
@@ -1238,6 +1269,8 @@ def apicall_bestie(playername):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + str(playername) + ' not found.'
+    if playerid == 1:
+        return 'API limit reached.'
     else:
         request_type = 'players/bestFriends/' + playerid
         url = 'https://apiv2.legiontd2.com/' + request_type + '?limit=1&offset=0'
@@ -1262,6 +1295,8 @@ def apicall_showlove(playername, playername2):
     print(playername2)
     if playerid == 0:
         return 'Player ' + str(playername) + ' not found.'
+    if playerid == 1:
+        return 'API limit reached.'
     else:
         request_type = 'players/bestFriends/' + playerid
         url = 'https://apiv2.legiontd2.com/' + request_type + '?limit=50&offset=0'
@@ -1291,6 +1326,8 @@ def apicall_rank(rank):
         int(rank) - 1) + '&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=header)
     player_info = json.loads(api_response.text)
+    if 'Limit Exceeded' in player_info:
+        return 'API limit reached.'
     try:
         name = apicall_getprofile(player_info[0]['_id'])
     except Exception:
@@ -1300,6 +1337,8 @@ def apicall_rank(rank):
 
 def apicall_gamestats(playername):
     playerid = apicall_getid(playername)
+    if playerid == 1:
+        return 'API limit reached.'
     stats = apicall_getstats(playerid)
     wins = stats['rankedWinsThisSeason']
     loses = stats['rankedLossesThisSeason']
