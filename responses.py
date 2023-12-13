@@ -344,17 +344,34 @@ def count_value(playername, value, player_names, data):
             value_count = value_count + 1
     return value_count
 
+mercs = {"Snail": (20, 6), "Giant Snail": (20, 6), "Lizard": (40, 12), "Dragon Turtle": (40, 12), "Brute": (60, 15), "Fiend": (60, 18), "Dino": (80, 24),
+         "Hermit": (80, 20), "Cannoneer": (100, 30), "Imp": (100, 13), "Safety Mole": (120, 30), "Drake": (120, 36), "Pack Leader": (160, 40),
+         "Mimic": (160, 40), "Witch": (200, 50), "Ogre": (200, 50), "Ghost Knight": (240, 60), "Four Eyes": (240, 60), "Centaur": (280, 70),
+         "Shaman": (320, 80), "Siege Ram": (320, 80), "Needler": (360, 90), "Kraken": (400, 100), "Froggo": (0, 3)}
+
+creep_values = {"Crab": (72, 6), "Wale": (84, 7), "Hopper": (90, 5), "Flying Chicken": (96, 8), "Scorpion": (108, 9), "Scorpion King": (108, 36),
+                "Rocko": (114, 19), "Sludge": (120, 10), "Blob": (120, 2), "Kobra": (132, 11), "Carapace": (144, 12), "Granddaddy": (150, 63),
+                "Quill Shooter": (156, 13), "Mantis": (168, 14), "Drill Golem": (180, 30), "Killer Slug": (192, 16), "Quadrapus": (204, 17),
+                "Giant Quadrapus": (204, 68), "Cardinal": (216, 12), "Metal Dragon": (228, 19), "Wale Chief": (252, 42), "Dire Toad": (276, 23),
+                "Maccabeus": (300, 126), "Legion Lord": (360, 30), "Legion King": (360, 120)}
+wave_values = (72,84,90,96,108,114,120,132,144,150,156,168,180,192,204,216,228,252,276,300,360)
 
 def count_mythium(send):
-    mercs = {"Snail": 20, "Giant Snail": 20, "Lizard": 40, "Dragon Turtle": 40, "Brute": 60, "Fiend": 60, "Dino": 80,
-             "Hermit": 80, "Cannoneer": 100, "Imp": 100, "Safety Mole": 120, "Drake": 120, "Pack Leader": 160,
-             "Mimic": 160, "Witch": 200, "Ogre": 200, "Ghost Knight": 240, "Four Eyes": 240, "Centaur": 280,
-             "Shaman": 320, "Siege Ram": 320, "Needler": 360, "Kraken": 400}
     send_amount = 0
     for x in send:
-        send_amount = send_amount + mercs.get(x)
+        send_amount += mercs.get(x)[0]
     return send_amount
 
+def calc_leak(leak, wave):
+    leak_amount = 0
+    send_amount = 0
+    wave_total = wave_values[wave]
+    for x in leak:
+        if x in creep_values:
+            leak_amount += creep_values.get(x)[1]
+        else:
+            leak_amount += mercs.get(x)[1]
+    return round(leak_amount / wave_total * 100, 1)
 
 def count_elochange(playername, player_names, data):
     value_count = 0
@@ -363,27 +380,30 @@ def count_elochange(playername, player_names, data):
             value_count = value_count + data[1][i]
     return value_count
 
-
 def handle_response(message, author) -> str:
     p_message = message.lower()
-    if '!elo fine' in p_message:
-        return str(apicall_elo('fine', 0) + ' :eggplant:')
-    if '!julian' in p_message:
-        return 'julian sucks'
-    if '!penny' in p_message:
-        return 'penny sucks'
-    if '!green' in p_message:
-        return 'fast & aggressive'
-    if 'kidkpro' in p_message:
-        return ':eggplant:'
-    if 'widderson' in p_message:
-        return ':banana:'
-    if '!update' in p_message and str(author) == 'drachir_':
-        return ladder_update()
-    # if '!test' in p_message:
-    #     return apicall_getmatchistory('all', 0, 0, '0', 0)
-    if '!github' in p_message:
-        return 'https://github.com/Drachiir/Legion-Elo-Bot'
+    if '!elo fine' in p_message:    return str(apicall_elo('fine', 0) + ' :eggplant:')
+    if 'julian' in p_message:       return 'julian sucks'
+    if 'penny' in p_message:        return 'penny sucks'
+    if 'green' in p_message:        return '<:green:1136426397619978391> & aggressive'
+    if 'kidkpro' in p_message:      return ':eggplant:'
+    if 'widderson' in p_message:    return ':banana:'
+    if 'ofma' in p_message:         return ':a: :b:'
+    if 'drachir' in p_message:      return '<:GK:1161013811927601192>'
+    if 'shea' in p_message:         return 'sister? <:sheastare:1121047323464712273>'
+    if 'aviator' in p_message:      return '<:aviator:1180232477537738944>'
+    if 'lucy' in p_message:         return 'snail angle <:Dice:1180232938399469588>'
+    if 'king' in p_message:         return "like its the most fun i've had playing legion pretty much"
+    if 'genom' in p_message:        return ":rat:"
+    if 'quacker' in p_message:      return ":duck: quack"
+    if 'toikan' in p_message:       return "nyctea, :older_man:"
+    if 'jokeonu' in p_message:      return "look dis brah, snacc"
+    if 'mrbuzz' in p_message:       return "(On his smurf)"
+    if 'nyctea' in p_message:       return "toikan,"
+    if '!github' in p_message:      return 'https://github.com/Drachiir/Legion-Elo-Bot'
+    if '!test' in p_message:        return calc_leak(["Quill Shooter", "Quill Shooter", "Quill Shooter", "Quill Shooter", "Quill Shooter"])
+    if '!update' in p_message and str(author) == 'drachir_':    return ladder_update()
+    if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
 
 
 def apicall_getid(playername):
@@ -488,8 +508,39 @@ def get_games_loop(playerid, offset, path, expected, timeout_limit = 5):
     return games_count
 
 def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0):
-    if patch != '0':
+    patch_list = []
+    if patch != '0' and "," in patch:
         patch_list = patch.split(',')
+    elif patch != '0' and "-" not in patch and "+" not in patch:
+        patch_list = patch.split(',')
+    elif patch != "0" and "+" in patch and "-" not in patch:
+        patch_new = patch.split("+")
+        if len(patch_new) == 2:
+            patch_new = patch_new[1].split('.')
+            for x in range(12 - int(patch_new[1])):
+                if int(patch_new[1]) + x < 10:
+                    prefix = "0"
+                else:
+                    prefix = ""
+                patch_list.append(patch_new[0] + "." + prefix + str(int(patch_new[1]) + x))
+        else:
+            return []
+    elif patch != "0" and "-" in patch:
+        patch_new = patch.split("-")
+        if len(patch_new) == 2:
+            patch_new2 = patch_new[0].split('.')
+            patch_new3 = patch_new[1].split('.')
+            for x in range(int(patch_new3[1])-int(patch_new2[1])+1):
+                if int(patch_new2[1]) + x < 10:
+                    prefix = "0"
+                else:
+                    prefix = ""
+                patch_list.append(patch_new2[0] + "." + prefix + str(int(patch_new2[1]) + x))
+        else:
+            return []
+    print(patch_list)
+    if len(patch_list) > 5:
+        return "Too many patches."
     games_count = 0
     if playerid != 'all':
         playername = apicall_getprofile(playerid)['playerName']
@@ -501,7 +552,15 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0):
             with open(str(path) + "gamecount_" + playername + ".txt", "w") as f:
                 data = get_games_loop(playerid, 0, path, games)
                 playerstats = apicall_getstats(playerid)
-                ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+                try:
+                    wins = playerstats['rankedWinsThisSeason']
+                except KeyError:
+                    wins = 0
+                try:
+                    losses = playerstats['rankedLossesThisSeason']
+                except KeyError:
+                    losses = 0
+                ranked_games = wins + losses
                 lines = [str(ranked_games), str(data)]
                 f.write('\n'.join(lines))
         else:
@@ -513,7 +572,15 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0):
                 ranked_games_old = int(txt[0])
                 games_amount_old = int(txt[1])
             playerstats = apicall_getstats(playerid)
-            ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+            try:
+                wins = playerstats['rankedWinsThisSeason']
+            except KeyError:
+                wins = 0
+            try:
+                losses = playerstats['rankedLossesThisSeason']
+            except KeyError:
+                losses = 0
+            ranked_games = wins + losses
             games_diff = ranked_games - ranked_games_old
             if ranked_games_old < ranked_games:
                 games_count += get_games_loop(playerid, 0, path, games_diff)
@@ -619,8 +686,20 @@ def apicall_wave1tendency(playername, option, games):
         return 'Player ' + playername + ' not found.'
     if playerid == 1:
         return 'API limit reached.'
+    playerstats = apicall_getstats(playerid)
+    try:
+        wins = playerstats['rankedWinsThisSeason']
+    except KeyError:
+        wins = 0
+    try:
+        losses = playerstats['rankedLossesThisSeason']
+    except KeyError:
+        losses = 0
+    ranked_games = wins + losses
     if games == 0:
         games = get_games_saved_count(playerid)
+    elif games > ranked_games:
+        return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
     snail_count = 0
     kingup_atk_count = 0
@@ -634,7 +713,7 @@ def apicall_wave1tendency(playername, option, games):
         print(e)
         return playername + ' has not played enough games.'
     games = len(history_raw)
-    playernames = list(divide_chunks(extract_values(history_raw, 'playerName')[1], 4))
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     if option == 'send':
         snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
         kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
@@ -644,12 +723,12 @@ def apicall_wave1tendency(playername, option, games):
     leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
     gameid = extract_values(history_raw, '_id')
     while count < games:
-        playernames_ranked = playernames[count]
+        playerids_ranked = playerids[count]
         snail_ranked = snail[count]
         kingup_ranked = kingup[count]
         leaks_ranked = leaks[count]
-        for i, x in enumerate(playernames_ranked):
-            if str(x).lower() == str(playername).lower():
+        for i, x in enumerate(playerids_ranked):
+            if x == playerid:
                 if len(snail_ranked[i][0]) > 0:
                     if str(snail_ranked[i][0][0]) == 'Snail':
                         snail_count = snail_count + 1
@@ -687,9 +766,10 @@ def apicall_wave1tendency(playername, option, games):
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
     if send_total > 4:
-        return (playername).capitalize() + "'s Wave 1 " + option + " stats: (Last " + str(send_total) + " ranked games)\nKingup: " + \
-            str(kingup_total) + ' (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
-            ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + ' (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))' + '\nSave: ' + str(save_count)
+        return ((playername).capitalize() + "'s Wave 1 " + option + " stats: (Last " + str(send_total) + " ranked games) <:Stare:1148703530039902319>\nKingup: " + \
+            str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
+            ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))'+\
+            '\nSave: ' + str(save_count)) + ' | '  + str(round(save_count/send_total*100,1)) + '%'
     else:
         return 'Not enough ranked data'
 
@@ -705,7 +785,15 @@ def apicall_winrate(playername, playername2, option, games, patch):
         if playerid2 == 0:
             return 'Player ' + playername2 + ' not found.'
     playerstats = apicall_getstats(playerid)
-    ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+    try:
+        wins = playerstats['rankedWinsThisSeason']
+    except KeyError:
+        wins = 0
+    try:
+        losses = playerstats['rankedLossesThisSeason']
+    except KeyError:
+        losses = 0
+    ranked_games = wins + losses
     if games == 0:
         games = get_games_saved_count(playerid)
     elif games > ranked_games:
@@ -723,6 +811,8 @@ def apicall_winrate(playername, playername2, option, games, patch):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    if history_raw == "Too many patches.":
+        return "Too many patches."
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
@@ -852,7 +942,7 @@ def apicall_winrate(playername, playername2, option, games, patch):
             return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + option + ' each other recently.'
 
 
-def apicall_elcringo(playername, games, patch, min_elo):
+def apicall_elcringo(playername, games, patch, min_elo, option):
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
@@ -868,7 +958,15 @@ def apicall_elcringo(playername, games, patch, min_elo):
             return 'API limit reached, you can still use "all" commands.'
         suffix = "'s"
         playerstats = apicall_getstats(playerid)
-        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+        try:
+            wins = playerstats['rankedWinsThisSeason']
+        except KeyError:
+            wins = 0
+        try:
+            losses = playerstats['rankedLossesThisSeason']
+        except KeyError:
+            losses = 0
+        ranked_games = wins + losses
         if games == 0:
             games = get_games_saved_count(playerid)
         elif games > ranked_games:
@@ -887,11 +985,15 @@ def apicall_elcringo(playername, games, patch, min_elo):
     mythium_list = []
     mythium_list_pergame = []
     kinghp_list = []
+    leaks_list = []
+    leaks_pre10_list = []
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    if history_raw == "Too many patches.":
+        return "Too many patches."
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
@@ -902,6 +1004,7 @@ def apicall_elcringo(playername, games, patch, min_elo):
     kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 1))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 1))
     income = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 1))
+    leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 1))
     kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
     kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
     gameid = extract_values(history_raw, '_id')
@@ -923,6 +1026,7 @@ def apicall_elcringo(playername, games, patch, min_elo):
         kingup_ranked = kingup[count] + kingup[count + 1] + kingup[count + 2] + kingup[count + 3]
         workers_ranked = workers[count] + workers[count + 1] + workers[count + 2] + workers[count + 3]
         income_ranked = income[count] + income[count + 1] + income[count + 2] + income[count + 3]
+        leaks_ranked = leaks[count] + leaks[count + 1] + leaks[count + 2] + leaks[count + 3]
         mythium_list_pergame.clear()
         gameelo_list.append(gameelo[1][queue_count])
         for i, x in enumerate(playerids_ranked):
@@ -934,17 +1038,31 @@ def apicall_elcringo(playername, games, patch, min_elo):
                     if n <= 9:
                         if workers_ranked[i][n] > 5:
                             worker_adjusted = workers_ranked[i][n] - 5
-                            small_send = worker_adjusted / 5 * 20
-                        if send <= small_send:
+                            small_send = worker_adjusted / 4 * 20
+                        if send <= small_send and option.value == "Yes":
+                            save_count_pre10 += 1
+                        elif send == 0 and option.value == "No":
                             save_count_pre10 += 1
                     elif n > 9:
                         worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
-                        small_send = worker_adjusted / 5 * 20
-                        if send <= small_send:
+                        small_send = worker_adjusted / 4 * 20
+                        if send <= small_send and option.value == "Yes":
+                            save_count += 1
+                        elif send == 0 and option.value == "No":
                             save_count += 1
                 mythium_list.append(sum(mythium_list_pergame))
                 worker_10_list.append(workers_ranked[i][9])
                 income_10_list.append(income_ranked[i][9])
+                leak_amount = 0
+                leak_pre10_amount = 0
+                for y in range(endingwaves[1][queue_count]):
+                    if len(leaks_ranked[i][y]) > 0:
+                        p = calc_leak(leaks_ranked[i][y], y)
+                        leak_amount += p
+                        if y < 10:
+                            leak_pre10_amount += p
+                leaks_list.append(leak_amount/endingwaves[1][queue_count])
+                leaks_pre10_list.append(leak_pre10_amount/10)
                 if i == 0 or 1:
                     kinghp_list.append(kinghp_left[1][queue_count][9])
                 else:
@@ -963,17 +1081,20 @@ def apicall_elcringo(playername, games, patch, min_elo):
     else:
         saves_pre10 = round(sum(save_count_pre10_list) / len(save_count_pre10_list), 2)
         saves_post10 = round(sum(save_count_list) / len(save_count_list), 2)
+    leaks_total = round(sum(leaks_list) / len(leaks_list), 1)
+    leaks_pre10_total = round(sum(leaks_pre10_list) / len(leaks_pre10_list), 1)
     king_hp_10 = sum(kinghp_list) / len(kinghp_list)
     avg_gameelo = sum(gameelo_list) / len(gameelo_list)
     if ranked_count > 0:
         return (playername).capitalize() +suffix+" elcringo stats(Averages from " + str(ranked_count) +" ranked games):<:GK:1161013811927601192>\n" \
-            'Saves first 10:  ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +\
-            'Saves after 10:  ' + str(saves_post10)+'/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n'\
-            'Worker on 10:  ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n" \
-            'Income on 10:  ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n" \
+            'Saves first 10: ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +\
+            'Saves after 10: ' + str(saves_post10)+'/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n'\
+            'Worker on 10: ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n" \
+            'Leaks: ' + str(leaks_total) + "% (First 10: "+str(leaks_pre10_total)+"%)\n" \
+            'Income on 10: ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n" \
             'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n' + \
-            'Game elo:  ' + str(round(avg_gameelo)) + '\n' + \
-            'Patches:  ' + ', '.join(patches)
+            'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
+            'Patches: ' + ', '.join(patches)
     else:
         return 'Not enough ranked data'
 
@@ -991,7 +1112,15 @@ def apicall_openstats(playername, games, min_elo, patch):
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
         playerstats = apicall_getstats(playerid)
-        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+        try:
+            wins = playerstats['rankedWinsThisSeason']
+        except KeyError:
+            wins = 0
+        try:
+            losses = playerstats['rankedLossesThisSeason']
+        except KeyError:
+            losses = 0
+        ranked_games = wins + losses
         if games == 0:
             games = get_games_saved_count(playerid)
         elif games > ranked_games:
@@ -1001,6 +1130,8 @@ def apicall_openstats(playername, games, min_elo, patch):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    if history_raw == "Too many patches.":
+        return "Too many patches."
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
@@ -1024,6 +1155,7 @@ def apicall_openstats(playername, games, min_elo, patch):
     fighters = list(divide_chunks(extract_values(history_raw, 'buildPerWave')[1], 4))
     gameelo = extract_values(history_raw, 'gameElo')
     patches = extract_values(history_raw, 'version')
+    gameid = extract_values(history_raw, '_id')
     patches = list(dict.fromkeys(patches[1]))
     new_patches = []
     gameelo_list = []
@@ -1063,30 +1195,33 @@ def apicall_openstats(playername, games, min_elo, patch):
                 for y in opener_ranked[x]:
                     s.add(y)
             for y in s:
-                if y != opener_ranked[0][0]:
-                    if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
-                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
+                try:
+                    if y != opener_ranked[0][0]:
+                        if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
+                            unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
+                            if gameresult_ranked[player_num] == 'won':
+                                unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
+                        else:
+                            unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
+                            if gameresult_ranked[player_num] == 'won':
+                                unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
+                    else:
+                        unit_dict[opener_ranked[0][0]]['Count'] += 1
+                        if masterminds_ranked[player_num] not in unit_dict[opener_ranked[0][0]]['MMs']:
+                            unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]] = {'Count': 1, 'Wins': 0}
+                        else:
+                            unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]]['Count'] += 1
+                        if spell_ranked[player_num] not in unit_dict[opener_ranked[0][0]]['Spells']:
+                            unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]] = {'Count': 1, 'Wins': 0}
+                        else:
+                            unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]]['Count'] += 1
+                        unit_dict[opener_ranked[0][0]]['W4'] += workers_ranked[player_num][3]
                         if gameresult_ranked[player_num] == 'won':
-                            unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                    else:
-                        unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                        if gameresult_ranked[player_num] == 'won':
-                            unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                else:
-                    unit_dict[opener_ranked[0][0]]['Count'] += 1
-                    if masterminds_ranked[player_num] not in unit_dict[opener_ranked[0][0]]['MMs']:
-                        unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]] = {'Count': 1, 'Wins': 0}
-                    else:
-                        unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]]['Count'] += 1
-                    if spell_ranked[player_num] not in unit_dict[opener_ranked[0][0]]['Spells']:
-                        unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]] = {'Count': 1, 'Wins': 0}
-                    else:
-                        unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]]['Count'] += 1
-                    unit_dict[opener_ranked[0][0]]['W4'] += workers_ranked[player_num][3]
-                    if gameresult_ranked[player_num] == 'won':
-                        unit_dict[opener_ranked[0][0]]['OpenWins'] += 1
-                        unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]]['Wins'] += 1
-                        unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]]['Wins'] += 1
+                            unit_dict[opener_ranked[0][0]]['OpenWins'] += 1
+                            unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]]['Wins'] += 1
+                            unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]]['Wins'] += 1
+                except IndexError:
+                    continue
         else:
             counter = 0
             for i in range(4):
@@ -1095,30 +1230,33 @@ def apicall_openstats(playername, games, min_elo, patch):
                     for y in opener_ranked[x]:
                         s.add(y)
                 for y in s:
-                    if y != opener_ranked[counter][0]:
-                        if y in unit_dict[opener_ranked[counter][0]]['OpenWith']:
-                            unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Count'] += 1
+                    try:
+                        if y != opener_ranked[counter][0]:
+                            if y in unit_dict[opener_ranked[counter][0]]['OpenWith']:
+                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Count'] += 1
+                                if gameresult_ranked[i] == 'won':
+                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
+                            else:
+                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
+                                if gameresult_ranked[i] == 'won':
+                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
+                        else:
+                            unit_dict[opener_ranked[counter][0]]['Count'] += 1
+                            if masterminds_ranked[i] not in unit_dict[opener_ranked[counter][0]]['MMs']:
+                                unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]] = {'Count': 1,'Wins': 0}
+                            else:
+                                unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]]['Count'] += 1
+                            if spell_ranked[i] not in unit_dict[opener_ranked[counter][0]]['Spells']:
+                                unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]] = {'Count': 1, 'Wins': 0}
+                            else:
+                                unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]]['Count'] += 1
+                            unit_dict[opener_ranked[counter][0]]['W4'] += workers_ranked[i][3]
                             if gameresult_ranked[i] == 'won':
-                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
-                        else:
-                            unit_dict[opener_ranked[counter][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                            if gameresult_ranked[i] == 'won':
-                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
-                    else:
-                        unit_dict[opener_ranked[counter][0]]['Count'] += 1
-                        if masterminds_ranked[i] not in unit_dict[opener_ranked[counter][0]]['MMs']:
-                            unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]] = {'Count': 1,'Wins': 0}
-                        else:
-                            unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]]['Count'] += 1
-                        if spell_ranked[i] not in unit_dict[opener_ranked[counter][0]]['Spells']:
-                            unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]] = {'Count': 1, 'Wins': 0}
-                        else:
-                            unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]]['Count'] += 1
-                        unit_dict[opener_ranked[counter][0]]['W4'] += workers_ranked[i][3]
-                        if gameresult_ranked[i] == 'won':
-                            unit_dict[opener_ranked[counter][0]]['OpenWins'] += 1
-                            unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]]['Wins'] += 1
-                            unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]]['Wins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['OpenWins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]]['Wins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]]['Wins'] += 1
+                    except IndexError:
+                        continue
                 counter += 4
         count += 1
     newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
@@ -1126,7 +1264,7 @@ def apicall_openstats(playername, games, min_elo, patch):
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
     return create_image_unitstats(unit_dict, games, playerid, avgelo, patches)
 
-def apicall_mmstats(playername, games, min_elo, patch):
+def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
     if playername == 'all':
         playerid = 'all'
         if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
@@ -1140,7 +1278,15 @@ def apicall_mmstats(playername, games, min_elo, patch):
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
         playerstats = apicall_getstats(playerid)
-        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+        try:
+            wins = playerstats['rankedWinsThisSeason']
+        except KeyError:
+            wins = 0
+        try:
+            losses = playerstats['rankedLossesThisSeason']
+        except KeyError:
+            losses = 0
+        ranked_games = wins + losses
         if games == 0:
             games = get_games_saved_count(playerid)
         elif games > ranked_games:
@@ -1156,6 +1302,8 @@ def apicall_mmstats(playername, games, min_elo, patch):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    if history_raw == "Too many patches.":
+        return "Too many patches."
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
@@ -1186,39 +1334,69 @@ def apicall_mmstats(playername, games, min_elo, patch):
         spell_ranked = spell[count]
         elo_ranked = elo[count]
         gameelo_list.append(gameelo[1][count])
-        for i, x in enumerate(playerids_ranked):
-            if playerid == 'all':
-                # if 'Angler' in opener_ranked[i] and 'LockIn' in masterminds_ranked[i]:
-                #     print(x)
-                #     print(gameid[1][count])
-                #     print(opener_ranked[i])
-                masterminds_dict[masterminds_ranked[i]]["Count"] += 1
-                if gameresult_ranked[i] == 'won':
-                    masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
-                masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
-                masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
-                if ',' in opener_ranked[i]:
-                    string = opener_ranked[i]
-                    commas = string.count(',')
-                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',',commas)[commas])
-                else:
-                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
-            elif x == playerid:
-                masterminds_dict[masterminds_ranked[i]]["Count"] += 1
-                if gameresult_ranked[i] == 'won':
-                    masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
-                masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
-                masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
-                if ',' in opener_ranked[i]:
-                    string = opener_ranked[i]
-                    commas = string.count(',')
-                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',',commas)[commas])
-                else:
-                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
+        match mastermind.lower():
+            case 'all':
+                for i, x in enumerate(playerids_ranked):
+                    if playerid == 'all':
+                        masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                        if gameresult_ranked[i] == 'won':
+                            masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                        masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
+                        masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
+                        masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
+                        masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                        if ',' in opener_ranked[i]:
+                            string = opener_ranked[i]
+                            commas = string.count(',')
+                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',',commas)[commas])
+                        else:
+                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
+                    elif x == playerid:
+                        masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                        if gameresult_ranked[i] == 'won':
+                            masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                        masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
+                        masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
+                        masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
+                        masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                        if ',' in opener_ranked[i]:
+                            string = opener_ranked[i]
+                            commas = string.count(',')
+                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',',commas)[commas])
+                        else:
+                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
+            case 'fiesta':
+                for i, x in enumerate(playerids_ranked):
+                    if playerid == 'all':
+                        if masterminds_dict[masterminds_ranked[i]].lower() == mastermind.lower():
+                            masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                            if gameresult_ranked[i] == 'won':
+                                masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                            masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
+                            masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
+                            masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
+                            masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                            if ',' in opener_ranked[i]:
+                                string = opener_ranked[i]
+                                commas = string.count(',')
+                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',', commas)[commas])
+                            else:
+                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
+                    elif x == playerid:
+                        if masterminds_dict[masterminds_ranked[i]].lower() == mastermind.lower():
+                            masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                            if gameresult_ranked[i] == 'won':
+                                masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                            masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
+                            masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
+                            masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
+                            masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                            if ',' in opener_ranked[i]:
+                                string = opener_ranked[i]
+                                commas = string.count(',')
+                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',', commas)[commas])
+                            else:
+                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
         count += 1
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}

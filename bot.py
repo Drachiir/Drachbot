@@ -101,11 +101,15 @@ def run_discord_bot():
     @tree.command(name="elcringo", description="Shows how cringe someone is.",
                   guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
-                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.', min_elo='Enter minium average game elo to include in the data set',)
-    async def elcringo(interaction: discord.Interaction, playername: str, games: int, patch: str, min_elo: int):
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.', min_elo='Enter minium average game elo to include in the data set', option='Count small sends as save?')
+    @app_commands.choices(option=[
+        discord.app_commands.Choice(name='Yes', value="Yes"),
+        discord.app_commands.Choice(name='No', value="No")
+    ])
+    async def elcringo(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_elcringo(playername, games, patch, min_elo)
+            response = responses.apicall_elcringo(playername, games, patch, min_elo, option)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -173,8 +177,6 @@ def run_discord_bot():
 
     @client.event
     async def on_message(message):
-        if message.author == client.user:
-            return
         if '!' in message.content:
             username = str(message.author)
             user_message = str(message.content)
