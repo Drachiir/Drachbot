@@ -1348,7 +1348,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
                         masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
                         masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
                         masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                        masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                        masterminds_dict[masterminds_ranked[i]]['Elo'] += gameelo[1][count]
                         if ',' in opener_ranked[i]:
                             string = opener_ranked[i]
                             commas = string.count(',')
