@@ -15,8 +15,6 @@ from io import BytesIO
 from imgurpython import ImgurClient
 import numpy as np
 import math
-import multiprocessing
-from multiprocessing import Pool
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -91,9 +89,9 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
     keys = ['Games:', 'Winrate:', 'Pickrate:', 'Elo:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spells:', '', 'Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    im = PIL.Image.new(mode="RGB", size=(1070, 925), color=(49,51,56))
+    im = PIL.Image.new(mode="RGB", size=(1490, 895), color=(49,51,56))
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
-    im3 = PIL.Image.new(mode="RGB", size=(1040, 4), color=(169, 169, 169))
+    im3 = PIL.Image.new(mode="RGB", size=(1495, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
     myFont_small = ImageFont.truetype(ttf, 20)
@@ -115,36 +113,30 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
     I1.text((10, 15), str(playername)+string+" Mastermind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     x = 126
-    y = 220
+    y = 190
     for i in dict:
-        im.paste(im2, (x-12, 88))
+        im.paste(im2, (x-12, 100))
         url_new = url + i + '.png'
         response = requests.get(url_new)
         mm_image = Image.open(BytesIO(response.content))
-        im.paste(mm_image, (x, 100))
-        if i == 'CashOut':
-            I1.text((x-10, 175), i, font=myFont, fill=(255, 255, 255))
-        elif i == 'Redraw':
-                I1.text((x - 5, 175), i, font=myFont, fill=(255, 255, 255))
-        else:
-            I1.text((x, 175), i, font=myFont, fill=(255, 255, 255))
-        I1.text((x, 220), str(dict[i]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 270), str(calc_wr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 320), str(calc_pr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 370), str(calc_elo(dict, i)), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 420), str(get_w10(dict, i)), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 550), str(get_open_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 600), str(get_open_wrpr(dict, i)[1])+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 650), str(get_open_wrpr(dict, i)[2])+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 780), str(get_spell_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 830), str(get_spell_wrpr(dict, i)[1]) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 880), str(get_spell_wrpr(dict, i)[2]) + '%', font=myFont, fill=(255, 255, 255))
+        im.paste(mm_image, (x, 112))
+        I1.text((x, 190), str(dict[i]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 240), str(calc_wr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 290), str(calc_pr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 340), str(calc_elo(dict, i)), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 390), str(get_w10(dict, i)), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 520), str(get_open_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 570), str(get_open_wrpr(dict, i)[1])+'%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 620), str(get_open_wrpr(dict, i)[2])+'%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 750), str(get_spell_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
+        I1.text((x, 800), str(get_spell_wrpr(dict, i)[1]) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, 850), str(get_spell_wrpr(dict, i)[2]) + '%', font=myFont, fill=(255, 255, 255))
         url_new = url2 + str(most_common(dict, i)[0]).replace(' ', '') + '.png'
         if url_new == 'https://cdn.legiontd2.com/icons/N.png':
             url_new = 'https://cdn.legiontd2.com/icons/Secret/SadHopper.png'
         response = requests.get(url_new)
         unit_image = Image.open(BytesIO(response.content))
-        im.paste(unit_image, (x, 470))
+        im.paste(unit_image, (x, 440))
         url_new = url2 + str(most_common(dict, i)[1]).replace(' ', '') + '.png'
         if 'none' in url_new:
             url_new = 'https://cdn.legiontd2.com/icons/Granddaddy.png'
@@ -154,7 +146,7 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
             url_new = 'https://cdn.legiontd2.com/icons/Secret/HermitHas0Friends.png'
         response = requests.get(url_new)
         spell_image = Image.open(BytesIO(response.content))
-        im.paste(spell_image, (x, 700))
+        im.paste(spell_image, (x, 670))
         x += 106
     for k in keys:
         if (k != 'Open:') and (k != 'Spells:') and (k != ''):
@@ -538,7 +530,6 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0):
                 patch_list.append(patch_new2[0] + "." + prefix + str(int(patch_new2[1]) + x))
         else:
             return []
-    print(patch_list)
     if len(patch_list) > 5:
         return "Too many patches."
     games_count = 0
@@ -1037,8 +1028,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
                     mythium_list_pergame.append(send)
                     if n <= 9:
                         if workers_ranked[i][n] > 5:
-                            worker_adjusted = workers_ranked[i][n] - 5
-                            small_send = worker_adjusted / 4 * 20
+                            small_send = (workers_ranked[i][n] - 5) / 4 * 20
                         if send <= small_send and option.value == "Yes":
                             save_count_pre10 += 1
                         elif send == 0 and option.value == "No":
@@ -1292,7 +1282,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
         elif games > ranked_games:
             return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
-    mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos']
+    mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'KingsGuard', 'MegaMind']
     masterminds_dict = {}
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": [], "Spell": [], "Elo": 0}
