@@ -121,11 +121,17 @@ def run_discord_bot():
     @tree.command(name="mmstats", description="Mastermind stats.",guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
-                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
-    async def mmstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str):
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           mastermind= 'Select a Mastermind for specific stats, or All for a general overview.')
+    @app_commands.choices(mastermind=[
+        discord.app_commands.Choice(name='All', value="All"),
+        discord.app_commands.Choice(name='Fiesta', value="Fiesta"),
+        discord.app_commands.Choice(name='Megamind', value="Megamind")
+    ])
+    async def mmstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, mastermind: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_mmstats(str(playername).lower(), games, min_elo, patch)
+            response = responses.apicall_mmstats(str(playername).lower(), games, min_elo, patch, mastermind)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:

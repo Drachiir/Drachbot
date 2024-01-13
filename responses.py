@@ -1,3 +1,5 @@
+import io
+
 import requests
 import json
 from collections import Counter
@@ -15,6 +17,7 @@ from io import BytesIO
 from imgurpython import ImgurClient
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -29,7 +32,7 @@ def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
     return True if c ==4 else False
 
-def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
+def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind = False, megamind_count = 0):
     if playerid != 'all':
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
@@ -42,7 +45,10 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
             return '0'
     def calc_pr(dict, mm):
         try:
-            return str(round(dict[mm]['Count'] / ranked_count * 100, 1))
+            if megamind:
+                return str(round(dict[mm]['Count'] / megamind_count * 100, 1))
+            else:
+                return str(round(dict[mm]['Count'] / ranked_count * 100, 1))
         except ZeroDivisionError as e:
             return '0'
     def most_common(dict, mm):
@@ -66,7 +72,7 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
             return '000'
     def get_w10(dict, i):
         try:
-            return round(dict[i]['W10'] / dict[i]['Count'], 1)
+            return round(sum(dict[i]['W10']) / dict[i]['Count'], 1)
         except ZeroDivisionError as e:
             return '0'
     def get_spell_wrpr(dict, mm):
@@ -86,10 +92,13 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
             return round(dict[mm]['Elo'] / dict[mm]['Count'])
         except ZeroDivisionError as e:
             return '0'
-    keys = ['Games:', 'Winrate:', 'Pickrate:', 'Elo:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spells:', '', 'Games:', 'Winrate:', 'Playrate:']
+    keys = ['Games:', 'Winrate:', 'Pickrate', 'Elo:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:','Spells:', '', 'Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    im = PIL.Image.new(mode="RGB", size=(1490, 895), color=(49,51,56))
+    if megamind:
+        im = PIL.Image.new(mode="RGB", size=(1490-106, 895), color=(49,51,56))
+    else:
+        im = PIL.Image.new(mode="RGB", size=(1490, 895), color=(49, 51, 56))
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
     im3 = PIL.Image.new(mode="RGB", size=(1495, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -110,7 +119,10 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
         else:
             im.paste(av_image, (24, 100))
         im.paste(gold_border, (24, 100), mask=gold_border)
-    I1.text((10, 15), str(playername)+string+" Mastermind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    if megamind:
+        I1.text((10, 15), str(playername)+string+" Megamind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    else:
+        I1.text((10, 15), str(playername) + string + " Mastermind stats (From " + str(ranked_count) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     x = 126
     y = 190
@@ -156,6 +168,296 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch):
             y += 50
         else:
             y += 40
+    im.save('Files/output.png')
+    image_upload = imgur_client.upload_from_path('Files/output.png')
+    print('Uploading output.png to Imgur...')
+    return image_upload['link']
+
+def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch):
+    if playerid != 'all':
+        playername = apicall_getprofile(playerid)['playerName']
+        avatar = apicall_getprofile(playerid)['avatarUrl']
+    else:
+        playername = 'All'
+    def calc_wr(dict, mm):
+        try:
+            return str(round(dict[mm]['Wins']/dict[mm]['Count'] * 100, 1))
+        except ZeroDivisionError as e:
+            return '0'
+    def calc_pr(dict, mm):
+        try:
+            return str(round(dict[mm]['Count'] / ranked_count * 100, 1))
+        except ZeroDivisionError as e:
+            return '0'
+    def most_common(dict, mm, amount, key):
+        try:
+            data = Counter(dict[mm][key])
+            return [data.most_common(amount)]
+        except IndexError as e:
+            return 'No data'
+    def get_wrpr(dict, mm, opener, key):
+        wins = 0
+        count = 0
+        for i, x in enumerate(dict[mm][key]):
+            if opener in x:
+                count += 1
+                if dict[mm]['Results'][i] == 'won':
+                    wins += 1
+        try:
+            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1), wins]
+        except ZeroDivisionError as e:
+            return '000'
+    def get_open_w10(dict, mm, opener):
+        count = 0
+        w10 = 0
+        for i, x in enumerate(dict[mm]['Opener']):
+            if opener in x:
+                w10 += dict[mm]['W10'][i][9]
+                count += 1
+        return round(w10/count, 1)
+    def get_worker_list(dict, mm, waves):
+        workers = []
+        count = 0
+        for c in range(waves):
+            workers.append(0)
+        for x in dict[mm]['W10']:
+            count += 1
+            for i, y in enumerate(workers):
+                workers[i] += x[i]
+        for w, n in enumerate(workers):
+            workers[w] = round(workers[w]/count, 1)
+        return workers
+    def get_leak_list(dict, mm, waves):
+        leaks = []
+        count = 0
+        for c in range(waves):
+            leaks.append(0)
+        for x in dict[mm]['Leaks']:
+            count += 1
+            for i, y in enumerate(leaks):
+                leaks[i] += x[i]
+        for w, n in enumerate(leaks):
+            leaks[w] = round(leaks[w]/count, 1)
+        return leaks
+
+    def get_open_leak(dict, mm, opener):
+        count = 0
+        waves = 0
+        leak = 0
+        leak_w1 = 0
+        for i, x in enumerate(dict[mm]['Opener']):
+            if opener in x:
+                for counter, l in enumerate(dict[mm]['Leaks'][i]):
+                    if counter == 0:
+                        count += 1
+                        waves += 1
+                        leak_w1 += l
+                        leak += l
+                    else:
+                        leak += l
+                        waves += 1
+        return [round(leak_w1/count, 1), round(leak/waves, 1)]
+
+        return round(w10/count, 1)
+    def calc_elo(dict, mm):
+        try:
+            return round(dict[mm]['Elo'] / dict[mm]['Count'])
+        except ZeroDivisionError as e:
+            return '0'
+    keys = ['Games:', 'Winrate:', 'Pickrate:', 'W on 10:', 'Leaks:', 'W1 Leak:']
+    keys2 = ['Games:', 'Winrate:', 'Playrate:']
+    url = 'https://cdn.legiontd2.com/icons/Items/'
+    url2 = 'https://cdn.legiontd2.com/icons/'
+    if playername != 'All':
+        im = PIL.Image.new(mode="RGB", size=(1470, 770), color=(49,51,56))
+    else:
+        im = PIL.Image.new(mode="RGB", size=(1810, 780), color=(49, 51, 56))
+    im2 = PIL.Image.new(mode="RGB", size=(88, 365), color=(25,25,25))
+    im4 = PIL.Image.new(mode="RGB", size=(812, 760), color=(25, 25, 25))
+    im5 = PIL.Image.new(mode="RGB", size=(320, 760), color=(25, 25, 25))
+    I1 = ImageDraw.Draw(im)
+    ttf = 'Files/RobotoCondensed-Regular.ttf'
+    myFont_small = ImageFont.truetype(ttf, 20)
+    myFont = ImageFont.truetype(ttf, 25)
+    myFont_title = ImageFont.truetype(ttf, 30)
+    if playername == 'All':
+        string = ''
+    else:
+        string = "'s"
+        avatar_url = 'https://cdn.legiontd2.com/' + avatar
+        avatar_response = requests.get(avatar_url)
+        av_image = Image.open(BytesIO(avatar_response.content))
+        gold_border = Image.open('Files/gold_64.png')
+        if im_has_alpha(np.array(av_image)):
+            im.paste(av_image, (24, 100), mask=av_image)
+        else:
+            im.paste(av_image, (24, 100))
+        im.paste(gold_border, (24, 100), mask=gold_border)
+    I1.text((10, 15), str(playername)+string+" Fiesta stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    x = 126
+    y = 160
+    y2 = 570
+    y3 = 138
+    step = 106
+    offset = 50
+    I1.text((x - 12, 90), "Most common Fiesta openers:", font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    I1.text((x - 12, y2-70), "Most common Legion Spells with Fiesta:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    if playername != 'All':
+        I1.text((114+106*5, 90), "Fiesta stats:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+        im.paste(im4, (114+106*5, y - 32))
+        fiesta_image_response = requests.get('https://cdn.legiontd2.com/icons/Items/Fiesta.png')
+        fiesta_image = Image.open(BytesIO(fiesta_image_response.content))
+        im.paste(fiesta_image, (x + step * 5, y - 20))
+        I1.text((x + 70 + step * 5, y - 20), "Wins:", font=myFont, fill=(255, 255, 255))
+        I1.text((x + 70 + step * 5, y + 10), "Losses:", font=myFont, fill=(255, 255, 255))
+        I1.text((x + 50 + step * 6, y - 20), str(dict['Fiesta']['Wins']), font=myFont, fill=(0, 255, 0))
+        I1.text((x + 50 + step * 6, y + 10), str(dict['Fiesta']['Count']-dict['Fiesta']['Wins']), font=myFont, fill=(255, 0, 0))
+        winrate = round(dict['Fiesta']['Wins']/dict['Fiesta']['Count']*100, 1)
+        if winrate >= 50:
+            rgb = (0, 255, 0)
+        else:
+            rgb = (255, 0, 0)
+        I1.text((x + 10 + step * 7, y - 5), "Winrate:", font=myFont, fill=(255, 255, 255))
+        I1.text((x + step * 8, y - 5), str(winrate)+'%', font=myFont, fill=(rgb))
+        workers = get_worker_list(dict, 'Fiesta', 10)
+        leaks = get_leak_list(dict, 'Fiesta', 10)
+        waves = ['1','2','3','4','5','6','7','8','9','10']
+        plt.rcParams["figure.figsize"] = (9, 6.2)
+        plt.rcParams['axes.autolimit_mode'] = 'round_numbers'
+        params = {"ytick.color": "w",
+                  "xtick.color": "w",
+                  "axes.labelcolor": "w",
+                  "axes.edgecolor": "w"}
+        plt.rcParams.update(params)
+        plt.grid()
+        plt.plot(waves, workers,color='green',linewidth=3,marker='o',label='Workers')
+        plt.xlabel('Waves')
+        plt.ylabel('Workers')
+        plt.legend(bbox_to_anchor=(0.45,1.07))
+        plt.twinx()
+        plt.plot(waves, leaks, color='red', linewidth=3, marker='o', label='Leak%')
+        plt.ylabel('Leak%')
+        plt.legend(bbox_to_anchor=(0.7,1.07))
+        img_buf = io.BytesIO()
+        plt.savefig(img_buf,transparent=True, format='png')
+        plt.close()
+        worker_graph = Image.open(img_buf)
+        im.paste(worker_graph, (x-60 + step * 5, y), worker_graph)
+    else:
+        offset2 = 30
+        I1.text((114 + 106 * 5, 90), "Fiesta Players:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+        leaderboard_ids = most_common(dict, 'Fiesta', 10, 'PlayerIds')
+        im.paste(im5, (114 + 106 * 5, y - 32))
+        for player in leaderboard_ids[0]:
+            player_stats = get_wrpr(dict, 'Fiesta', player[0], 'PlayerIds')
+            player_profile = apicall_getprofile(player[0])
+            avatar = player_profile['avatarUrl']
+            avatar_url = 'https://cdn.legiontd2.com/' + avatar
+            avatar_response = requests.get(avatar_url)
+            av_image = Image.open(BytesIO(avatar_response.content))
+            gold_border = Image.open('Files/gold_64.png')
+            av_image = av_image.resize((48,48))
+            gold_border = gold_border.resize((48,48))
+            if im_has_alpha(np.array(av_image)):
+                im.paste(av_image, (126 + 106 * 5, y3), mask=av_image)
+            else:
+                im.paste(av_image, (126 + 106 * 5, y3))
+            im.paste(gold_border, (126 + 106 * 5, y3), mask=gold_border)
+            I1.text((180 + 106 * 5, y3-5), player_profile['playerName'], font=myFont_small,fill=(255, 255, 255))
+            if player_stats[1] >= 50:
+                rgb = (0,255,0)
+            else:
+                rgb = (255,0,0)
+            I1.text((180 + 106 * 5, y3 - 5 + offset2),'(' + str(player_stats[1]) + '% wr, ' + str(player_stats[0]) + ' games)', font=myFont_small,fill=(rgb))
+            y3 += 65
+        #Graph
+        x2 = 452
+        I1.text((x2 + 106 * 5, 90), "Fiesta stats:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),
+                fill=(255, 255, 255))
+        im.paste(im4, (x2 + 106 * 5, y - 32))
+        fiesta_image_response = requests.get('https://cdn.legiontd2.com/icons/Items/Fiesta.png')
+        fiesta_image = Image.open(BytesIO(fiesta_image_response.content))
+        im.paste(fiesta_image, (x2+12 + step * 5, y - 20))
+        I1.text((x2 + 80 + step * 5, y - 20), "Wins:", font=myFont, fill=(255, 255, 255))
+        I1.text((x2 + 80 + step * 5, y + 10), "Losses:", font=myFont, fill=(255, 255, 255))
+        I1.text((x2 + 60 + step * 6, y - 20), str(dict['Fiesta']['Wins']), font=myFont, fill=(0, 255, 0))
+        I1.text((x2 + 60 + step * 6, y + 10), str(dict['Fiesta']['Count'] - dict['Fiesta']['Wins']), font=myFont,
+                fill=(255, 0, 0))
+        winrate = round(dict['Fiesta']['Wins'] / dict['Fiesta']['Count'] * 100, 1)
+        if winrate >= 50:
+            rgb = (0, 255, 0)
+        else:
+            rgb = (255, 0, 0)
+        I1.text((x2 + 20 + step * 7, y - 5), "Winrate:", font=myFont, fill=(255, 255, 255))
+        I1.text((x2 + 10 + step * 8, y - 5), str(winrate) + '%', font=myFont, fill=(rgb))
+        workers = get_worker_list(dict, 'Fiesta', 10)
+        leaks = get_leak_list(dict, 'Fiesta', 10)
+        waves = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+        plt.rcParams["figure.figsize"] = (9, 6.2)
+        plt.rcParams['axes.autolimit_mode'] = 'round_numbers'
+        params = {"ytick.color": "w",
+                  "xtick.color": "w",
+                  "axes.labelcolor": "w",
+                  "axes.edgecolor": "w"}
+        plt.rcParams.update(params)
+        plt.grid()
+        plt.plot(waves, workers, color='green', linewidth=3, marker='o', label='Workers')
+        plt.xlabel('Waves')
+        plt.ylabel('Workers')
+        plt.legend(bbox_to_anchor=(0.45, 1.07))
+        plt.twinx()
+        plt.plot(waves, leaks, color='red', linewidth=3, marker='o', label='Leak%')
+        plt.ylabel('Leak%')
+        plt.legend(bbox_to_anchor=(0.7, 1.07))
+        img_buf = io.BytesIO()
+        plt.savefig(img_buf, transparent=True, format='png')
+        plt.close()
+        worker_graph = Image.open(img_buf)
+        im.paste(worker_graph, (x2 - 60 + step * 5, y), worker_graph)
+    most_common_opens = most_common(dict, 'Fiesta', 5, 'Opener')[0]
+    most_common_spells = most_common(dict, 'Fiesta', 5, 'Spell')[0]
+    for unit in most_common_opens:
+        im.paste(im2, (x-12, y-32))
+        url_new = url2 + unit[0].replace(' ', '') + '.png'
+        response = requests.get(url_new)
+        opener_image = Image.open(BytesIO(response.content))
+        im.paste(opener_image, (x, y-20))
+        I1.text((x, y+offset*1), str(get_wrpr(dict, 'Fiesta', unit[0], 'Opener')[0]), font=myFont, fill=(255, 255, 255))
+        I1.text((x, y+offset*2), str(get_wrpr(dict, 'Fiesta', unit[0], 'Opener')[1]) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y+offset*3), str(get_wrpr(dict, 'Fiesta', unit[0], 'Opener')[2]) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y+offset*4), str(get_open_w10(dict, 'Fiesta', unit[0])), font=myFont,fill=(255, 255, 255))
+        I1.text((x, y+offset*5), str(get_open_leak(dict, 'Fiesta', unit[0])[1]) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y+offset*6), str(get_open_leak(dict, 'Fiesta', unit[0])[0]) + '%', font=myFont, fill=(255, 255, 255))
+        x += 106
+    x = 126
+    for spell in most_common_spells:
+        im.paste(im2, (x - 12, y2 - 32))
+        url_new = url2 + spell[0].replace(' ', '') + '.png'
+        if 'none' in url_new:
+            url_new = 'https://cdn.legiontd2.com/icons/Granddaddy.png'
+        if url_new == 'https://cdn.legiontd2.com/icons/PresstheAttack.png':
+            url_new = 'https://cdn.legiontd2.com/icons/PressTheAttack.png'
+        response = requests.get(url_new)
+        spell_image = Image.open(BytesIO(response.content))
+        im.paste(spell_image, (x, y2 - 20))
+        I1.text((x, y2+offset*1), str(get_wrpr(dict, 'Fiesta', spell[0], 'Spell')[0]), font=myFont,fill=(255, 255, 255))
+        I1.text((x, y2+offset*2), str(get_wrpr(dict, 'Fiesta', spell[0], 'Spell')[1]) + '%', font=myFont,fill=(255, 255, 255))
+        I1.text((x, y2+offset*3), str(get_wrpr(dict, 'Fiesta', spell[0], 'Spell')[2]) + '%', font=myFont,fill=(255, 255, 255))
+        x += 106
+    im3 = PIL.Image.new(mode="RGB", size=(86+106*len(most_common_opens), 4), color=(169, 169, 169))
+    for k in keys:
+        im.paste(im3, (10, y+80))
+        I1.text((10, y+50), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+        y += 50
+    for k in keys2:
+        if k == 'Spells:':
+            I1.text((10, y2 + 50), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+            y2 += 50
+        else:
+            im.paste(im3, (10, y2+80))
+            I1.text((10, y2+50), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+            y2 += 50
     im.save('Files/output.png')
     image_upload = imgur_client.upload_from_path('Files/output.png')
     print('Uploading output.png to Imgur...')
@@ -263,6 +565,8 @@ def create_image_unitstats(dict, games, playerid, avgelo, patch):
             url_new = 'https://cdn.legiontd2.com/icons/Items/CashOut.png'
         if url_new == 'https://cdn.legiontd2.com/icons/Items/Lockin.png':
             url_new = 'https://cdn.legiontd2.com/icons/Items/LockIn.png'
+        if url_new == 'https://cdn.legiontd2.com/icons/Items/Doublelockin.png':
+            url_new = 'https://cdn.legiontd2.com/icons/Items/DoubleLockIn.png'
         response = requests.get(url_new)
         temp_image = Image.open(BytesIO(response.content))
         im.paste(temp_image, (x, y + 25+offset * 8))
@@ -643,14 +947,20 @@ def ladder_update():
     url = 'https://apiv2.legiontd2.com/players/stats?limit=100&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=header)
     leaderboard = json.loads(api_response.text)
-    new_list = [item['_id'] for item in leaderboard]
+    try:
+        new_list = [item['_id'] for item in leaderboard]
+    except TypeError:
+        return 'API limit reached. <:peeposad:1103599448623415357> '
     games_count = 0
-    for x in new_list:
-        print(apicall_getprofile(x)['playerName'])
+    for i, x in enumerate(new_list):
+        print(str(i) + '. ' + apicall_getprofile(x)['playerName'])
         playerstats = apicall_getstats(x)
         ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
         if ranked_games >= 200:
             games_count += apicall_getmatchistory(x, 200, 0, '0', 1)
+        elif ranked_games == 0:
+            print('No games this season.')
+            continue
         else:
             games_count += apicall_getmatchistory(x, ranked_games, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top 100.'
@@ -677,20 +987,8 @@ def apicall_wave1tendency(playername, option, games):
         return 'Player ' + playername + ' not found.'
     if playerid == 1:
         return 'API limit reached.'
-    playerstats = apicall_getstats(playerid)
-    try:
-        wins = playerstats['rankedWinsThisSeason']
-    except KeyError:
-        wins = 0
-    try:
-        losses = playerstats['rankedLossesThisSeason']
-    except KeyError:
-        losses = 0
-    ranked_games = wins + losses
     if games == 0:
         games = get_games_saved_count(playerid)
-    elif games > ranked_games:
-        return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
     snail_count = 0
     kingup_atk_count = 0
@@ -704,6 +1002,8 @@ def apicall_wave1tendency(playername, option, games):
         print(e)
         return playername + ' has not played enough games.'
     games = len(history_raw)
+    if games == 0:
+        return 'No games found.'
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     if option == 'send':
         snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
@@ -775,20 +1075,8 @@ def apicall_winrate(playername, playername2, option, games, patch):
         playerid2 = apicall_getid(playername2)
         if playerid2 == 0:
             return 'Player ' + playername2 + ' not found.'
-    playerstats = apicall_getstats(playerid)
-    try:
-        wins = playerstats['rankedWinsThisSeason']
-    except KeyError:
-        wins = 0
-    try:
-        losses = playerstats['rankedLossesThisSeason']
-    except KeyError:
-        losses = 0
-    ranked_games = wins + losses
     if games == 0:
         games = get_games_saved_count(playerid)
-    elif games > ranked_games:
-        return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
     win_count = 0
     game_count = 0
@@ -948,20 +1236,8 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
         suffix = "'s"
-        playerstats = apicall_getstats(playerid)
-        try:
-            wins = playerstats['rankedWinsThisSeason']
-        except KeyError:
-            wins = 0
-        try:
-            losses = playerstats['rankedLossesThisSeason']
-        except KeyError:
-            losses = 0
-        ranked_games = wins + losses
         if games == 0:
             games = get_games_saved_count(playerid)
-        elif games > ranked_games:
-            return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
     ranked_count = 0
     queue_count = 0
@@ -974,6 +1250,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
     worker_10_list = []
     income_10_list = []
     mythium_list = []
+    mythium_pre10_list = []
     mythium_list_pergame = []
     kinghp_list = []
     leaks_list = []
@@ -1002,13 +1279,13 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
     gameelo = extract_values(history_raw, 'gameElo')
     gameelo_list = []
     patches = extract_values(history_raw, 'version')
-    patches = list(dict.fromkeys(patches[1]))
+    patches2 = list(dict.fromkeys(patches[1]))
     new_patches = []
-    for x in patches:
+    for x in patches2:
         string = x
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches = list(dict.fromkeys(new_patches))
+    patches2 = list(dict.fromkeys(new_patches))
     print('starting elcringo command...')
     while count < games_limit:
         ending_wave_list.append(endingwaves[1][queue_count])
@@ -1034,13 +1311,22 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
                         elif send == 0 and option.value == "No":
                             save_count_pre10 += 1
                     elif n > 9:
-                        worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
+                        if patches[1][queue_count].startswith('v11'):
+                            worker_adjusted = workers_ranked[i][n]
+                        elif patches[1][queue_count].startswith('v10'):
+                            worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
                         small_send = worker_adjusted / 4 * 20
                         if send <= small_send and option.value == "Yes":
                             save_count += 1
                         elif send == 0 and option.value == "No":
                             save_count += 1
                 mythium_list.append(sum(mythium_list_pergame))
+                mythium_pre10 = 0
+                for counter, myth in enumerate(mythium_list_pergame):
+                    mythium_pre10 += myth
+                    if counter == 9:
+                        break
+                mythium_pre10_list.append(mythium_pre10)
                 worker_10_list.append(workers_ranked[i][9])
                 income_10_list.append(income_ranked[i][9])
                 leak_amount = 0
@@ -1057,6 +1343,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
                     kinghp_list.append(kinghp_left[1][queue_count][9])
                 else:
                     kinghp_list.append(kinghp_right[1][queue_count][9])
+            mythium_list_pergame.clear()
         save_count_pre10_list.append(save_count_pre10)
         save_count_list.append(save_count)
         save_count_pre10 = 0
@@ -1071,6 +1358,8 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
     else:
         saves_pre10 = round(sum(save_count_pre10_list) / len(save_count_pre10_list), 2)
         saves_post10 = round(sum(save_count_list) / len(save_count_list), 2)
+    mythium_pre10 = round(sum(mythium_pre10_list) / len(mythium_pre10_list))
+    mythium = round(sum(mythium_list) / len(mythium_list))
     leaks_total = round(sum(leaks_list) / len(leaks_list), 1)
     leaks_pre10_total = round(sum(leaks_pre10_list) / len(leaks_pre10_list), 1)
     king_hp_10 = sum(kinghp_list) / len(kinghp_list)
@@ -1083,8 +1372,9 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
             'Leaks: ' + str(leaks_total) + "% (First 10: "+str(leaks_pre10_total)+"%)\n" \
             'Income on 10: ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n" \
             'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n' + \
+            'Mythium sent: ' + str(mythium) + ' (Pre 10: '+str(mythium_pre10)+', Post 10: '+str(mythium-mythium_pre10)+')\n' + \
             'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
-            'Patches: ' + ', '.join(patches)
+            'Patches: ' + ', '.join(patches2)
     else:
         return 'Not enough ranked data'
 
@@ -1101,20 +1391,8 @@ def apicall_openstats(playername, games, min_elo, patch):
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-        playerstats = apicall_getstats(playerid)
-        try:
-            wins = playerstats['rankedWinsThisSeason']
-        except KeyError:
-            wins = 0
-        try:
-            losses = playerstats['rankedLossesThisSeason']
-        except KeyError:
-            losses = 0
-        ranked_games = wins + losses
         if games == 0:
             games = get_games_saved_count(playerid)
-        elif games > ranked_games:
-            return playername + ' has not played ' + str(games) + ' ranked games this season.'
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
     except TypeError as e:
@@ -1255,6 +1533,8 @@ def apicall_openstats(playername, games, min_elo, patch):
     return create_image_unitstats(unit_dict, games, playerid, avgelo, patches)
 
 def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
+    if mastermind != 'all':
+        mastermind = mastermind.value
     if playername == 'all':
         playerid = 'all'
         if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
@@ -1267,25 +1547,18 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-        playerstats = apicall_getstats(playerid)
-        try:
-            wins = playerstats['rankedWinsThisSeason']
-        except KeyError:
-            wins = 0
-        try:
-            losses = playerstats['rankedLossesThisSeason']
-        except KeyError:
-            losses = 0
-        ranked_games = wins + losses
         if games == 0:
             games = get_games_saved_count(playerid)
-        elif games > ranked_games:
-            return playername + ' has not played ' + str(games) + ' ranked games this season.'
     count = 0
-    mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'KingsGuard', 'MegaMind']
+    if mastermind == 'All':
+        mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
+    elif mastermind == 'Megamind':
+        mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard']
+    else:
+        mmnames_list = [mastermind]
     masterminds_dict = {}
     for x in mmnames_list:
-        masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Results": [], "Opener": [], "Spell": [], "Elo": 0}
+        masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": [], "Results": [], "Opener": [], "Spell": [], "Elo": 0, "Leaks": [], "PlayerIds": []}
     gameelo_list = []
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
@@ -1302,13 +1575,21 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
     opener = list(divide_chunks(extract_values(history_raw, 'firstWaveFighters')[1], 4))
-    spell = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
     elo = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
+    endingwaves = extract_values(history_raw, 'endingWave')
+    spell = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
+    if mastermind == 'All' or mastermind == 'Megamind':
+        megamind = list(divide_chunks(extract_values(history_raw, 'megamind')[1], 4))
+        if len(megamind) == 0:
+            megamind = 'N/A'
+    if mastermind == 'Fiesta':
+        leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
     gameelo = extract_values(history_raw, 'gameElo')
     patches = extract_values(history_raw, 'version')
     gameid = extract_values(history_raw, '_id')
     patches = list(dict.fromkeys(patches[1]))
     new_patches = []
+    megamind_count = 0
     for x in patches:
         string = x
         periods = string.count('.')
@@ -1321,77 +1602,93 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
         gameresult_ranked = gameresult[count]
         workers_ranked = workers[count]
         opener_ranked = opener[count]
-        spell_ranked = spell[count]
         elo_ranked = elo[count]
+        spell_ranked = spell[count]
         gameelo_list.append(gameelo[1][count])
-        match mastermind.lower():
-            case 'all':
+        match mastermind:
+            case 'All':
+                if megamind != 'N/A':
+                    megamind_ranked = megamind[count]
                 for i, x in enumerate(playerids_ranked):
-                    if playerid == 'all':
-                        masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                    if playerid == 'all' or x == playerid:
+                        if megamind != 'N/A' and megamind_ranked[i] == True:
+                            mastermind_current = 'Megamind'
+                        else:
+                            mastermind_current = masterminds_ranked[i]
+                        masterminds_dict[mastermind_current]["Count"] += 1
                         if gameresult_ranked[i] == 'won':
-                            masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                        masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
-                        masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
-                        masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                        masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                            masterminds_dict[mastermind_current]["Wins"] += 1
+                        masterminds_dict[mastermind_current]["W10"].append(workers_ranked[i][9])
+                        masterminds_dict[mastermind_current]['Results'].append(gameresult_ranked[i])
+                        masterminds_dict[mastermind_current]['Spell'].append(spell_ranked[i])
+                        masterminds_dict[mastermind_current]['Elo'] += elo_ranked[i]
                         if ',' in opener_ranked[i]:
                             string = opener_ranked[i]
                             commas = string.count(',')
-                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',',commas)[commas])
+                            masterminds_dict[mastermind_current]['Opener'].append(string.split(',',commas)[commas])
                         else:
-                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
-                    elif x == playerid:
-                        masterminds_dict[masterminds_ranked[i]]["Count"] += 1
-                        if gameresult_ranked[i] == 'won':
-                            masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                        masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
-                        masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
-                        masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                        masterminds_dict[masterminds_ranked[i]]['Elo'] += gameelo[1][count]
-                        if ',' in opener_ranked[i]:
-                            string = opener_ranked[i]
-                            commas = string.count(',')
-                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',',commas)[commas])
-                        else:
-                            masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
-            case 'fiesta':
+                            masterminds_dict[mastermind_current]['Opener'].append(opener_ranked[i])
+            case 'Fiesta':
+                leaks_ranked = leaks[count]
                 for i, x in enumerate(playerids_ranked):
-                    if playerid == 'all':
-                        if masterminds_dict[masterminds_ranked[i]].lower() == mastermind.lower():
+                    if playerid == 'all' or x == playerid:
+                        if masterminds_ranked[i] == 'Fiesta':
                             masterminds_dict[masterminds_ranked[i]]["Count"] += 1
                             if gameresult_ranked[i] == 'won':
                                 masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                            masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
+                            masterminds_dict[masterminds_ranked[i]]["W10"].append(workers_ranked[i])
                             masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
                             masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
+                            masterminds_dict[masterminds_ranked[i]]['PlayerIds'].append(playerids_ranked[i])
                             masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                            leaks_temp = []
+                            for y in range(endingwaves[1][count]):
+                                if len(leaks_ranked[i][y]) > 0:
+                                    p = calc_leak(leaks_ranked[i][y], y)
+                                    leaks_temp.append(p)
+                                else:
+                                    leaks_temp.append(0)
+                            masterminds_dict[masterminds_ranked[i]]['Leaks'].append(leaks_temp)
                             if ',' in opener_ranked[i]:
                                 string = opener_ranked[i]
                                 commas = string.count(',')
                                 masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',', commas)[commas])
                             else:
                                 masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
-                    elif x == playerid:
-                        if masterminds_dict[masterminds_ranked[i]].lower() == mastermind.lower():
-                            masterminds_dict[masterminds_ranked[i]]["Count"] += 1
-                            if gameresult_ranked[i] == 'won':
-                                masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                            masterminds_dict[masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
-                            masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
-                            masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                            masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
-                            if ',' in opener_ranked[i]:
-                                string = opener_ranked[i]
-                                commas = string.count(',')
-                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',', commas)[commas])
+            case 'Megamind':
+                if megamind != 'N/A':
+                    megamind_ranked = megamind[count]
+                for i, x in enumerate(playerids_ranked):
+                    if playerid == 'all' or x == playerid:
+                        if megamind != 'N/A' and megamind_ranked[i] == True:
+                            if masterminds_ranked[i] == 'Megamind':
+                                continue
                             else:
-                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
+                                megamind_count += 1
+                                masterminds_dict[masterminds_ranked[i]]["Count"] += 1
+                                if gameresult_ranked[i] == 'won':
+                                    masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                                masterminds_dict[masterminds_ranked[i]]["W10"].append(workers_ranked[i][9])
+                                masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
+                                masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
+                                masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                                if ',' in opener_ranked[i]:
+                                    string = opener_ranked[i]
+                                    commas = string.count(',')
+                                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',', commas)[commas])
+                                else:
+                                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
         count += 1
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
     avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
-    return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches)
+    match mastermind:
+        case 'All':
+            return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches)
+        case 'Fiesta':
+            return create_image_mmstats_fiesta(masterminds_dict, count, playerid, avg_gameelo, patches)
+        case 'Megamind':
+            return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches, True, megamind_count)
 
 def apicall_elo(playername, rank):
     playerid = apicall_getid(playername)
@@ -1510,7 +1807,10 @@ def apicall_gamestats(playername):
     stats = apicall_getstats(playerid)
     wins = stats['rankedWinsThisSeason']
     loses = stats['rankedLossesThisSeason']
-    winrate = wins / (wins + loses)
+    try:
+        winrate = wins / (wins + loses)
+    except ZeroDivisionError:
+        return 'No games played this season.'
     return str(playername).capitalize() + "'s stats(Season 2023):\nElo: " + str(stats['overallElo']) + '(Peak: ' + str(
         stats['overallPeakEloThisSeason']) + ')\nGames played: ' + \
         str(wins + loses) + '\nWinrate: ' + str(round(winrate * 100)) + '%\nBehavior score: ' + str(
