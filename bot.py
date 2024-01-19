@@ -126,7 +126,8 @@ def run_discord_bot():
     @app_commands.choices(mastermind=[
         discord.app_commands.Choice(name='All', value="All"),
         discord.app_commands.Choice(name='Fiesta', value="Fiesta"),
-        discord.app_commands.Choice(name='Megamind', value="Megamind")
+        discord.app_commands.Choice(name='Megamind', value="Megamind"),
+        discord.app_commands.Choice(name='Champion', value="Champion")
     ])
     async def mmstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, mastermind: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
@@ -136,9 +137,9 @@ def run_discord_bot():
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
             print(e)
-        except IndexError as e:
-            print(e)
-            await interaction.edit_original_response(content='Bot error. :sob:')
+        # except IndexError as e:
+        #     print(e)
+        #     await interaction.edit_original_response(content='Bot error. :sob:')
 
     @tree.command(name="openstats", description="Opener stats.", guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
@@ -168,6 +169,23 @@ def run_discord_bot():
         await interaction.response.send_message('Thinking... :robot:')
         try:
             response = responses.apicall_winrate(playername1, playername2, option.value, games, patch)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
+
+    @tree.command(name="elograph", description="Shows elo graph of player.",
+                  guild=discord.Object(id=serverid))
+    @app_commands.describe(playername='Enter playername.',
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
+    async def elo_graph(interaction: discord.Interaction, playername: str, games: int, patch: str):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.apicall_elograph(playername, games, patch)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
