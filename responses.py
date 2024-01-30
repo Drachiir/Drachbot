@@ -1,5 +1,4 @@
 import io
-
 import requests
 import json
 from collections import Counter
@@ -33,11 +32,11 @@ def im_has_alpha(img_arr):
     return True if c ==4 else False
 
 def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind = False, megamind_count = 0):
-    if playerid != 'all':
+    if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
-        playername = 'All'
+        playername = playerid.capitalize()
     def calc_wr(dict, mm):
         try:
             return str(round(dict[mm]['Wins']/dict[mm]['Count'] * 100, 1))
@@ -106,7 +105,7 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
     myFont_small = ImageFont.truetype(ttf, 20)
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All':
+    if playername == 'All' or 'Nova cup' in playername:
         string = ''
     else:
         string = "'s"
@@ -174,11 +173,11 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
     return image_upload['link']
 
 def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch):
-    if playerid != 'all':
+    if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
-        playername = 'All'
+        playername = playerid.capitalize()
     def calc_wr(dict, mm):
         try:
             return str(round(dict[mm]['Wins']/dict[mm]['Count'] * 100, 1))
@@ -280,7 +279,7 @@ def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch):
     myFont_small = ImageFont.truetype(ttf, 20)
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All':
+    if playername == 'All' or 'Nova cup' in playername:
         string = ''
     else:
         string = "'s"
@@ -464,11 +463,11 @@ def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch):
     return image_upload['link']
 
 def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgelo, patch):
-    if playerid != 'all':
+    if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
-        playername = 'All'
+        playername = playerid.capitalize()
     def most_common(mm, amount, key):
         try:
             data = Counter(dict[mm][key].keys())
@@ -508,17 +507,17 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
             return round(wins / count * 100, 1)
         except ZeroDivisionError as e:
             return '0'
-    keys = ['Games:', 'Winrate:', 'W on 10:', 'Spell:', '', 'Games:', 'Winrate:']
+    keys = ['Games:', 'Winrate:', 'W on 10:', 'Spell:', '', 'Games:', 'Winrate:','Games:', 'Winrate:', 'W on 10:', 'Spell:', '', 'Games:', 'Winrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    im = PIL.Image.new(mode="RGB", size=(1485, 520), color=(49,51,56))
-    im2 = PIL.Image.new(mode="RGB", size=(88, 520), color=(25,25,25))
+    im = PIL.Image.new(mode="RGB", size=(1485, 940), color=(49,51,56))
+    im2 = PIL.Image.new(mode="RGB", size=(88, 425), color=(25,25,25))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
     myFont_small = ImageFont.truetype(ttf, 20)
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All':
+    if playername == 'All' or 'Nova cup' in playername:
         string = ''
     else:
         string = "'s"
@@ -537,12 +536,21 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
     y = 190
     offset = 50
     count = 0
+    line_1 = 0
+    line_2 = 0
     for unit in unit_dict:
-        count += 1
-        if count > 13:
-            count = 13
+        if count == 13:
+            line_1 = 13
+            y = 600
+            x = 126
+        elif count < 13:
+            line_1 = count+1
+        if count == 26:
+            line_2 = 13
             break
-        im.paste(im2, (x - 12, 100))
+        elif count < 26 and count > 13:
+            line_2 = count - 12
+        im.paste(im2, (x - 12, y-90))
         if ' ' in unit:
             unit_string = unit.split(' ')
             unit_new = ''
@@ -553,7 +561,7 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
             url_new = url2 + unit.capitalize() + '.png'
         response = requests.get(url_new)
         opener_image = Image.open(BytesIO(response.content))
-        im.paste(opener_image, (x, 112))
+        im.paste(opener_image, (x, y-78))
         I1.text((x, y), str(dict['Champion']['ChampionUnit'][unit]['Count']), font=myFont,fill=(255, 255, 255))
         I1.text((x, y + offset * 1), str(calc_unit_wr(unit)) + '%', font=myFont,fill=(255, 255, 255))
         I1.text((x, y + offset * 2), str(get_w10(unit)), font=myFont,fill=(255, 255, 255))
@@ -569,8 +577,18 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
         I1.text((x, y + offset * 4.6), str(spell_name[1]), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset * 5.6), str(get_spell_wr(unit, spell_name[0])) + '%', font=myFont, fill=(255, 255, 255))
         x += 106
-    im3 = PIL.Image.new(mode="RGB", size=(86 + 106 * count, 4), color=(169, 169, 169))
+        count += 1
+    im3 = PIL.Image.new(mode="RGB", size=(86 + 106 * line_1, 4), color=(169, 169, 169))
+    x = 126
+    y = 190
+    count2 = 0
     for k in keys:
+        if count2 == 7 and count > 13:
+            y = 600
+            x = 126
+            im3 = PIL.Image.new(mode="RGB", size=(86 + 106 * line_2, 4), color=(169, 169, 169))
+        elif count2 == 7 and line_2 == 0:
+            break
         if (k != 'Open:') and (k != 'Spell:') and (k != ''):
             im.paste(im3, (10, y + 30))
         I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
@@ -578,17 +596,18 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
             y += 50
         else:
             y += 40
+        count2 += 1
     im.save('Files/output.png')
     image_upload = imgur_client.upload_from_path('Files/output.png')
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
-def create_image_unitstats(dict, games, playerid, avgelo, patch):
-    if playerid != 'all':
+def create_image_openstats(dict, games, playerid, avgelo, patch):
+    if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
-        playername = 'All'
+        playername = playerid.capitalize()
     def calc_wr(dict, unit):
         try:
             return str(round(dict[unit]['OpenWins']/dict[unit]['Count'] * 100, 1))
@@ -615,7 +634,7 @@ def create_image_unitstats(dict, games, playerid, avgelo, patch):
     myFont_small = ImageFont.truetype(ttf, 20)
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All':
+    if playername == 'All' or 'Nova cup' in playername:
         suffix = ''
     else:
         suffix = "'s"
@@ -656,10 +675,15 @@ def create_image_unitstats(dict, games, playerid, avgelo, patch):
         I1.text((x, y+offset), str(calc_wr(dict, unit)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y+offset*2), str(calc_pr(dict, unit)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y+offset*3), str(get_w10(dict, unit)), font=myFont, fill=(255, 255, 255))
-        new_dict = {}
-        for xy in dict[unit]['OpenWith']:
-            new_dict[xy] = dict[unit]['OpenWith'][xy]['Wins'] / dict[unit]['OpenWith'][xy]['Count'] * (dict[unit]['OpenWith'][xy]['Count'] / dict[unit]['Count'])
-        newIndex = sorted(new_dict,key=lambda k: new_dict[k], reverse=True)
+        def get_perf_score(dict2, key):
+            new_dict = {}
+            for xy in dict2[key]:
+                if dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] < dict2['OpenWins'] / dict2['Count']:
+                    continue
+                new_dict[xy] = dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] * (dict2[key][xy]['Count'] / dict2['Count'])
+            newIndex = sorted(new_dict,key=lambda k: new_dict[k], reverse=True)
+            return newIndex
+        newIndex = get_perf_score(dict[unit], 'OpenWith')
         if ' ' in newIndex[0]:
             string = newIndex[0].split(' ')
             unit_new = ''
@@ -676,10 +700,7 @@ def create_image_unitstats(dict, games, playerid, avgelo, patch):
         I1.text((x, y + 25+offset * 5), str(dict[unit]['OpenWith'][newIndex[0]]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 25+offset * 6), str(round(dict[unit]['OpenWith'][newIndex[0]]['Wins'] / dict[unit]['OpenWith'][newIndex[0]]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 25+offset * 7), str(round(dict[unit]['OpenWith'][newIndex[0]]['Count'] / dict[unit]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        new_dict = {}
-        for xy in dict[unit]['MMs']:
-            new_dict[xy] = dict[unit]['MMs'][xy]['Wins'] / dict[unit]['MMs'][xy]['Count'] * (dict[unit]['MMs'][xy]['Count'] / dict[unit]['Count'])
-        newIndex = sorted(new_dict, key=lambda k: new_dict[k], reverse=True)
+        newIndex = get_perf_score(dict[unit], 'MMs')
         url_new = url + newIndex[0].capitalize() + '.png'
         if url_new == 'https://cdn.legiontd2.com/icons/Items/Cashout.png':
             url_new = 'https://cdn.legiontd2.com/icons/Items/CashOut.png'
@@ -693,11 +714,7 @@ def create_image_unitstats(dict, games, playerid, avgelo, patch):
         I1.text((x, y + 50+offset * 9), str(dict[unit]['MMs'][newIndex[0]]['Count']), font=myFont,fill=(255, 255, 255))
         I1.text((x, y + 50+offset * 10), str(round(dict[unit]['MMs'][newIndex[0]]['Wins'] / dict[unit]['MMs'][newIndex[0]]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 50+offset * 11),str(round(dict[unit]['MMs'][newIndex[0]]['Count'] / dict[unit]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        new_dict = {}
-        for xy in dict[unit]['Spells']:
-            new_dict[xy] = dict[unit]['Spells'][xy]['Wins'] / dict[unit]['Spells'][xy]['Count'] * (
-                        dict[unit]['Spells'][xy]['Count'] / dict[unit]['Count'])
-        newIndex = sorted(new_dict, key=lambda k: new_dict[k], reverse=True)
+        newIndex = get_perf_score(dict[unit], 'Spells')
         if ' ' in newIndex[0]:
             string = newIndex[0].split(' ')
             spell_new = ''
@@ -819,6 +836,7 @@ def handle_response(message, author) -> str:
     if '!github' in p_message:      return 'https://github.com/Drachiir/Legion-Elo-Bot'
     if '!test' in p_message:        return calc_leak(["Quill Shooter", "Quill Shooter", "Quill Shooter", "Quill Shooter", "Quill Shooter"])
     if '!update' in p_message and str(author) == 'drachir_':    return ladder_update(p_message[8:])
+    if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
 
 
@@ -860,7 +878,12 @@ def get_games_saved_count(playerid):
         playernames = os.listdir(path1)
         for i, x in enumerate(playernames):
             path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + "/gamedata/"
-            json_files = [pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json')]
+            try:
+                json_files = [pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json')]
+            except FileNotFoundError:
+                continue
+            except NotADirectoryError:
+                continue
             count += len(json_files)
         return count
     else:
@@ -891,9 +914,7 @@ def apicall_pullgamedata(playerid, offset, path, expected):
             break
         if (x['queueType'] == 'Normal'):
             ranked_count += 1
-            date = str(x['date']).replace(':', '')
-            date = date.replace('.', '')
-            if Path(Path(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_'+ date + '_' + str(x['_id']) + ".json")).is_file():
+            if Path(Path(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+ '_' + str(x['_id']) + ".json")).is_file():
                 print('File already there, breaking loop.')
                 break
             with open(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_' + str(x['_id']) + ".json", "w") as f:
@@ -956,14 +977,13 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
     if len(patch_list) > 5:
         return "Too many patches."
     games_count = 0
-    if playerid != 'all':
-        playername = apicall_getprofile(playerid)['playerName']
-        path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/"
+    if playerid != 'all' and 'nova cup' not in playerid:
+        path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + "/"
         if not Path(Path(str(path))).is_dir():
             print(playername + ' profile not found, creating new folder...')
             new_profile = True
             Path(str(path+'gamedata/')).mkdir(parents=True, exist_ok=True)
-            with open(str(path) + "gamecount_" + playername + ".txt", "w") as f:
+            with open(str(path) + "gamecount_" + playerid + ".txt", "w") as f:
                 data = get_games_loop(playerid, 0, path, games)
                 playerstats = apicall_getstats(playerid)
                 try:
@@ -1001,7 +1021,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
             if len(json_files) < games:
                 games_count += get_games_loop(playerid, games_amount_old, path, games-len(json_files))
-            with open(str(path) + "gamecount_" + playername + ".txt", "w") as f:
+            with open(str(path) + "gamecount_" + playerid + ".txt", "w") as f:
                 f.truncate(0)
                 lines = [str(ranked_games), str(games_amount_old+games_count)]
                 f.write('\n'.join(lines))
@@ -1028,25 +1048,54 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                             for x in patch_list:
                                 if str(raw_data_partial['version']).startswith('v'+x):
                                     if earlier_than_wave10 == True:
+                                        count += 1
                                         raw_data.append(raw_data_partial)
                                     elif raw_data_partial['endingWave'] >= 10 and earlier_than_wave10 == False:
+                                        count += 1
                                         raw_data.append(raw_data_partial)
-                                    count += 1
     else:
-        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
-        playernames = os.listdir(path1)
-        print(playernames)
-        raw_data = []
-        json_files = []
-        json_counter = 0
-        for i, x in enumerate(playernames):
-            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + "/gamedata/"
+        if 'nova cup' in playerid:
+            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + '/gamedata/'
+            json_files = []
+            raw_data = []
             if patch != '0':
                 for y in patch_list:
-                    json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v'+y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
+                    json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v' + y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
             else:
                 json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
-        sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1],"%Y-%m-%d-%H-%M-%S")), reverse=True)
+            sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1], "%Y-%m-%d-%H-%M-%S")), reverse=True)
+        else:
+            path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
+            playernames = sorted(os.listdir(path1))
+            print(playernames)
+            raw_data = []
+            json_files = []
+            json_counter = 0
+            for i, x in enumerate(playernames):
+                if '.zip' in x:
+                    continue
+                # if x == "0":
+                #     continue
+                # playerid = apicall_getid(playernames[i])
+                # if playerid == 0:
+                #     print('invalid id')
+                #     continue
+                path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + '/gamedata/'
+                # print(path2)
+                # os.rename(path2, str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + str(playerid))
+                # os.rename(str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + str(playerid) + "/gamecount_" + playernames[i] + ".txt", str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + str(playerid) + "/gamecount_" + str(playerid) + ".txt")
+                if patch != '0':
+                    for y in patch_list:
+                        try:
+                            json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v'+y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
+                        except FileNotFoundError:
+                            continue
+                else:
+                    try:
+                        json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
+                    except FileNotFoundError:
+                        continue
+            sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1],"%Y-%m-%d-%H-%M-%S")), reverse=True)
         count = 0
         for i, x in enumerate(sorted_json_files):
             if count == games and games != 0:
@@ -1057,10 +1106,11 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                 # print(x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
                 # os.rename(x, x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
                 if (raw_data_partial not in raw_data):
-                    count += 1
                     if earlier_than_wave10 == True:
+                        count += 1
                         raw_data.append(raw_data_partial)
                     elif raw_data_partial['endingWave'] >= 10 and earlier_than_wave10 == False:
+                        count += 1
                         raw_data.append(raw_data_partial)
     if update == 0:
         print(len(raw_data))
@@ -1092,6 +1142,31 @@ def ladder_update(amount=100):
         else:
             games_count += apicall_getmatchistory(x, ranked_games, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
+
+def pull_games_by_id(file, name):
+    path = '/home/container/Profiles/' + name
+    if not Path(Path(str(path + '/gamedata/'))).is_dir():
+        print(name + ' profile not found, creating new folder...')
+        Path(str(path + '/gamedata/')).mkdir(parents=True, exist_ok=True)
+    with open(file, 'r') as f:
+        txt = f.readlines()
+        print('Pulling ' + str(len(txt)) + ' games from API...')
+        for game_id in txt:
+            game_id = str(game_id).replace('\n', '')
+            print('Pulling game id: ' + str(game_id))
+            url = 'https://apiv2.legiontd2.com/games/byId/'+game_id+'?includeDetails=true'
+            print(url)
+            api_response = requests.get(url, headers=header)
+            x = json.loads(api_response.text)
+            if (x == {'message': 'Internal server error'}) or (x == {'err': 'Entry not found.'}):
+                    print(x)
+                    break
+            if Path(Path(str(path + '/gamedata/') + x['date'].split('.')[0].replace('T', '-').replace(':','-') + '_' +x['version'].replace('.', '-') + '_' + str(x['gameElo']) + '_' + str(x['_id']) + ".json")).is_file():
+                print('File already there, breaking loop.')
+                break
+            with open(str(path + '/gamedata/') + x['date'].split('.')[0].replace('T', '-').replace(':','-') + '_' +x['version'].replace('.', '-') + '_' + str(x['gameElo']) + '_' + str(x['_id']) + ".json","w") as f:
+                json.dump(x, f)
+    return 'Success'
 
 def apicall_matchhistorydetails(playerid):
     playername = apicall_getprofile(playerid)['playerName']
@@ -1191,14 +1266,24 @@ def apicall_elograph(playername, games, patch):
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
-def apicall_wave1tendency(playername, option, games):
-    playerid = apicall_getid(playername)
-    if playerid == 0:
-        return 'Player ' + playername + ' not found.'
-    if playerid == 1:
-        return 'API limit reached.'
-    if games == 0:
-        games = get_games_saved_count(playerid)
+def apicall_wave1tendency(playername, option, games, min_elo, patch):
+    if playername.lower() == 'all':
+        playerid = 'all'
+        suffix = ''
+        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+            return 'Too many games, please limit data.'
+    elif 'nova cup' in playername:
+        suffix = ''
+        playerid = playername
+    else:
+        suffix = "'s"
+        playerid = apicall_getid(playername)
+        if playerid == 0:
+            return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached.'
+        if games == 0:
+            games = get_games_saved_count(playerid)
     count = 0
     snail_count = 0
     kingup_atk_count = 0
@@ -1207,15 +1292,17 @@ def apicall_wave1tendency(playername, option, games):
     save_count = 0
     leaks_count = 0
     try:
-        history_raw = apicall_getmatchistory(playerid, games)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
+    if 'nova cup' in playerid:
+        playerid = 'all'
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    if option == 'send':
+    if option == 'send' or playerid == 'all':
         snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
         kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
     elif option == 'received':
@@ -1223,17 +1310,20 @@ def apicall_wave1tendency(playername, option, games):
         kingup = list(divide_chunks(extract_values(history_raw, 'opponentKingUpgradesPerWave')[1], 4))
     leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
     gameid = extract_values(history_raw, '_id')
+    gameelo = extract_values(history_raw, 'gameElo')
+    gameelo_list = []
     while count < games:
         playerids_ranked = playerids[count]
         snail_ranked = snail[count]
         kingup_ranked = kingup[count]
         leaks_ranked = leaks[count]
+        gameelo_list.append(gameelo[1][count])
         for i, x in enumerate(playerids_ranked):
-            if x == playerid:
+            if playerid == 'all' or x == playerid:
                 if len(snail_ranked[i][0]) > 0:
                     if str(snail_ranked[i][0][0]) == 'Snail':
                         snail_count = snail_count + 1
-                        if option == 'send':
+                        if option == 'send' and playerid != 'all':
                             if i == 0:
                                 if len(leaks_ranked[2][0]) != 0:
                                     leaks_count += 1
@@ -1246,7 +1336,7 @@ def apicall_wave1tendency(playername, option, games):
                             if i == 3:
                                 if len(leaks_ranked[0][0]) != 0:
                                     leaks_count += 1
-                        if option == 'received':
+                        if option == 'received' or playerid == 'all':
                             if len(leaks_ranked[i][0]) != 0:
                                 leaks_count += 1
                         break
@@ -1266,8 +1356,11 @@ def apicall_wave1tendency(playername, option, games):
         count += 1
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
+    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    if playerid == 'all':
+        option = ''
     if send_total > 4:
-        return ((playername).capitalize() + "'s Wave 1 " + option + " stats: (Last " + str(send_total) + " ranked games) <:Stare:1148703530039902319>\nKingup: " + \
+        return ((playername).capitalize() +suffix+" Wave 1 " + option + " stats: (Last " + str(send_total) + " ranked games, Avg. Elo: "+str(avg_gameelo)+") <:Stare:1148703530039902319>\nKingup: " + \
             str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
             ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))'+\
             '\nSave: ' + str(save_count)) + ' | '  + str(round(save_count/send_total*100,1)) + '%'
@@ -1439,6 +1532,9 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
             return 'Too many games, please limit data.'
         if games == 0:
             games = get_games_saved_count(playerid)
+    elif 'nova cup' in playername:
+        suffix = ''
+        playerid = playername
     else:
         playerid = apicall_getid(playername)
         if playerid == 0:
@@ -1472,6 +1568,8 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
+    if 'nova cup' in playerid:
+        playerid = 'all'
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     endingwaves = extract_values(history_raw, 'endingWave')
     snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
@@ -1581,12 +1679,16 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
         'Patches: ' + ', '.join(patches2)
 
 def apicall_openstats(playername, games, min_elo, patch):
+    novacup = False
     if playername == 'all':
         playerid = 'all'
         if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
             return 'Too many games, please limit data.'
         if games == 0:
             games = get_games_saved_count(playerid)
+    elif 'nova cup' in playername:
+        novacup = True
+        playerid = playername
     else:
         playerid = apicall_getid(playername)
         if playerid == 0:
@@ -1611,12 +1713,14 @@ def apicall_openstats(playername, games, min_elo, patch):
         units_extracted = extract_values(units_json, 'unitId')
         value_extracted = extract_values(units_json, 'totalValue')[1]
     for i, x in enumerate(units_extracted[1]):
-        if value_extracted[i] and int(value_extracted[i]) <= 270 and int(value_extracted[i]) > 0:
+        if value_extracted[i] and int(value_extracted[i]) > 0:
             string = x
             string = string.replace('_', ' ')
             string = string.replace(' unit id', '')
             unit_dict[string] = {'Count': 0,'OpenWins': 0,'W4': 0,'OpenWith': {},'MMs': {},'Spells': {}}
     unit_dict['pack rat nest'] = {'Count': 0, 'OpenWins': 0,'W4': 0, 'OpenWith': {},'MMs': {},'Spells': {}}
+    if 'nova cup' in playerid:
+        playerid = 'all'
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
@@ -1643,7 +1747,7 @@ def apicall_openstats(playername, games, min_elo, patch):
         workers_ranked = workers[count]
         spell_ranked = spell[count]
         gameelo_list.append(gameelo[1][count])
-        if playername.lower() != 'all':
+        if playerid.lower() != 'all' and 'nova cup' not in playerid:
             for i, x in enumerate(playerids_ranked):
                 if x == playerid:
                     opener_ranked_raw = [fighters[count][i][0],fighters[count][i][1],fighters[count][i][2],fighters[count][i][3]]
@@ -1659,7 +1763,7 @@ def apicall_openstats(playername, games, min_elo, patch):
             for v, y in enumerate(x):
                 string = y.split('_unit_id:')
                 opener_ranked[i].append(string[0].replace('_', ' '))
-        if playername.lower() != 'all':
+        if playerid.lower() != 'all' and 'nova cup' not in playerid:
             s = set()
             for x in range(4):
                 for y in opener_ranked[x]:
@@ -1732,9 +1836,12 @@ def apicall_openstats(playername, games, min_elo, patch):
     newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
     unit_dict = {k: unit_dict[k] for k in newIndex}
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
-    return create_image_unitstats(unit_dict, games, playerid, avgelo, patches)
+    if novacup:
+        playerid = playername
+    return create_image_openstats(unit_dict, games, playerid, avgelo, patches)
 
 def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
+    novacup = False
     if mastermind != 'all':
         mastermind = mastermind.value
     if playername == 'all':
@@ -1743,6 +1850,9 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
             return 'Too many games, please limit data.'
         if games == 0:
             games = get_games_saved_count(playerid)
+    elif 'nova cup' in playername:
+        novacup = True
+        playerid = playername
     else:
         playerid = apicall_getid(playername)
         if playerid == 0:
@@ -1772,6 +1882,8 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
+    if 'nova cup' in playerid:
+        playerid = 'all'
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
@@ -1912,7 +2024,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
                                 if champ_found == True:
                                     break
                                 for unit in wave:
-                                    if unit.split(':')[1] == champ_location_current:
+                                    if unit.split(':')[1] == champ_location_current and 'grarl' not in unit:
                                         unit_name = unit.split('_unit_id:')[0].replace('_', ' ')
                                         if unit_name in masterminds_dict[masterminds_ranked[i]]['ChampionUnit']:
                                             masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Count'] += 1
@@ -1938,6 +2050,8 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
         newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
         masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
     avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
+    if novacup:
+        playerid = playername
     match mastermind:
         case 'All':
             return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches)

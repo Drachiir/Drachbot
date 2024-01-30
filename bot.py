@@ -80,15 +80,19 @@ def run_discord_bot():
 
     @tree.command(name="wave1", description="Shows Wave 1 tendency",
                   guild=discord.Object(id=serverid))
-    @app_commands.describe(playername='Enter playername.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)', option='Send or received?')
+    @app_commands.describe(playername='Enter playername or "all" for all available data.',
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           min_elo='Enter minium average game elo to include in the data set',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           option='Send or received?')
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='send', value='send'),
         discord.app_commands.Choice(name='received', value='received')
     ])
-    async def wave1(interaction: discord.Interaction, playername: str, games: int, option: discord.app_commands.Choice[str]):
+    async def wave1(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_wave1tendency(playername, option.value, games)
+            response = responses.apicall_wave1tendency(playername, option.value, games, min_elo, patch)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -137,9 +141,9 @@ def run_discord_bot():
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
             print(e)
-        # except IndexError as e:
-        #     print(e)
-        #     await interaction.edit_original_response(content='Bot error. :sob:')
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
 
     @tree.command(name="openstats", description="Opener stats.", guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
