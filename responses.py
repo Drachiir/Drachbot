@@ -31,7 +31,7 @@ def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
     return True if c ==4 else False
 
-def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind = False, megamind_count = 0):
+def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind = False, megamind_count = 0, transparency = True):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
@@ -94,10 +94,16 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
     keys = ['Games:', 'Winrate:', 'Pickrate', 'Elo:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:','Spells:', '', 'Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    if megamind:
-        im = PIL.Image.new(mode="RGB", size=(1490-106, 895), color=(49,51,56))
+    if transparency:
+        mode = 'RGBA'
+        colors = (0,0,0,0)
     else:
-        im = PIL.Image.new(mode="RGB", size=(1490, 895), color=(49, 51, 56))
+        mode = 'RGB'
+        colors = (49,51,56)
+    if megamind:
+        im = PIL.Image.new(mode=mode, size=(1490-106, 895), color=colors)
+    else:
+        im = PIL.Image.new(mode=mode, size=(1490, 895), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
     im3 = PIL.Image.new(mode="RGB", size=(1495, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -167,12 +173,12 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
             y += 50
         else:
             y += 40
-    im.save('Files/output.png')
+    im.save('Files/output.png', 'PNG')
     image_upload = imgur_client.upload_from_path('Files/output.png')
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
-def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch):
+def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch, transparency = True):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
@@ -267,10 +273,16 @@ def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch):
     keys2 = ['Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    if playername != 'All':
-        im = PIL.Image.new(mode="RGB", size=(1470, 770), color=(49,51,56))
+    if transparency:
+        mode = 'RGBA'
+        colors = (0,0,0,0)
     else:
-        im = PIL.Image.new(mode="RGB", size=(1810, 780), color=(49, 51, 56))
+        mode = 'RGB'
+        colors = (49,51,56)
+    if playername != 'All':
+        im = PIL.Image.new(mode=mode, size=(1470, 770), color=colors)
+    else:
+        im = PIL.Image.new(mode=mode, size=(1810, 780), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 365), color=(25,25,25))
     im4 = PIL.Image.new(mode="RGB", size=(812, 760), color=(25, 25, 25))
     im5 = PIL.Image.new(mode="RGB", size=(320, 760), color=(25, 25, 25))
@@ -462,7 +474,7 @@ def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch):
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
-def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgelo, patch):
+def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgelo, patch, transparency = True):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
@@ -510,7 +522,13 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
     keys = ['Games:', 'Winrate:', 'W on 10:', 'Spell:', '', 'Games:', 'Winrate:','Games:', 'Winrate:', 'W on 10:', 'Spell:', '', 'Games:', 'Winrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    im = PIL.Image.new(mode="RGB", size=(1485, 940), color=(49,51,56))
+    if transparency:
+        mode = 'RGBA'
+        colors = (0,0,0,0)
+    else:
+        mode = 'RGB'
+        colors = (49,51,56)
+    im = PIL.Image.new(mode=mode, size=(1485, 940), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 425), color=(25,25,25))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
@@ -602,7 +620,7 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
-def create_image_openstats(dict, games, playerid, avgelo, patch):
+def create_image_openstats(dict, games, playerid, avgelo, patch, transparency = True):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
@@ -626,7 +644,13 @@ def create_image_openstats(dict, games, playerid, avgelo, patch):
     keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 4:', 'Best add:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:','', 'Games:', 'Winrate:', 'Playrate:', 'Best\nSpells:','', 'Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
-    im = PIL.Image.new(mode="RGB", size=(1700, 975), color=(49, 51, 56))
+    if transparency:
+        mode = 'RGBA'
+        colors = (0,0,0,0)
+    else:
+        mode = 'RGB'
+        colors = (49,51,56)
+    im = PIL.Image.new(mode=mode, size=(1700, 975), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
     im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -777,7 +801,7 @@ def count_value(playername, value, player_names, data):
             value_count = value_count + 1
     return value_count
 
-mercs = {"Snail": (20, 6), "Giant Snail": (20, 6), "Lizard": (40, 12), "Dragon Turtle": (40, 12), "Brute": (60, 15), "Fiend": (60, 18), "Dino": (80, 24),
+mercs = {"Snail": (20, 6), "Giant Snail": (20, 6), "Robo": (40, 10), "Lizard": (40, 12), "Dragon Turtle": (40, 12), "Brute": (60, 15), "Fiend": (60, 18), "Dino": (80, 24),
          "Hermit": (80, 20), "Cannoneer": (100, 30), "Imp": (100, 13), "Safety Mole": (120, 30), "Drake": (120, 36), "Pack Leader": (160, 40),
          "Mimic": (160, 40), "Witch": (200, 50), "Ogre": (200, 50), "Ghost Knight": (240, 60), "Four Eyes": (240, 60), "Centaur": (280, 70),
          "Shaman": (320, 80), "Siege Ram": (320, 80), "Needler": (360, 90), "Kraken": (400, 100), "Froggo": (0, 3)}
@@ -887,8 +911,7 @@ def get_games_saved_count(playerid):
             count += len(json_files)
         return count
     else:
-        playername = apicall_getprofile(playerid)['playerName']
-        path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playername + "/gamedata/"
+        path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + "/gamedata/"
         if Path(Path(str(path))).is_dir():
             json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
             if len(json_files) == 0:
@@ -980,7 +1003,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
     if playerid != 'all' and 'nova cup' not in playerid:
         path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + "/"
         if not Path(Path(str(path))).is_dir():
-            print(playername + ' profile not found, creating new folder...')
+            print(playerid + ' profile not found, creating new folder...')
             new_profile = True
             Path(str(path+'gamedata/')).mkdir(parents=True, exist_ok=True)
             with open(str(path) + "gamecount_" + playerid + ".txt", "w") as f:
@@ -1184,7 +1207,88 @@ def apicall_matchhistorydetails(playerid):
     output.append(wins)
     return output
 
-def apicall_elograph(playername, games, patch):
+def apicall_leaderboard(ranks=10, transparency=False):
+    url = 'https://apiv2.legiontd2.com/players/stats?limit=' + str(ranks) + '&sortBy=overallElo&sortDirection=-1'
+    api_response = requests.get(url, headers=header)
+    leaderboard = json.loads(api_response.text)
+    player_dict = {}
+    url = 'https://cdn.legiontd2.com/icons/Items/'
+    url2 = 'https://cdn.legiontd2.com/icons/'
+    if transparency:
+        mode = 'RGBA'
+        colors = (0, 0, 0, 0)
+    else:
+        mode = 'RGB'
+        colors = (49, 51, 56)
+    im = PIL.Image.new(mode=mode, size=(758, 830), color=colors)
+    im2 = PIL.Image.new(mode="RGB", size=(720, 76), color=(25, 25, 25))
+    I1 = ImageDraw.Draw(im)
+    ttf = 'Files/RobotoCondensed-Regular.ttf'
+    myFont_small = ImageFont.truetype(ttf, 20)
+    myFont = ImageFont.truetype(ttf, 25)
+    myFont_title = ImageFont.truetype(ttf, 30)
+    x = 24
+    y = 24
+    offset = 80
+    print(leaderboard)
+    for i, player in enumerate(leaderboard):
+        im.paste(im2, (x-6,y-6))
+        avatar_url = 'https://cdn.legiontd2.com/' + player["profile"][0]["avatarUrl"]
+        avatar_response = requests.get(avatar_url)
+        av_image = Image.open(BytesIO(avatar_response.content))
+        gold_border = Image.open('Files/gold_64.png')
+        if im_has_alpha(np.array(av_image)):
+            im.paste(av_image, (x, y), mask=av_image)
+        else:
+            im.paste(av_image, (x, y))
+        im.paste(gold_border, (x, y), mask=gold_border)
+        I1.text((x + offset, y), str(i+1)+". "+player["profile"][0]["playerName"], font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+        width = I1.textlength(str(i+1)+". "+player["profile"][0]["playerName"], font=myFont)
+        I1.text((x+width+10+offset, y+5), player["profile"][0]["guildTag"], font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(247, 203, 27))
+        if player["overallElo"] >= 2800:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
+        elif player["overallElo"] >= 2600:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Grandmaster.png'
+        elif player["overallElo"] >= 2400:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/SeniorMaster.png'
+        elif player["overallElo"] >= 2200:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Master.png'
+        else:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Expert.png'
+        rank_response = requests.get(rank_url)
+        rank_image = Image.open(BytesIO(rank_response.content))
+        rank_image = rank_image.resize((32,32))
+        im.paste(rank_image, (x + offset, y+30), mask=rank_image)
+        I1.text((x + offset+ 40, y+30), str(player["overallElo"]), font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+        width2 = I1.textlength(str(player["overallElo"]), font=myFont)
+        I1.text((x + offset + 60+width2, y + 33), "W: "+str(player["rankedWinsThisSeason"])+" L: "+str(player["rankedLossesThisSeason"]), font=myFont_small, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        width2 += I1.textlength("W: "+str(player["rankedWinsThisSeason"])+" L: "+str(player["rankedLossesThisSeason"]), font=myFont_small)
+        winrate = round(player["rankedWinsThisSeason"]/(player["rankedWinsThisSeason"]+player["rankedLossesThisSeason"])*100, 1)
+        if winrate >= 50:
+            rgb = (0,255,0)
+        else:
+            rgb = (255, 0, 0)
+        I1.text((x + offset + 70+width2, y + 33), "(WR: "+str(winrate)+ "%)", font=myFont_small, stroke_width=2,stroke_fill=(0, 0, 0), fill=(rgb))
+        width2 += I1.textlength("(WR: "+str(winrate)+ "%)", font=myFont_small)
+        if player["winStreak"] != 0:
+            I1.text((x + offset + 90+width2, y + 33), "Win Streak: "+str(player["winStreak"]), font=myFont_small, stroke_width=2,stroke_fill=(0, 0, 0), fill=(0, 255, 0))
+            width2 +=  I1.textlength("Win Streak: "+str(player["winStreak"]), font=myFont_small)
+        else:
+            I1.text((x + offset + 90+width2, y + 33), "Loss Streak: "+str(player["lossStreak"]), font=myFont_small, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 0, 0))
+            width2 += I1.textlength("Loss Streak: "+str(player["lossStreak"]), font=myFont_small)
+        lp_response = requests.get("https://cdn.legiontd2.com/icons/LadderPoints.png")
+        lp_image = Image.open(BytesIO(lp_response.content))
+        lp_image = lp_image.resize((32, 32))
+        im.paste(lp_image, (x + offset+int(width2)+110, y + 30), mask=lp_image)
+        I1.text((x + offset + 142 + width2, y + 33), " LP: "+str(player["ladderPoints"]), font=myFont_small, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255,255,255))
+        y += offset
+    im.save('Files/output.png')
+    image_upload = imgur_client.upload_from_path('Files/output.png')
+    print('Uploading output.png to Imgur...')
+    return image_upload['link']
+
+
+def apicall_elograph(playername, games, patch, transparency = True):
     playerid = apicall_getid(playername)
     if playerid == 0:
         return 'Player ' + playername + ' not found.'
@@ -1225,7 +1329,13 @@ def apicall_elograph(playername, games, patch):
     #Image generation
     x = 126
     y = 160
-    im = PIL.Image.new(mode="RGB", size=(1180, 770), color=(49, 51, 56))
+    if transparency:
+        mode = 'RGBA'
+        colors = (0,0,0,0)
+    else:
+        mode = 'RGB'
+        colors = (49,51,56)
+    im = PIL.Image.new(mode=mode, size=(1180, 770), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
     im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -1242,15 +1352,16 @@ def apicall_elograph(playername, games, patch):
               "axes.labelcolor": "w",
               "axes.edgecolor": "w",
               "figure.figsize": (14, 8),
-              'axes.autolimit_mode': 'round_numbers'}
+              'axes.autolimit_mode': 'round_numbers',
+              'font.weight': 'bold'}
     if len(elo_per_game) > 100:
         marker_plot = ''
     else:
         marker_plot = 'o'
     plt.rcParams.update(params)
-    plt.grid()
-    plt.xlabel('Games')
-    plt.ylabel('Elo')
+    plt.grid(linewidth=2)
+    plt.xlabel('Games', weight='bold')
+    plt.ylabel('Elo', weight='bold')
     plt.margins(x=0)
     plt.plot(range(1,games+1), elo_per_game, color='red', marker=marker_plot, linewidth=2.5, label='Elo')
     plt.xticks(ticks=plt.xticks()[0], labels=plt.xticks()[0].astype(int))
@@ -1521,14 +1632,14 @@ def apicall_winrate(playername, playername2, option, games, patch):
             '% winrate)\nPatches: ' + ', '.join(patches)
         except ZeroDivisionError as e:
             print(e)
-            return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + option + ' each other recently.'
+            return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + option + ' each other.'
 
 
 def apicall_elcringo(playername, games, patch, min_elo, option):
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0' or patch == '10'):
             return 'Too many games, please limit data.'
         if games == 0:
             games = get_games_saved_count(playerid)
@@ -1677,6 +1788,63 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
         'Mythium sent: ' + str(mythium) + ' (Pre 10: '+str(mythium_pre10)+', Post 10: '+str(mythium-mythium_pre10)+')\n' + \
         'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
         'Patches: ' + ', '.join(patches2)
+
+# def apicall_elcringo2(playername, games, patch, min_elo, option):
+#     if playername.lower() == 'all':
+#         playerid = 'all'
+#         suffix = ''
+#         if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+#             return 'Too many games, please limit data.'
+#         if games == 0:
+#             games = get_games_saved_count(playerid)
+#     elif 'nova cup' in playername:
+#         suffix = ''
+#         playerid = playername
+#     else:
+#         playerid = apicall_getid(playername)
+#         if playerid == 0:
+#             return 'Player ' + playername + ' not found.'
+#         if playerid == 1:
+#             return 'API limit reached, you can still use "all" commands.'
+#         suffix = "'s"
+#         if games == 0:
+#             games = get_games_saved_count(playerid)
+#     try:
+#         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
+#     except TypeError as e:
+#         print(e)
+#         return playername + ' has not played enough games.'
+#     if history_raw == "Too many patches.":
+#         return "Too many patches."
+#     games = len(history_raw)
+#     if games == 0:
+#         return 'No games found.'
+#     if 'nova cup' in playerid:
+#         playerid = 'all'
+#     gameelo_list = []
+#     count = 0
+#     elcringo_dict = {}
+#     per_player_dict = {"Waves": []}
+#     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
+#     sends = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
+#     kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
+#     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
+#     income = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
+#     leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
+#     kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
+#     kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
+#     gameid = extract_values(history_raw, '_id')
+#     gameelo = extract_values(history_raw, 'gameElo')
+#     endingwaves = extract_values(history_raw, 'endingWave')
+#     patches = extract_values(history_raw, 'version')
+#     patches2 = list(dict.fromkeys(patches[1]))
+#     new_patches = []
+#     for x in patches2:
+#         string = x
+#         periods = string.count('.')
+#         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+#     patches2 = list(dict.fromkeys(new_patches))
+#     print('starting elcringo command...')
 
 def apicall_openstats(playername, games, min_elo, patch):
     novacup = False

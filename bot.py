@@ -198,6 +198,20 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
+    @tree.command(name="leaderboard", description="Shows current top 10 ranked leaderboard.",
+                  guild=discord.Object(id=serverid))
+    async def leaderboard(interaction: discord.Interaction):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.apicall_leaderboard()
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
+
     @client.event
     async def on_ready():
         await tree.sync(guild=discord.Object(id=serverid))
