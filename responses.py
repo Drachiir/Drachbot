@@ -17,6 +17,7 @@ from imgurpython import ImgurClient
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -1230,7 +1231,6 @@ def apicall_leaderboard(ranks=10, transparency=False):
     x = 24
     y = 24
     offset = 80
-    print(leaderboard)
     for i, player in enumerate(leaderboard):
         im.paste(im2, (x-6,y-6))
         avatar_url = 'https://cdn.legiontd2.com/' + player["profile"][0]["avatarUrl"]
@@ -1242,6 +1242,11 @@ def apicall_leaderboard(ranks=10, transparency=False):
         else:
             im.paste(av_image, (x, y))
         im.paste(gold_border, (x, y), mask=gold_border)
+        last_game = apicall_getmatchistory(player["_id"], 1)
+        game_date = datetime.strptime(last_game[0]["date"].split(".000Z")[0].replace("T", "-"), '%Y-%m-%d-%H:%M:%S')
+        if game_date < datetime.now() - timedelta(days=1):
+            tent = Image.open('Files/tent.png')
+            im.paste(tent, (x, y), mask=tent)
         I1.text((x + offset, y), str(i+1)+". "+player["profile"][0]["playerName"], font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
         width = I1.textlength(str(i+1)+". "+player["profile"][0]["playerName"], font=myFont)
         I1.text((x+width+10+offset, y+5), player["profile"][0]["guildTag"], font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(247, 203, 27))
