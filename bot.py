@@ -84,15 +84,19 @@ def run_discord_bot():
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           option='Send or received?')
+                           option='Send or received?', sort="Sort by?")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='send', value='send'),
         discord.app_commands.Choice(name='received', value='received')
     ])
-    async def wave1(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str]):
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def wave1(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str], sort: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_wave1tendency(playername, option.value, games, min_elo, patch)
+            response = responses.apicall_wave1tendency(playername, option.value, games, min_elo, patch, sort=sort.value)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -105,15 +109,20 @@ def run_discord_bot():
     @tree.command(name="elcringo", description="Shows how cringe someone is.",
                   guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
-                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.', min_elo='Enter minium average game elo to include in the data set', option='Count small sends as save?')
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.', min_elo='Enter minium average game elo to include in the data set',
+                           option='Count small sends as save?', sort='Sort by?')
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Yes', value="Yes"),
         discord.app_commands.Choice(name='No', value="No")
     ])
-    async def elcringo(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str]):
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def elcringo(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str], sort: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_elcringo(playername, games, patch, min_elo, option)
+            response = responses.apicall_elcringo(playername, games, patch, min_elo, option, sort=sort.value)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -126,17 +135,21 @@ def run_discord_bot():
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           mastermind= 'Select a Mastermind for specific stats, or All for a general overview.')
+                           mastermind= 'Select a Mastermind for specific stats, or All for a general overview.', sort="Sort by?")
     @app_commands.choices(mastermind=[
         discord.app_commands.Choice(name='All', value="All"),
         discord.app_commands.Choice(name='Fiesta', value="Fiesta"),
         discord.app_commands.Choice(name='Megamind', value="Megamind"),
         discord.app_commands.Choice(name='Champion', value="Champion")
     ])
-    async def mmstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, mastermind: discord.app_commands.Choice[str]):
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def mmstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, mastermind: discord.app_commands.Choice[str], sort: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_mmstats(str(playername).lower(), games, min_elo, patch, mastermind)
+            response = responses.apicall_mmstats(str(playername).lower(), games, min_elo, patch, mastermind, sort=sort.value)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
@@ -149,11 +162,16 @@ def run_discord_bot():
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
-                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
-    async def openstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str):
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           sort="Sort by?")
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def openstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, sort: discord.app_commands.Choice[str]):
         await interaction.response.send_message('Thinking... :robot:')
         try:
-            response = responses.apicall_openstats(str(playername).lower(), games, min_elo, patch)
+            response = responses.apicall_openstats(str(playername).lower(), games, min_elo, patch, sort=sort.value)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:

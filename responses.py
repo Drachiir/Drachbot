@@ -859,7 +859,7 @@ def handle_response(message, author) -> str:
     if 'mrbuzz' in p_message:       return "(On his smurf)"
     if 'nyctea' in p_message:       return "toikan,"
     if '!github' in p_message:      return 'https://github.com/Drachiir/Legion-Elo-Bot'
-    if '!test' in p_message:        return calc_leak(["Quill Shooter", "Quill Shooter", "Quill Shooter", "Quill Shooter", "Quill Shooter"])
+    if '!test' in p_message:        return ffstats()
     if '!update' in p_message and str(author) == 'drachir_':    return ladder_update(p_message[8:])
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
@@ -967,7 +967,7 @@ def get_games_loop(playerid, offset, path, expected, timeout_limit = 5):
         print('All '+str(expected)+' required games pulled.')
     return games_count
 
-def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False):
+def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date"):
     patch_list = []
     if patch != '0' and "," in patch:
         patch_list = patch.split(',')
@@ -1053,21 +1053,26 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             raw_data = []
             json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
             count = 0
-            sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4],"%Y-%m-%d-%H-%M-%S")), reverse=True)
+            if sort_by == "date":
+                sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1], "%Y-%m-%d-%H-%M-%S")), reverse=True)
+            elif sort_by == "elo":
+                sorted_json_files = sorted(json_files, key=lambda x: x.split("_")[-2], reverse=True)
             for i, x in enumerate(sorted_json_files):
                 with (open(path + '/gamedata/' + x) as f):
                     raw_data_partial = json.load(f)
                     f.close()
                     if raw_data_partial['gameElo'] >= min_elo:
                         if patch == '0':
-                            if i > games - 1:
+                            if count == games:
                                 break
                             if earlier_than_wave10 == True:
+                                count += 1
                                 raw_data.append(raw_data_partial)
                             elif raw_data_partial['endingWave'] >= 10 and earlier_than_wave10 == False:
+                                count += 1
                                 raw_data.append(raw_data_partial)
                         else:
-                            if count > games - 1:
+                            if count == games:
                                 break
                             for x in patch_list:
                                 if str(raw_data_partial['version']).startswith('v'+x):
@@ -1119,7 +1124,10 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                         json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
                     except FileNotFoundError:
                         continue
-            sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1],"%Y-%m-%d-%H-%M-%S")), reverse=True)
+            if sort_by == "date":
+                sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1],"%Y-%m-%d-%H-%M-%S")), reverse=True)
+            elif sort_by == "elo":
+                sorted_json_files = sorted(json_files, key=lambda x: x.split("_")[-2], reverse=True)
         count = 0
         for i, x in enumerate(sorted_json_files):
             if count == games and games != 0:
@@ -1145,26 +1153,32 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
         else:
             return games_diff
 
+def ffstats():
+    games = apicall_getmatchistory("all", 0, patch="11.01", earlier_than_wave10=True)
+    ff_count = 0
+    win_team = []
+    lose_team = []
+    for game in games:
+        if game["endingWave"] < 10:
+            ff_count += 1
+    return str(len(games)) + " " + str(ff_count)
+
 def ladder_update(amount=100):
     url = 'https://apiv2.legiontd2.com/players/stats?limit='+str(amount)+'&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=header)
     leaderboard = json.loads(api_response.text)
-    try:
-        new_list = [item['_id'] for item in leaderboard]
-    except TypeError:
-        return 'API limit reached. <:peeposad:1103599448623415357> '
     games_count = 0
-    for i, x in enumerate(new_list):
-        print(str(i) + '. ' + apicall_getprofile(x)['playerName'])
-        playerstats = apicall_getstats(x)
-        ranked_games = playerstats['rankedWinsThisSeason'] + playerstats['rankedLossesThisSeason']
+    for i, player in enumerate(leaderboard):
+        print(str(i+1) + '. ' + player["profile"][0]["playerName"])
+        ranked_games = player['rankedWinsThisSeason'] + player['rankedLossesThisSeason']
+        print(ranked_games)
         if ranked_games >= 200:
-            games_count += apicall_getmatchistory(x, 200, 0, '0', 1)
+            games_count += apicall_getmatchistory(player["_id"], 200, 0, '0', 1)
         elif ranked_games == 0:
             print('No games this season.')
             continue
         else:
-            games_count += apicall_getmatchistory(x, ranked_games, 0, '0', 1)
+            games_count += apicall_getmatchistory(player["_id"], ranked_games, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
 
 def pull_games_by_id(file, name):
@@ -1208,7 +1222,7 @@ def apicall_matchhistorydetails(playerid):
     output.append(wins)
     return output
 
-def apicall_leaderboard(ranks=10, transparency=False):
+def apicall_leaderboard(ranks=10, transparency=True):
     url = 'https://apiv2.legiontd2.com/players/stats?limit=' + str(ranks) + '&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=header)
     leaderboard = json.loads(api_response.text)
@@ -1242,14 +1256,17 @@ def apicall_leaderboard(ranks=10, transparency=False):
         else:
             im.paste(av_image, (x, y))
         im.paste(gold_border, (x, y), mask=gold_border)
-        last_game = apicall_getmatchistory(player["_id"], 1)
+        last_game = apicall_getmatchistory(player["_id"], 1, earlier_than_wave10=True)
         game_date = datetime.strptime(last_game[0]["date"].split(".000Z")[0].replace("T", "-"), '%Y-%m-%d-%H:%M:%S')
-        if game_date < datetime.now() - timedelta(days=1):
+        if game_date < datetime.now() - timedelta(days=2) or player["profile"][0]["playerName"] == "InDaHole":
             tent = Image.open('Files/tent.png')
             im.paste(tent, (x, y), mask=tent)
         I1.text((x + offset, y), str(i+1)+". "+player["profile"][0]["playerName"], font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
         width = I1.textlength(str(i+1)+". "+player["profile"][0]["playerName"], font=myFont)
-        I1.text((x+width+10+offset, y+5), player["profile"][0]["guildTag"], font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(247, 203, 27))
+        try:
+            I1.text((x+width+10+offset, y+5), player["profile"][0]["guildTag"], font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(247, 203, 27))
+        except KeyError:
+            print(player["profile"][0]["playerName"]+ " has no guild.")
         if player["overallElo"] >= 2800:
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
         elif player["overallElo"] >= 2600:
@@ -1314,6 +1331,7 @@ def apicall_elograph(playername, games, patch, transparency = True):
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
     elo = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
+    elo_change = list(divide_chunks(extract_values(history_raw, 'eloChange')[1], 4))
     gameid = extract_values(history_raw, '_id')
     patches = extract_values(history_raw, 'version')[1]
     new_patches = []
@@ -1327,9 +1345,10 @@ def apicall_elograph(playername, games, patch, transparency = True):
     while count < games:
         playerids_ranked = playerids[count]
         elo_ranked = elo[count]
+        elo_change_ranked = elo_change[count]
         for i, x in enumerate(playerids_ranked):
             if x == playerid:
-                elo_per_game.insert(0, elo_ranked[i])
+                elo_per_game.insert(0, elo_ranked[i]+elo_change_ranked[i])
         count += 1
     #Image generation
     x = 126
@@ -1382,7 +1401,7 @@ def apicall_elograph(playername, games, patch, transparency = True):
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
-def apicall_wave1tendency(playername, option, games, min_elo, patch):
+def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
@@ -1408,7 +1427,7 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch):
     save_count = 0
     leaks_count = 0
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -1614,7 +1633,7 @@ def apicall_winrate(playername, playername2, option, games, patch):
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
     if playername2.lower() == 'all':
-        most_common_mates = Counter(playerid2_list).most_common(5)
+        most_common_mates = Counter(playerid2_list).most_common(6)
         winrates = []
         for i, x in enumerate(most_common_mates):
             counter = 0
@@ -1630,6 +1649,7 @@ def apicall_winrate(playername, playername2, option, games, patch):
             apicall_getprofile(most_common_mates[2][0])['playerName'] + ': ' + str(winrates[5]) + ' win - ' + str(most_common_mates[2][1] - winrates[5]) + ' lose (' + str(winrates[4]) + '% winrate)\n' + \
             apicall_getprofile(most_common_mates[3][0])['playerName'] + ': ' + str(winrates[7]) + ' win - ' + str(most_common_mates[3][1] - winrates[7]) + ' lose (' + str(winrates[6]) + '% winrate)\n' + \
             apicall_getprofile(most_common_mates[4][0])['playerName'] + ': ' + str(winrates[9]) + ' win - ' + str(most_common_mates[4][1] - winrates[9]) + ' lose (' + str(winrates[8]) + '% winrate)\n' + \
+            apicall_getprofile(most_common_mates[5][0])['playerName'] + ': ' + str(winrates[11]) + ' win - ' + str(most_common_mates[5][1] - winrates[11]) + ' lose (' + str(winrates[10]) + '% winrate)\n' + \
             'Patches: ' + ', '.join(patches)
     else:
         try: return str(playername).capitalize() + "'s winrate " + option + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
@@ -1640,7 +1660,7 @@ def apicall_winrate(playername, playername2, option, games, patch):
             return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + option + ' each other.'
 
 
-def apicall_elcringo(playername, games, patch, min_elo, option):
+def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
@@ -1675,7 +1695,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
     leaks_list = []
     leaks_pre10_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -1794,64 +1814,66 @@ def apicall_elcringo(playername, games, patch, min_elo, option):
         'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
         'Patches: ' + ', '.join(patches2)
 
-# def apicall_elcringo2(playername, games, patch, min_elo, option):
-#     if playername.lower() == 'all':
-#         playerid = 'all'
-#         suffix = ''
-#         if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
-#             return 'Too many games, please limit data.'
-#         if games == 0:
-#             games = get_games_saved_count(playerid)
-#     elif 'nova cup' in playername:
-#         suffix = ''
-#         playerid = playername
-#     else:
-#         playerid = apicall_getid(playername)
-#         if playerid == 0:
-#             return 'Player ' + playername + ' not found.'
-#         if playerid == 1:
-#             return 'API limit reached, you can still use "all" commands.'
-#         suffix = "'s"
-#         if games == 0:
-#             games = get_games_saved_count(playerid)
-#     try:
-#         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
-#     except TypeError as e:
-#         print(e)
-#         return playername + ' has not played enough games.'
-#     if history_raw == "Too many patches.":
-#         return "Too many patches."
-#     games = len(history_raw)
-#     if games == 0:
-#         return 'No games found.'
-#     if 'nova cup' in playerid:
-#         playerid = 'all'
-#     gameelo_list = []
-#     count = 0
-#     elcringo_dict = {}
-#     per_player_dict = {"Waves": []}
-#     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-#     sends = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
-#     kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
-#     workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-#     income = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
-#     leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
-#     kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
-#     kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
-#     gameid = extract_values(history_raw, '_id')
-#     gameelo = extract_values(history_raw, 'gameElo')
-#     endingwaves = extract_values(history_raw, 'endingWave')
-#     patches = extract_values(history_raw, 'version')
-#     patches2 = list(dict.fromkeys(patches[1]))
-#     new_patches = []
-#     for x in patches2:
-#         string = x
-#         periods = string.count('.')
-#         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-#     patches2 = list(dict.fromkeys(new_patches))
-#     print('starting elcringo command...')
+def apicall_elcringo2(playername, games, patch, min_elo, option):
+    if playername.lower() == 'all':
+        playerid = 'all'
+        suffix = ''
+        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+            return 'Too many games, please limit data.'
+        if games == 0:
+            games = get_games_saved_count(playerid)
+    elif 'nova cup' in playername:
+        suffix = ''
+        playerid = playername
+    else:
+        playerid = apicall_getid(playername)
+        if playerid == 0:
+            return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached, you can still use "all" commands.'
+        suffix = "'s"
+        if games == 0:
+            games = get_games_saved_count(playerid)
+    try:
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
+    except TypeError as e:
+        print(e)
+        return playername + ' has not played enough games.'
+    if history_raw == "Too many patches.":
+        return "Too many patches."
+    games = len(history_raw)
+    if games == 0:
+        return 'No games found.'
+    if 'nova cup' in playerid:
+        playerid = 'all'
+    gameelo_list = []
+    count = 0
+    elcringo_dict = {}
+    player_dict = {}
+    for i in range(21):
+        player_dict["Wave"+str(i)] = {}
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
+    sends = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
+    kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
+    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
+    income = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
+    leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
+    kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
+    kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
+    gameid = extract_values(history_raw, '_id')
+    gameelo = extract_values(history_raw, 'gameElo')
+    endingwaves = extract_values(history_raw, 'endingWave')
+    patches = extract_values(history_raw, 'version')
+    patches2 = list(dict.fromkeys(patches[1]))
+    new_patches = []
+    for x in patches2:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches2 = list(dict.fromkeys(new_patches))
+    print('starting elcringo command...')
 
-def apicall_openstats(playername, games, min_elo, patch):
+def apicall_openstats(playername, games, min_elo, patch, sort="date"):
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -1871,7 +1893,7 @@ def apicall_openstats(playername, games, min_elo, patch):
         if games == 0:
             games = get_games_saved_count(playerid)
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -2013,7 +2035,7 @@ def apicall_openstats(playername, games, min_elo, patch):
         playerid = playername
     return create_image_openstats(unit_dict, games, playerid, avgelo, patches)
 
-def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
+def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort="date"):
     novacup = False
     if mastermind != 'all':
         mastermind = mastermind.value
@@ -2046,7 +2068,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": [], "Results": [], "Opener": [], "Spell": [], "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
     gameelo_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -2067,7 +2089,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
     spell = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
     if mastermind == 'All' or mastermind == 'Megamind':
         megamind = list(divide_chunks(extract_values(history_raw, 'megamind')[1], 4))
-        if len(megamind) == 0:
+        if len(megamind) < games:
             megamind = 'N/A'
     elif mastermind == 'Fiesta':
         leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
@@ -2108,6 +2130,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
         match mastermind:
             case 'All':
                 if megamind != 'N/A':
+                    print(count)
                     megamind_ranked = megamind[count]
                 for i, x in enumerate(playerids_ranked):
                     if playerid == 'all' or x == playerid:
@@ -2199,6 +2222,8 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all'):
                                 for unit in wave:
                                     if unit.split(':')[1] == champ_location_current and 'grarl' not in unit:
                                         unit_name = unit.split('_unit_id:')[0].replace('_', ' ')
+                                        if "seedling" in unit_name:
+                                            print(gameid[1][count])
                                         if unit_name in masterminds_dict[masterminds_ranked[i]]['ChampionUnit']:
                                             masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Count'] += 1
                                             if gameresult_ranked[i] == 'won':
