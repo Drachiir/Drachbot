@@ -1401,6 +1401,126 @@ def apicall_elograph(playername, games, patch, transparency = True):
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
+def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="date"):
+    if starting_wave > 20:
+        return "Enter a wave before 21."
+    elif starting_wave < 0:
+        return "Invalid Wave number."
+    starting_wave -= 1
+    if playername.lower() == 'all':
+        playerid = 'all'
+        suffix = ''
+        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+            return 'Too many games, please limit data.'
+    elif 'nova cup' in playername:
+        suffix = ''
+        playerid = playername
+    else:
+        suffix = "'s"
+        playerid = apicall_getid(playername)
+        if playerid == 0:
+            return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached.'
+        if games == 0:
+            games = get_games_saved_count(playerid)
+    try:
+        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort)
+    except TypeError as e:
+        print(e)
+        return playername + ' has not played enough games.'
+    games = len(history_raw)
+    if games == 0:
+        return 'No games found.'
+    if 'nova cup' in playerid:
+        playerid = 'all'
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
+    sends = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
+    kingups = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
+    gameresults = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
+    endingwaves = extract_values(history_raw, 'endingWave')
+    patches = extract_values(history_raw, 'version')
+    game_ids = extract_values(history_raw, '_id')
+    gameelo = extract_values(history_raw, 'gameElo')
+    gameelo_list = []
+    patches2 = list(dict.fromkeys(patches[1]))
+    new_patches = []
+    for x in patches2:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches2 = list(dict.fromkeys(new_patches))
+    print('starting sendstats command...')
+    count = 0
+    send_count = 0
+    sends_dict = {}
+    while count < games:
+        playerids_ranked = playerids[count]
+        sends_ranked = sends[count]
+        endingwave_ranked = endingwaves[1][count]
+        kingups_ranked = kingups[count]
+        gameresults_ranked = gameresults[count]
+        gameelo_list.append(gameelo[1][count])
+        for i, x in enumerate(playerids_ranked):
+            if playerid == 'all' or x == playerid:
+                save_on_1 = False
+                if endingwave_ranked <= starting_wave+1:
+                    continue
+                if starting_wave != -1:
+                    if len(sends_ranked[i][starting_wave]) == 0 and len(kingups_ranked[i][starting_wave]) == 0:
+                        continue
+                elif starting_wave == -1:
+                    if len(sends_ranked[i][0]) == 0 and len(kingups_ranked[i][0]) == 0:
+                        save_on_1 = True
+                    else:
+                        continue
+                if (save_on_1 == False) and (len(sends_ranked[i][starting_wave]) > 0 or len(kingups_ranked[i][starting_wave]) > 0):
+                    send_count += 1
+                    for n in range(endingwave_ranked-starting_wave-1):
+                        sent = False
+                        if len(sends_ranked[i][starting_wave+n+1]) > 0 or len(kingups_ranked[i][starting_wave+n+1]) > 0:
+                            if "Wave " + str(starting_wave+n+2) in sends_dict:
+                                sends_dict["Wave " + str(starting_wave+n+2)] += 1
+                                sent = True
+                                break
+                            else:
+                                sends_dict["Wave " + str(starting_wave+n+2)] = 1
+                                sent = True
+                                break
+                elif save_on_1 == True:
+                    send_count += 1
+                    for n in range(endingwave_ranked-1):
+                        sent = False
+                        if len(sends_ranked[i][n]) > 0 or len(kingups_ranked[i][n]) > 0:
+                            if "Wave " + str(n+1) in sends_dict:
+                                sends_dict["Wave " + str(n+1)] += 1
+                                sent = True
+                                break
+                            else:
+                                sends_dict["Wave " + str(n+1)] = 1
+                                sent = True
+                                break
+        count += 1
+    if not sends_dict:
+        return "No Wave" + str(starting_wave+1) + " sends found."
+    else:
+        avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+        newIndex = sorted(sends_dict, key=lambda x: sends_dict[x], reverse=True)
+        sends_dict = {k: sends_dict[k] for k in newIndex}
+        result_string = ""
+        for key in list(sends_dict):
+            result_string += key + ": "+ str(sends_dict[key])+" sends ("+str(round(sends_dict[key]/send_count*100,1))+"%)\n"
+        if playerid == "all":
+            games_num = games * 4
+        else:
+            games_num = games
+        if starting_wave != -1:
+            return playername.capitalize() + suffix + " Wave " + str(starting_wave+1) + " send stats. (Last " + str(games) + " ranked games, Avg. Elo: "+str(avg_gameelo)+")\n" +\
+                "Sends on Wave "+str(starting_wave+1)+": "+str(send_count)+" ("+str(round(send_count/games_num*100,1))+"%)\nNext send(s):\n"+ result_string
+        else:
+            return playername.capitalize() + suffix + " Wave 1 save stats. (Last " + str(games) + " ranked games, Avg. Elo: " + str(avg_gameelo) + ")\n" + \
+                "Saves on Wave 1: " + str(send_count) + " (" + str(round(send_count / games_num * 100, 1)) + "%)\nNext send(s):\n" + result_string
+
 def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
@@ -1474,20 +1594,20 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
                         if option == 'received' or playerid == 'all':
                             if len(leaks_ranked[i][0]) != 0:
                                 leaks_count += 1
-                        break
+                        continue
                 elif len(kingup_ranked[i][0]) > 0:
                     if str(kingup_ranked[i][0][0]) == 'Upgrade King Attack':
                         kingup_atk_count = kingup_atk_count + 1
-                        break
+                        continue
                     if str(kingup_ranked[i][0][0]) == 'Upgrade King Regen':
                         kingup_regen_count = kingup_regen_count + 1
-                        break
+                        continue
                     if str(kingup_ranked[i][0][0]) == 'Upgrade King Spell':
                         kingup_spell_count = kingup_spell_count + 1
-                        break
+                        continue
                 else:
                     save_count = save_count + 1
-                    break
+                    continue
         count += 1
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
@@ -1495,7 +1615,7 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     if playerid == 'all':
         option = ''
     if send_total > 4:
-        return ((playername).capitalize() +suffix+" Wave 1 " + option + " stats: (Last " + str(send_total) + " ranked games, Avg. Elo: "+str(avg_gameelo)+") <:Stare:1148703530039902319>\nKingup: " + \
+        return ((playername).capitalize() +suffix+" Wave 1 " + option + " stats: (Last " + str(games) + " ranked games, Avg. Elo: "+str(avg_gameelo)+") <:Stare:1148703530039902319>\nKingup: " + \
             str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
             ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))'+\
             '\nSave: ' + str(save_count)) + ' | '  + str(round(save_count/send_total*100,1)) + '%'
@@ -1695,7 +1815,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     leaks_list = []
     leaks_pre10_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -1767,8 +1887,11 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
                     if counter == 9:
                         break
                 mythium_pre10_list.append(mythium_pre10)
-                worker_10_list.append(workers_ranked[i][9])
-                income_10_list.append(income_ranked[i][9])
+                try:
+                    worker_10_list.append(workers_ranked[i][9])
+                    income_10_list.append(income_ranked[i][9])
+                except Exception:
+                    pass
                 leak_amount = 0
                 leak_pre10_amount = 0
                 for y in range(endingwaves[1][count]):
@@ -1779,10 +1902,13 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
                             leak_pre10_amount += p
                 leaks_list.append(leak_amount/endingwaves[1][count])
                 leaks_pre10_list.append(leak_pre10_amount/10)
-                if i == 0 or 1:
-                    kinghp_list.append(kinghp_left[1][count][9])
-                else:
-                    kinghp_list.append(kinghp_right[1][count][9])
+                try:
+                    if i == 0 or 1:
+                        kinghp_list.append(kinghp_left[1][count][9])
+                    else:
+                        kinghp_list.append(kinghp_right[1][count][9])
+                except Exception:
+                    pass
             mythium_list_pergame.clear()
         save_count_pre10_list.append(save_count_pre10)
         save_count_list.append(save_count)
@@ -2130,7 +2256,6 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
         match mastermind:
             case 'All':
                 if megamind != 'N/A':
-                    print(count)
                     megamind_ranked = megamind[count]
                 for i, x in enumerate(playerids_ranked):
                     if playerid == 'all' or x == playerid:
@@ -2203,6 +2328,17 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
                                 else:
                                     masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
             case 'Champion':
+                unit_dict = {}
+                with open('Files/units.json', 'r') as f:
+                    units_json = json.load(f)
+                    units_extracted = extract_values(units_json, 'unitId')
+                    value_extracted = extract_values(units_json, 'totalValue')[1]
+                for i, x in enumerate(units_extracted[1]):
+                    if value_extracted[i] and int(value_extracted[i]) > 0:
+                        string = x
+                        string = string.replace('_', ' ')
+                        string = string.replace(' unit id', '')
+                        unit_dict[string] = int(value_extracted[i])
                 champ_location_ranked = champ_location[count]
                 build_per_wave_ranked = build_per_wave[count]
                 for i, x in enumerate(playerids_ranked):
@@ -2220,8 +2356,8 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
                                 if champ_found == True:
                                     break
                                 for unit in wave:
-                                    if unit.split(':')[1] == champ_location_current and 'grarl' not in unit:
-                                        unit_name = unit.split('_unit_id:')[0].replace('_', ' ')
+                                    unit_name = unit.split('_unit_id:')[0].replace('_', ' ')
+                                    if unit.split(':')[1] == champ_location_current and 'grarl' not in unit and 'pirate' not in unit and unit_dict[unit_name] > 50:
                                         if "seedling" in unit_name:
                                             print(gameid[1][count])
                                         if unit_name in masterminds_dict[masterminds_ranked[i]]['ChampionUnit']:

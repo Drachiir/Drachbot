@@ -127,9 +127,9 @@ def run_discord_bot():
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
             print(e)
-        except IndexError as e:
-            print(e)
-            await interaction.edit_original_response(content='Bot error. :sob:')
+        # except IndexError as e:
+        #     print(e)
+        #     await interaction.edit_original_response(content='Bot error. :sob:')
 
     @tree.command(name="mmstats", description="Mastermind stats.",guild=discord.Object(id=serverid))
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
@@ -222,6 +222,29 @@ def run_discord_bot():
         await interaction.response.send_message('Thinking... :robot:')
         try:
             response = responses.apicall_leaderboard()
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
+
+    @tree.command(name="sendstats", description="Send stats.", guild=discord.Object(id=serverid))
+    @app_commands.describe(playername='Enter playername or "all" for all available data.',
+                           starting_wave='Enter wave to show next sends when there was a send on that wave, or 0 for first sends after saving on Wave 1',
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           min_elo='Enter minium average game elo to include in the data set',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           sort="Sort by?")
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def sendstats(interaction: discord.Interaction, playername: str, starting_wave: int, games: int, min_elo: int, patch: str, sort: discord.app_commands.Choice[str]):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.apicall_sendstats(str(playername).lower(), starting_wave, games, min_elo, patch, sort=sort.value)
             if len(response) > 0:
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
