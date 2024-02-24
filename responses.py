@@ -18,6 +18,8 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
+import csv
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -859,7 +861,7 @@ def handle_response(message, author) -> str:
     if 'mrbuzz' in p_message:       return "(On his smurf)"
     if 'nyctea' in p_message:       return "toikan,"
     if '!github' in p_message:      return 'https://github.com/Drachiir/Legion-Elo-Bot'
-    if '!test' in p_message:        return ffstats()
+    if '!test' in p_message:        return novacup()
     if '!update' in p_message and str(author) == 'drachir_':    return ladder_update(p_message[8:])
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
@@ -1510,16 +1512,53 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         result_string = ""
         for key in list(sends_dict):
             result_string += key + ": "+ str(sends_dict[key])+" sends ("+str(round(sends_dict[key]/send_count*100,1))+"%)\n"
+        result_string += 'Patches: ' + ', '.join(patches2)
         if playerid == "all":
             games_num = games * 4
         else:
             games_num = games
         if starting_wave != -1:
-            return playername.capitalize() + suffix + " Wave " + str(starting_wave+1) + " send stats. (Last " + str(games) + " ranked games, Avg. Elo: "+str(avg_gameelo)+")\n" +\
+            return playername.capitalize() + suffix + " Wave " + str(starting_wave+1) + " send stats. (From " + str(games) + " ranked games, Avg. Elo: "+str(avg_gameelo)+")\n" +\
                 "Sends on Wave "+str(starting_wave+1)+": "+str(send_count)+" ("+str(round(send_count/games_num*100,1))+"%)\nNext send(s):\n"+ result_string
         else:
-            return playername.capitalize() + suffix + " Wave 1 save stats. (Last " + str(games) + " ranked games, Avg. Elo: " + str(avg_gameelo) + ")\n" + \
+            return playername.capitalize() + suffix + " Wave 1 save stats. (From " + str(games) + " ranked games, Avg. Elo: " + str(avg_gameelo) + ")\n" + \
                 "Saves on Wave 1: " + str(send_count) + " (" + str(round(send_count / games_num * 100, 1)) + "%)\nNext send(s):\n" + result_string
+
+def novacup(division):
+    html = requests.get('https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pubhtml#').text
+    soup = BeautifulSoup(html, "lxml")
+    tables = soup.find_all("table")
+    with open("novacup.csv", "w", encoding="utf-8") as f:
+        wr = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
+        wr.writerows([[td.text for td in row.find_all("td")] for row in tables[0].find_all("tr")])
+    team_dict = {}
+    with open("novacup.csv", encoding="utf-8", newline="") as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            try:
+                if row[1] != "Team Name" and row[1] != "" and row[1] not in team_dict:
+                    team_dict[row[1]] = [row[2],row[3],row[4]]
+            except Exception:
+                continue
+    newIndex = sorted(team_dict, key=lambda x: int(team_dict[x][2]), reverse=True)
+    team_dict = {k: team_dict[k] for k in newIndex}
+    month = datetime.now()
+    output = str(month.strftime("%B")) + " Nova Cup Division 1:\n"
+    output2 = str(month.strftime("%B")) + " Nova Cup Division 2:\n"
+    count = 1
+    for team in team_dict:
+        if count < 9:
+            output += str(count) +". **"+ team + "**: " + team_dict[team][0] + ", " + team_dict[team][1] + ", Seed Elo: " + team_dict[team][2] + "\n"
+        if count >= 9:
+            output2 += str(count-8) + ". **" + team + "**: " + team_dict[team][0] + ", " + team_dict[team][1] + ", Seed Elo: " + team_dict[team][2] + "\n"
+        count +=1
+        if count == 17:
+            break
+    if division == "1":
+        return output
+    elif division == "2":
+        return output2
+
 
 def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     if playername.lower() == 'all':
@@ -2510,6 +2549,8 @@ def apicall_gamestats(playername):
     playerid = apicall_getid(playername)
     if playerid == 1:
         return 'API limit reached.'
+    if playerid == 0:
+        return "API error."
     stats = apicall_getstats(playerid)
     wins = stats['rankedWinsThisSeason']
     loses = stats['rankedLossesThisSeason']

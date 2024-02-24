@@ -67,6 +67,21 @@ def run_discord_bot():
         except discord.NotFound as e:
             print(e)
 
+    @tree.command(name="novacup", description="Shows current teams in each novacup division 1 or 2.", guild=discord.Object(id=serverid))
+    @app_commands.describe(division='Enter division.')
+    @app_commands.choices(division=[
+        discord.app_commands.Choice(name='1', value='1'),
+        discord.app_commands.Choice(name='2', value='2')
+    ])
+    async def gamestats(interaction: discord.Interaction, division: discord.app_commands.Choice[str]):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.novacup(division.value)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+
     @tree.command(name="showlove", description="Shows how many games both players have played together.", guild=discord.Object(id=serverid))
     @app_commands.describe(playername1='Enter playername 1.', playername2='Enter playername 2')
     async def showlove(interaction: discord.Interaction, playername1: str, playername2: str):
