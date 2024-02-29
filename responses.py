@@ -1000,7 +1000,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                 patch_list.append(patch_new2[0] + "." + prefix + str(int(patch_new2[1]) + x))
         else:
             return []
-    if len(patch_list) > 5:
+    if len(patch_list) > 5 and playerid == "all":
         return "Too many patches."
     games_count = 0
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -1662,98 +1662,138 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
         return 'Not enough ranked data'
 
 
-def apicall_winrate(playername, playername2, option, games, patch):
-    playerid = apicall_getid(playername)
+def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
+    mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard']
+    mm1 = ""
+    mm2 = ""
+    if "," in playername:
+        playername = playername.split(",")
+        if playername[0].lower() != 'all':
+            playerid = apicall_getid(playername[0])
+        else:
+            playerid = "all"
+            if ((games == 0) or (games > get_games_saved_count(playerid) * 0.25)) and (min_elo < 2700) and (patch == '0'):
+                return 'Too many games, please limit data.'
+        for mm in mmnames_list:
+            if mm.lower() == playername[1].replace(" ", "").lower():
+                mm1 = mm
+                break
+        else:
+            return playername[1] + " mastermind not found."
+    else:
+        playerid = apicall_getid(playername)
     if playerid == 0:
+        if type(playername) == list:
+            playername = playername[0]
         return 'Player ' + playername + ' not found.'
     if playerid == 1:
         return 'API limit reached.'
-    if playername2.lower() != 'all':
-        playerid2 = apicall_getid(playername2)
-        if playerid2 == 0:
-            return 'Player ' + playername2 + ' not found.'
+    if "," in playername2:
+        playername2 = playername2.split(",")
+        if playername2[0].lower() != 'all':
+            playerid2 = apicall_getid(playername2[0])
+        else:
+            playerid2 = "all"
+        for mm in mmnames_list:
+            if mm.lower() == playername2[1].replace(" ", "").lower():
+                mm2 = mm
+                break
+        else:
+            return playername2[1] + " mastermind not found."
+    else:
+        if playername2 != "all":
+            playerid2 = apicall_getid(playername2)
+        else:
+            playerid2 = "all"
+    if playerid2 == 0:
+        if type(playername2) == list:
+            playername2 = playername2[0]
+        return 'Player ' + playername2 + ' not found.'
+    if playerid2 == 1:
+        return 'API limit reached.'
     if games == 0:
         games = get_games_saved_count(playerid)
     count = 0
     win_count = 0
     game_count = 0
-    ranked_count = 0
     queue_count = 0
-    games_limit = games * 4
     playerid2_list = []
     gameresults = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games, 0, patch)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
     if history_raw == "Too many patches.":
-        return "Too many patches."
+        return history_raw
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
-    games_limit = games * 4
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 1))
-    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 1))
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
+    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
+    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
     gameid = extract_values(history_raw, '_id')
     patches = extract_values(history_raw, 'version')[1]
+    gameelo = extract_values(history_raw, 'gameElo')
+    gameelo_list = []
     patches_list = []
-    while count < games_limit:
-        gameresult_ranked_west = gameresult[count] + gameresult[count + 1]
-        gameresult_ranked_east = gameresult[count + 2] + gameresult[count + 3]
-        playerids_ranked_west = playerids[count] + playerids[count + 1]
-        playerids_ranked_east = playerids[count + 2] + playerids[count + 3]
-        if playername2.lower() != 'all':
+    while count < games:
+        gameresult_ranked_west = [gameresult[count][0], gameresult[count][1]]
+        gameresult_ranked_east = [gameresult[count][2], gameresult[count][3]]
+        playerids_ranked_west = [playerids[count][0], playerids[count][1]]
+        playerids_ranked_east = [playerids[count][2], playerids[count][3]]
+        masterminds_ranked_west = [masterminds[count][0], masterminds[count][1]]
+        masterminds_ranked_east = [masterminds[count][2], masterminds[count][3]]
+        gameelo_list.append(gameelo[1][count])
+        if (playerid2 != 'all') or (playerid == "all" and playerid2 == "all") or (playerid != "all" and mm2 != "") or (playerid != "all" and mm1 != ""):
             for i, x in enumerate(playerids_ranked_west):
-                if x == playerid:
+                if (x == playerid and (mm1 == masterminds_ranked_west[i] or mm1 == "")) or (playerid == "all" and x != playerid2 and (mm1 == masterminds_ranked_west[i] or mm1 == "")):
                     if option == 'against':
-                        if playerids_ranked_east[0] == playerid2:
-                            patches_list.append(patches[ranked_count])
+                        if (playerids_ranked_east[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[0] or mm2 == ""):
+                            patches_list.append(patches[count])
                             game_count += 1
                             if gameresult_ranked_west[i] == 'won':
                                 win_count += 1
-                        elif playerids_ranked_east[1] == playerid2:
-                            patches_list.append(patches[ranked_count])
+                        elif (playerids_ranked_east[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[1] or mm2 == ""):
+                            patches_list.append(patches[count])
                             game_count += 1
                             if gameresult_ranked_west[i] == 'won':
                                 win_count += 1
                     elif option == 'with':
-                        if playerids_ranked_west[0] == playerid2:
-                            patches_list.append(patches[ranked_count])
+                        if i == 0:
+                            teammate = 1
+                        else:
+                            teammate = 0
+                        if (playerids_ranked_west[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[teammate] or mm2 == ""):
+                            patches_list.append(patches[count])
                             game_count += 1
-                            if gameresult_ranked_west[i] == 'won':
-                                win_count += 1
-                        elif playerids_ranked_west[1] == playerid2:
-                            patches_list.append(patches[ranked_count])
-                            game_count += 1
-                            if gameresult_ranked_west[i] == 'won':
+                            if gameresult_ranked_west[teammate] == 'won':
                                 win_count += 1
             for i, x in enumerate(playerids_ranked_east):
-                if x == playerid:
+                if (x == playerid and (mm1 == masterminds_ranked_east[i] or mm1 == "")) or (playerid == "all" and x != playerid2 and (mm1 == masterminds_ranked_east[i] or mm1 == "")):
                     if option == 'against':
-                        if playerids_ranked_west[0] == playerid2:
-                            patches_list.append(patches[ranked_count])
+                        if (playerids_ranked_west[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[0] or mm2 == ""):
+                            patches_list.append(patches[count])
                             game_count += 1
                             if gameresult_ranked_east[i] == 'won':
                                 win_count += 1
-                        elif playerids_ranked_west[1] == playerid2:
-                            patches_list.append(patches[ranked_count])
+                        elif (playerids_ranked_west[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[1] or mm2 == ""):
+                            patches_list.append(patches[count])
                             game_count += 1
                             if gameresult_ranked_east[i] == 'won':
                                 win_count += 1
                     elif option == 'with':
-                        if playerids_ranked_east[0] == playerid2:
-                            patches_list.append(patches[ranked_count])
+                        if i == 0:
+                            teammate = 1
+                        else:
+                            teammate = 0
+                        if (playerids_ranked_east[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[teammate] or mm2 == ""):
+                            patches_list.append(patches[count])
                             game_count += 1
-                            if gameresult_ranked_east[i] == 'won':
-                                win_count += 1
-                        elif playerids_ranked_east[1] == playerid2:
-                            patches_list.append(patches[ranked_count])
-                            game_count += 1
-                            if gameresult_ranked_east[i] == 'won':
+                            if gameresult_ranked_east[teammate] == 'won':
                                 win_count += 1
         else:
-            patches_list.append(patches[ranked_count])
+            patches_list.append(patches[count])
             for i, x in enumerate(playerids_ranked_west):
                 if x == playerid:
                     if option == 'against':
@@ -1782,8 +1822,7 @@ def apicall_winrate(playername, playername2, option, games, patch):
                         elif playerids_ranked_east[1] != playerid:
                             playerid2_list.append(playerids_ranked_east[1])
                             gameresults.append(gameresult_ranked_east[i])
-        count += 4
-        ranked_count += 1
+        count += 1
     patches = list(dict.fromkeys(patches_list))
     new_patches = []
     for x in patches:
@@ -1791,7 +1830,24 @@ def apicall_winrate(playername, playername2, option, games, patch):
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
-    if playername2.lower() == 'all':
+    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    if type(playername) == list:
+        if playername[0] != 'all':
+            suffix = "'s"
+        else:
+            suffix = ""
+        output_string_1 = playername[0].capitalize() + suffix + " " + mm1 + " winrate " + option + " "
+    else:
+        output_string_1 = playername.capitalize() + "'s winrate " + option + " "
+    if type(playername2) == list:
+        if playername2[0] != 'all':
+            suffix = "'s"
+        else:
+            suffix = ""
+        output_string_2 = playername2[0].capitalize() + suffix + " " + mm2
+    else:
+        output_string_2 = playername2.capitalize()
+    if playerid2 == 'all' and playerid != "all" and mm2 == "" and mm1 == "":
         most_common_mates = Counter(playerid2_list).most_common(6)
         winrates = []
         for i, x in enumerate(most_common_mates):
@@ -1802,7 +1858,7 @@ def apicall_winrate(playername, playername2, option, games, patch):
                         counter += 1
             winrates.append(round(counter / x[1] * 100, 2))
             winrates.append(counter)
-        return str(playername).capitalize() + "'s winrate " + option + ' any players (From ' + str(ranked_count) + ' ranked games)\n' +\
+        return output_string_1 + output_string_2 + ' (From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n" +\
             apicall_getprofile(most_common_mates[0][0])['playerName'] + ': ' + str(winrates[1]) + ' win - ' + str(most_common_mates[0][1] - winrates[1]) + ' lose (' + str(winrates[0]) + '% winrate)\n' + \
             apicall_getprofile(most_common_mates[1][0])['playerName'] + ': ' + str(winrates[3]) + ' win - ' + str(most_common_mates[1][1] - winrates[3]) + ' lose (' + str(winrates[2]) + '% winrate)\n' + \
             apicall_getprofile(most_common_mates[2][0])['playerName'] + ': ' + str(winrates[5]) + ' win - ' + str(most_common_mates[2][1] - winrates[5]) + ' lose (' + str(winrates[4]) + '% winrate)\n' + \
@@ -1811,12 +1867,12 @@ def apicall_winrate(playername, playername2, option, games, patch):
             apicall_getprofile(most_common_mates[5][0])['playerName'] + ': ' + str(winrates[11]) + ' win - ' + str(most_common_mates[5][1] - winrates[11]) + ' lose (' + str(winrates[10]) + '% winrate)\n' + \
             'Patches: ' + ', '.join(patches)
     else:
-        try: return str(playername).capitalize() + "'s winrate " + option + ' ' + str(playername2).capitalize() + '(From ' + str(game_count) + ' ranked games)\n' +\
+        try: return output_string_1 + output_string_2 + ' (From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n" +\
             str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\
             '% winrate)\nPatches: ' + ', '.join(patches)
         except ZeroDivisionError as e:
             print(e)
-            return str(playername).capitalize() + ' and ' + str(playername2).capitalize() + ' have no games played ' + option + ' each other.'
+            return "No games found."
 
 
 def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
