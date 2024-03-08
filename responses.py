@@ -819,6 +819,8 @@ wave_values = (72,84,90,96,108,114,120,132,144,150,156,168,180,192,204,216,228,2
 def count_mythium(send):
     send_amount = 0
     for x in send:
+        if "Upgrade" in x:
+            continue
         send_amount += mercs.get(x)[0]
     return send_amount
 
@@ -1335,6 +1337,8 @@ def apicall_elograph(playername, games, patch, transparency = True):
     elo = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
     elo_change = list(divide_chunks(extract_values(history_raw, 'eloChange')[1], 4))
     gameid = extract_values(history_raw, '_id')
+    date = extract_values(history_raw, 'date')
+    gametime = extract_values(history_raw, 'gameLength')
     patches = extract_values(history_raw, 'version')[1]
     new_patches = []
     for x in patches:
@@ -1350,6 +1354,7 @@ def apicall_elograph(playername, games, patch, transparency = True):
         elo_change_ranked = elo_change[count]
         for i, x in enumerate(playerids_ranked):
             if x == playerid:
+                print(date[1][count], gametime[1][count], elo_ranked[i]+elo_change_ranked[i])
                 elo_per_game.insert(0, elo_ranked[i]+elo_change_ranked[i])
         count += 1
     #Image generation
@@ -1403,7 +1408,7 @@ def apicall_elograph(playername, games, patch, transparency = True):
     print('Uploading output.png to Imgur...')
     return image_upload['link']
 
-def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="date"):
+def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="date", transparency = True):
     if starting_wave > 20:
         return "Enter a wave before 21."
     elif starting_wave < 0:
@@ -1411,19 +1416,19 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
     starting_wave -= 1
     if playername.lower() == 'all':
         playerid = 'all'
-        suffix = ''
         if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
             return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
-        suffix = ''
         playerid = playername
     else:
-        suffix = "'s"
         playerid = apicall_getid(playername)
         if playerid == 0:
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached.'
+        profile = apicall_getprofile(playerid)
+        playername = apicall_getprofile(playerid)['playerName']
+        avatar = apicall_getprofile(playerid)['avatarUrl']
         if games == 0:
             games = get_games_saved_count(playerid)
     try:
@@ -1440,6 +1445,7 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
     sends = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
     kingups = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
     gameresults = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
+    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
     endingwaves = extract_values(history_raw, 'endingWave')
     patches = extract_values(history_raw, 'version')
     game_ids = extract_values(history_raw, '_id')
@@ -1455,6 +1461,7 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
     print('starting sendstats command...')
     count = 0
     send_count = 0
+    game_count = 0
     sends_dict = {}
     while count < games:
         playerids_ranked = playerids[count]
@@ -1462,12 +1469,15 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         endingwave_ranked = endingwaves[1][count]
         kingups_ranked = kingups[count]
         gameresults_ranked = gameresults[count]
-        gameelo_list.append(gameelo[1][count])
+        workers_ranked = workers[count]
         for i, x in enumerate(playerids_ranked):
             if playerid == 'all' or x == playerid:
                 save_on_1 = False
-                if endingwave_ranked <= starting_wave+1:
+                if endingwave_ranked < starting_wave+1:
                     continue
+                else:
+                    game_count += 1
+                    gameelo_list.append(gameelo[1][count])
                 if starting_wave != -1:
                     if len(sends_ranked[i][starting_wave]) == 0 and len(kingups_ranked[i][starting_wave]) == 0:
                         continue
@@ -1476,53 +1486,119 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
                         save_on_1 = True
                     else:
                         continue
-                if (save_on_1 == False) and (len(sends_ranked[i][starting_wave]) > 0 or len(kingups_ranked[i][starting_wave]) > 0):
+                send = count_mythium(sends_ranked[i][starting_wave]) + len(kingups_ranked[i][starting_wave]) * 20
+                small_send = (workers_ranked[i][starting_wave] - 5) / 4 * 20
+                if (save_on_1 == False) and (send > small_send):
                     send_count += 1
+                    if "Wave " + str(starting_wave + 1) in sends_dict:
+                        sends_dict["Wave " + str(starting_wave+1)]["Count"] += 1
+                        sends_dict["Wave " + str(starting_wave+1)]["Sends"].extend(sends_ranked[i][starting_wave])
+                        if len(kingups_ranked[i][starting_wave]) > 0:
+                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(kingups_ranked[i][starting_wave])
+                    else:
+                        sends_dict["Wave " + str(starting_wave+1)] = {"Count": 1, "Sends": sends_ranked[i][starting_wave]}
+                        if len(kingups_ranked[i][starting_wave]) > 0:
+                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(kingups_ranked[i][starting_wave])
                     for n in range(endingwave_ranked-starting_wave-1):
-                        sent = False
-                        if len(sends_ranked[i][starting_wave+n+1]) > 0 or len(kingups_ranked[i][starting_wave+n+1]) > 0:
+                        try:
+                            send2 = count_mythium(sends_ranked[i][starting_wave+n+1]) + len(kingups_ranked[i][starting_wave+n+1]) * 20
+                        except IndexError:
+                            break
+                        small_send2 = (workers_ranked[i][starting_wave + n + 1] - 5) / 4 * 20
+                        if send2 > small_send2:
                             if "Wave " + str(starting_wave+n+2) in sends_dict:
-                                sends_dict["Wave " + str(starting_wave+n+2)] += 1
-                                sent = True
+                                sends_dict["Wave " + str(starting_wave+n+2)]["Count"] += 1
+                                sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(sends_ranked[i][starting_wave+n+1])
+                                if len(kingups_ranked[i][starting_wave+n+1]) > 0:
+                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(kingups_ranked[i][starting_wave+n+1])
                                 break
                             else:
-                                sends_dict["Wave " + str(starting_wave+n+2)] = 1
-                                sent = True
+                                sends_dict["Wave " + str(starting_wave+n+2)] = {"Count": 1, "Sends": sends_ranked[i][starting_wave+n+1]}
+                                if len(kingups_ranked[i][starting_wave+n+1]) > 0:
+                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(kingups_ranked[i][starting_wave+n+1])
                                 break
                 elif save_on_1 == True:
                     send_count += 1
                     for n in range(endingwave_ranked-1):
-                        sent = False
-                        if len(sends_ranked[i][n]) > 0 or len(kingups_ranked[i][n]) > 0:
-                            if "Wave " + str(n+1) in sends_dict:
-                                sends_dict["Wave " + str(n+1)] += 1
-                                sent = True
+                        if len(sends_ranked[i][n+1]) > 0 or len(kingups_ranked[i][n+1]) > 0:
+                            if "Wave " + str(n+2) in sends_dict:
+                                sends_dict["Wave " + str(n+2)]["Count"] += 1
+                                sends_dict["Wave " + str(n+2)]["Sends"].extend(sends_ranked[i][n+1])
+                                if len(kingups_ranked[i][n+1]) > 0:
+                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(kingups_ranked[i][n+1])
                                 break
                             else:
-                                sends_dict["Wave " + str(n+1)] = 1
-                                sent = True
+                                sends_dict["Wave " + str(n+2)] = {"Count": 1,"Sends": sends_ranked[i][n+1]}
+                                if len(kingups_ranked[i][n+1]) > 0:
+                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(kingups_ranked[i][n+1])
                                 break
         count += 1
     if not sends_dict:
         return "No Wave" + str(starting_wave+1) + " sends found."
     else:
         avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
-        newIndex = sorted(sends_dict, key=lambda x: sends_dict[x], reverse=True)
+        newIndex = sorted(sends_dict, key=lambda x: sends_dict[x]["Count"], reverse=True)
         sends_dict = {k: sends_dict[k] for k in newIndex}
-        result_string = ""
-        for key in list(sends_dict):
-            result_string += key + ": "+ str(sends_dict[key])+" sends ("+str(round(sends_dict[key]/send_count*100,1))+"%)\n"
-        result_string += 'Patches: ' + ', '.join(patches2)
-        if playerid == "all":
-            games_num = games * 4
+        if transparency:
+            mode = 'RGBA'
+            colors = (0, 0, 0, 0)
         else:
-            games_num = games
-        if starting_wave != -1:
-            return playername.capitalize() + suffix + " Wave " + str(starting_wave+1) + " send stats. (From " + str(games) + " ranked games, Avg. Elo: "+str(avg_gameelo)+")\n" +\
-                "Sends on Wave "+str(starting_wave+1)+": "+str(send_count)+" ("+str(round(send_count/games_num*100,1))+"%)\nNext send(s):\n"+ result_string
+            mode = 'RGB'
+            colors = (49, 51, 56)
+        im = PIL.Image.new(mode=mode, size=(1300, 1100), color=colors)
+        im2 = PIL.Image.new(mode="RGB", size=(1300, 76), color=(25, 25, 25))
+        I1 = ImageDraw.Draw(im)
+        ttf = 'Files/RobotoCondensed-Regular.ttf'
+        myFont_small = ImageFont.truetype(ttf, 20)
+        myFont = ImageFont.truetype(ttf, 25)
+        myFont_title = ImageFont.truetype(ttf, 30)
+        if playername == 'all' or 'nova cup' in playername:
+            string = ''
         else:
-            return playername.capitalize() + suffix + " Wave 1 save stats. (From " + str(games) + " ranked games, Avg. Elo: " + str(avg_gameelo) + ")\n" + \
-                "Saves on Wave 1: " + str(send_count) + " (" + str(round(send_count / games_num * 100, 1)) + "%)\nNext send(s):\n" + result_string
+            string = "'s"
+            avatar_url = 'https://cdn.legiontd2.com/' + avatar
+            avatar_response = requests.get(avatar_url)
+            av_image = Image.open(BytesIO(avatar_response.content))
+            gold_border = Image.open('Files/gold_64.png')
+            if im_has_alpha(np.array(av_image)):
+                im.paste(av_image, (10, 10), mask=av_image)
+            else:
+                im.paste(av_image, (10, 10))
+            im.paste(gold_border, (10, 10), mask=gold_border)
+        starting_wave += 1
+        if starting_wave > 0:
+            string_2 = "Wave " + str(starting_wave) + " send"
+        else:
+            string_2 = "Wave 1 save"
+        I1.text((80, 10), str(playername.capitalize()) + string + " " + string_2 + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avg_gameelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((80, 50), 'Patches: ' + ', '.join(patches2), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+        x = 400
+        y = 100
+        for wave in sends_dict:
+            im.paste(im2, (4,y-6))
+            im.paste(Image.open('Files/Waves/'+wave.replace(" ", "")+".png"), (10, y))
+            I1.text((80, y), wave, font=myFont, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+            most_common_sends = Counter(sends_dict[wave]["Sends"]).most_common(6)
+            I1.text((270, y), 'Fav. Sends:', font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+            for send in most_common_sends:
+                im.paste(Image.open(BytesIO(requests.get('https://cdn.legiontd2.com/icons/'+send[0].replace(" ", "")+".png").content)), (x, y))
+                x += 70
+                I1.text((x, y+20), ": "+str(send[1]), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+                width = int(I1.textlength(": "+str(send[1]), font=myFont_title))
+                x += width+5
+            if wave == "Wave "+str(starting_wave):
+                I1.text((80, y+32), "Sends: " + str(sends_dict[wave]["Count"]) + " (" + str(round(sends_dict[wave]["Count"] / game_count * 100, 1))+"%)",font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+                I1.text((10, y+83), 'Next Send(s):', font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+                y += 140
+            else:
+                I1.text((80, y+32), "Sends: " + str(sends_dict[wave]["Count"]) + " (" + str(round(sends_dict[wave]["Count"] / send_count * 100, 1))+"%)",font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+                y += 100
+            x = 400
+        im.save('Files/output.png')
+        image_upload = imgur_client.upload_from_path('Files/output.png')
+        print('Uploading output.png to Imgur...')
+        return image_upload['link']
+
 
 def novacup(division):
     html = requests.get('https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pubhtml#').text
@@ -1586,7 +1662,7 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     save_count = 0
     leaks_count = 0
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -1907,6 +1983,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     mythium_pre10_list = []
     mythium_list_pergame = []
     kinghp_list = []
+    kinghp_enemy_list = []
     leaks_list = []
     leaks_pre10_list = []
     try:
@@ -2000,8 +2077,10 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
                 try:
                     if i == 0 or 1:
                         kinghp_list.append(kinghp_left[1][count][9])
+                        kinghp_enemy_list.append(kinghp_right[1][count][9])
                     else:
                         kinghp_list.append(kinghp_right[1][count][9])
+                        kinghp_enemy_list.append(kinghp_left[1][count][9])
                 except Exception:
                     pass
             mythium_list_pergame.clear()
@@ -2022,6 +2101,12 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     leaks_total = round(sum(leaks_list) / len(leaks_list), 1)
     leaks_pre10_total = round(sum(leaks_pre10_list) / len(leaks_pre10_list), 1)
     king_hp_10 = sum(kinghp_list) / len(kinghp_list)
+    king_hp_enemy_10 = sum(kinghp_enemy_list) / len(kinghp_enemy_list)
+    if playername == "all" or "nova cup" in playername:
+        king_hp_10 = (king_hp_10 + king_hp_enemy_10) / 2
+        string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2))+'%\n'
+    else:
+        string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%, Enemy King: '+str(round(king_hp_enemy_10*100,2))+'%\n'
     avg_gameelo = sum(gameelo_list) / len(gameelo_list)
 
     return (playername).capitalize() +suffix+" elcringo stats(Averages from " + str(games) +" ranked games):<:GK:1161013811927601192>\n" \
@@ -2029,70 +2114,11 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         'Saves after 10: ' + str(saves_post10)+'/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n'\
         'Worker on 10: ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n" \
         'Leaks: ' + str(leaks_total) + "% (First 10: "+str(leaks_pre10_total)+"%)\n" \
-        'Income on 10: ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n" \
-        'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n' + \
+        'Income on 10: ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n"+\
+        string2 + \
         'Mythium sent: ' + str(mythium) + ' (Pre 10: '+str(mythium_pre10)+', Post 10: '+str(mythium-mythium_pre10)+')\n' + \
         'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
         'Patches: ' + ', '.join(patches2)
-
-def apicall_elcringo2(playername, games, patch, min_elo, option):
-    if playername.lower() == 'all':
-        playerid = 'all'
-        suffix = ''
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
-            return 'Too many games, please limit data.'
-        if games == 0:
-            games = get_games_saved_count(playerid)
-    elif 'nova cup' in playername:
-        suffix = ''
-        playerid = playername
-    else:
-        playerid = apicall_getid(playername)
-        if playerid == 0:
-            return 'Player ' + playername + ' not found.'
-        if playerid == 1:
-            return 'API limit reached, you can still use "all" commands.'
-        suffix = "'s"
-        if games == 0:
-            games = get_games_saved_count(playerid)
-    try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
-    if history_raw == "Too many patches.":
-        return "Too many patches."
-    games = len(history_raw)
-    if games == 0:
-        return 'No games found.'
-    if 'nova cup' in playerid:
-        playerid = 'all'
-    gameelo_list = []
-    count = 0
-    elcringo_dict = {}
-    player_dict = {}
-    for i in range(21):
-        player_dict["Wave"+str(i)] = {}
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    sends = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
-    kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
-    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-    income = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
-    leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
-    kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
-    kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
-    gameid = extract_values(history_raw, '_id')
-    gameelo = extract_values(history_raw, 'gameElo')
-    endingwaves = extract_values(history_raw, 'endingWave')
-    patches = extract_values(history_raw, 'version')
-    patches2 = list(dict.fromkeys(patches[1]))
-    new_patches = []
-    for x in patches2:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches2 = list(dict.fromkeys(new_patches))
-    print('starting elcringo command...')
 
 def apicall_openstats(playername, games, min_elo, patch, sort="date"):
     novacup = False

@@ -210,9 +210,9 @@ def run_discord_bot():
                 await interaction.edit_original_response(content=response)
         except discord.NotFound as e:
             print(e)
-        # except IndexError as e:
-        #     print(e)
-        #     await interaction.edit_original_response(content='Bot error. :sob:')
+        except IndexError as e:
+            print(e)
+            await interaction.edit_original_response(content='Bot error. :sob:')
 
     @tree.command(name="elograph", description="Shows elo graph of player.",
                   guild=discord.Object(id=serverid))
