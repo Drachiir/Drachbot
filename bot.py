@@ -10,11 +10,11 @@ serverid = secret_file.get('id')
 
 
 async def send_message(message, user_message, is_private, username):
-    try:
-        response = responses.handle_response(user_message, username)
-        await message.author.send(response) if is_private else await message.channel.send(response)
-    except Exception as e:
-        print(e)
+    #try:
+    response = responses.handle_response(user_message, username)
+    await message.author.send(response) if is_private else await message.channel.send(response)
+    # except Exception as e:
+    #     print(e)
 
 def run_discord_bot():
     TOKEN = secret_file.get('token')
@@ -23,7 +23,7 @@ def run_discord_bot():
     client = discord.Client(intents=intents)
     tree = app_commands.CommandTree(client)
 
-    @tree.command(name= "elo", description= "Shows rank, elo and playtime.", guild=discord.Object(id=serverid))
+    @tree.command(name= "elo", description= "Shows rank, elo and playtime.")
     @app_commands.describe(playername='Enter the playername.')
     async def elo(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
@@ -34,7 +34,7 @@ def run_discord_bot():
         except discord.NotFound as e:
             print(e)
 
-    @tree.command(name="bestie", description="Shows your bestie.", guild=discord.Object(id=serverid))
+    @tree.command(name="bestie", description="Shows your bestie.")
     @app_commands.describe(playername='Enter the playername.')
     async def bestie(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
@@ -45,7 +45,7 @@ def run_discord_bot():
         except discord.NotFound as e:
             print(e)
 
-    @tree.command(name="rank", description="Shows player info of a certain rank.", guild=discord.Object(id=serverid))
+    @tree.command(name="rank", description="Shows player info of a certain rank.")
     @app_commands.describe(rank='Enter a rank(number).')
     async def rank(interaction: discord.Interaction, rank: int):
         await interaction.response.send_message('Thinking... :robot:')
@@ -56,7 +56,7 @@ def run_discord_bot():
         except discord.NotFound as e:
             print(e)
 
-    @tree.command(name="gamestats", description="Shows player stats.", guild=discord.Object(id=serverid))
+    @tree.command(name="gamestats", description="Shows player stats.")
     @app_commands.describe(playername='Enter the playername.')
     async def gamestats(interaction: discord.Interaction, playername: str):
         await interaction.response.send_message('Thinking... :robot:')
@@ -67,7 +67,18 @@ def run_discord_bot():
         except discord.NotFound as e:
             print(e)
 
-    @tree.command(name="novacup", description="Shows current teams in each novacup division 1 or 2.", guild=discord.Object(id=serverid))
+    @tree.command(name="gameid_viewer", description="Outputs image(s) of the gameid provided.")
+    @app_commands.describe(game_id= "Enter the GameID.",wave='Enter a specific wave to output, or just 0 for an Album of every wave.')
+    async def gameid_viewer(interaction: discord.Interaction, game_id: str, wave: int):
+        await interaction.response.send_message('Thinking... :robot:')
+        try:
+            response = responses.apicall_gameid_visualizer(game_id, wave)
+            if len(response) > 0:
+                await interaction.edit_original_response(content=response)
+        except discord.NotFound as e:
+            print(e)
+
+    @tree.command(name="novacup", description="Shows current teams in each novacup division 1 or 2.")
     @app_commands.describe(division='Enter division.')
     @app_commands.choices(division=[
         discord.app_commands.Choice(name='1', value='1'),
@@ -82,7 +93,7 @@ def run_discord_bot():
         except discord.NotFound as e:
             print(e)
 
-    @tree.command(name="showlove", description="Shows how many games both players have played together.", guild=discord.Object(id=serverid))
+    @tree.command(name="showlove", description="Shows how many games both players have played together.")
     @app_commands.describe(playername1='Enter playername 1.', playername2='Enter playername 2')
     async def showlove(interaction: discord.Interaction, playername1: str, playername2: str):
         await interaction.response.send_message('Thinking... :robot:')
@@ -93,8 +104,7 @@ def run_discord_bot():
         except discord.NotFound as e:
             print(e)
 
-    @tree.command(name="wave1", description="Shows Wave 1 tendency",
-                  guild=discord.Object(id=serverid))
+    @tree.command(name="wave1", description="Shows Wave 1 tendency.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
@@ -121,8 +131,7 @@ def run_discord_bot():
             await interaction.edit_original_response(content='Bot error. :sob:')
 
 
-    @tree.command(name="elcringo", description="Shows how cringe someone is.",
-                  guild=discord.Object(id=serverid))
+    @tree.command(name="elcringo", description="Shows how cringe someone is.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.', min_elo='Enter minium average game elo to include in the data set',
                            option='Count small sends as save?', sort='Sort by?')
@@ -146,7 +155,7 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="mmstats", description="Mastermind stats.",guild=discord.Object(id=serverid))
+    @tree.command(name="mmstats", description="Mastermind stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
@@ -173,7 +182,7 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="openstats", description="Opener stats.", guild=discord.Object(id=serverid))
+    @tree.command(name="openstats", description="Opener stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
@@ -195,7 +204,7 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="winrate", description="Shows player1's winrate against/with player2",guild=discord.Object(id=serverid))
+    @tree.command(name="winrate", description="Shows player1's winrate against/with player2.")
     @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2 or all for 6 most common players', option='Against or with?', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set', patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
     @app_commands.choices(option=[
@@ -214,8 +223,7 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="elograph", description="Shows elo graph of player.",
-                  guild=discord.Object(id=serverid))
+    @tree.command(name="elograph", description="Shows elo graph of player.")
     @app_commands.describe(playername='Enter playername.',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
@@ -231,8 +239,7 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="leaderboard", description="Shows current top 10 ranked leaderboard.",
-                  guild=discord.Object(id=serverid))
+    @tree.command(name="leaderboard", description="Shows current top 10 ranked leaderboard")
     async def leaderboard(interaction: discord.Interaction):
         await interaction.response.send_message('Thinking... :robot:')
         try:
@@ -245,7 +252,14 @@ def run_discord_bot():
             print(e)
             await interaction.edit_original_response(content='Bot error. :sob:')
 
-    @tree.command(name="sendstats", description="Send stats.", guild=discord.Object(id=serverid))
+    @tree.command(name="help", description="Gives some info on how to use all the commands.")
+    async def help(interaction: discord.Interaction):
+        try:
+            await interaction.response.send_message('todo')
+        except discord.NotFound as e:
+            print(e)
+
+    @tree.command(name="sendstats", description="Send stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
                            starting_wave='Enter wave to show next sends when there was a send on that wave, or 0 for first sends after saving on Wave 1',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
@@ -270,16 +284,16 @@ def run_discord_bot():
 
     @client.event
     async def on_ready():
-        await tree.sync(guild=discord.Object(id=serverid))
         print(f'{client.user} is now running!')
 
     @client.event
     async def on_message(message):
         if '!' in message.content:
+            if "!sync" == message.content and "drachir_" == str(message.author):
+                print(await tree.sync(guild=None))
             username = str(message.author)
             user_message = str(message.content)
             channel = str(message.channel)
-
             print(f"{username} said: '{user_message}'({channel})")
         else: return
 
