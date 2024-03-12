@@ -1962,7 +1962,6 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
                         counter += 1
             winrates.append(round(counter / x[1] * 100, 2))
             winrates.append(counter)
-        print(most_common_mates)
         final_output = ""
         for c, mate in enumerate(most_common_mates):
             final_output += apicall_getprofile(most_common_mates[0+c][0])['playerName'] + ': ' + str(winrates[1+c*2]) + ' win - ' + str(most_common_mates[0+c][1] - winrates[1+c*2]) + ' lose (' + str(winrates[0+c*2]) + '% winrate)\n'
