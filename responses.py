@@ -18,7 +18,6 @@ from imgur_python import Imgur
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import csv
@@ -1411,11 +1410,11 @@ def apicall_elograph(playername, games, patch, transparency = True):
     ax.plot(range(1, games + 1), elo_per_game, color='red', marker=marker_plot, linewidth=2.5, label='Elo')
     ax2.set_xlim(ax.get_xlim())
     new_tick_locs = []
-    for c, d in enumerate(date_per_game):
-        new_tick_locs.append(c)
+    for d in range(0, games):
+        new_tick_locs.append(d)
     ax2.set_xticks(new_tick_locs)
     ax2.set_xticklabels(date_per_game)
-    locator = plt.MaxNLocator(nbins=8, min_n_ticks=1)
+    locator = plt.MaxNLocator(nbins=len(ax.get_xticks())-1, min_n_ticks=1)
     ax2.xaxis.set_major_locator(locator)
     img_buf = io.BytesIO()
     fig.savefig(img_buf, transparent=True, format='png')
@@ -1423,7 +1422,6 @@ def apicall_elograph(playername, games, patch, transparency = True):
     elo_graph = Image.open(img_buf)
     im.paste(elo_graph, (-100,40), elo_graph)
 
-    I1.text((10, 55), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
     im.save('Files/output.png')
     image_upload = imgur_client.upload_from_path('Files/output.png')
     print('Uploading output.png to Imgur...')
