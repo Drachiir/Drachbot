@@ -2827,7 +2827,7 @@ def apicall_gamestats(playername):
     try:
         winrate = wins / (wins + loses)
     except ZeroDivisionError:
-        return 'No games played this season.'
+        return 'No games played this season. :('
     return str(playername).capitalize() + ("'s stats(Season 2024):\n"
         "Elo: ") + str(stats['overallElo']) + '(Peak: ' + str(stats['overallPeakEloThisSeason']) + (')\n'
         'Games played: ') + str(wins + loses) + ('\n'
