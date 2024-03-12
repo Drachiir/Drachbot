@@ -18,6 +18,7 @@ from imgur_python import Imgur
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import csv
@@ -1356,6 +1357,7 @@ def apicall_elograph(playername, games, patch, transparency = True):
     patches = list(dict.fromkeys(new_patches))
     count = 0
     elo_per_game = []
+    date_per_game = []
     while count < games:
         playerids_ranked = playerids[count]
         elo_ranked = elo[count]
@@ -1363,6 +1365,8 @@ def apicall_elograph(playername, games, patch, transparency = True):
         for i, x in enumerate(playerids_ranked):
             if x == playerid:
                 elo_per_game.insert(0, elo_ranked[i]+elo_change_ranked[i])
+                date_this = date[1][count].replace("T", "-").replace(":", "-").split(".")[0]
+                date_per_game.insert(0, datetime.strptime(date_this, "%Y-%m-%d-%H-%M-%S").strftime("%d/%m/%y"))
         count += 1
     #Image generation
     x = 126
@@ -1373,7 +1377,7 @@ def apicall_elograph(playername, games, patch, transparency = True):
     else:
         mode = 'RGB'
         colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1180, 770), color=colors)
+    im = PIL.Image.new(mode=mode, size=(1300, 810), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
     im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -1389,7 +1393,7 @@ def apicall_elograph(playername, games, patch, transparency = True):
               "xtick.color": "w",
               "axes.labelcolor": "w",
               "axes.edgecolor": "w",
-              "figure.figsize": (14, 8),
+              "figure.figsize": (15, 8),
               'axes.autolimit_mode': 'round_numbers',
               'font.weight': 'bold'}
     if len(elo_per_game) > 100:
@@ -1397,19 +1401,29 @@ def apicall_elograph(playername, games, patch, transparency = True):
     else:
         marker_plot = 'o'
     plt.rcParams.update(params)
-    plt.grid(linewidth=2)
-    plt.xlabel('Games', weight='bold')
-    plt.ylabel('Elo', weight='bold')
-    plt.margins(x=0)
-    plt.plot(range(1,games+1), elo_per_game, color='red', marker=marker_plot, linewidth=2.5, label='Elo')
-    plt.xticks(ticks=plt.xticks()[0], labels=plt.xticks()[0].astype(int))
-    plt.margins(x=0)
+    fig, ax = plt.subplots()
+    ax2 = ax.twiny()
+    ax.grid(linewidth=2)
+    ax.margins(x=0)
+    ax.set_xlabel('Games', weight='bold')
+    ax.set_ylabel('Elo', weight='bold')
+    ax2.set_xlabel("Date d/m/y", weight='bold')
+    ax.plot(range(1, games + 1), elo_per_game, color='red', marker=marker_plot, linewidth=2.5, label='Elo')
+    ax2.set_xlim(ax.get_xlim())
+    new_tick_locs = []
+    for c, d in enumerate(date_per_game):
+        new_tick_locs.append(c)
+    ax2.set_xticks(new_tick_locs)
+    ax2.set_xticklabels(date_per_game)
+    locator = plt.MaxNLocator(nbins=8, min_n_ticks=1)
+    ax2.xaxis.set_major_locator(locator)
     img_buf = io.BytesIO()
-    plt.savefig(img_buf, transparent=True, format='png')
+    fig.savefig(img_buf, transparent=True, format='png')
     plt.close()
     elo_graph = Image.open(img_buf)
-    im.paste(elo_graph, (-100,0), elo_graph)
+    im.paste(elo_graph, (-100,40), elo_graph)
 
+    I1.text((10, 55), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
     im.save('Files/output.png')
     image_upload = imgur_client.upload_from_path('Files/output.png')
     print('Uploading output.png to Imgur...')
