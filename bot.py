@@ -1,9 +1,12 @@
 import asyncio
 import functools
 import json
+import traceback
+
 import discord
 import responses
 from discord import app_commands
+import os
 import concurrent.futures
 
 with open('Files/Secrets.json') as f:
@@ -19,12 +22,65 @@ async def send_message(message, user_message, is_private, username):
     # except Exception as e:
     #     print(e)
 
+def get_game_elo(playerlist):
+    elo = 0
+    for player in playerlist:
+        elo += int(player.split(":")[1])
+    return round(elo / len(playerlist))
+
+def save_live_game(gameid, playerlist):
+    if len(playerlist) == 5:
+        with open("Livegame/Ranked/" + str(gameid)+"_"+str(playerlist[4])+".txt", "w") as f:
+            f.write('\n'.join(playerlist))
+            f.close()
+    else:
+        with open("Livegame/Classic/" + str(gameid) + "_"+str(playerlist[8])+".txt", "w") as f:
+            f.write('\n'.join(playerlist))
+            f.close()
+
+def get_top_games(queue):
+    if queue == "Ranked":
+        path = "Livegame/Ranked/"
+    else:
+        path = "Livegame/Classic/"
+    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+    print(livegame_files)
+    topgames = []
+    for game in livegame_files:
+        if len(topgames) < 3:
+            topgames.append(game)
+        else:
+            for i, topgame in enumerate(topgames):
+                if int(game.split("_")[1].split(".")[0]) > int(topgame.split("_")[1].split(".")[0]):
+                    topgames[i] = game
+                    break
+    output = ""
+    for idx, game2 in enumerate(topgames):
+        with open(path+game2, "r") as f:
+            txt = f.readlines()
+            f.close()
+        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+"**\n"
+        for c, data in enumerate(txt):
+            if c == len(txt)-1:
+                output += "\n"
+                break
+            data = data.replace("\n", "")
+            if c == (len(txt)-1)/2:
+                output += "\n"
+            output += data + " "
+    return output
+
 def run_discord_bot():
     TOKEN = secret_file.get('token')
     intents = discord.Intents.default()
     intents.message_content = True
     client = discord.Client(intents=intents)
     tree = app_commands.CommandTree(client)
+
+    TOKEN2 = secret_file.get('livegametoken')
+    intents2 = discord.Intents.default()
+    intents2.message_content = True
+    client2 = discord.Client(intents=intents)
 
     @tree.command(name= "elo", description= "Shows rank, elo and playtime.")
     @app_commands.describe(playername='Enter the playername.')
@@ -323,9 +379,44 @@ def run_discord_bot():
                 print(e)
                 await interaction.followup.send("Bot error :sob:")
 
+    @tree.command(name="topgames", description="Shows the 3 highest elo game in Ranked or Classic.")
+    @app_commands.describe(queue="Select a queue type.")
+    @app_commands.choices(queue=[
+        discord.app_commands.Choice(name='Ranked', value='Ranked'),
+        discord.app_commands.Choice(name='Classic', value='Classic')
+    ])
+    async def topgames(interaction: discord.Interaction, queue: discord.app_commands.Choice[str]):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(get_top_games, queue.value))
+                if len(response) > 0:
+                    await interaction.followup.send(response)
+            except discord.NotFound as e:
+                print(e)
+            except Exception:
+                traceback.print_exc()
+            except IndexError as e:
+                print(e)
+                await interaction.followup.send("Bot error :sob:")
+
     @client.event
     async def on_ready():
         print(f'{client.user} is now running!')
+
+    @client2.event
+    async def on_ready():
+        ranked_dir = "Livegame/Ranked/"
+        classic_dir = "Livegame/Classic/"
+        filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
+        filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
+        for f in filelist_ranked:
+            os.remove(os.path.join(ranked_dir, f))
+        for f in filelist_classic:
+            os.remove(os.path.join(classic_dir, f))
+        print("Livegame cache cleared.")
+        print(f'{client2.user} is now running!')
 
     @client.event
     async def on_message(message):
@@ -344,5 +435,44 @@ def run_discord_bot():
         else:
             await send_message(message, user_message, False, username)
 
-    client.run(TOKEN)
+    @client2.event
+    async def on_message(message):
+        try:
+            if str(message.channel) == "game-starts":
+                players = str(message.content).splitlines()[1:]
+                gameid = str(message.author).split("#")[0].replace("Game started! ", "")
+                if len(players) == 4:
+                    gameelo = get_game_elo(players)
+                    players.append(str(gameelo))
+                    save_live_game(gameid, players)
+                elif len(players) == 8:
+                    gameelo = get_game_elo(players)
+                    players.append(str(gameelo))
+                    save_live_game(gameid, players)
+            elif str(message.channel) == "game-results":
+                embeds = message.embeds
+                for embed in embeds:
+                    embed_dict = embed.to_dict()
+                for field in embed_dict["fields"]:
+                    if field["name"] == "Game ID":
+                        gameid_result = field["value"]
+                desc = embed_dict["description"].split(")")[0].split("(")[1]
+                if "elo" in desc:
+                    path = 'Livegame/Ranked/'
+                    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+                else:
+                    path = 'Livegame/Classic/'
+                    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+                for game in livegame_files:
+                    if game.split("_")[0] == gameid_result:
+                        print("Game finished. (" + str(gameid_result) + ")")
+                        os.remove(path+game)
+        except Exception:
+            traceback.print_exc()
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.create_task(client.start(TOKEN))
+    loop.create_task(client2.start(TOKEN2))
+    loop.run_forever()
 
