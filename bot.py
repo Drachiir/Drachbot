@@ -2,7 +2,7 @@ import asyncio
 import functools
 import json
 import traceback
-
+from datetime import datetime
 import discord
 import responses
 from discord import app_commands
@@ -30,11 +30,11 @@ def get_game_elo(playerlist):
 
 def save_live_game(gameid, playerlist):
     if len(playerlist) == 5:
-        with open("Livegame/Ranked/" + str(gameid)+"_"+str(playerlist[4])+".txt", "w") as f:
+        with open("Livegame/Ranked/" + str(gameid)+"_"+str(playerlist[4])+".txt", "w", encoding="utf_8") as f:
             f.write('\n'.join(playerlist))
             f.close()
     else:
-        with open("Livegame/Classic/" + str(gameid) + "_"+str(playerlist[8])+".txt", "w") as f:
+        with open("Livegame/Classic/" + str(gameid) + "_"+str(playerlist[8])+".txt", "w", encoding="utf_8") as f:
             f.write('\n'.join(playerlist))
             f.close()
 
@@ -44,7 +44,6 @@ def get_top_games(queue):
     else:
         path = "Livegame/Classic/"
     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
-    print(livegame_files)
     topgames = []
     for game in livegame_files:
         if len(topgames) < 3:
@@ -56,10 +55,14 @@ def get_top_games(queue):
                     break
     output = ""
     for idx, game2 in enumerate(topgames):
-        with open(path+game2, "r") as f:
+        path2 = path+game2
+        mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2))
+        date_diff = datetime.now() - mod_date
+        minutes_diff = date_diff.total_seconds() / 60 - 60
+        with open(path+game2, "r", encoding="utf_8") as f:
             txt = f.readlines()
             f.close()
-        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+"**\n"
+        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+",  Started "+str(round(minutes_diff))+" minute(s) ago.**\n"
         for c, data in enumerate(txt):
             if c == len(txt)-1:
                 output += "\n"
@@ -407,15 +410,15 @@ def run_discord_bot():
 
     @client2.event
     async def on_ready():
-        ranked_dir = "Livegame/Ranked/"
-        classic_dir = "Livegame/Classic/"
-        filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
-        filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
-        for f in filelist_ranked:
-            os.remove(os.path.join(ranked_dir, f))
-        for f in filelist_classic:
-            os.remove(os.path.join(classic_dir, f))
-        print("Livegame cache cleared.")
+        # ranked_dir = "Livegame/Ranked/"
+        # classic_dir = "Livegame/Classic/"
+        # filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
+        # filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
+        # for f in filelist_ranked:
+        #     os.remove(os.path.join(ranked_dir, f))
+        # for f in filelist_classic:
+        #     os.remove(os.path.join(classic_dir, f))
+        # print("Livegame cache cleared.")
         print(f'{client2.user} is now running!')
 
     @client.event
