@@ -48,17 +48,18 @@ def get_top_games(queue):
     for game in livegame_files:
         if len(topgames) < 3:
             topgames.append(game)
-        else:
-            for i, topgame in enumerate(topgames):
-                if int(game.split("_")[1].split(".")[0]) > int(topgame.split("_")[1].split(".")[0]):
-                    topgames[i] = game
-                    break
+    for game in livegame_files:
+        for i, topgame in enumerate(topgames):
+            if int(game.split("_")[1].split(".")[0]) > int(topgame.split("_")[1].split(".")[0]):
+                topgames.insert(i,game)
+                del topgames[-1]
+                break
     output = ""
     for idx, game2 in enumerate(topgames):
         path2 = path+game2
         mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2))
         date_diff = datetime.now() - mod_date
-        minutes_diff = date_diff.total_seconds() / 60 - 60
+        minutes_diff = date_diff.total_seconds() / 60
         with open(path+game2, "r", encoding="utf_8") as f:
             txt = f.readlines()
             f.close()
@@ -410,15 +411,15 @@ def run_discord_bot():
 
     @client2.event
     async def on_ready():
-        # ranked_dir = "Livegame/Ranked/"
-        # classic_dir = "Livegame/Classic/"
-        # filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
-        # filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
-        # for f in filelist_ranked:
-        #     os.remove(os.path.join(ranked_dir, f))
-        # for f in filelist_classic:
-        #     os.remove(os.path.join(classic_dir, f))
-        # print("Livegame cache cleared.")
+        ranked_dir = "Livegame/Ranked/"
+        classic_dir = "Livegame/Classic/"
+        filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
+        filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
+        for f in filelist_ranked:
+            os.remove(os.path.join(ranked_dir, f))
+        for f in filelist_classic:
+            os.remove(os.path.join(classic_dir, f))
+        print("Livegame cache cleared.")
         print(f'{client2.user} is now running!')
 
     @client.event
