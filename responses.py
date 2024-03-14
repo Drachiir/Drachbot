@@ -875,7 +875,6 @@ def handle_response(message, author) -> str:
 def apicall_getid(playername):
     request_type = 'players/byName/' + playername
     url = 'https://apiv2.legiontd2.com/' + request_type
-    print(request_type)
     try:
         api_response = requests.get(url, headers=header)
         if 'Limit Exceeded' in api_response.text:
@@ -2577,6 +2576,8 @@ def get_icons_image(type, name):
                 image_path = "Files/icons/PriestessoftheAbyss.png"
         case "icon_send":
             image_path = 'Files/icons/' + name + ".png"
+            if image_path == "Files/icons/PresstheAttack.png":
+                image_path = "Files/icons/PressTheAttack.png"
         case "legion":
             image_path = 'Files/icons/Items/' + name.replace(" ", "") + ".png"
     return Image.open(open(image_path, "rb"))

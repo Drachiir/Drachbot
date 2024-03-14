@@ -22,11 +22,28 @@ async def send_message(message, user_message, is_private, username):
     # except Exception as e:
     #     print(e)
 
-def get_game_elo(playerlist):
+def custom_exception_handler(loop, context):
+    loop.default_exception_handler(context)
+
+    exception = context.get('exception')
+    if isinstance(exception, Exception):
+        print(context)
+
+def get_game_elo(playerlist, classic):
     elo = 0
-    for player in playerlist:
-        elo += int(player.split(":")[1])
-    return round(elo / len(playerlist))
+    new_list = []
+    if classic == True:
+        for player in playerlist:
+            classic_elo = int(responses.apicall_getstats(responses.apicall_getid(player.split(":")[0]))["classicElo"])
+            new_list.append(player.split(":")[0]+":"+str(classic_elo))
+            elo += classic_elo
+    else:
+        for player in playerlist:
+            ranked_elo = int(player.split(":")[1])
+            new_list.append(player.split(":")[0]+":"+str(ranked_elo))
+            elo += ranked_elo
+    new_list.append(str(round(elo/len(playerlist))))
+    return new_list
 
 def save_live_game(gameid, playerlist):
     if len(playerlist) == 5:
@@ -75,6 +92,9 @@ def get_top_games(queue):
     return output
 
 def run_discord_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.set_exception_handler(custom_exception_handler)
     TOKEN = secret_file.get('token')
     intents = discord.Intents.default()
     intents.message_content = True
@@ -96,8 +116,9 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elo, playername, 0))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="bestie", description="Shows your bestie.")
     @app_commands.describe(playername='Enter the playername.')
@@ -109,8 +130,9 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_bestie, playername))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="rank", description="Shows player info of a certain rank.")
     @app_commands.describe(rank='Enter a rank(number).')
@@ -122,8 +144,9 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_rank, rank))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="gamestats", description="Shows player stats.")
     @app_commands.describe(playername='Enter the playername.')
@@ -135,8 +158,9 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_gamestats, playername))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="gameid_viewer", description="Outputs image(s) of the gameid provided.")
     @app_commands.describe(game_id= "Enter the GameID.",wave='Enter a specific wave to output, or just 0 for an Album of every wave.')
@@ -148,8 +172,9 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_gameid_visualizer, game_id, wave))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="novacup", description="Shows current teams in each novacup division 1 or 2.")
     @app_commands.describe(division='Enter division.')
@@ -165,8 +190,9 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.novacup, division.value))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="showlove", description="Shows how many games both players have played together.")
     @app_commands.describe(playername1='Enter playername 1.', playername2='Enter playername 2')
@@ -178,8 +204,9 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_showlove, playername1, playername2))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="wave1", description="Shows Wave 1 tendency.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
@@ -203,10 +230,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_wave1tendency, playername, option.value, games, min_elo, patch, sort.value))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="elcringo", description="Shows how cringe someone is.")
@@ -229,10 +254,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_elcringo, playername, games, patch, min_elo, option, sort = sort.value))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="mmstats", description="Mastermind stats.")
@@ -258,10 +281,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort = sort.value))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="openstats", description="Opener stats.")
@@ -282,10 +303,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_openstats, str(playername).lower(), games, min_elo, patch, sort = sort.value))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2.")
@@ -303,10 +322,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_winrate, playername1, playername2, option.value, games, patch, min_elo = min_elo))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="elograph", description="Shows elo graph of player.")
@@ -321,10 +338,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elograph,playername, games, patch))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="leaderboard", description="Shows current top 10 ranked leaderboard")
@@ -336,10 +351,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_leaderboard))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="help", description="Gives some info on how to use all the commands.")
@@ -377,10 +390,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_sendstats, str(playername).lower(), starting_wave, games, min_elo, patch, sort = sort.value))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
-            except IndexError as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="topgames", description="Shows the 3 highest elo game in Ranked or Classic.")
@@ -397,12 +408,8 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, functools.partial(get_top_games, queue.value))
                 if len(response) > 0:
                     await interaction.followup.send(response)
-            except discord.NotFound as e:
-                print(e)
             except Exception:
                 traceback.print_exc()
-            except IndexError as e:
-                print(e)
                 await interaction.followup.send("Bot error :sob:")
 
     @client.event
@@ -442,40 +449,37 @@ def run_discord_bot():
     @client2.event
     async def on_message(message):
         try:
-            if str(message.channel) == "game-starts":
-                players = str(message.content).splitlines()[1:]
-                gameid = str(message.author).split("#")[0].replace("Game started! ", "")
-                if len(players) == 4:
-                    gameelo = get_game_elo(players)
-                    players.append(str(gameelo))
-                    save_live_game(gameid, players)
-                elif len(players) == 8:
-                    gameelo = get_game_elo(players)
-                    players.append(str(gameelo))
-                    save_live_game(gameid, players)
-            elif str(message.channel) == "game-results":
-                embeds = message.embeds
-                for embed in embeds:
-                    embed_dict = embed.to_dict()
-                for field in embed_dict["fields"]:
-                    if field["name"] == "Game ID":
-                        gameid_result = field["value"]
-                desc = embed_dict["description"].split(")")[0].split("(")[1]
-                if "elo" in desc:
-                    path = 'Livegame/Ranked/'
-                    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
-                else:
-                    path = 'Livegame/Classic/'
-                    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
-                for game in livegame_files:
-                    if game.split("_")[0] == gameid_result:
-                        print("Game finished. (" + str(gameid_result) + ")")
-                        os.remove(path+game)
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                if str(message.channel) == "game-starts":
+                    players = str(message.content).splitlines()[1:]
+                    gameid = str(message.author).split("#")[0].replace("Game started! ", "")
+                    if len(players) == 4:
+                        players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, False))
+                        save_live_game(gameid, players_new)
+                    elif len(players) == 8:
+                        players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, True))
+                        save_live_game(gameid, players_new)
+                elif str(message.channel) == "game-results":
+                    embeds = message.embeds
+                    for embed in embeds:
+                        embed_dict = embed.to_dict()
+                    for field in embed_dict["fields"]:
+                        if field["name"] == "Game ID":
+                            gameid_result = field["value"]
+                    desc = embed_dict["description"].split(")")[0].split("(")[1]
+                    if "elo" in desc:
+                        path = 'Livegame/Ranked/'
+                        livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+                    else:
+                        path = 'Livegame/Classic/'
+                        livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+                    for game in livegame_files:
+                        if game.split("_")[0] == gameid_result:
+                            os.remove(path+game)
         except Exception:
             traceback.print_exc()
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     loop.create_task(client.start(TOKEN))
     loop.create_task(client2.start(TOKEN2))
     loop.run_forever()
