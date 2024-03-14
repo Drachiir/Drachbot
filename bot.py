@@ -8,6 +8,7 @@ import responses
 from discord import app_commands
 import os
 import concurrent.futures
+import platform
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -63,6 +64,16 @@ def get_top_games(queue):
     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
     topgames = []
     for game in livegame_files:
+        path2 = path + game
+        mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2))
+        date_diff = datetime.now() - mod_date
+        if platform.system() == "Linux":
+            minutes_diff = date_diff.total_seconds() / 60
+        elif platform.system() == "Windows":
+            minutes_diff = date_diff.total_seconds() / 60 - 60
+        if minutes_diff > 35:
+            os.remove(path2)
+            continue
         if len(topgames) < 3:
             topgames.append(game)
     for game in livegame_files:
@@ -76,7 +87,10 @@ def get_top_games(queue):
         path2 = path+game2
         mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2))
         date_diff = datetime.now() - mod_date
-        minutes_diff = date_diff.total_seconds() / 60
+        if platform.system() == "Linux":
+            minutes_diff = date_diff.total_seconds() / 60
+        elif platform.system() == "Windows":
+            minutes_diff = date_diff.total_seconds() / 60 - 60
         with open(path+game2, "r", encoding="utf_8") as f:
             txt = f.readlines()
             f.close()

@@ -884,7 +884,6 @@ def apicall_getid(playername):
         return 0
     else:
         playerid = json.loads(api_response.text)
-        print(playerid['_id'])
         return playerid['_id']
 
 def apicall_getprofile(playerid):
