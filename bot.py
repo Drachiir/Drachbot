@@ -33,19 +33,18 @@ def custom_exception_handler(loop, context):
 def get_game_elo(playerlist, classic):
     elo = 0
     new_list = []
-    if classic == True:
-        for player in playerlist:
-            try:
-                classic_elo = int(responses.apicall_getstats(responses.apicall_getid(player.split(":")[0]))["classicElo"])
-            except KeyError:
-                classic_elo = 0
-            new_list.append(player.split(":")[0]+":"+str(classic_elo))
-            elo += classic_elo
-    else:
-        for player in playerlist:
-            ranked_elo = int(player.split(":")[1])
-            new_list.append(player.split(":")[0]+":"+str(ranked_elo))
-            elo += ranked_elo
+    # if classic == True:
+    #     for player in playerlist:
+    #         try:
+    #             classic_elo = int(responses.apicall_getstats(responses.apicall_getid(player.split(":")[0]))["classicElo"])
+    #         except KeyError:
+    #             classic_elo = 0
+    #         new_list.append(player.split(":")[0]+":"+str(classic_elo))
+    #         elo += classic_elo
+    for player in playerlist:
+        ranked_elo = int(player.split(":")[1])
+        new_list.append(player.split(":")[0]+":"+str(ranked_elo))
+        elo += ranked_elo
     new_list.append(str(round(elo/len(playerlist))))
     return new_list
 
@@ -54,10 +53,10 @@ def save_live_game(gameid, playerlist):
         with open("Livegame/Ranked/" + str(gameid)+"_"+str(playerlist[4])+".txt", "w", encoding="utf_8") as f:
             f.write('\n'.join(playerlist))
             f.close()
-    else:
-        with open("Livegame/Classic/" + str(gameid) + "_"+str(playerlist[8])+".txt", "w", encoding="utf_8") as f:
-            f.write('\n'.join(playerlist))
-            f.close()
+    # else:
+    #     with open("Livegame/Classic/" + str(gameid) + "_"+str(playerlist[8])+".txt", "w", encoding="utf_8") as f:
+    #         f.write('\n'.join(playerlist))
+    #         f.close()
 
 def get_top_games(queue):
     if queue == "Ranked":
@@ -406,11 +405,11 @@ def run_discord_bot():
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
-    @tree.command(name="topgames", description="Shows the 3 highest elo game in Ranked or Classic.")
+    @tree.command(name="topgames", description="Shows the 3 highest elo game in Ranked.")
     @app_commands.describe(queue="Select a queue type.")
     @app_commands.choices(queue=[
         discord.app_commands.Choice(name='Ranked', value='Ranked'),
-        discord.app_commands.Choice(name='Classic', value='Classic')
+        #discord.app_commands.Choice(name='Classic', value='Classic')
     ])
     async def topgames(interaction: discord.Interaction, queue: discord.app_commands.Choice[str]):
         loop = asyncio.get_running_loop()
@@ -469,9 +468,9 @@ def run_discord_bot():
                     if len(players) == 4:
                         players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, False))
                         save_live_game(gameid, players_new)
-                    elif len(players) == 8:
-                        players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, True))
-                        save_live_game(gameid, players_new)
+                    # elif len(players) == 8:
+                    #     players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, True))
+                    #     save_live_game(gameid, players_new)
                 elif str(message.channel) == "game-results":
                     embeds = message.embeds
                     for embed in embeds:
@@ -483,12 +482,12 @@ def run_discord_bot():
                     if "elo" in desc:
                         path = 'Livegame/Ranked/'
                         livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
-                    else:
-                        path = 'Livegame/Classic/'
-                        livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
-                    for game in livegame_files:
-                        if game.split("_")[0] == gameid_result:
-                            os.remove(path+game)
+                        for game in livegame_files:
+                            if game.split("_")[0] == gameid_result:
+                                os.remove(path + game)
+                    # else:
+                    #     path = 'Livegame/Classic/'
+                    #     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
         except Exception:
             traceback.print_exc()
 

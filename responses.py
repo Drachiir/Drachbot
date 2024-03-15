@@ -888,6 +888,7 @@ def apicall_getid(playername):
     except requests.exceptions.HTTPError:
         return 0
     else:
+        print(api_response)
         playerid = json.loads(api_response.text)
         return playerid['_id']
 
