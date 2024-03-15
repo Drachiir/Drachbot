@@ -35,7 +35,10 @@ def get_game_elo(playerlist, classic):
     new_list = []
     if classic == True:
         for player in playerlist:
-            classic_elo = int(responses.apicall_getstats(responses.apicall_getid(player.split(":")[0]))["classicElo"])
+            try:
+                classic_elo = int(responses.apicall_getstats(responses.apicall_getid(player.split(":")[0]))["classicElo"])
+            except KeyError:
+                classic_elo = 0
             new_list.append(player.split(":")[0]+":"+str(classic_elo))
             elo += classic_elo
     else:
@@ -62,6 +65,7 @@ def get_top_games(queue):
     else:
         path = "Livegame/Classic/"
     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+    livegame_files = sorted(livegame_files, key=lambda x: int(x.split("_")[1].split(".")[0]), reverse=True)
     topgames = []
     for game in livegame_files:
         path2 = path + game
@@ -76,12 +80,6 @@ def get_top_games(queue):
             continue
         if len(topgames) < 3:
             topgames.append(game)
-    for game in livegame_files:
-        for i, topgame in enumerate(topgames):
-            if int(game.split("_")[1].split(".")[0]) > int(topgame.split("_")[1].split(".")[0]):
-                topgames.insert(i,game)
-                del topgames[-1]
-                break
     output = ""
     for idx, game2 in enumerate(topgames):
         path2 = path+game2
@@ -432,15 +430,15 @@ def run_discord_bot():
 
     @client2.event
     async def on_ready():
-        ranked_dir = "Livegame/Ranked/"
-        classic_dir = "Livegame/Classic/"
-        filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
-        filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
-        for f in filelist_ranked:
-            os.remove(os.path.join(ranked_dir, f))
-        for f in filelist_classic:
-            os.remove(os.path.join(classic_dir, f))
-        print("Livegame cache cleared.")
+        # ranked_dir = "Livegame/Ranked/"
+        # classic_dir = "Livegame/Classic/"
+        # filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
+        # filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
+        # for f in filelist_ranked:
+        #     os.remove(os.path.join(ranked_dir, f))
+        # for f in filelist_classic:
+        #     os.remove(os.path.join(classic_dir, f))
+        # print("Livegame cache cleared.")
         print(f'{client2.user} is now running!')
 
     @client.event

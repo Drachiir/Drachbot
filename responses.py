@@ -819,6 +819,11 @@ creep_values = {"Crab": (72, 6), "Wale": (84, 7), "Hopper": (90, 5), "Flying Chi
 
 wave_values = (72,84,90,96,108,114,120,132,144,150,156,168,180,192,204,216,228,252,276,300,360)
 
+rank_emotes = {"bronze": [1000,"<:Bronze:1217999684484862057>"], "silver": [1200,"<:Silver:1217999706555158631>"], "gold": [1400,"<:Gold:1217999690369335407>"],
+               "plat": [1600,"<:Platinum:1217999701337571379>"], "dia": [1800,"<:Diamond:1217999686888325150>"], "ruby": [2000,"<:Expert:1217999688494747718>"],
+               "purple": [2200,"<:Master:1217999699114590248>"], "sm": [2400,"<:SeniorMaster:1217999704349081701>"], "gm": [2600,"<:Grandmaster:1217999691883741224>"],
+               "legend": [2800, "<:Legend:1217999693234176050>"]}
+
 def count_mythium(send):
     send_amount = 0
     for x in send:
@@ -887,13 +892,13 @@ def apicall_getid(playername):
         return playerid['_id']
 
 def apicall_getprofile(playerid):
-    url = 'https://apiv2.legiontd2.com/players/byId/' + playerid
+    url = 'https://apiv2.legiontd2.com/players/byId/' + str(playerid)
     api_response = requests.get(url, headers=header)
     playername = json.loads(api_response.text)
     return playername
 
 def apicall_getstats(playerid):
-    request_type = 'players/stats/' + playerid
+    request_type = 'players/stats/' + str(playerid)
     url = 'https://apiv2.legiontd2.com/' + request_type
     api_response = requests.get(url, headers=header)
     stats = json.loads(api_response.text)
@@ -2739,23 +2744,30 @@ def apicall_elo(playername, rank):
         else:
             history_details = [0,0]
         new_dict = {item['_id']: item['_id'] for item in leaderboard}
+        rank_emote = ""
+        peak_emote = ""
+        for emote in rank_emotes:
+            if stats["overallElo"] >= rank_emotes[emote][0]:
+                rank_emote = rank_emotes[emote][1]
+            if stats["overallPeakEloThisSeason"] >= rank_emotes[emote][0]:
+                peak_emote = rank_emotes[emote][1]
         if rank == 0:
             for i, key in enumerate(new_dict.keys()):
                 if key == playerid:
                     index = i
                     return str(playername).capitalize() + ' is rank ' + str(index + 1) + ' with ' + str(
-                        stats['overallElo']) + ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + ') and ' + str(
+                        stats['overallElo']) + rank_emote+' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + peak_emote+') and ' + str(
                         round(playtime_hours)) + ' in game hours.\nThey have won ' + \
                         str(history_details[1]) + ' out of their last 10 games. (Elo change: ' + \
                         str(history_details[0]) + ')'
             else:
-                return str(playername).capitalize() + ' has ' + str(stats['overallElo']) + ' elo (Peak: ' + str(
-                    stats['overallPeakEloThisSeason']) + ') with ' + str(round(playtime_hours)) + ' in game hours.\n' \
+                return str(playername).capitalize() + ' has ' + str(stats['overallElo']) + rank_emote+ ' elo (Peak: ' + str(
+                    stats['overallPeakEloThisSeason']) + peak_emote+') with ' + str(round(playtime_hours)) + ' in game hours.\n' \
                     'They have won ' + str(history_details[1]) + ' out of their last 10 games. ' \
                     '(Elo change: ' + str(history_details[0]) + ')'
         else:
             return str(playername).capitalize() + ' is rank ' + str(rank) + ' with ' + str(
-                stats['overallElo']) + ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + ') and ' + str(
+                stats['overallElo']) + rank_emote+ ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + peak_emote+') and ' + str(
                 round(playtime_hours)) + ' in game hours.\nThey have won ' + \
                 str(history_details[1]) + ' out of their last 10 games. (Elo change: ' + \
                 str(history_details[0]) + ')'
