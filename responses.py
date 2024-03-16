@@ -67,7 +67,7 @@ rank_emotes = {"bronze": [1000,"<:Bronze:1217999684484862057>"], "silver": [1200
                "purple": [2200,"<:Master:1217999699114590248>"], "sm": [2400,"<:SeniorMaster:1217999704349081701>"], "gm": [2600,"<:Grandmaster:1217999691883741224>"],
                "legend": [2800, "<:Legend:1217999693234176050>"]}
 
-slang = {"pota": "priestess of the abyss", "cat": "nekomata", "pixie": "chloropixie", "scally": "spectral scallywag"}
+slang = {"pota": "priestess of the abyss", "cat": "nekomata", "pixie": "chloropixie", "scally": "spectral scallywag", "hunt": "pack rat nest"}
 
 def get_ranked_emote(rank):
     rank_emote = ""
@@ -926,9 +926,14 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
         dict_mms = dict[unit_name]["MMs"]
     except KeyError:
         return unit_name + " not found."
+    if dict[unit_name]["Count"] == 0:
+        return "No " + unit_name + " openings found."
     I1.text((82, 10), str(playername) + suffix + " "+string_title+" opener stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-    I1.text((10, 80), "Count: "+str(dict[unit_name]["Count"])+" Wins: "+str(dict[unit_name]["OpenWins"])+" Losses: "+str(dict[unit_name]["Count"]-dict[unit_name]["OpenWins"])+" Winrate: "+str(round(dict[unit_name]["OpenWins"]/dict[unit_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    try:
+        I1.text((10, 80), "Count: "+str(dict[unit_name]["Count"])+" Wins: "+str(dict[unit_name]["OpenWins"])+" Losses: "+str(dict[unit_name]["Count"]-dict[unit_name]["OpenWins"])+" Winrate: "+str(round(dict[unit_name]["OpenWins"]/dict[unit_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    except ZeroDivisionError:
+        I1.text((10, 80), "Count: " + str(dict[unit_name]["Count"]) + " Wins: " + str(dict[unit_name]["OpenWins"]) + " Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["OpenWins"]) + " Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 175-46
     offset = 45
@@ -2352,6 +2357,23 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         'Patches: ' + ', '.join(patches2)
 
 def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
+    unit_dict = {}
+    with open('Files/units.json', 'r') as f:
+        units_json = json.load(f)
+        units_extracted = extract_values(units_json, 'unitId')
+        value_extracted = extract_values(units_json, 'totalValue')[1]
+    for i, x in enumerate(units_extracted[1]):
+        if value_extracted[i] and int(value_extracted[i]) > 0:
+            string = x
+            string = string.replace('_', ' ')
+            string = string.replace(' unit id', '')
+            unit_dict[string] = {'Count': 0, 'OpenWins': 0, 'W4': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+    unit_dict['pack rat nest'] = {'Count': 0, 'OpenWins': 0, 'W4': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+    if unit != "all":
+        if unit in slang:
+            unit = slang.get(unit)
+        if unit not in unit_dict:
+            return "Unit not found."
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -2380,18 +2402,6 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
-    unit_dict = {}
-    with open('Files/units.json', 'r') as f:
-        units_json = json.load(f)
-        units_extracted = extract_values(units_json, 'unitId')
-        value_extracted = extract_values(units_json, 'totalValue')[1]
-    for i, x in enumerate(units_extracted[1]):
-        if value_extracted[i] and int(value_extracted[i]) > 0:
-            string = x
-            string = string.replace('_', ' ')
-            string = string.replace(' unit id', '')
-            unit_dict[string] = {'Count': 0,'OpenWins': 0,'W4': 0,'OpenWith': {},'MMs': {},'Spells': {}}
-    unit_dict['pack rat nest'] = {'Count': 0, 'OpenWins': 0,'W4': 0, 'OpenWith': {},'MMs': {},'Spells': {}}
     if 'nova cup' in playerid:
         playerid = 'all'
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
