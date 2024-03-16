@@ -91,7 +91,7 @@ def get_top_games(queue):
         with open(path+game2, "r", encoding="utf_8") as f:
             txt = f.readlines()
             f.close()
-        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+",  Started "+str(round(minutes_diff))+" minute(s) ago.**\n"
+        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+",  Started "+str(round(minutes_diff))+" minute(s) ago.**\n"
         for c, data in enumerate(txt):
             if c == len(txt)-1:
                 output += "\n"
@@ -99,7 +99,7 @@ def get_top_games(queue):
             data = data.replace("\n", "")
             if c == (len(txt)-1)/2:
                 output += "\n"
-            output += data + " "
+            output += data + responses.get_ranked_emote(int(data.split(":")[1]))+ " "
     return output
 
 def run_discord_bot():
@@ -301,17 +301,21 @@ def run_discord_bot():
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           sort="Sort by?")
+                           sort="Sort by?", unit= "Unit name for specific stats, or 'all' for all openers.")
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def openstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, sort: discord.app_commands.Choice[str]):
+    async def openstats(interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "0", sort: discord.app_commands.Choice[str] = "date", unit: str = "all"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
-                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_openstats, str(playername).lower(), games, min_elo, patch, sort = sort.value))
+                sort = sort.value
+            except AttributeError:
+                pass
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_openstats, str(playername).lower(), games, min_elo, patch, sort = sort, unit= unit))
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -406,17 +410,17 @@ def run_discord_bot():
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="topgames", description="Shows the 3 highest elo game in Ranked.")
-    @app_commands.describe(queue="Select a queue type.")
-    @app_commands.choices(queue=[
-        discord.app_commands.Choice(name='Ranked', value='Ranked'),
-        #discord.app_commands.Choice(name='Classic', value='Classic')
-    ])
-    async def topgames(interaction: discord.Interaction, queue: discord.app_commands.Choice[str]):
+    # @app_commands.describe(queue="Select a queue type.")
+    # @app_commands.choices(queue=[
+    #     discord.app_commands.Choice(name='Ranked', value='Ranked'),
+    #     #discord.app_commands.Choice(name='Classic', value='Classic')
+    # ])
+    async def topgames(interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
-                response = await loop.run_in_executor(pool, functools.partial(get_top_games, queue.value))
+                response = await loop.run_in_executor(pool, functools.partial(get_top_games, "Ranked"))
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
