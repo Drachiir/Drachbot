@@ -903,7 +903,7 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
     else:
         mode = 'RGB'
         colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1700, 800-76), color=colors)
+    im = PIL.Image.new(mode=mode, size=(1700, 800-46), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
     im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -920,19 +920,20 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
     try:
         if unit_name in slang:
             unit_name = slang.get(unit_name)
-        im.paste(get_icons_image("icon", unit_name.capitalize()), (12,12))
+        im.paste(get_icons_image("icon", unit_name.capitalize()), (10,10))
         dict_open = dict[unit_name]["OpenWith"]
         dict_spell = dict[unit_name]["Spells"]
         dict_mms = dict[unit_name]["MMs"]
     except KeyError:
         return unit_name + " not found."
-    I1.text((82, 12), str(playername) + suffix + " "+string_title+" opener stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((82, 10), str(playername) + suffix + " "+string_title+" opener stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    I1.text((10, 80), "Count: "+str(dict[unit_name]["Count"])+" Wins: "+str(dict[unit_name]["OpenWins"])+" Losses: "+str(dict[unit_name]["Count"]-dict[unit_name]["OpenWins"])+" Winrate: "+str(round(dict[unit_name]["OpenWins"]/dict[unit_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
-    y = 175-76
+    y = 175-46
     offset = 45
     for i in range(15):
-        im.paste(im2, (x - 12, 88))
+        im.paste(im2, (x - 12, 88+30))
         x += 106
     x = 126
     newIndex = sorted(dict_open, key=lambda k: int(dict_open[k]["Count"]), reverse=True)
