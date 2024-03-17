@@ -7,6 +7,7 @@ from pathlib import Path
 import datetime
 import traceback
 import os
+import os.path
 import glob
 import re
 import time
@@ -22,7 +23,9 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import csv
-import discord
+import asyncio
+import concurrent.futures
+import functools
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -2022,11 +2025,13 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
     playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
     masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
+    elo_change = list(divide_chunks(extract_values(history_raw, 'eloChange')[1], 4))
     gameid = extract_values(history_raw, '_id')[1]
     patches = extract_values(history_raw, 'version')[1]
     gameelo = extract_values(history_raw, 'gameElo')
     gameelo_list = []
     patches_list = []
+    elo_change_list = []
     while count < games:
         gameresult_ranked_west = [gameresult[count][0], gameresult[count][1]]
         gameresult_ranked_east = [gameresult[count][2], gameresult[count][3]]
@@ -2034,6 +2039,8 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
         playerids_ranked_east = [playerids[count][2], playerids[count][3]]
         masterminds_ranked_west = [masterminds[count][0], masterminds[count][1]]
         masterminds_ranked_east = [masterminds[count][2], masterminds[count][3]]
+        elo_change_ranked_west = elo_change[count][0]
+        elo_change_ranked_east = elo_change[count][2]
         gameelo_list.append(gameelo[1][count])
         if (playerid2 != 'all') or (playerid == "all" and playerid2 == "all") or (playerid != "all" and mm2 != "") or (playerid != "all" and mm1 != ""):
             for i, x in enumerate(playerids_ranked_west):
@@ -2041,11 +2048,13 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
                     if option == 'against':
                         if (playerids_ranked_east[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[0] or mm2 == ""):
                             patches_list.append(patches[count])
+                            elo_change_list.append(elo_change_ranked_west)
                             game_count += 1
                             if gameresult_ranked_west[i] == 'won':
                                 win_count += 1
                         elif (playerids_ranked_east[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[1] or mm2 == ""):
                             patches_list.append(patches[count])
+                            elo_change_list.append(elo_change_ranked_west)
                             game_count += 1
                             if gameresult_ranked_west[i] == 'won':
                                 win_count += 1
@@ -2054,20 +2063,23 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
                             teammate = 1
                         else:
                             teammate = 0
-                        if type(playername) != list and playername.lower() == playername2.lower():
+                        if type(playername) != list and type(playername2) != list and playername.lower() == playername2.lower():
                             if (playerids_ranked_west[0] == playerid2) and (mm2 == masterminds_ranked_west[0] or mm2 == ""):
                                 patches_list.append(patches[count])
+                                elo_change_list.append(elo_change_ranked_west)
                                 game_count += 1
                                 if gameresult_ranked_west[0] == 'won':
                                     win_count += 1
                             elif (playerids_ranked_west[1] == playerid2) and (mm2 == masterminds_ranked_west[1] or mm2 == ""):
                                 patches_list.append(patches[count])
+                                elo_change_list.append(elo_change_ranked_west)
                                 game_count += 1
                                 if gameresult_ranked_west[1] == 'won':
                                     win_count += 1
                         else:
                             if (playerids_ranked_west[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[teammate] or mm2 == ""):
                                 patches_list.append(patches[count])
+                                elo_change_list.append(elo_change_ranked_west)
                                 game_count += 1
                                 if gameresult_ranked_west[teammate] == 'won':
                                     win_count += 1
@@ -2076,11 +2088,13 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
                     if option == 'against':
                         if (playerids_ranked_west[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[0] or mm2 == ""):
                             patches_list.append(patches[count])
+                            elo_change_list.append(elo_change_ranked_east)
                             game_count += 1
                             if gameresult_ranked_east[i] == 'won':
                                 win_count += 1
                         elif (playerids_ranked_west[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[1] or mm2 == ""):
                             patches_list.append(patches[count])
+                            elo_change_list.append(elo_change_ranked_east)
                             game_count += 1
                             if gameresult_ranked_east[i] == 'won':
                                 win_count += 1
@@ -2089,20 +2103,23 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
                             teammate = 1
                         else:
                             teammate = 0
-                        if type(playername) != list and playername.lower() == playername2.lower():
+                        if type(playername) != list and type(playername2) != list and playername.lower() == playername2.lower():
                             if (playerids_ranked_east[0] == playerid2) and (mm2 == masterminds_ranked_east[0] or mm2 == ""):
                                 patches_list.append(patches[count])
+                                elo_change_list.append(elo_change_ranked_east)
                                 game_count += 1
                                 if gameresult_ranked_east[0] == 'won':
                                     win_count += 1
                             elif (playerids_ranked_east[1] == playerid2) and (mm2 == masterminds_ranked_east[1] or mm2 == ""):
                                 patches_list.append(patches[count])
+                                elo_change_list.append(elo_change_ranked_east)
                                 game_count += 1
                                 if gameresult_ranked_east[1] == 'won':
                                     win_count += 1
                         else:
                             if (playerids_ranked_east[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[teammate] or mm2 == ""):
                                 patches_list.append(patches[count])
+                                elo_change_list.append(elo_change_ranked_east)
                                 game_count += 1
                                 if gameresult_ranked_east[teammate] == 'won':
                                     win_count += 1
@@ -2180,9 +2197,16 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0):
         return output_string_1 + output_string_2 + ' (From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n" +\
             final_output + 'Patches: ' + ', '.join(patches)
     else:
+        if len(elo_change_list) > 0:
+            sum_elo = sum(elo_change_list)
+            if sum_elo > 0: string_pm = "+"
+            else: string_pm = ""
+            elo_change_sum = ", Elo change: "+string_pm+str(sum_elo)
+        else:
+            elo_change_sum = ""
         try: return output_string_1 + output_string_2 + ' (From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n" +\
             str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\
-            '% winrate)\nPatches: ' + ', '.join(patches)
+            '% winrate'+elo_change_sum+')\nPatches: ' + ', '.join(patches)
         except ZeroDivisionError as e:
             print(e)
             return "No games found."
