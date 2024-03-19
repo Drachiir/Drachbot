@@ -450,14 +450,14 @@ def run_discord_bot():
                 data = f.readlines()
                 for entry in data:
                     if interaction.user.name == entry.split("|")[0]:
-                        playername = entry.split("|")[1]
+                        playername = entry.split("|")[1].replace("\n", "")
                         break
                 else:
                     await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
                     return
             if action.value == "End":
-                if os.path.isfile('/shared/' + playername + '_output.png'):
-                    os.remove('/shared/' + playername + '_output.png')
+                if os.path.isfile('/shared/' + playername + '_output.html'):
+                    os.remove('/shared/' + playername + '_output.html')
                 if os.path.isfile("sessions/session_" + playername + ".json"):
                     os.remove("sessions/session_" + playername + ".json")
                     await interaction.response.send_message("Session ended.")
@@ -466,7 +466,7 @@ def run_discord_bot():
                     await interaction.response.send_message("No active session found.")
                     return
             elif action.value == "Start":
-                if os.path.isfile('/shared/' + playername + '_output.png'):
+                if os.path.isfile('/shared/' + playername + '_output.html'):
                     await interaction.response.send_message("A session is already running.")
                     return
                 else:
@@ -475,8 +475,6 @@ def run_discord_bot():
                         await interaction.response.defer(ephemeral=False, thinking=True)
                         response = await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername))
                         await interaction.followup.send("Session started! Use http://85.215.133.154:4443/"+response+' as a OBS browser source. (Dont share the address with anyone please)')
-                        await interaction.followup.send("To enable transparency replace the **Custom CSS** in the **Browser Source Properties** with:\n"
-                                                        "`img { background: none !important; }`")
                         return
         except Exception:
             traceback.print_exc()
@@ -544,14 +542,13 @@ def run_discord_bot():
                         with open("Files/whitelist.txt", "r") as f:
                             data = f.readlines()
                             for entry in data:
-                                if entry.split("|")[1] in desc3[1]:
+                                playername = entry.split("|")[1].replace("\n", "")
+                                if playername in desc3[1]:
                                     elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
-                                    playername = entry.split("|")[1]
                                     if os.path.isfile("sessions/session_" + playername + ".json"):
                                         await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, elo_change=elo_change))
-                                elif entry.split("|")[1] in desc3[2]:
+                                elif playername in desc3[2]:
                                     elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
-                                    playername = entry.split("|")[1]
                                     if os.path.isfile("sessions/session_" + playername + ".json"):
                                         await loop.run_in_executor(pool,functools.partial(responses.stream_overlay, playername,elo_change=elo_change))
                     if "elo" in desc or "**TIED**" in desc2:

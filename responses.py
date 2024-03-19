@@ -116,7 +116,6 @@ def im_has_alpha(img_arr):
 def stream_overlay(playername, elo_change=0):
     if not os.path.isfile("sessions/session_" + playername + ".json"):
         playerid = apicall_getid(playername)
-        profile = apicall_getprofile(playerid)
         stats = apicall_getstats(playerid)
         initial_elo = stats["overallElo"]
         current_elo = stats["overallElo"]
@@ -145,41 +144,97 @@ def stream_overlay(playername, elo_change=0):
         with open("sessions/session_" + playername + ".json", "w") as f:
             dict = {"int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
             json.dump(dict, f)
-    # PIL Image
-    mode = 'RGBA'
-    colors = (0, 0, 0, 0)
-    im = PIL.Image.new(mode=mode, size=(400, 150), color=colors)
-    I1 = ImageDraw.Draw(im)
-    ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont_small = ImageFont.truetype(ttf, 20)
-    myFont = ImageFont.truetype(ttf, 25)
-    myFont_title = ImageFont.truetype(ttf, 30)
-    I1.text((0, 0), "Starting rank:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((170, 0), str(initial_elo), font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((0, 32), "Current rank:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((170, 32), str(current_elo), font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((0, 64), "W: "+str(current_wins-initial_wins)+" L: "+str(current_losses-initial_losses), font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    if initial_elo >= 2800:
-        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
-    elif initial_elo >= 2600:
-        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Grandmaster.png'
-    elif initial_elo >= 2400:
-        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/SeniorMaster.png'
-    elif initial_elo >= 2200:
-        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Master.png'
-    elif initial_elo >= 2000:
-        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Expert.png'
-    elif initial_elo >= 1800:
-        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Diamond.png'
-    elif initial_elo >= 1600:
-        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Platinum.png'
-    rank_response = requests.get(rank_url)
-    rank_image = Image.open(BytesIO(rank_response.content))
-    rank_image = rank_image.resize((32, 32))
-    im.paste(rank_image, (135, 0), mask=rank_image)
-    im.paste(rank_image, (135, 32), mask=rank_image)
-    im.save('/shared/'+playername+'_output.png')
-    return playername+'_output.png'
+    def get_rank_url(elo):
+        if elo >= 2800:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
+        elif elo >= 2600:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Grandmaster.png'
+        elif elo >= 2400:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/SeniorMaster.png'
+        elif elo >= 2200:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Master.png'
+        elif elo >= 2000:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Expert.png'
+        elif elo >= 1800:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Diamond.png'
+        elif elo >= 1600:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Platinum.png'
+        return rank_url
+    bracket1 = "{"
+    bracket2 = "}"
+    html_file = """<!doctype html>
+                    <html>
+                    <head>
+                          <style>
+                      .container {
+                      min-height: -5vh;
+                      max-height: 9vh;
+                      display: flex;
+                      flex-direction: right;
+                      align-items: center;
+                      font-size: 0px;
+                      margin 15px;
+                    }
+                    
+                    img {
+                      display: block;
+                      max-width: 100%;
+                      height: auto;
+                    }
+                    
+                    .text {
+                      font-family: Roboto; src: url('Roboto-BoldCondensed.ttf');
+                      font-size: 20px;
+                      padding-left: 20px;
+                      color: white;
+                        text-shadow:
+                        /* Outline */
+                        -1px -1px 0 #000000,
+                        1px -1px 0 #000000,
+                        -1px 1px 0 #000000,
+                        1px 1px 0 #000000,  
+                        -2px 0 0 #000000,
+                        2px 0 0 #000000,
+                        0 2px 0 #000000,
+                        0 -2px 0 #000000;
+                    }
+                    </style>
+                    <title>"""+playername+"""</title>
+                    </head>
+                    <body>
+                    <div class="container">
+                         <div class="text">
+                            <h1 class="Roboto"><b>Starting elo:‎ ‎ </b></h1>
+                          </div>
+                          <div class="image">                          
+                            <img src="""+str(get_rank_url(initial_elo))+""">
+                          </div>
+                         <div class="text">
+                            <h1 class="Roboto"><b>"""+str(initial_elo)+"""</b></h1>
+                          </div>
+                        </div>
+                    <div class="container">
+                         <div class="text">
+                            <h1 class="Roboto"><b>Current elo:‎ ‎ ‎</b></h1>
+                          </div>
+                          <div class="image">
+                            <img src="""+str(get_rank_url(current_elo))+""">
+                          </div>
+                         <div class="text">
+                            <h1 class="Roboto"><b>"""+str(current_elo)+"""</b></h1>
+                          </div>
+                        </div>
+                    <div class="container">
+                         <div class="text">
+                            <h1 class="Roboto"><b>W : """+str(current_wins-initial_wins)+""", L : """+str(current_losses-initial_losses)+""":</b></h1>
+                          </div>
+                        </div>
+                    </body>
+                    </html>
+                    """
+    with open('/shared/'+playername+'_output.html', "w") as f:
+        f.write(html_file)
+    return playername+'_output.html'
 
 def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind = False, megamind_count = 0, transparency = True):
     if playerid != 'all' and 'nova cup' not in playerid:
