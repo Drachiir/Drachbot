@@ -324,17 +324,25 @@ def run_discord_bot():
 
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2.")
     @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2 or all for 6 most common players', option='Against or with?', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
-                           min_elo='Enter minium average game elo to include in the data set', patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
+                           min_elo='Enter minium average game elo to include in the data set', patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           sort= "Sort by? (Only for playername2 = all)")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='against', value='against'),
         discord.app_commands.Choice(name='with', value='with')
     ])
-    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str], games: int, min_elo: int, patch: str):
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='Count', value='Count'),
+        discord.app_commands.Choice(name='EloChange+', value='EloChange+'),
+        discord.app_commands.Choice(name='EloChange-', value='EloChange-')
+    ])
+    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str], games: int, min_elo: int, patch: str, sort: discord.app_commands.Choice[str]="Count"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
-                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_winrate, playername1, playername2, option.value, games, patch, min_elo = min_elo))
+                try: sort = sort.value
+                except AttributeError: pass
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_winrate, playername1, playername2, option.value, games, patch, min_elo = min_elo, sort=sort))
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -427,6 +435,23 @@ def run_discord_bot():
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
+    # @tree.command(name="streamtracker", description="Simple W/L and Elo tracker for your stream.")
+    # @app_commands.describe(action="Select an action.")
+    # @app_commands.choices(action=[
+    #     discord.app_commands.Choice(name='Start Session', value='Start'),
+    #     discord.app_commands.Choice(name='End Session', value='End')
+    # ])
+    # async def streamtracker(interaction: discord.Interaction, action: discord.app_commands.Choice[str]):
+    #     try:
+    #         loop = asyncio.get_running_loop()
+    #         with concurrent.futures.ProcessPoolExecutor() as pool:
+    #             await interaction.response.defer(ephemeral=False, thinking=True)
+    #             await interaction.followup.send("Session "+action.value+"ed.")
+    #             response = await loop.run_in_executor(pool, functools.partial(post_request))
+    #     except Exception:
+    #         traceback.print_exc()
+    #         await interaction.followup.send("Bot error :sob:")
+
     @client.event
     async def on_ready():
         print(f'{client.user} is now running!')
@@ -483,7 +508,8 @@ def run_discord_bot():
                         if field["name"] == "Game ID":
                             gameid_result = field["value"]
                     desc = embed_dict["description"].split(")")[0].split("(")[1]
-                    if "elo" in desc:
+                    desc2 = embed_dict["description"].split("(")[0]
+                    if "elo" in desc or "**TIED**" in desc2:
                         path = 'Livegame/Ranked/'
                         livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
                         for game in livegame_files:
