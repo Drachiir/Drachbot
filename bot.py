@@ -335,7 +335,7 @@ def run_discord_bot():
         discord.app_commands.Choice(name='EloChange+', value='EloChange+'),
         discord.app_commands.Choice(name='EloChange-', value='EloChange-')
     ])
-    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str], games: int, min_elo: int, patch: str, sort: discord.app_commands.Choice[str]="Count"):
+    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str], games: int=0, min_elo: int=0, patch: str="0", sort: discord.app_commands.Choice[str]="Count"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -435,22 +435,52 @@ def run_discord_bot():
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
-    # @tree.command(name="streamtracker", description="Simple W/L and Elo tracker for your stream.")
-    # @app_commands.describe(action="Select an action.")
-    # @app_commands.choices(action=[
-    #     discord.app_commands.Choice(name='Start Session', value='Start'),
-    #     discord.app_commands.Choice(name='End Session', value='End')
-    # ])
-    # async def streamtracker(interaction: discord.Interaction, action: discord.app_commands.Choice[str]):
-    #     try:
-    #         loop = asyncio.get_running_loop()
-    #         with concurrent.futures.ProcessPoolExecutor() as pool:
-    #             await interaction.response.defer(ephemeral=False, thinking=True)
-    #             await interaction.followup.send("Session "+action.value+"ed.")
-    #             response = await loop.run_in_executor(pool, functools.partial(post_request))
-    #     except Exception:
-    #         traceback.print_exc()
-    #         await interaction.followup.send("Bot error :sob:")
+    @tree.command(name="streamtracker", description="Simple W/L and Elo tracker for your stream.")
+    @app_commands.describe(action="Select an action.")
+    @app_commands.choices(action=[
+        discord.app_commands.Choice(name='Start Session', value='Start'),
+        discord.app_commands.Choice(name='End Session', value='End')
+    ])
+    async def streamtracker(interaction: discord.Interaction, action: discord.app_commands.Choice[str]):
+        try:
+            if interaction.guild != None:
+                await interaction.response.send_message("This command only works in DMs.", ephemeral=True)
+                return
+            with open("Files/whitelist.txt", "r") as f:
+                data = f.readlines()
+                for entry in data:
+                    if interaction.user.name == entry.split("|")[0]:
+                        playername = entry.split("|")[1]
+                        break
+                else:
+                    await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
+                    return
+            if action.value == "End":
+                if os.path.isfile('/shared/' + playername + '_output.png'):
+                    os.remove('/shared/' + playername + '_output.png')
+                if os.path.isfile("sessions/session_" + playername + ".json"):
+                    os.remove("sessions/session_" + playername + ".json")
+                    await interaction.response.send_message("Session ended.")
+                    return
+                else:
+                    await interaction.response.send_message("No active session found.")
+                    return
+            elif action.value == "Start":
+                if os.path.isfile('/shared/' + playername + '_output.png'):
+                    await interaction.response.send_message("A session is already running.")
+                    return
+                else:
+                    loop = asyncio.get_running_loop()
+                    with concurrent.futures.ProcessPoolExecutor() as pool:
+                        await interaction.response.defer(ephemeral=False, thinking=True)
+                        response = await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername))
+                        await interaction.followup.send("Session started! Use http://85.215.133.154:4443/"+response+' as a OBS browser source. (Dont share the address with anyone please)')
+                        await interaction.followup.send("To enable transparency replace the **Custom CSS** in the **Browser Source Properties** with:\n"
+                                                        "`img { background: none !important; }`")
+                        return
+        except Exception:
+            traceback.print_exc()
+            await interaction.followup.send("Bot error :sob:")
 
     @client.event
     async def on_ready():
@@ -509,6 +539,21 @@ def run_discord_bot():
                             gameid_result = field["value"]
                     desc = embed_dict["description"].split(")")[0].split("(")[1]
                     desc2 = embed_dict["description"].split("(")[0]
+                    desc3 = embed_dict["description"].split("Markdown")
+                    if "elo" in desc:
+                        with open("Files/whitelist.txt", "r") as f:
+                            data = f.readlines()
+                            for entry in data:
+                                if entry.split("|")[1] in desc3[1]:
+                                    elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
+                                    playername = entry.split("|")[1]
+                                    if os.path.isfile("sessions/session_" + playername + ".json"):
+                                        await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, elo_change=elo_change))
+                                elif entry.split("|")[1] in desc3[2]:
+                                    elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
+                                    playername = entry.split("|")[1]
+                                    if os.path.isfile("sessions/session_" + playername + ".json"):
+                                        await loop.run_in_executor(pool,functools.partial(responses.stream_overlay, playername,elo_change=elo_change))
                     if "elo" in desc or "**TIED**" in desc2:
                         path = 'Livegame/Ranked/'
                         livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]

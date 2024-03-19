@@ -113,6 +113,74 @@ def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
     return True if c ==4 else False
 
+def stream_overlay(playername, elo_change=0):
+    if not os.path.isfile("sessions/session_" + playername + ".json"):
+        playerid = apicall_getid(playername)
+        profile = apicall_getprofile(playerid)
+        stats = apicall_getstats(playerid)
+        initial_elo = stats["overallElo"]
+        current_elo = stats["overallElo"]
+        initial_wins = stats["rankedWinsThisSeason"]
+        current_wins = stats["rankedWinsThisSeason"]
+        initial_losses = stats["rankedLossesThisSeason"]
+        current_losses = stats["rankedLossesThisSeason"]
+        with open("sessions/session_" + playername + ".json", "w") as f:
+            dict = {"int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            json.dump(dict, f)
+    else:
+        with open("sessions/session_" + playername + ".json", "r") as f:
+            dict = json.load(f)
+            initial_elo = dict["int_elo"]
+            current_elo = dict["current_elo"]+elo_change
+            if elo_change > 0:
+                current_wins = dict["current_wins"]+1
+            else:
+                current_wins = dict["current_wins"]
+            initial_wins = dict["int_wins"]
+            initial_losses = dict["int_losses"]
+            if elo_change < 0:
+                current_losses = dict["current_losses"] + 1
+            else:
+                current_losses = dict["current_losses"]
+        with open("sessions/session_" + playername + ".json", "w") as f:
+            dict = {"int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            json.dump(dict, f)
+    # PIL Image
+    mode = 'RGBA'
+    colors = (0, 0, 0, 0)
+    im = PIL.Image.new(mode=mode, size=(400, 150), color=colors)
+    I1 = ImageDraw.Draw(im)
+    ttf = 'Files/RobotoCondensed-Regular.ttf'
+    myFont_small = ImageFont.truetype(ttf, 20)
+    myFont = ImageFont.truetype(ttf, 25)
+    myFont_title = ImageFont.truetype(ttf, 30)
+    I1.text((0, 0), "Starting rank:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((170, 0), str(initial_elo), font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((0, 32), "Current rank:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((170, 32), str(current_elo), font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((0, 64), "W: "+str(current_wins-initial_wins)+" L: "+str(current_losses-initial_losses), font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    if initial_elo >= 2800:
+        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
+    elif initial_elo >= 2600:
+        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Grandmaster.png'
+    elif initial_elo >= 2400:
+        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/SeniorMaster.png'
+    elif initial_elo >= 2200:
+        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Master.png'
+    elif initial_elo >= 2000:
+        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Expert.png'
+    elif initial_elo >= 1800:
+        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Diamond.png'
+    elif initial_elo >= 1600:
+        rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Platinum.png'
+    rank_response = requests.get(rank_url)
+    rank_image = Image.open(BytesIO(rank_response.content))
+    rank_image = rank_image.resize((32, 32))
+    im.paste(rank_image, (135, 0), mask=rank_image)
+    im.paste(rank_image, (135, 32), mask=rank_image)
+    im.save('/shared/'+playername+'_output.png')
+    return playername+'_output.png'
+
 def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind = False, megamind_count = 0, transparency = True):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
@@ -1143,10 +1211,10 @@ def apicall_pullgamedata(playerid, offset, path, expected):
         if (raw_data == {'message': 'Internal server error'}) or (raw_data == {'err': 'Entry not found.'}):
             break
         if (x['queueType'] == 'Normal'):
-            ranked_count += 1
             if Path(Path(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+ '_' + str(x['_id']) + ".json")).is_file():
                 print('File already there, breaking loop.')
                 break
+            ranked_count += 1
             with open(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_' + str(x['_id']) + ".json", "w") as f:
                 json.dump(x, f)
         games_count += 1
@@ -2245,13 +2313,12 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
             reverse = False
         newIndex = sorted(all_dict, key=lambda x: all_dict[x][sort], reverse=reverse)
         all_dict = {k: all_dict[k] for k in newIndex}
-        print(all_dict)
         final_output = ""
         for indx, player in enumerate(all_dict):
             if indx == 6: break
             if all_dict[player]["EloChange"] > 0: elo_prefix = "+"
             else: elo_prefix = ""
-            final_output += apicall_getprofile(player)['playerName'] + ': ' + str(all_dict[player]["Wins"]) + ' win - ' + str(all_dict[player]["Count"]-all_dict[player]["Wins"]) + ' lose (' + str(round(all_dict[player]["Wins"]/all_dict[player]["Count"]*100,1)) + '%wr, elo+/-: '+elo_prefix+str(all_dict[player]["EloChange"])+')\n'
+            final_output += apicall_getprofile(player)['playerName'] + ': ' + str(all_dict[player]["Wins"]) + ' win - ' + str(all_dict[player]["Count"]-all_dict[player]["Wins"]) + ' lose (' + str(round(all_dict[player]["Wins"]/all_dict[player]["Count"]*100,1)) + '%wr, elo change: '+elo_prefix+str(all_dict[player]["EloChange"])+')\n'
         return output_string_1 + output_string_2 + ' (From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n" +\
             final_output + 'Patches: ' + ', '.join(patches)
     else:
