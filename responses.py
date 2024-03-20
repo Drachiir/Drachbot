@@ -144,6 +144,25 @@ def stream_overlay(playername, elo_change=0):
         with open("sessions/session_" + playername + ".json", "w") as f:
             dict = {"int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
             json.dump(dict, f)
+    wins = current_wins-initial_wins
+    losses = current_losses-initial_losses
+    try:
+        winrate = round(wins/(wins+losses)*100,1)
+    except ZeroDivisionError:
+        winrate = 0
+    rgb = ""
+    rgb2 = ""
+    if winrate < 50:
+        rgb = 'class="redText"'
+    else:
+        rgb = 'class="greenText"'
+    elo_diff = current_elo-initial_elo
+    if elo_diff >= 0:
+        elo_str = "+"
+        rgb2 = 'class="greenText"'
+    else:
+        elo_str = ""
+        rgb2 = 'class="redText"'
     def get_rank_url(elo):
         if elo >= 2800:
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
@@ -199,6 +218,14 @@ def stream_overlay(playername, elo_change=0):
                        0 2px 0 #000000,
                        0 -2px 0 #000000;
                     }
+                   .redText
+                   {
+                      color:red;
+                   }
+                   .greenText
+                   {
+                      color:green;
+                   }
                     </style>
                     <title>"""+playername+"""</title>
                     </head>
@@ -222,12 +249,12 @@ def stream_overlay(playername, elo_change=0):
                             <img src="""+str(get_rank_url(current_elo))+""">
                           </div>
                          <div class="text">
-                            <r><b>"""+str(current_elo)+"""</b></r>
+                            <r><b>"""+str(current_elo)+"""</b></r>&nbsp;<r """+rgb2+""" ><b>("""+elo_str+str(elo_diff)+""")</b></r>
                           </div>
                         </div>
                     <div class="container">
                          <div class="text">
-                            <r><b>W : """+str(current_wins-initial_wins)+""", L : """+str(current_losses-initial_losses)+"""</b></r>
+                            <r><b>Win: """+str(wins)+""", Loss: """+str(losses)+""", Winrate:</b></r>&nbsp;<r """+rgb+""" ><b>"""+str(winrate)+"""%</b></r>
                           </div>
                         </div>
                     </body>
