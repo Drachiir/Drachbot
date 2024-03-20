@@ -160,19 +160,19 @@ def stream_overlay(playername, elo_change=0):
         elif elo >= 1600:
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Platinum.png'
         return rank_url
-    bracket1 = "{"
-    bracket2 = "}"
     html_file = """<!doctype html>
                     <html>
                     <head>
-                          <style>
-                      .container {
-                      min-height: -5vh;
-                      max-height: 9vh;
+                       <link rel="preconnect" href="https://fonts.googleapis.com">
+                       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                       <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+                    <style>
+                    .container {
+                      min-height: 0vh;
+                      max-height: 14vh;
                       display: flex;
                       flex-direction: right;
                       align-items: center;
-                      font-size: 0px;
                       margin 15px;
                     }
                     
@@ -181,22 +181,23 @@ def stream_overlay(playername, elo_change=0):
                       max-width: 100%;
                       height: auto;
                     }
-                    
-                    .text {
-                      font-family: Roboto; src: url('Roboto-BoldCondensed.ttf');
-                      font-size: 20px;
-                      padding-left: 20px;
-                      color: white;
-                        text-shadow:
-                        /* Outline */
-                        -1px -1px 0 #000000,
-                        1px -1px 0 #000000,
-                        -1px 1px 0 #000000,
-                        1px 1px 0 #000000,  
-                        -2px 0 0 #000000,
-                        2px 0 0 #000000,
-                        0 2px 0 #000000,
-                        0 -2px 0 #000000;
+                    r {
+                       font-family: "Roboto", sans-serif;
+                       font-weight: 700;
+                       font-style: normal;
+                       font-size: 40px;
+                       padding-left: 20px;
+                       color: white;
+                       text-shadow:
+                       /* Outline */
+                       -1px -1px 0 #000000,
+                       1px -1px 0 #000000,
+                       -1px 1px 0 #000000,
+                       1px 1px 0 #000000,  
+                       -2px 0 0 #000000,
+                       2px 0 0 #000000,
+                       0 2px 0 #000000,
+                       0 -2px 0 #000000;
                     }
                     </style>
                     <title>"""+playername+"""</title>
@@ -204,29 +205,29 @@ def stream_overlay(playername, elo_change=0):
                     <body>
                     <div class="container">
                          <div class="text">
-                            <h1 class="Roboto"><b>Starting elo:‎ ‎ </b></h1>
+                            <r><b>Starting elo:‎ ‎ </b></r>
                           </div>
                           <div class="image">                          
                             <img src="""+str(get_rank_url(initial_elo))+""">
                           </div>
                          <div class="text">
-                            <h1 class="Roboto"><b>"""+str(initial_elo)+"""</b></h1>
+                            <r><b>"""+str(initial_elo)+"""</b></r>
                           </div>
                         </div>
                     <div class="container">
                          <div class="text">
-                            <h1 class="Roboto"><b>Current elo:‎ ‎ ‎</b></h1>
+                            <r><b>Current elo:‎ ‎ ‎</b></r>
                           </div>
                           <div class="image">
                             <img src="""+str(get_rank_url(current_elo))+""">
                           </div>
                          <div class="text">
-                            <h1 class="Roboto"><b>"""+str(current_elo)+"""</b></h1>
+                            <r><b>"""+str(current_elo)+"""</b></r>
                           </div>
                         </div>
                     <div class="container">
                          <div class="text">
-                            <h1 class="Roboto"><b>W : """+str(current_wins-initial_wins)+""", L : """+str(current_losses-initial_losses)+""":</b></h1>
+                            <r><b>W : """+str(current_wins-initial_wins)+""", L : """+str(current_losses-initial_losses)+"""</b></r>
                           </div>
                         </div>
                     </body>
