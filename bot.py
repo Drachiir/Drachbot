@@ -13,17 +13,22 @@ from twitchAPI.twitch import Twitch
 from twitchAPI.helper import first
 import discord_timestamps
 from discord_timestamps import TimestampType
-import arrow
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
 
-async def twitch_app():
+async def twitch_get_streams(names: list) -> dict:
     twitch = await Twitch(secret_file.get("twitchappid"), secret_file.get("twitchsecret"))
-    legion = await first(twitch.get_games(names="Legion TD 2"))
-    streams = await first(twitch.get_streams(game_id=legion.id))
-    print(streams.title)
+    streams_dict = {}
+    for name in names:
+        user = await first(twitch.get_users(logins=name))
+        stream = await first(twitch.get_streams(user_id=user.id))
+        if type(stream) == type(None):
+            streams_dict[user.display_name] = {"live": False, "started_at": ""}
+        else:
+            streams_dict[user.display_name] = {"live": True, "started_at": stream.started_at}
     await  twitch.close()
+    return streams_dict
 
 async def send_message(message, user_message, is_private, username):
     #try:
@@ -453,7 +458,7 @@ def run_discord_bot():
         discord.app_commands.Choice(name='Start Session', value='Start'),
         discord.app_commands.Choice(name='End Session', value='End')
     ])
-    async def streamtracker(interaction: discord.Interaction, action: discord.app_commands.Choice[str]):
+    async def streamtracker(interaction: discord.Interaction, action: discord.app_commands.Choice[str] = "Start"):
         try:
             if interaction.guild != None:
                 await interaction.response.send_message("This command only works in DMs.", ephemeral=True)
@@ -467,7 +472,10 @@ def run_discord_bot():
                 else:
                     await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
                     return
-            if action.value == "End":
+            try:
+                action = action.value
+            except AttributeError: pass
+            if action == "End":
                 if os.path.isfile('/shared/' + playername + '_output.html'):
                     os.remove('/shared/' + playername + '_output.html')
                 if os.path.isfile("sessions/session_" + playername + ".json"):
@@ -477,17 +485,8 @@ def run_discord_bot():
                 else:
                     await interaction.response.send_message("No active session found.")
                     return
-            elif action.value == "Start":
-                if os.path.isfile('/shared/' + playername + '_output.html'):
-                    await interaction.response.send_message("A session is already running.")
-                    return
-                else:
-                    loop = asyncio.get_running_loop()
-                    with concurrent.futures.ProcessPoolExecutor() as pool:
-                        await interaction.response.defer(ephemeral=False, thinking=True)
-                        response = await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername))
-                        await interaction.followup.send("Session started! Use http://overlay.drachbot.site/"+response+' as a OBS browser source.')
-                        return
+            elif action == "Start":
+                await interaction.response.send_message("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
         except Exception:
             traceback.print_exc()
             await interaction.followup.send("Bot error :sob:")
@@ -537,6 +536,31 @@ def run_discord_bot():
                     if len(players) == 4:
                         players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, False))
                         save_live_game(gameid, players_new)
+                        twitch_list = []
+                        with open("Files/whitelist.txt", "r") as f:
+                            data = f.readlines()
+                            f.close()
+                            for entry in data:
+                                playername = entry.split("|")[1].replace("\n", "")
+                                twitch_name = entry.split("|")[2].replace("\n", "")
+                                for p in players:
+                                    if p.split(":")[0] == playername:
+                                        if os.path.isfile("sessions/session_" + playername + ".json") == False:
+                                            twitch_list.append(twitch_name)
+                                        else:
+                                            with open("sessions/session_" + playername + ".json", "r") as f2:
+                                                temp_dict = json.load(f2)
+                                                twitch_dict = twitch_get_streams([twitch_name])
+                                                if temp_dict["started_at"] != twitch_dict["started_at"]:
+                                                    os.remove("sessions/session_" + playername + ".json")
+                                                    twitch_list.append(twitch_name)
+                        if len(twitch_list) > 0:
+                            twitch_dict = twitch_get_streams(twitch_list)
+                            for streamer in twitch_dict:
+                                if twitch_dict[streamer]["live"] == True:
+                                    print(await loop.run_in_executor(pool,functools.partial(responses.stream_overlay,playername, started_at=twitch_dict["started_at"]))+ " session started.")
+                                else:
+                                    print(streamer + " is not live.")
                     # elif len(players) == 8:
                     #     players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, True))
                     #     save_live_game(gameid, players_new)
@@ -577,6 +601,5 @@ def run_discord_bot():
 
     loop.create_task(client.start(TOKEN))
     loop.create_task(client2.start(TOKEN2))
-    loop.create_task(twitch_app())
     loop.run_forever()
 

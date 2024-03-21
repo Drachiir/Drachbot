@@ -113,7 +113,7 @@ def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
     return True if c ==4 else False
 
-def stream_overlay(playername, elo_change=0):
+def stream_overlay(playername, stream_started_at="", elo_change=0):
     if not os.path.isfile("sessions/session_" + playername + ".json"):
         playerid = apicall_getid(playername)
         stats = apicall_getstats(playerid)
@@ -124,7 +124,7 @@ def stream_overlay(playername, elo_change=0):
         initial_losses = stats["rankedLossesThisSeason"]
         current_losses = stats["rankedLossesThisSeason"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            dict = {"int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
             json.dump(dict, f)
     else:
         with open("sessions/session_" + playername + ".json", "r") as f:
@@ -142,7 +142,7 @@ def stream_overlay(playername, elo_change=0):
             else:
                 current_losses = dict["current_losses"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            dict = {"int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
             json.dump(dict, f)
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
