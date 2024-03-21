@@ -147,7 +147,7 @@ def stream_overlay(playername, elo_change=0):
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
     try:
-        winrate = round(wins/(wins+losses)*100,1)
+        winrate = round(wins/(wins+losses)*100)
     except ZeroDivisionError:
         winrate = 0
     rgb = ""
@@ -178,6 +178,10 @@ def stream_overlay(playername, elo_change=0):
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Diamond.png'
         elif elo >= 1600:
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Platinum.png'
+        elif elo >= 1400:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Gold.png'
+        elif elo >= 1200:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Silver.png'
         return rank_url
     html_file = """<!doctype html>
                     <html>
@@ -249,12 +253,12 @@ def stream_overlay(playername, elo_change=0):
                             <img src="""+str(get_rank_url(current_elo))+""">
                           </div>
                          <div class="text">
-                            <r><b>"""+str(current_elo)+"""</b></r>&nbsp;<r """+rgb2+""" ><b>("""+elo_str+str(elo_diff)+""")</b></r>
+                            <r><b>"""+str(current_elo)+"""</b></r><r """+rgb2+""" ><b>("""+elo_str+str(elo_diff)+""")</b></r>
                           </div>
                         </div>
                     <div class="container">
                          <div class="text">
-                            <r><b>Win: """+str(wins)+""", Loss: """+str(losses)+""", Winrate:</b></r>&nbsp;<r """+rgb+""" ><b>"""+str(winrate)+"""%</b></r>
+                            <r><b>Win: """+str(wins)+""", Loss: """+str(losses)+""", Winrate:</b></r><r """+rgb+""" ><b>"""+str(winrate)+"""%</b></r>
                           </div>
                         </div>
                     </body>
@@ -1305,11 +1309,12 @@ def apicall_pullgamedata(playerid, offset, path, expected):
     output.append(games_count)
     return output
 
-def get_games_loop(playerid, offset, path, expected, timeout_limit = 5):
+def get_games_loop(playerid, offset, path, expected, timeout_limit = 3):
     data = apicall_pullgamedata(playerid, offset, path, expected)
     count = data[0]
     games_count = data[1]
     timeout = 0
+    print("Starting get_games_loop, expecting "+str(expected)+" games.")
     while count < expected:
         if timeout == timeout_limit:
             print('Timeout while pulling games.')
@@ -2765,7 +2770,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
         mastermind = mastermind.value
     if playername == 'all':
         playerid = 'all'
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0' or '10'):
             return 'Too many games, please limit data.'
         if games == 0:
             games = get_games_saved_count(playerid)
@@ -3172,7 +3177,7 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
 def apicall_elo(playername, rank):
     playerid = apicall_getid(playername)
     if playerid == 0:
-        output = 'Player ' + str(playername) + ' not found.'
+        return 'Player ' + str(playername) + ' not found.'
     if playerid == 1:
         return 'API limit reached.'
     else:

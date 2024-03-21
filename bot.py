@@ -9,10 +9,21 @@ from discord import app_commands
 import os
 import concurrent.futures
 import platform
+from twitchAPI.twitch import Twitch
+from twitchAPI.helper import first
+import discord_timestamps
+from discord_timestamps import TimestampType
+import arrow
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
-serverid = secret_file.get('id')
+
+async def twitch_app():
+    twitch = await Twitch(secret_file.get("twitchappid"), secret_file.get("twitchsecret"))
+    legion = await first(twitch.get_games(names="Legion TD 2"))
+    streams = await first(twitch.get_streams(game_id=legion.id))
+    print(streams.title)
+    await  twitch.close()
 
 async def send_message(message, user_message, is_private, username):
     #try:
@@ -82,16 +93,17 @@ def get_top_games(queue):
     output = ""
     for idx, game2 in enumerate(topgames):
         path2 = path+game2
-        mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2))
-        date_diff = datetime.now() - mod_date
-        if platform.system() == "Linux":
-            minutes_diff = date_diff.total_seconds() / 60
-        elif platform.system() == "Windows":
-            minutes_diff = date_diff.total_seconds() / 60 - 60
+        mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2)).timestamp()
+        #date_diff = datetime.now() - mod_date
+        timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+        # if platform.system() == "Linux":
+        #     minutes_diff = date_diff.total_seconds() / 60
+        # elif platform.system() == "Windows":
+        #     minutes_diff = date_diff.total_seconds() / 60 - 60
         with open(path+game2, "r", encoding="utf_8") as f:
             txt = f.readlines()
             f.close()
-        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+",  Started "+str(round(minutes_diff))+" minute(s) ago.**\n"
+        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+",  Started "+str(timestamp)+".**\n"
         for c, data in enumerate(txt):
             if c == len(txt)-1:
                 output += "\n"
@@ -474,7 +486,7 @@ def run_discord_bot():
                     with concurrent.futures.ProcessPoolExecutor() as pool:
                         await interaction.response.defer(ephemeral=False, thinking=True)
                         response = await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername))
-                        await interaction.followup.send("Session started! Use http://85.215.133.154:4443/"+response+' as a OBS browser source. (Dont share the address with anyone please)')
+                        await interaction.followup.send("Session started! Use http://overlay.drachbot.site/"+response+' as a OBS browser source.')
                         return
         except Exception:
             traceback.print_exc()
@@ -565,5 +577,6 @@ def run_discord_bot():
 
     loop.create_task(client.start(TOKEN))
     loop.create_task(client2.start(TOKEN2))
+    loop.create_task(twitch_app())
     loop.run_forever()
 
