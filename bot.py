@@ -17,16 +17,22 @@ from discord_timestamps import TimestampType
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
 
-async def twitch_get_streams(names: list) -> dict:
+async def twitch_get_streams(names: list, playernames: list = []) -> dict:
     twitch = await Twitch(secret_file.get("twitchappid"), secret_file.get("twitchsecret"))
     streams_dict = {}
-    for name in names:
+    for i, name in enumerate(names):
         user = await first(twitch.get_users(logins=name))
         stream = await first(twitch.get_streams(user_id=user.id))
         if type(stream) == type(None):
-            streams_dict[user.display_name] = {"live": False, "started_at": ""}
+            try:
+                streams_dict[user.display_name] = {"live": False, "started_at": "", "playername": playernames[i]}
+            except IndexError:
+                streams_dict[user.display_name] = {"live": False, "started_at": "", "playername": ""}
         else:
-            streams_dict[user.display_name] = {"live": True, "started_at": stream.started_at}
+            try:
+                streams_dict[user.display_name] = {"live": True, "started_at": str(stream.started_at), "playername": playernames[i]}
+            except IndexError:
+                streams_dict[user.display_name] = {"live": True, "started_at": str(stream.started_at), "playername": ""}
     await  twitch.close()
     return streams_dict
 
@@ -96,6 +102,8 @@ def get_top_games(queue):
         if len(topgames) < 3:
             topgames.append(game)
     output = ""
+    if len(topgames) == 0:
+        return "No games found."
     for idx, game2 in enumerate(topgames):
         path2 = path+game2
         mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2)).timestamp()
@@ -453,12 +461,12 @@ def run_discord_bot():
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="streamtracker", description="Simple W/L and Elo tracker for your stream.")
-    @app_commands.describe(action="Select an action.")
-    @app_commands.choices(action=[
-        discord.app_commands.Choice(name='Start Session', value='Start'),
-        discord.app_commands.Choice(name='End Session', value='End')
-    ])
-    async def streamtracker(interaction: discord.Interaction, action: discord.app_commands.Choice[str] = "Start"):
+    # @app_commands.describe(action="Select an action.")
+    # @app_commands.choices(action=[
+    #     discord.app_commands.Choice(name='Start Session', value='Start'),
+    #     discord.app_commands.Choice(name='End Session', value='End')
+    # ])
+    async def streamtracker(interaction: discord.Interaction): #, action: discord.app_commands.Choice[str] = "Start"
         try:
             if interaction.guild != None:
                 await interaction.response.send_message("This command only works in DMs.", ephemeral=True)
@@ -472,21 +480,21 @@ def run_discord_bot():
                 else:
                     await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
                     return
-            try:
-                action = action.value
-            except AttributeError: pass
-            if action == "End":
-                if os.path.isfile('/shared/' + playername + '_output.html'):
-                    os.remove('/shared/' + playername + '_output.html')
-                if os.path.isfile("sessions/session_" + playername + ".json"):
-                    os.remove("sessions/session_" + playername + ".json")
-                    await interaction.response.send_message("Session ended.")
-                    return
-                else:
-                    await interaction.response.send_message("No active session found.")
-                    return
-            elif action == "Start":
-                await interaction.response.send_message("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
+            # try:
+            #     action = action.value
+            # except AttributeError: pass
+            # if action == "End":
+            #     if os.path.isfile('/shared/' + playername + '_output.html'):
+            #         os.remove('/shared/' + playername + '_output.html')
+            #     if os.path.isfile("sessions/session_" + playername + ".json"):
+            #         os.remove("sessions/session_" + playername + ".json")
+            #         await interaction.response.send_message("Session ended.")
+            #         return
+            #     else:
+            #         await interaction.response.send_message("No active session found.")
+            #         return
+            # elif action == "Start":
+            await interaction.response.send_message("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
         except Exception:
             traceback.print_exc()
             await interaction.followup.send("Bot error :sob:")
@@ -537,28 +545,31 @@ def run_discord_bot():
                         players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, False))
                         save_live_game(gameid, players_new)
                         twitch_list = []
+                        playernames_list = []
                         with open("Files/whitelist.txt", "r") as f:
                             data = f.readlines()
                             f.close()
-                            for entry in data:
-                                playername = entry.split("|")[1].replace("\n", "")
-                                twitch_name = entry.split("|")[2].replace("\n", "")
-                                for p in players:
-                                    if p.split(":")[0] == playername:
-                                        if os.path.isfile("sessions/session_" + playername + ".json") == False:
+                        for entry in data:
+                            playername = entry.split("|")[1].replace("\n", "")
+                            twitch_name = entry.split("|")[2].replace("\n", "")
+                            for p in players:
+                                if p.split(":")[0] == playername and os.path.isfile("sessions/session_" + playername + ".json") == False:
+                                        twitch_list.append(twitch_name)
+                                        playernames_list.append(playername)
+                                elif p.split(":")[0] == playername and os.path.isfile("sessions/session_" + playername + ".json") == True:
+                                    with open("sessions/session_" + playername + ".json", "r") as f2:
+                                        temp_dict = json.load(f2)
+                                        f2.close()
+                                        twitch_dict = await twitch_get_streams([twitch_name])
+                                        if str(temp_dict["started_at"]) != str(twitch_dict[twitch_name]["started_at"]):
+                                            os.remove("sessions/session_" + playername + ".json")
                                             twitch_list.append(twitch_name)
-                                        else:
-                                            with open("sessions/session_" + playername + ".json", "r") as f2:
-                                                temp_dict = json.load(f2)
-                                                twitch_dict = twitch_get_streams([twitch_name])
-                                                if temp_dict["started_at"] != twitch_dict["started_at"]:
-                                                    os.remove("sessions/session_" + playername + ".json")
-                                                    twitch_list.append(twitch_name)
+                                            playernames_list.append(playername)
                         if len(twitch_list) > 0:
-                            twitch_dict = twitch_get_streams(twitch_list)
+                            twitch_dict = await twitch_get_streams(twitch_list, playernames=playernames_list)
                             for streamer in twitch_dict:
                                 if twitch_dict[streamer]["live"] == True:
-                                    print(await loop.run_in_executor(pool,functools.partial(responses.stream_overlay,playername, started_at=twitch_dict["started_at"]))+ " session started.")
+                                    print(await loop.run_in_executor(pool,functools.partial(responses.stream_overlay,twitch_dict[streamer]["playername"], stream_started_at=str(twitch_dict[streamer]["started_at"])))+ " session started.")
                                 else:
                                     print(streamer + " is not live.")
                     # elif len(players) == 8:
@@ -598,8 +609,9 @@ def run_discord_bot():
                     #     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
         except Exception:
             traceback.print_exc()
-
+    
     loop.create_task(client.start(TOKEN))
     loop.create_task(client2.start(TOKEN2))
+    loop.create_task(twitch_get_streams(["Lwon"]))
     loop.run_forever()
 

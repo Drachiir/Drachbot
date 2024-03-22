@@ -125,7 +125,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0):
         current_losses = stats["rankedLossesThisSeason"]
         with open("sessions/session_" + playername + ".json", "w") as f:
             dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
-            json.dump(dict, f)
+            json.dump(dict, f, default=str)
     else:
         with open("sessions/session_" + playername + ".json", "r") as f:
             dict = json.load(f)
@@ -142,8 +142,8 @@ def stream_overlay(playername, stream_started_at="", elo_change=0):
             else:
                 current_losses = dict["current_losses"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
-            json.dump(dict, f)
+            dict = {"started_at": dict["started_at"], "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            json.dump(dict, f, default=str)
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
     try:
@@ -1221,7 +1221,9 @@ def handle_response(message, author) -> str:
     if 'lwon' in p_message:         return "<:AgentEggwon:1215622131187191828> fucking teamates, nothing you can do"
     if '!github' in p_message:      return 'https://github.com/Drachiir/Legion-Elo-Bot'
     if '!test' in p_message:        return api_call_logger("yo")
-    if '!update' in p_message and str(author) == 'drachir_':    return ladder_update(p_message[8:])
+    if '!update' in p_message and str(author) == 'drachir_':
+        input = p_message.split("|")
+        return ladder_update(input[1], old_games=False)
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
 
@@ -1282,7 +1284,7 @@ def get_games_saved_count(playerid):
         else:
             return 200
 
-def apicall_pullgamedata(playerid, offset, path, expected):
+def apicall_pullgamedata(playerid, offset, path, expected, old_games = False):
     ranked_count = 0
     games_count = 0
     output = []
@@ -1299,8 +1301,11 @@ def apicall_pullgamedata(playerid, offset, path, expected):
             break
         if (x['queueType'] == 'Normal'):
             if Path(Path(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+ '_' + str(x['_id']) + ".json")).is_file():
-                print('File already there, breaking loop.')
-                break
+                if old_games:
+                    continue
+                else:
+                    print('File already there, breaking loop.')
+                    break
             ranked_count += 1
             with open(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_' + str(x['_id']) + ".json", "w") as f:
                 json.dump(x, f)
@@ -1309,19 +1314,29 @@ def apicall_pullgamedata(playerid, offset, path, expected):
     output.append(games_count)
     return output
 
-def get_games_loop(playerid, offset, path, expected, timeout_limit = 3):
-    data = apicall_pullgamedata(playerid, offset, path, expected)
+def get_games_loop(playerid, offset, path, expected, timeout_limit = 3, old_games = False):
+    print("Starting get_games_loop, expecting " + str(expected) + " games.")
+    data = apicall_pullgamedata(playerid, offset, path, expected, old_games=old_games)
     count = data[0]
     games_count = data[1]
     timeout = 0
-    print("Starting get_games_loop, expecting "+str(expected)+" games.")
     while count < expected:
         if timeout == timeout_limit:
             print('Timeout while pulling games.')
             break
-        offset += 50
-        data = apicall_pullgamedata(playerid, offset, path, expected)
-        if data[0] + data[1] == 0:
+        if old_games:
+            old_games_check = False
+            offset -= 50
+            if offset < 0 and old_games_check == False:
+                offset = 0
+                old_games_check = True
+            elif old_games_check:
+                print("Couldnt find missing games")
+                break
+        else:
+            offset += 50
+        data = apicall_pullgamedata(playerid, offset, path, expected, old_games=old_games)
+        if data[0] + data[1] == 0 and old_games == False:
             timeout += 1
         count += data[0]
         games_count += data[1]
@@ -1329,7 +1344,7 @@ def get_games_loop(playerid, offset, path, expected, timeout_limit = 3):
         print('All '+str(expected)+' required games pulled.')
     return games_count
 
-def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date"):
+def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", old_games = False):
     patch_list = []
     if patch != '0' and "," in patch:
         patch_list = patch.replace(" ", "").split(',')
@@ -1411,6 +1426,13 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
             if len(json_files) < games2:
                 games_count += get_games_loop(playerid, games_amount_old, path, games2-len(json_files))
+            if old_games:
+                json_files2 = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json') and pos_json.split("_")[1].startswith("v11")]
+                print(len(json_files2))
+                print(ranked_games)
+                if len(json_files2) < ranked_games:
+                    print("Searching old games for " + playerid)
+                    games_count += get_games_loop(playerid, ranked_games, path, ranked_games-len(json_files2), old_games=old_games)
             with open(str(path) + "gamecount_" + playerid + ".txt", "w") as f:
                 f.truncate(0)
                 lines = [str(ranked_games), str(games_amount_old+games_count)]
@@ -1419,8 +1441,6 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             raw_data = []
             if games == 0:
                 games2 = get_games_saved_count(playerid)
-            else:
-                games2 = games
             json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
             count = 0
             if sort_by == "date":
@@ -1532,7 +1552,7 @@ def ffstats():
             ff_count += 1
     return str(len(games)) + " " + str(ff_count)
 
-def ladder_update(amount=100):
+def ladder_update(amount=100, old_games = True):
     url = 'https://apiv2.legiontd2.com/players/stats?limit='+str(amount)+'&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=header)
     leaderboard = json.loads(api_response.text)
@@ -1542,12 +1562,12 @@ def ladder_update(amount=100):
         ranked_games = player['rankedWinsThisSeason'] + player['rankedLossesThisSeason']
         print(ranked_games)
         if ranked_games >= 200:
-            games_count += apicall_getmatchistory(player["_id"], 200, 0, '0', 1)
+            games_count += apicall_getmatchistory(player["_id"], 200, 0, '0', 1, old_games=old_games)
         elif ranked_games == 0:
             print('No games this season.')
             continue
         else:
-            games_count += apicall_getmatchistory(player["_id"], ranked_games, 0, '0', 1)
+            games_count += apicall_getmatchistory(player["_id"], ranked_games, 0, '0', 1, old_games=old_games)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
 
 def pull_games_by_id(file, name):
@@ -1792,7 +1812,7 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
     starting_wave -= 1
     if playername.lower() == 'all':
         playerid = 'all'
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
             return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         playerid = playername
@@ -1805,8 +1825,6 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         profile = apicall_getprofile(playerid)
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
-        if games == 0:
-            games = get_games_saved_count(playerid)
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort)
     except TypeError as e:
@@ -2014,7 +2032,7 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
             return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         suffix = ''
@@ -2026,8 +2044,6 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached.'
-        if games == 0:
-            games = get_games_saved_count(playerid)
     count = 0
     snail_count = 0
     kingup_atk_count = 0
@@ -2121,7 +2137,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
             playerid = apicall_getid(playername[0])
         else:
             playerid = "all"
-            if ((games == 0) or (games > get_games_saved_count(playerid) * 0.25)) and (min_elo < 2700) and (patch == '0'):
+            if ((games > get_games_saved_count(playerid) * 0.25)) and (min_elo < 2700) and (patch == '0'):
                 return 'Too many games, please limit data.'
         for mm in mmnames_list:
             if mm.lower() == playername[1].replace(" ", "").lower():
@@ -2160,8 +2176,6 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         return 'Player ' + playername2 + ' not found.'
     if playerid2 == 1:
         return 'API limit reached.'
-    if games == 0:
-        games = get_games_saved_count(playerid)
     count = 0
     win_count = 0
     game_count = 0
@@ -2428,10 +2442,8 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0' or patch == '10'):
+        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0' or patch == '10'):
             return 'Too many games, please limit data.'
-        if games == 0:
-            games = get_games_saved_count(playerid)
     elif 'nova cup' in playername:
         suffix = ''
         playerid = playername
@@ -2442,8 +2454,6 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
         suffix = "'s"
-        if games == 0:
-            games = get_games_saved_count(playerid)
     count = 0
     save_count_list = []
     save_count_pre10_list = []
@@ -2614,10 +2624,8 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     novacup = False
     if playername == 'all':
         playerid = 'all'
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
+        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
             return 'Too many games, please limit data.'
-        if games == 0:
-            games = get_games_saved_count(playerid)
     elif 'nova cup' in playername:
         novacup = True
         playerid = playername
@@ -2627,8 +2635,6 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-        if games == 0:
-            games = get_games_saved_count(playerid)
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort)
     except TypeError as e:
@@ -2770,10 +2776,8 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
         mastermind = mastermind.value
     if playername == 'all':
         playerid = 'all'
-        if ((games == 0) or (games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0' or '10'):
+        if games > get_games_saved_count(playerid)* 0.25 and (min_elo < 2700) and (patch == '0' or '10'):
             return 'Too many games, please limit data.'
-        if games == 0:
-            games = get_games_saved_count(playerid)
     elif 'nova cup' in playername:
         novacup = True
         playerid = playername
@@ -2783,8 +2787,6 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-        if games == 0:
-            games = get_games_saved_count(playerid)
     count = 0
     if mastermind == 'All':
         mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
