@@ -113,7 +113,7 @@ def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
     return True if c ==4 else False
 
-def stream_overlay(playername, stream_started_at="", elo_change=0):
+def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
     if not os.path.isfile("sessions/session_" + playername + ".json"):
         playerid = apicall_getid(playername)
         stats = apicall_getstats(playerid)
@@ -130,17 +130,24 @@ def stream_overlay(playername, stream_started_at="", elo_change=0):
         with open("sessions/session_" + playername + ".json", "r") as f:
             dict = json.load(f)
             initial_elo = dict["int_elo"]
-            current_elo = dict["current_elo"]+elo_change
-            if elo_change > 0:
-                current_wins = dict["current_wins"]+1
-            else:
-                current_wins = dict["current_wins"]
             initial_wins = dict["int_wins"]
             initial_losses = dict["int_losses"]
-            if elo_change < 0:
-                current_losses = dict["current_losses"] + 1
+            if update == True:
+                playerid = apicall_getid(playername)
+                stats = apicall_getstats(playerid)
+                current_elo = stats["overallElo"]
+                current_wins = stats["rankedWinsThisSeason"]
+                current_losses = stats["rankedLossesThisSeason"]
             else:
-                current_losses = dict["current_losses"]
+                current_elo = dict["current_elo"]+elo_change
+                if elo_change > 0:
+                    current_wins = dict["current_wins"]+1
+                else:
+                    current_wins = dict["current_wins"]
+                if elo_change < 0:
+                    current_losses = dict["current_losses"] + 1
+                else:
+                    current_losses = dict["current_losses"]
         with open("sessions/session_" + playername + ".json", "w") as f:
             dict = {"started_at": dict["started_at"], "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
             json.dump(dict, f, default=str)

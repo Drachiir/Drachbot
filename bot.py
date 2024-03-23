@@ -565,7 +565,15 @@ def run_discord_bot():
                                             os.remove("sessions/session_" + playername + ".json")
                                             twitch_list.append(twitch_name)
                                             playernames_list.append(playername)
-                        if len(twitch_list) > 0:
+                                        else:
+                                            mod_date = datetime.utcfromtimestamp(os.path.getmtime(f2))
+                                            date_diff = datetime.now() - mod_date
+                                            if platform.system() == "Linux":
+                                                minutes_diff = date_diff.total_seconds() / 60
+                                            elif platform.system() == "Windows":
+                                                minutes_diff = date_diff.total_seconds() / 60 - 60
+                                            if minutes_diff > 35:
+                                                await loop.run_in_executor(pool,functools.partial(responses.stream_overlay,playername, update=True))
                             twitch_dict = await twitch_get_streams(twitch_list, playernames=playernames_list)
                             for streamer in twitch_dict:
                                 if twitch_dict[streamer]["live"] == True:
@@ -612,6 +620,5 @@ def run_discord_bot():
     
     loop.create_task(client.start(TOKEN))
     loop.create_task(client2.start(TOKEN2))
-    loop.create_task(twitch_get_streams(["Lwon"]))
     loop.run_forever()
 
