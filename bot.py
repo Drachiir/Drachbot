@@ -346,6 +346,32 @@ def run_discord_bot():
             except Exception:
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
+    
+    @tree.command(name="spellstats", description="Spell stats.")
+    @app_commands.describe(playername='Enter playername or "all" for all available data.',
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           min_elo='Enter minium average game elo to include in the data set',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           sort="Sort by?", spell="Spell name for specific stats, or 'all' for all Spells.")
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def spellstats(interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "0", sort: discord.app_commands.Choice[str] = "date", spell: str = "all"):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_spellstats, str(playername).lower(), games, min_elo, patch, sort=sort, spellname=spell))
+                if len(response) > 0:
+                    await interaction.followup.send(response)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="winrate", description="Shows player1's winrate against/with player2.")
     @app_commands.describe(playername1='Enter playername1.', playername2= 'Enter playername2 or all for 6 most common players', option='Against or with?', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
@@ -467,37 +493,41 @@ def run_discord_bot():
     #     discord.app_commands.Choice(name='End Session', value='End')
     # ])
     async def streamtracker(interaction: discord.Interaction): #, action: discord.app_commands.Choice[str] = "Start"
-        try:
-            if interaction.guild != None:
-                await interaction.response.send_message("This command only works in DMs.", ephemeral=True)
-                return
-            with open("Files/whitelist.txt", "r") as f:
-                data = f.readlines()
-                for entry in data:
-                    if interaction.user.name == entry.split("|")[0]:
-                        playername = entry.split("|")[1].replace("\n", "")
-                        break
-                else:
-                    await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                if interaction.guild != None:
+                    await interaction.response.send_message("This command only works in DMs.", ephemeral=True)
                     return
-            # try:
-            #     action = action.value
-            # except AttributeError: pass
-            # if action == "End":
-            #     if os.path.isfile('/shared/' + playername + '_output.html'):
-            #         os.remove('/shared/' + playername + '_output.html')
-            #     if os.path.isfile("sessions/session_" + playername + ".json"):
-            #         os.remove("sessions/session_" + playername + ".json")
-            #         await interaction.response.send_message("Session ended.")
-            #         return
-            #     else:
-            #         await interaction.response.send_message("No active session found.")
-            #         return
-            # elif action == "Start":
-            await interaction.response.send_message("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
-        except Exception:
-            traceback.print_exc()
-            await interaction.followup.send("Bot error :sob:")
+                with open("Files/whitelist.txt", "r") as f:
+                    data = f.readlines()
+                    for entry in data:
+                        if interaction.user.name == entry.split("|")[0]:
+                            playername = entry.split("|")[1].replace("\n", "")
+                            break
+                    else:
+                        await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
+                        return
+                # try:
+                #     action = action.value
+                # except AttributeError: pass
+                # if action == "End":
+                #     if os.path.isfile('/shared/' + playername + '_output.html'):
+                #         os.remove('/shared/' + playername + '_output.html')
+                #     if os.path.isfile("sessions/session_" + playername + ".json"):
+                #         os.remove("sessions/session_" + playername + ".json")
+                #         await interaction.response.send_message("Session ended.")
+                #         return
+                #     else:
+                #         await interaction.response.send_message("No active session found.")
+                #         return
+                # elif action == "Start":
+                await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, update=True))
+                await interaction.followup.send("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @client.event
     async def on_ready():
