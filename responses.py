@@ -1204,7 +1204,7 @@ def create_image_spellstats(dict, games, playerid, avgelo, patch, transparency =
             return round(dict[spell]['W10'] / dict[spell]['Count'], 1)
         except ZeroDivisionError as e:
             return '0'
-    keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 4:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:','', 'Games:', 'Winrate:', 'Playrate:']
+    keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:','', 'Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
     if transparency:
@@ -1619,8 +1619,6 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                 patch_list.append(patch_new2[0] + "." + prefix + str(int(patch_new2[1]) + x))
         else:
             return []
-    if len(patch_list) > 5 and playerid == "all":
-        return "Too many patches."
     games_count = 0
     if playerid != 'all' and 'nova cup' not in playerid:
         if games == 0:
@@ -1762,6 +1760,9 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             elif sort_by == "elo":
                 sorted_json_files = sorted(json_files, key=lambda x: x.split("_")[-2], reverse=True)
         count = 0
+        print(len(sorted_json_files))
+        if len(sorted_json_files) > 25000:
+            return "Too many games, please limit the data."
         for i, x in enumerate(sorted_json_files):
             if count == games and games != 0:
                 break
@@ -1778,7 +1779,6 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                         count += 1
                         raw_data.append(raw_data_partial)
     if update == 0:
-        print(len(raw_data))
         return raw_data
     else:
         if new_profile:
@@ -2276,8 +2276,6 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
-        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
-            return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         suffix = ''
         playerid = playername
@@ -2300,6 +2298,8 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
+    if type(history_raw) == str:
+        return history_raw
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
@@ -2381,8 +2381,6 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
             playerid = apicall_getid(playername[0])
         else:
             playerid = "all"
-            if ((games > get_games_saved_count(playerid) * 0.25)) and (min_elo < 2700) and (patch == '0'):
-                return 'Too many games, please limit data.'
         for mm in mmnames_list:
             if mm.lower() == playername[1].replace(" ", "").lower():
                 mm1 = mm
@@ -2431,7 +2429,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    if history_raw == "Too many patches.":
+    if type(history_raw) == str:
         return history_raw
     games = len(history_raw)
     if games == 0:
@@ -2686,8 +2684,6 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
-        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0' or patch == '10'):
-            return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         suffix = ''
         playerid = playername
@@ -2718,8 +2714,8 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    if history_raw == "Too many patches.":
-        return "Too many patches."
+    if type(history_raw) == str:
+        return history_raw
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
@@ -2868,8 +2864,6 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     novacup = False
     if playername == 'all':
         playerid = 'all'
-        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
-            return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         novacup = True
         playerid = playername
@@ -2884,8 +2878,8 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    if history_raw == "Too many patches.":
-        return "Too many patches."
+    if type(history_raw) == str:
+        return history_raw
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
@@ -3020,8 +3014,6 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
         mastermind = mastermind.value
     if playername == 'all':
         playerid = 'all'
-        if games > get_games_saved_count(playerid)* 0.25 and (min_elo < 2700) and (patch == '0' or '10'):
-            return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         novacup = True
         playerid = playername
@@ -3047,8 +3039,8 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    if history_raw == "Too many patches.":
-        return "Too many patches."
+    if type(history_raw) == str:
+        return history_raw
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
@@ -3265,8 +3257,6 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
     novacup = False
     if playername == 'all':
         playerid = 'all'
-        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
-            return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         novacup = True
         playerid = playername
@@ -3281,8 +3271,8 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
-    if history_raw == "Too many patches.":
-        return "Too many patches."
+    if type(history_raw) == str:
+        return history_raw
     if len(history_raw) == 0:
         return 'No games found.'
     games = len(history_raw)
