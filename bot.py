@@ -37,13 +37,10 @@ async def twitch_get_streams(names: list, playernames: list = []) -> dict:
     return streams_dict
 
 async def send_message(message, user_message, is_private, username):
-    #try:
     loop = asyncio.get_running_loop()
     with concurrent.futures.ProcessPoolExecutor() as pool:
         response = await loop.run_in_executor(pool, functools.partial(responses.handle_response, user_message, username))
         await message.author.send(response) if is_private else await message.channel.send(response)
-    # except Exception as e:
-    #     print(e)
 
 def custom_exception_handler(loop, context):
     loop.default_exception_handler(context)
@@ -55,14 +52,6 @@ def custom_exception_handler(loop, context):
 def get_game_elo(playerlist, classic):
     elo = 0
     new_list = []
-    # if classic == True:
-    #     for player in playerlist:
-    #         try:
-    #             classic_elo = int(responses.apicall_getstats(responses.apicall_getid(player.split(":")[0]))["classicElo"])
-    #         except KeyError:
-    #             classic_elo = 0
-    #         new_list.append(player.split(":")[0]+":"+str(classic_elo))
-    #         elo += classic_elo
     for player in playerlist:
         ranked_elo = int(player.split(":")[1])
         new_list.append(player.split(":")[0]+":"+str(ranked_elo))
@@ -75,11 +64,7 @@ def save_live_game(gameid, playerlist):
         with open("Livegame/Ranked/" + str(gameid)+"_"+str(playerlist[4])+".txt", "w", encoding="utf_8") as f:
             f.write('\n'.join(playerlist))
             f.close()
-    # else:
-    #     with open("Livegame/Classic/" + str(gameid) + "_"+str(playerlist[8])+".txt", "w", encoding="utf_8") as f:
-    #         f.write('\n'.join(playerlist))
-    #         f.close()
-
+            
 def get_top_games(queue):
     if queue == "Ranked":
         path = "Livegame/Ranked/"
@@ -399,6 +384,51 @@ def run_discord_bot():
             except Exception:
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
+    
+    @tree.command(name="statsgraph", description="Stats graph.")
+    @app_commands.describe(playernames='Enter playername or up to 3 playernames separated by commas.',
+                           key_value='Select which stat to display in the graph.',
+                           waves='Enter min and max wave separated by a hyphen, e.g "1-3" for Wave 1, Wave 2 and Wave 3',
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           min_elo='Enter minium average game elo to include in the data set',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           sort="Sort by?")
+    @app_commands.choices(key_value=[
+        discord.app_commands.Choice(name='Workers', value="Workers"),
+        discord.app_commands.Choice(name='Income', value="Income"),
+        discord.app_commands.Choice(name='Value', value="Value")
+    ])
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def statsgraph(interaction: discord.Interaction, playernames: str, key_value: discord.app_commands.Choice[str], waves: str = "1-5", games: int = 0, min_elo: int = 0, patch: str = "11", sort: discord.app_commands.Choice[str] = "date"):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            if "," in playernames:
+                playernames = playernames.replace(" ", "").split(",")
+                if len(playernames) > 3:
+                    await interaction.followup.send("Only enter 3 playernames at a time.")
+                    return
+            else:
+                playernames = [playernames]
+            if "-" in waves:
+                waves_list = [int(waves.split("-")[0]),int(waves.split("-")[1])]
+            else:
+                await interaction.followup.send("Invalid waves input.")
+                return
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_statsgraph, playernames=playernames, waves=waves_list, games=games, patch=patch, key=key_value.value, sort=sort))
+                if len(response) > 0:
+                    await interaction.followup.send(response)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="elograph", description="Shows elo graph of player.")
     @app_commands.describe(playername='Enter playername.',
@@ -469,11 +499,6 @@ def run_discord_bot():
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="topgames", description="Shows the 3 highest elo game in Ranked.")
-    # @app_commands.describe(queue="Select a queue type.")
-    # @app_commands.choices(queue=[
-    #     discord.app_commands.Choice(name='Ranked', value='Ranked'),
-    #     #discord.app_commands.Choice(name='Classic', value='Classic')
-    # ])
     async def topgames(interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
@@ -487,12 +512,7 @@ def run_discord_bot():
                 await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="streamtracker", description="Simple W/L and Elo tracker for your stream.")
-    # @app_commands.describe(action="Select an action.")
-    # @app_commands.choices(action=[
-    #     discord.app_commands.Choice(name='Start Session', value='Start'),
-    #     discord.app_commands.Choice(name='End Session', value='End')
-    # ])
-    async def streamtracker(interaction: discord.Interaction): #, action: discord.app_commands.Choice[str] = "Start"
+    async def streamtracker(interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -509,20 +529,6 @@ def run_discord_bot():
                     else:
                         await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
                         return
-                # try:
-                #     action = action.value
-                # except AttributeError: pass
-                # if action == "End":
-                #     if os.path.isfile('/shared/' + playername + '_output.html'):
-                #         os.remove('/shared/' + playername + '_output.html')
-                #     if os.path.isfile("sessions/session_" + playername + ".json"):
-                #         os.remove("sessions/session_" + playername + ".json")
-                #         await interaction.response.send_message("Session ended.")
-                #         return
-                #     else:
-                #         await interaction.response.send_message("No active session found.")
-                #         return
-                # elif action == "Start":
                 await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, update=True))
                 await interaction.followup.send("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
             except Exception:
@@ -535,15 +541,6 @@ def run_discord_bot():
 
     @client2.event
     async def on_ready():
-        # ranked_dir = "Livegame/Ranked/"
-        # classic_dir = "Livegame/Classic/"
-        # filelist_ranked = [f for f in os.listdir(ranked_dir) if f.endswith(".txt")]
-        # filelist_classic = [f for f in os.listdir(classic_dir) if f.endswith(".txt")]
-        # for f in filelist_ranked:
-        #     os.remove(os.path.join(ranked_dir, f))
-        # for f in filelist_classic:
-        #     os.remove(os.path.join(classic_dir, f))
-        # print("Livegame cache cleared.")
         print(f'{client2.user} is now running!')
 
     @client.event
@@ -611,9 +608,6 @@ def run_discord_bot():
                                     print(await loop.run_in_executor(pool,functools.partial(responses.stream_overlay,twitch_dict[streamer]["playername"], stream_started_at=str(twitch_dict[streamer]["started_at"])))+ " session started.")
                                 else:
                                     print(streamer + " is not live.")
-                    # elif len(players) == 8:
-                    #     players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, True))
-                    #     save_live_game(gameid, players_new)
                 elif str(message.channel) == "game-results":
                     embeds = message.embeds
                     for embed in embeds:
@@ -643,9 +637,6 @@ def run_discord_bot():
                         for game in livegame_files:
                             if game.split("_")[0] == gameid_result:
                                 os.remove(path + game)
-                    # else:
-                    #     path = 'Livegame/Classic/'
-                    #     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
         except Exception:
             traceback.print_exc()
     

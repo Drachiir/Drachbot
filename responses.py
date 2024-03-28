@@ -203,7 +203,6 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                       display: flex;
                       flex-direction: right;
                       align-items: center;
-                      margin 15px;
                     }
                     
                     img {
@@ -233,13 +232,13 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                    {
                       -webkit-text-stroke-width: 0.2px;
 					  -webkit-text-stroke-color: black;
-                      color:red;
+                      color:rgb(219, 0, 0);
                    }
                    .greenText
                    {
                       -webkit-text-stroke-width: 0.2px;
 					  -webkit-text-stroke-color: black;
-                      color:green;
+                      color:rgb(0, 153, 0);
                    }
                     </style>
                     <title>"""+playername+"""</title>
@@ -247,7 +246,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     <body>
                     <div class="container">
                          <div class="text">
-                            <r><b>Starting elo:‎ ‎ </b></r>
+                            <r><b>Starting elo:&nbsp;</b></r>
                           </div>
                           <div class="image">                          
                             <img src="""+str(get_rank_url(initial_elo))+""">
@@ -258,7 +257,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                         </div>
                     <div class="container">
                          <div class="text">
-                            <r><b>Current elo:‎ ‎ ‎</b></r>
+                            <r><b>Current elo:&nbsp;&nbsp;</b></r>
                           </div>
                           <div class="image">
                             <img src="""+str(get_rank_url(current_elo))+""">
@@ -2042,6 +2041,109 @@ def apicall_elograph(playername, games, patch, transparency = False):
     plt.close()
     elo_graph = Image.open(img_buf)
     im.paste(elo_graph, (-100,40), elo_graph)
+
+    im.save('Files/output.png')
+    image_upload = imgur_client.upload_from_path('Files/output.png')
+    print('Uploading output.png to Imgur...')
+    return image_upload['link']
+
+def apicall_statsgraph(playernames: list, games, patch, key, transparency = False, sort="date", waves = [1,21]) -> str:
+    playerids = set()
+    total_games = 0
+    for name in playernames:
+        playerid = apicall_getid(name)
+        if playerid == 0:
+            return name + ' not found.'
+        if playerid == 1:
+            return 'API limit reached.'
+        playerids.add(playerid)
+    players_dict = dict()
+    print("Starting stats graph command...")
+    for j, id in enumerate(playerids):
+        history_raw = apicall_getmatchistory(id, games, 0, patch, sort_by=sort)
+        if type(history_raw) == str:
+            return history_raw
+        games2 = len(history_raw)
+        total_games += games2
+        if games2 == 0:
+            return 'No games found for ' + playernames[j] + "."
+        playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
+        match key:
+            case "Value":
+                data = list(divide_chunks(extract_values(history_raw, 'valuePerWave')[1], 4))
+            case "Workers":
+                data = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
+            case "Income":
+                data = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
+        gameid = extract_values(history_raw, '_id')
+        count = 0
+        while count < games2:
+            playerids_ranked = playerids[count]
+            data_ranked = data[count]
+            for i, x in enumerate(playerids_ranked):
+                if x == id:
+                    if id in players_dict:
+                        players_dict[id]["Data"].append(data_ranked[i])
+                    else:
+                        players_dict[id] = {"Data": [data_ranked[i]]}
+            count += 1
+    for player in players_dict:
+        players_dict[player]["Waves"] = []
+        for w in range(21):
+            players_dict[player]["Waves"].append([0,0])
+        for data in players_dict[player]["Data"]:
+            for c, wave_data in enumerate(data):
+                players_dict[player]["Waves"][c][0] += 1
+                players_dict[player]["Waves"][c][1] += wave_data
+        players_dict[player]["FinalData"] = []
+        for index, wave in enumerate(players_dict[player]["Waves"]):
+            if index+1 >= waves[0] and index+1 <= waves[1]:
+                players_dict[player]["FinalData"].append(round(wave[1]/wave[0], 1))
+        del players_dict[player]["Data"]
+        del players_dict[player]["Waves"]
+    #Image generation
+    x = 126
+    y = 160
+    if transparency:
+        mode = 'RGBA'
+        colors = (0,0,0,0)
+    else:
+        mode = 'RGB'
+        colors = (49,51,56)
+    im = PIL.Image.new(mode=mode, size=(1300, 800), color=colors)
+    I1 = ImageDraw.Draw(im)
+    ttf = 'Files/RobotoCondensed-Regular.ttf'
+    myFont_small = ImageFont.truetype(ttf, 20)
+    myFont = ImageFont.truetype(ttf, 25)
+    myFont_title = ImageFont.truetype(ttf, 30)
+    I1.text((10, 15), key+" Graph (From " + str(total_games) + " ranked games)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((10, 55), 'Patches: ' + ' '+str(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    #matplotlib graph
+    params = {"ytick.color": "w",
+              "xtick.color": "w",
+              "axes.labelcolor": "w",
+              "axes.edgecolor": "w",
+              "figure.figsize": (15, 8),
+              'font.weight': 'bold'}
+    marker_plot = 'o'
+    plt.rcParams.update(params)
+    fig, ax = plt.subplots()
+    ax.grid(linewidth=2)
+    ax.margins(x=0)
+    ax.set_xlabel('Wave', weight='bold')
+    ax.set_ylabel(key, weight='bold')
+    colors = ["red","deepskyblue","green"]
+    waves_list = []
+    for v in range(waves[0],waves[1]+1):
+        waves_list.append(str(v))
+    for index, player in enumerate(players_dict):
+        ax.plot(waves_list, players_dict[player]["FinalData"], color=colors[index], marker=marker_plot, linewidth=2, label=apicall_getprofile(player)["playerName"])
+    ax.legend(bbox_to_anchor=(0.53, 1.07))
+    img_buf = io.BytesIO()
+    fig.savefig(img_buf, transparent=True, format='png')
+    plt.close()
+    elo_graph = Image.open(img_buf)
+    im.paste(elo_graph, (-100,30), elo_graph)
 
     im.save('Files/output.png')
     image_upload = imgur_client.upload_from_path('Files/output.png')
