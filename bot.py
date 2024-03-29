@@ -17,6 +17,8 @@ from discord_timestamps import TimestampType
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
 
+current_season = "11"
+
 async def twitch_get_streams(names: list, playernames: list = []) -> dict:
     twitch = await Twitch(secret_file.get("twitchappid"), secret_file.get("twitchsecret"))
     streams_dict = {}
@@ -243,10 +245,18 @@ def run_discord_bot():
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def wave1(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str], sort: discord.app_commands.Choice[str]):
+    async def wave1(interaction: discord.Interaction, playername: str, games: int=0, min_elo: int=0, patch: str=current_season, option: discord.app_commands.Choice[str]="send", sort: discord.app_commands.Choice[str]="date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                option = option.value
+            except AttributeError:
+                pass
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_wave1tendency, playername, option.value, games, min_elo, patch, sort.value))
                 if len(response) > 0:
@@ -267,10 +277,18 @@ def run_discord_bot():
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def elcringo(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, option: discord.app_commands.Choice[str], sort: discord.app_commands.Choice[str]):
+    async def elcringo(interaction: discord.Interaction, playername: str, games: int=0, min_elo: int=0, patch: str=current_season, option: discord.app_commands.Choice[str]="Yes", sort: discord.app_commands.Choice[str]="date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                option = option.value
+            except AttributeError:
+                pass
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_elcringo, playername, games, patch, min_elo, option, sort = sort.value))
                 if len(response) > 0:
@@ -294,10 +312,18 @@ def run_discord_bot():
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def mmstats(interaction: discord.Interaction, playername: str, games: int, min_elo: int, patch: str, mastermind: discord.app_commands.Choice[str], sort: discord.app_commands.Choice[str]):
+    async def mmstats(interaction: discord.Interaction, playername: str, games: int=0, min_elo: int=0, patch: str=current_season, mastermind: discord.app_commands.Choice[str]="All", sort: discord.app_commands.Choice[str]="date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                mastermind = mastermind.value
+            except AttributeError:
+                pass
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort = sort.value))
                 if len(response) > 0:
@@ -316,7 +342,7 @@ def run_discord_bot():
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def openstats(interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "0", sort: discord.app_commands.Choice[str] = "date", unit: str = "all"):
+    async def openstats(interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -342,7 +368,7 @@ def run_discord_bot():
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def spellstats(interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "0", sort: discord.app_commands.Choice[str] = "date", spell: str = "all"):
+    async def spellstats(interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = current_season, sort: discord.app_commands.Choice[str] = "date", spell: str = "all"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -371,13 +397,14 @@ def run_discord_bot():
         discord.app_commands.Choice(name='EloChange+', value='EloChange+'),
         discord.app_commands.Choice(name='EloChange-', value='EloChange-')
     ])
-    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str], games: int=0, min_elo: int=0, patch: str="0", sort: discord.app_commands.Choice[str]="Count"):
+    async def winrate(interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str], games: int=0, min_elo: int=0, patch: str=current_season, sort: discord.app_commands.Choice[str]="Count"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
-                try: sort = sort.value
-                except AttributeError: pass
+                sort = sort.value
+            except AttributeError:
+                pass
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_winrate, playername1, playername2, option.value, games, patch, min_elo = min_elo, sort=sort))
                 if len(response) > 0:
                     await interaction.followup.send(response)
@@ -387,22 +414,22 @@ def run_discord_bot():
     
     @tree.command(name="statsgraph", description="Stats graph.")
     @app_commands.describe(playernames='Enter playername or up to 3 playernames separated by commas.',
-                           key_value='Select which stat to display in the graph.',
+                           key='Select which stat to display in the graph.',
                            waves='Enter min and max wave separated by a hyphen, e.g "1-3" for Wave 1, Wave 2 and Wave 3',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            sort="Sort by?")
-    @app_commands.choices(key_value=[
+    @app_commands.choices(key=[
         discord.app_commands.Choice(name='Workers', value="Workers"),
         discord.app_commands.Choice(name='Income', value="Income"),
-        discord.app_commands.Choice(name='Value', value="Value")
+        discord.app_commands.Choice(name='Fighter Value', value="Fighter Value")
     ])
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def statsgraph(interaction: discord.Interaction, playernames: str, key_value: discord.app_commands.Choice[str], waves: str = "1-5", games: int = 0, min_elo: int = 0, patch: str = "11", sort: discord.app_commands.Choice[str] = "date"):
+    async def statsgraph(interaction: discord.Interaction, playernames: str, key: discord.app_commands.Choice[str], waves: str = "1-5", games: int = 0, min_elo: int = 0, patch: str = current_season, sort: discord.app_commands.Choice[str] = "date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -423,7 +450,7 @@ def run_discord_bot():
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_statsgraph, playernames=playernames, waves=waves_list, games=games, patch=patch, key=key_value.value, sort=sort))
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_statsgraph, playernames=playernames, waves=waves_list, games=games, patch=patch, key=key.value, sort=sort))
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -434,7 +461,7 @@ def run_discord_bot():
     @app_commands.describe(playername='Enter playername.',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
-    async def elo_graph(interaction: discord.Interaction, playername: str, games: int, patch: str):
+    async def elo_graph(interaction: discord.Interaction, playername: str, games: int=0, patch: str=current_season):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -486,10 +513,14 @@ def run_discord_bot():
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def sendstats(interaction: discord.Interaction, playername: str, starting_wave: int, games: int, min_elo: int, patch: str, sort: discord.app_commands.Choice[str]):
+    async def sendstats(interaction: discord.Interaction, playername: str, starting_wave: int, games: int=0, min_elo: int=0, patch: str=current_season, sort: discord.app_commands.Choice[str]="date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_sendstats, str(playername).lower(), starting_wave, games, min_elo, patch, sort = sort.value))
                 if len(response) > 0:

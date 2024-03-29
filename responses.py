@@ -1974,6 +1974,7 @@ def apicall_elograph(playername, games, patch, transparency = False):
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     count = 0
     elo_per_game = []
     date_per_game = []
@@ -2059,6 +2060,7 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
         playerids.add(playerid)
     players_dict = dict()
     print("Starting stats graph command...")
+    patch_list = []
     for j, id in enumerate(playerids):
         history_raw = apicall_getmatchistory(id, games, 0, patch, sort_by=sort)
         if type(history_raw) == str:
@@ -2069,13 +2071,14 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
             return 'No games found for ' + playernames[j] + "."
         playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
         match key:
-            case "Value":
+            case "Fighter Value":
                 data = list(divide_chunks(extract_values(history_raw, 'valuePerWave')[1], 4))
             case "Workers":
                 data = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
             case "Income":
                 data = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
         gameid = extract_values(history_raw, '_id')
+        patch_list.extend(extract_values(history_raw, 'version')[1])
         count = 0
         while count < games2:
             playerids_ranked = playerids[count]
@@ -2101,6 +2104,14 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
                 players_dict[player]["FinalData"].append(round(wave[1]/wave[0], 1))
         del players_dict[player]["Data"]
         del players_dict[player]["Waves"]
+    patches = list(dict.fromkeys(patch_list))
+    new_patches = []
+    count = 0
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
     #Image generation
     x = 126
     y = 160
@@ -2117,7 +2128,7 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
     I1.text((10, 15), key+" Graph (From " + str(total_games) + " ranked games)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((10, 55), 'Patches: ' + ' '+str(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    I1.text((10, 55), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
     #matplotlib graph
     params = {"ytick.color": "w",
               "xtick.color": "w",
@@ -2138,7 +2149,7 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
         waves_list.append(str(v))
     for index, player in enumerate(players_dict):
         ax.plot(waves_list, players_dict[player]["FinalData"], color=colors[index], marker=marker_plot, linewidth=2, label=apicall_getprofile(player)["playerName"])
-    ax.legend(bbox_to_anchor=(0.53, 1.07))
+    ax.legend(bbox_to_anchor=(0.57, 1.07), prop={'size': 13})
     img_buf = io.BytesIO()
     fig.savefig(img_buf, transparent=True, format='png')
     plt.close()
@@ -2200,6 +2211,7 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches2 = list(dict.fromkeys(new_patches))
+    patches2 = sorted(patches2, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     print('starting sendstats command...')
     count = 0
     send_count = 0
@@ -2419,6 +2431,15 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
     gameid = extract_values(history_raw, '_id')
     gameelo = extract_values(history_raw, 'gameElo')
+    patches = extract_values(history_raw, 'version')
+    patches2 = list(dict.fromkeys(patches[1]))
+    new_patches = []
+    for x in patches2:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches2 = list(dict.fromkeys(new_patches))
+    patches2 = sorted(patches2, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     gameelo_list = []
     while count < games:
         playerids_ranked = playerids[count]
@@ -2471,7 +2492,8 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
         return ((playername).capitalize() +suffix+" Wave 1 " + option + " stats: (Last " + str(games) + " ranked games, Avg. Elo: "+str(avg_gameelo)+") <:Stare:1148703530039902319>\nKingup: " + \
             str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
             ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))'+\
-            '\nSave: ' + str(save_count)) + ' | '  + str(round(save_count/send_total*100,1)) + '%'
+            '\nSave: ' + str(save_count)) + ' | '  + str(round(save_count/send_total*100,1)) + '%\n' +\
+            'Patches: ' + ', '.join(patches2)
     else:
         return 'Not enough ranked data'
 
@@ -2824,6 +2846,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     if type(playername) == list:
         if playername[0] != 'all':
@@ -2943,6 +2966,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches2 = list(dict.fromkeys(new_patches))
+    patches2 = sorted(patches2, key=lambda x: int(x.split(".")[0]+x.split(".")[1]), reverse=True)
     print('starting elcringo command...')
     while count < games:
         ending_wave_list.append(endingwaves[1][count])
@@ -3105,6 +3129,7 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     print('Starting openstats command...')
     while count < games:
         playerids_ranked = playerids[count]
@@ -3286,6 +3311,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort=
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '')+'.'+string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     print('Starting mmstats command...')
     while count < games:
         playerids_ranked = playerids[count]
@@ -3498,6 +3524,7 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     print('Starting spellstats command...')
     while count < games:
         playerids_ranked = playerids[count]
