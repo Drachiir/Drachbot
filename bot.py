@@ -16,6 +16,7 @@ from discord_timestamps import TimestampType
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
+    f.close()
 
 current_season = "11"
 
@@ -41,8 +42,11 @@ async def twitch_get_streams(names: list, playernames: list = []) -> dict:
 async def send_message(message, user_message, is_private, username):
     loop = asyncio.get_running_loop()
     with concurrent.futures.ProcessPoolExecutor() as pool:
-        response = await loop.run_in_executor(pool, functools.partial(responses.handle_response, user_message, username))
-        await message.author.send(response) if is_private else await message.channel.send(response)
+        try:
+            response = await loop.run_in_executor(pool, functools.partial(responses.handle_response, user_message, username))
+            await message.author.send(response) if is_private else await message.channel.send(response)
+        except Exception:
+            traceback.print_exc()
 
 def custom_exception_handler(loop, context):
     loop.default_exception_handler(context)
@@ -51,7 +55,7 @@ def custom_exception_handler(loop, context):
     if isinstance(exception, Exception):
         print(context)
 
-def get_game_elo(playerlist, classic):
+def get_game_elo(playerlist):
     elo = 0
     new_list = []
     for player in playerlist:
@@ -137,6 +141,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elo, playername, 0))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -151,6 +156,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_bestie, playername))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -165,6 +171,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_rank, rank))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -179,6 +186,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_gamestats, playername))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -193,6 +201,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_gameid_visualizer, game_id, wave))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -211,6 +220,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.novacup, division.value))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -225,6 +235,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_showlove, playername1, playername2))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -258,7 +269,8 @@ def run_discord_bot():
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_wave1tendency, playername, option.value, games, min_elo, patch, sort.value))
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_wave1tendency, playername, option, games, min_elo, patch, sort))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -290,7 +302,8 @@ def run_discord_bot():
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool,functools.partial(responses.apicall_elcringo, playername, games, patch, min_elo, option, sort = sort.value))
+                response = await loop.run_in_executor(pool,functools.partial(responses.apicall_elcringo, playername, games, patch, min_elo, option, sort = sort))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -325,7 +338,8 @@ def run_discord_bot():
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool,functools.partial(responses.apicall_mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort = sort.value))
+                response = await loop.run_in_executor(pool,functools.partial(responses.apicall_mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort = sort))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -352,6 +366,7 @@ def run_discord_bot():
                 pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_openstats, str(playername).lower(), games, min_elo, patch, sort = sort, unit= unit))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -378,6 +393,7 @@ def run_discord_bot():
                 pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_spellstats, str(playername).lower(), games, min_elo, patch, sort=sort, spellname=spell))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -406,6 +422,7 @@ def run_discord_bot():
             except AttributeError:
                 pass
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_winrate, playername1, playername2, option.value, games, patch, min_elo = min_elo, sort=sort))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -451,6 +468,7 @@ def run_discord_bot():
                 pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_statsgraph, playernames=playernames, waves=waves_list, games=games, patch=patch, key=key.value, sort=sort))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -467,6 +485,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elograph,playername, games, patch))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -480,6 +499,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_leaderboard))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -488,19 +508,17 @@ def run_discord_bot():
 
     @tree.command(name="help", description="Gives some info on how to use all the commands.")
     async def help(interaction: discord.Interaction):
-        loop = asyncio.get_running_loop()
-        with concurrent.futures.ProcessPoolExecutor() as pool:
-            await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                await interaction.followup.send("Common Inputs:\n"
-                                                "**'playername'**: Needs to be a playername currently in use, or 'all' to retrieve data from any player if the command supports it\n"
-                                                "**'games'**: Any integer, or 0 to get all games available based on the other inputs.\n"
-                                                "**'min_elo'**: Any integer, defines minimum avg game elo that a game needs to be included into the set of games.\n"
-                                                "**'patch'**: Any patch in XX.XX format. Appending multiple patches with comas as delimiter is possible.\n"
-                                                "           -Also using a '+' infront of a single patch, counts as any all the patches that come after(including the initial one, works only within the same season version.)\n"
-                                                "           -Using a '-' between 2 patches takes the entire range from those patches.")
-            except discord.NotFound as e:
-                print(e)
+        await interaction.response.defer(ephemeral=False, thinking=True)
+        try:
+            await interaction.followup.send("Common Inputs:\n"
+                                            "**'playername'**: Needs to be a playername currently in use, or 'all' to retrieve data from any player if the command supports it\n"
+                                            "**'games'**: Any integer, or 0 to get all games available based on the other inputs.\n"
+                                            "**'min_elo'**: Any integer, defines minimum avg game elo that a game needs to be included into the set of games.\n"
+                                            "**'patch'**: Any patch in XX.XX format. Appending multiple patches with comas as delimiter is possible.\n"
+                                            "           -Also using a '+' infront of a single patch, counts as any all the patches that come after(including the initial one, works only within the same season version.)\n"
+                                            "           -Using a '-' between 2 patches takes the entire range from those patches.")
+        except discord.NotFound as e:
+            print(e)
 
     @tree.command(name="sendstats", description="Send stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
@@ -522,7 +540,8 @@ def run_discord_bot():
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_sendstats, str(playername).lower(), starting_wave, games, min_elo, patch, sort = sort.value))
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_sendstats, str(playername).lower(), starting_wave, games, min_elo, patch, sort = sort))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -536,6 +555,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(get_top_games, "Ranked"))
+                pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
@@ -561,6 +581,7 @@ def run_discord_bot():
                         await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
                         return
                 await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, update=True))
+                pool.shutdown()
                 await interaction.followup.send("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
             except Exception:
                 traceback.print_exc()
@@ -584,7 +605,6 @@ def run_discord_bot():
             channel = str(message.channel)
             print(f"{username} said: '{user_message}'({channel})")
         else: return
-
         if user_message[0] == '?':
             user_message = user_message[1:]
             await send_message(message, user_message, is_private=True)
@@ -594,80 +614,91 @@ def run_discord_bot():
     @client2.event
     async def on_message(message):
         try:
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ProcessPoolExecutor() as pool:
-                if str(message.channel) == "game-starts":
-                    players = str(message.content).splitlines()[1:]
-                    gameid = str(message.author).split("#")[0].replace("Game started! ", "")
-                    if len(players) == 4:
-                        players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players, False))
-                        save_live_game(gameid, players_new)
-                        twitch_list = []
-                        playernames_list = []
-                        with open("Files/whitelist.txt", "r") as f:
-                            data = f.readlines()
-                            f.close()
-                        for entry in data:
-                            playername = entry.split("|")[1].replace("\n", "")
-                            twitch_name = entry.split("|")[2].replace("\n", "")
-                            for p in players:
-                                if p.split(":")[0] == playername and os.path.isfile("sessions/session_" + playername + ".json") == False:
+            if str(message.channel) == "game-starts":
+                players = str(message.content).splitlines()[1:]
+                gameid = str(message.author).split("#")[0].replace("Game started! ", "")
+                if len(players) == 4:
+                    loop = asyncio.get_running_loop()
+                    with concurrent.futures.ProcessPoolExecutor() as pool:
+                        players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players))
+                        pool.shutdown()
+                    save_live_game(gameid, players_new)
+                    twitch_list = []
+                    playernames_list = []
+                    with open("Files/whitelist.txt", "r") as f:
+                        data = f.readlines()
+                        f.close()
+                    for entry in data:
+                        playername = entry.split("|")[1].replace("\n", "")
+                        twitch_name = entry.split("|")[2].replace("\n", "")
+                        for p in players:
+                            if p.split(":")[0] == playername and os.path.isfile("sessions/session_" + playername + ".json") == False:
+                                    twitch_list.append(twitch_name)
+                                    playernames_list.append(playername)
+                            elif p.split(":")[0] == playername and os.path.isfile("sessions/session_" + playername + ".json") == True:
+                                with open("sessions/session_" + playername + ".json", "r") as f2:
+                                    temp_dict = json.load(f2)
+                                    f2.close()
+                                    twitch_dict = await twitch_get_streams([twitch_name])
+                                    if str(temp_dict["started_at"]) != str(twitch_dict[twitch_name]["started_at"]):
+                                        os.remove("sessions/session_" + playername + ".json")
                                         twitch_list.append(twitch_name)
                                         playernames_list.append(playername)
-                                elif p.split(":")[0] == playername and os.path.isfile("sessions/session_" + playername + ".json") == True:
-                                    with open("sessions/session_" + playername + ".json", "r") as f2:
-                                        temp_dict = json.load(f2)
-                                        f2.close()
-                                        twitch_dict = await twitch_get_streams([twitch_name])
-                                        if str(temp_dict["started_at"]) != str(twitch_dict[twitch_name]["started_at"]):
-                                            os.remove("sessions/session_" + playername + ".json")
-                                            twitch_list.append(twitch_name)
-                                            playernames_list.append(playername)
-                                        else:
-                                            mod_date = datetime.utcfromtimestamp(os.path.getmtime("sessions/session_" + playername + ".json"))
-                                            date_diff = datetime.now() - mod_date
-                                            if platform.system() == "Linux":
-                                                minutes_diff = date_diff.total_seconds() / 60
-                                            elif platform.system() == "Windows":
-                                                minutes_diff = date_diff.total_seconds() / 60 - 60
-                                            if minutes_diff > 10:
+                                    else:
+                                        mod_date = datetime.utcfromtimestamp(os.path.getmtime("sessions/session_" + playername + ".json"))
+                                        date_diff = datetime.now() - mod_date
+                                        if platform.system() == "Linux":
+                                            minutes_diff = date_diff.total_seconds() / 60
+                                        elif platform.system() == "Windows":
+                                            minutes_diff = date_diff.total_seconds() / 60 - 60
+                                        if minutes_diff > 10:
+                                            loop = asyncio.get_running_loop()
+                                            with concurrent.futures.ProcessPoolExecutor() as pool:
                                                 await loop.run_in_executor(pool,functools.partial(responses.stream_overlay,playername, update=True))
-                        if len(twitch_list) > 0:
-                            twitch_dict = await twitch_get_streams(twitch_list, playernames=playernames_list)
-                            for streamer in twitch_dict:
-                                if twitch_dict[streamer]["live"] == True:
+                                                pool.shutdown()
+                    if len(twitch_list) > 0:
+                        twitch_dict = await twitch_get_streams(twitch_list, playernames=playernames_list)
+                        for streamer in twitch_dict:
+                            if twitch_dict[streamer]["live"] == True:
+                                loop = asyncio.get_running_loop()
+                                with concurrent.futures.ProcessPoolExecutor() as pool:
                                     print(await loop.run_in_executor(pool,functools.partial(responses.stream_overlay,twitch_dict[streamer]["playername"], stream_started_at=str(twitch_dict[streamer]["started_at"])))+ " session started.")
-                                else:
-                                    print(streamer + " is not live.")
-                elif str(message.channel) == "game-results":
-                    embeds = message.embeds
-                    for embed in embeds:
-                        embed_dict = embed.to_dict()
-                    for field in embed_dict["fields"]:
-                        if field["name"] == "Game ID":
-                            gameid_result = field["value"]
-                    desc = embed_dict["description"].split(")")[0].split("(")[1]
-                    desc2 = embed_dict["description"].split("(")[0]
-                    desc3 = embed_dict["description"].split("Markdown")
-                    if "elo" in desc:
-                        with open("Files/whitelist.txt", "r") as f:
-                            data = f.readlines()
-                            for entry in data:
-                                playername = entry.split("|")[1].replace("\n", "")
-                                if playername in desc3[1]:
-                                    elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
-                                    if os.path.isfile("sessions/session_" + playername + ".json"):
+                                    pool.shutdown()
+                            else:
+                                print(streamer + " is not live.")
+            elif str(message.channel) == "game-results":
+                embeds = message.embeds
+                for embed in embeds:
+                    embed_dict = embed.to_dict()
+                for field in embed_dict["fields"]:
+                    if field["name"] == "Game ID":
+                        gameid_result = field["value"]
+                desc = embed_dict["description"].split(")")[0].split("(")[1]
+                desc2 = embed_dict["description"].split("(")[0]
+                desc3 = embed_dict["description"].split("Markdown")
+                if "elo" in desc:
+                    with open("Files/whitelist.txt", "r") as f:
+                        data = f.readlines()
+                        for entry in data:
+                            playername = entry.split("|")[1].replace("\n", "")
+                            if playername in desc3[1]:
+                                elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
+                                if os.path.isfile("sessions/session_" + playername + ".json"):
+                                    with concurrent.futures.ProcessPoolExecutor() as pool:
                                         await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, elo_change=elo_change))
-                                elif playername in desc3[2]:
-                                    elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
-                                    if os.path.isfile("sessions/session_" + playername + ".json"):
+                                        pool.shutdown()
+                            elif playername in desc3[2]:
+                                elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
+                                if os.path.isfile("sessions/session_" + playername + ".json"):
+                                    with concurrent.futures.ProcessPoolExecutor() as pool:
                                         await loop.run_in_executor(pool,functools.partial(responses.stream_overlay, playername,elo_change=elo_change))
-                    if "elo" in desc or "**TIED**" in desc2:
-                        path = 'Livegame/Ranked/'
-                        livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
-                        for game in livegame_files:
-                            if game.split("_")[0] == gameid_result:
-                                os.remove(path + game)
+                                        pool.shutdown()
+                if "elo" in desc or "**TIED**" in desc2:
+                    path = 'Livegame/Ranked/'
+                    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+                    for game in livegame_files:
+                        if game.split("_")[0] == gameid_result:
+                            os.remove(path + game)
         except Exception:
             traceback.print_exc()
     

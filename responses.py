@@ -15,8 +15,6 @@ import bot
 import PIL
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-from imgurpython import ImgurClient
-from imgur_python import Imgur
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -26,13 +24,19 @@ import csv
 import asyncio
 import concurrent.futures
 import functools
+import string
+import random
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
-    header = {'x-api-key': secret_file.get('apikey')}
-    imgur_client = ImgurClient(secret_file.get('imgur'), secret_file.get('imgurcs'))
-    imgur_client.set_user_auth(secret_file.get("imgurat"), secret_file.get("imgurrt"))
-    imgur_client2 = Imgur({"client_id": secret_file.get('imgur'), "access_token": secret_file.get("imgurat"), "refresh_token": secret_file.get("imgurrt")})
+    f.close()
+
+header = {'x-api-key': secret_file.get('apikey')}
+site = "http://overlay.drachbot.site/Images/"
+shared_folder = "/shared/Images/"
+
+def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 def api_call_logger(request_type):
     try:
@@ -70,7 +74,8 @@ rank_emotes = {"bronze": [1000,"<:Bronze:1217999684484862057>"], "silver": [1200
                "purple": [2200,"<:Master:1217999699114590248>"], "sm": [2400,"<:SeniorMaster:1217999704349081701>"], "gm": [2600,"<:Grandmaster:1217999691883741224>"],
                "legend": [2800, "<:Legend:1217999693234176050>"]}
 
-slang = {"pota": "priestess of the abyss", "cat": "nekomata", "pixie": "chloropixie", "scally": "spectral scallywag", "hunt": "pack rat nest"}
+slang = {"pota": "priestess of the abyss", "cat": "nekomata", "pixie": "chloropixie", "scally": "spectral scallywag", "hunt": "pack rat nest", "aoa": "all out assault", "pta": "press the attack",
+         "la": "lizard army", "sorc": "sorcerer", "gg": "gateguard"}
 
 def get_ranked_emote(rank):
     rank_emote = ""
@@ -190,90 +195,69 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
         elif elo >= 1200:
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Silver.png'
         return rank_url
-    html_file = """<!doctype html>
-                    <html>
-                    <head>
-                       <link rel="preconnect" href="https://fonts.googleapis.com">
-                       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                       <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-                    <style>
-                    .container {
-                      min-height: 0vh;
-                      max-height: 14vh;
-                      display: flex;
-                      flex-direction: right;
-                      align-items: center;
-                    }
-                    
-                    img {
-                      display: block;
-                      max-width: 100%;
-                      height: auto;
-                    }
-                    r {
-                       font-family: "Roboto", sans-serif;
-                       font-weight: 700;
-                       font-style: normal;
-                       font-size: 40px;
-                       padding-left: 20px;
-                       color: white;
-                       text-shadow:
-                       /* Outline */
-                       -1px -1px 0 #000000,
-                       1px -1px 0 #000000,
-                       -1px 1px 0 #000000,
-                       1px 1px 0 #000000,  
-                       -2px 0 0 #000000,
-                       2px 0 0 #000000,
-                       0 2px 0 #000000,
-                       0 -2px 0 #000000;
-                    }
-                   .redText
-                   {
-                      -webkit-text-stroke-width: 0.2px;
-					  -webkit-text-stroke-color: black;
-                      color:rgb(219, 0, 0);
-                   }
-                   .greenText
-                   {
-                      -webkit-text-stroke-width: 0.2px;
-					  -webkit-text-stroke-color: black;
-                      color:rgb(0, 153, 0);
-                   }
-                    </style>
-                    <title>"""+playername+"""</title>
-                    </head>
-                    <body>
-                    <div class="container">
-                         <div class="text">
-                            <r><b>Starting elo:&nbsp;</b></r>
-                          </div>
-                          <div class="image">                          
-                            <img src="""+str(get_rank_url(initial_elo))+""">
-                          </div>
-                         <div class="text">
-                            <r><b>"""+str(initial_elo)+"""</b></r>
-                          </div>
-                        </div>
-                    <div class="container">
-                         <div class="text">
-                            <r><b>Current elo:&nbsp;&nbsp;</b></r>
-                          </div>
-                          <div class="image">
-                            <img src="""+str(get_rank_url(current_elo))+""">
-                          </div>
-                         <div class="text">
-                            <r><b>"""+str(current_elo)+"""</b></r><r """+rgb2+""" ><b>("""+elo_str+str(elo_diff)+""")</b></r>
-                          </div>
-                        </div>
-                    <div class="container">
-                         <div class="text">
-                            <r><b>Win: """+str(wins)+""", Loss: """+str(losses)+""", Winrate:</b></r><r """+rgb+""" ><b>"""+str(winrate)+"""%</b></r>
-                          </div>
-                        </div>
-                    </body>
-                    </html>
-                    """
+    html_file = """
+    <!doctype html>
+        <html>
+        <head>
+          <meta http-equiv="refresh" content="5">
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+        <style>
+          .container {
+            min-height: 0px;
+            max-height: 120px;
+            max-width: 700px;
+            display: flex;
+            flex-direction: right;
+            align-items: center;
+          }
+          r {
+            font-family: "Roboto", sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            font-size: 220%;
+            padding-left: 10px;
+            color: white;
+            letter-spacing: 1px;
+            text-shadow:
+            /* Outline */
+            -1px -1px 0 #000000,
+            1px -1px 0 #000000,
+            -1px 1px 0 #000000,
+            1px 1px 0 #000000,
+            -2px 0 0 #000000,
+            2px 0 0 #000000,
+            0 2px 0 #000000,
+            0 -2px 0 #000000;
+          }
+          .redText
+          {
+            color:rgb(219, 0, 0);
+          }
+          .greenText
+          {
+            color:rgb(0, 153, 0);
+          }
+        </style>
+        <title>"""+playername+"""</title>
+        </head>
+        <body>
+        <div class="container">
+              <r><b>Starting elo:</b></r>
+              <img src="""+get_rank_url(initial_elo)+""">
+              <r><b>"""+str(initial_elo)+"""</b></r>
+            </div>
+        <div class="container">
+              <r><b>Current elo:&nbsp;</b></r>
+              <img src="""+get_rank_url(current_elo)+""">
+              <r><b>"""+str(current_elo)+"""</b></r><r """+rgb2+""" ><b>("""+elo_str+str(elo_diff)+""")</b></r>
+            </div>
+        <div class="container">
+              <r><b>Win:"""+str(wins)+""",&thinsp;Lose:"""+str(losses)+""",&thinsp;Winrate:</b></r><r """+rgb+""" ><b>"""+str(winrate)+"""%</b></r>
+            </div>
+        </body>
+    </html>"""
     with open('/shared/'+playername+'_output.html', "w") as f:
         f.write(html_file)
     return playername+'_output.html'
@@ -420,10 +404,9 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
             y += 50
         else:
             y += 40
-    im.save('Files/output.png', 'PNG')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -715,10 +698,9 @@ def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch, tra
             im.paste(im3, (10, y2+80))
             I1.text((10, y2+50), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
             y2 += 50
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder+image_id+'.png')
+    return site+image_id+'.png'
 
 def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgelo, patch, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -861,10 +843,9 @@ def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgel
         else:
             y += 40
         count2 += 1
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def create_image_openstats(dict, games, playerid, avgelo, patch, transparency = False, unit_name = "all"):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -1035,10 +1016,9 @@ def create_image_openstats(dict, games, playerid, avgelo, patch, transparency = 
             y += offset
         else:
             y += offset - 10
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transparency = False, unit_name = "all"):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -1177,10 +1157,9 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
             y += offset
         else:
             y += offset - 10
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def create_image_spellstats(dict, games, playerid, avgelo, patch, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -1295,10 +1274,9 @@ def create_image_spellstats(dict, games, playerid, avgelo, patch, transparency =
             y += offset
         else:
             y += offset - 10
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def create_image_spellstats_specific(dict, games, playerid, avgelo, patch, transparency = False, spell_name = ""):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -1411,10 +1389,9 @@ def create_image_spellstats_specific(dict, games, playerid, avgelo, patch, trans
             y += offset
         else:
             y += offset - 10
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def extract_values(obj, key):
     arr = []
@@ -1718,12 +1695,15 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + '/gamedata/'
             json_files = []
             raw_data = []
-            if patch != '0':
-                for y in patch_list:
-                    json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v' + y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
-            else:
-                json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
-            sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1], "%Y-%m-%d-%H-%M-%S")), reverse=True)
+            try:
+                if patch != '0':
+                    for y in patch_list:
+                        json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v' + y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
+                else:
+                    json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
+                sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1], "%Y-%m-%d-%H-%M-%S")), reverse=True)
+            except FileNotFoundError:
+                return playerid + " not found. :("
         else:
             path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
             playernames = sorted(os.listdir(path1))
@@ -1937,10 +1917,9 @@ def apicall_leaderboard(ranks=10, transparency=False):
         im.paste(lp_image, (x + offset+int(width2)+110, y + 30), mask=lp_image)
         I1.text((x + offset + 142 + width2, y + 33), " LP: "+str(player["ladderPoints"]), font=myFont_small, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255,255,255))
         y += offset
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def apicall_elograph(playername, games, patch, transparency = False):
     playerid = apicall_getid(playername)
@@ -2042,11 +2021,10 @@ def apicall_elograph(playername, games, patch, transparency = False):
     plt.close()
     elo_graph = Image.open(img_buf)
     im.paste(elo_graph, (-100,40), elo_graph)
-
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def apicall_statsgraph(playernames: list, games, patch, key, transparency = False, sort="date", waves = [1,21]) -> str:
     playerids = set()
@@ -2155,11 +2133,10 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
     plt.close()
     elo_graph = Image.open(img_buf)
     im.paste(elo_graph, (-100,30), elo_graph)
-
-    im.save('Files/output.png')
-    image_upload = imgur_client.upload_from_path('Files/output.png')
-    print('Uploading output.png to Imgur...')
-    return image_upload['link']
+    
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="date", transparency = False):
     if starting_wave > 20:
@@ -2348,10 +2325,9 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
                 I1.text((80, y+32), "Sends: " + str(sends_dict[wave]["Count"]) + " (" + str(round(sends_dict[wave]["Count"] / send_count * 100, 1))+"%)",font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
                 y += 100
             x = 400
-        im.save('Files/output.png')
-        image_upload = imgur_client.upload_from_path('Files/output.png')
-        print('Uploading output.png to Imgur...')
-        return image_upload['link']
+        image_id = id_generator()
+        im.save(shared_folder + image_id + '.png')
+        return site + image_id + '.png'
 
 def novacup(division):
     html = requests.get('https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pubhtml#').text
@@ -2987,19 +2963,19 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
                     if n <= 9:
                         if workers_ranked[i][n] > 5:
                             small_send = (workers_ranked[i][n] - 5) / 4 * 20
-                        if send <= small_send and option.value == "Yes":
+                        if send <= small_send and option == "Yes":
                             save_count_pre10 += 1
-                        elif send == 0 and option.value == "No":
+                        elif send == 0 and option == "No":
                             save_count_pre10 += 1
                     elif n > 9:
-                        if patches[1][count].startswith('v11'):
+                        if patches[1][count].startswith('v11') or patches[1][count].startswith('v9'):
                             worker_adjusted = workers_ranked[i][n]
                         elif patches[1][count].startswith('v10'):
                             worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
                         small_send = worker_adjusted / 4 * 20
-                        if send <= small_send and option.value == "Yes":
+                        if send <= small_send and option == "Yes":
                             save_count += 1
-                        elif send == 0 and option.value == "No":
+                        elif send == 0 and option == "No":
                             save_count += 1
                 mythium_list.append(sum(mythium_list_pergame))
                 mythium_pre10 = 0
@@ -3237,8 +3213,6 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
 
 def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'all', sort="date"):
     novacup = False
-    if mastermind != 'all':
-        mastermind = mastermind.value
     if playername == 'all':
         playerid = 'all'
     elif 'nova cup' in playername:
@@ -3586,9 +3560,7 @@ def get_icons_image(type, name):
                 new_name = ""
                 for string in name:
                     new_name += string.capitalize()
-            else:
-                new_name = name.capitalize()
-            if " " in name:
+            elif " " in name:
                 name = name.split(" ")
                 new_name = ""
                 for string in name:
@@ -3739,16 +3711,14 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
                     break
                 leak_count += 1
             x += offset * 10
-        im.save("Files/Output/Wave"+str(wave+1)+".png")
-        image_upload = imgur_client2.image_upload("Files/Output/Wave"+str(wave+1)+".png", title="", description="")
-        print('Uploading '+"Wave"+str(wave+1)+'.png to Imgur...')
-        image_ids.append(image_upload["response"]["data"]["id"])
-        image_link = image_upload["response"]["data"]["link"]
+        image_id = id_generator()
+        im.save(shared_folder + image_id + '.png')
+        image_ids.append(image_id)
+        image_link = site + image_id + '.png'
     if start_wave != 0:
         return "Game ID: "+gameid+"\n"+image_link
     else:
-        album = imgur_client2.album_create(images=image_ids, title="", description="")
-        return "Game ID: "+gameid+"\n<https://imgur.com/a/"+album["response"]["data"]["id"]+">"
+        return "Not implemented yet."
 
 def apicall_elo(playername, rank):
     playerid = apicall_getid(playername)
