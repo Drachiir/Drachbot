@@ -13,6 +13,7 @@ from twitchAPI.twitch import Twitch
 from twitchAPI.helper import first
 import discord_timestamps
 from discord_timestamps import TimestampType
+from pathlib import Path
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -45,6 +46,8 @@ async def send_message(message, user_message, is_private, username):
         try:
             response = await loop.run_in_executor(pool, functools.partial(responses.handle_response, user_message, username))
             await message.author.send(response) if is_private else await message.channel.send(response)
+        except discord.DiscordException as e:
+            print(e)
         except Exception:
             traceback.print_exc()
 
@@ -86,7 +89,7 @@ def get_top_games(queue):
         if platform.system() == "Linux":
             minutes_diff = date_diff.total_seconds() / 60
         elif platform.system() == "Windows":
-            minutes_diff = date_diff.total_seconds() / 60 - 60
+            minutes_diff = date_diff.total_seconds() / 60 - 120
         if minutes_diff > 35:
             os.remove(path2)
             continue
@@ -96,6 +99,16 @@ def get_top_games(queue):
     if len(topgames) == 0:
         return "No games found."
     for idx, game2 in enumerate(topgames):
+        with open(path+game2, "r", encoding="utf_8") as f2:
+            txt = f2.readlines()
+            f2.close()
+        gameid = game2.split("_")[0].split(".")[0]
+        if not Path("/shared/Gameids/"+game2).is_file():
+            with open("/shared/Gameids/"+game2, "w") as f:
+                f.truncate(0)
+                lines = [gameid+"\n"]+txt
+                f.write("\n".join(lines))
+                f.close()
         path2 = path+game2
         mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2)).timestamp()
         #date_diff = datetime.now() - mod_date
@@ -104,10 +117,7 @@ def get_top_games(queue):
         #     minutes_diff = date_diff.total_seconds() / 60
         # elif platform.system() == "Windows":
         #     minutes_diff = date_diff.total_seconds() / 60 - 60
-        with open(path+game2, "r", encoding="utf_8") as f:
-            txt = f.readlines()
-            f.close()
-        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+",  Started "+str(timestamp)+".**\n"
+        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+", [Gameid](<"+"https://overlay.drachbot.site/Gameids/"+game2+">),  Started "+str(timestamp)+".**\n"
         for c, data in enumerate(txt):
             if c == len(txt)-1:
                 output += "\n"
@@ -200,6 +210,8 @@ def run_discord_bot():
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
+                if len(game_id) != len("a3bcd7578727fa2f229e06d10d367d9d58ec94adaf13c955ba8872e9da46aaab"):
+                    await interaction.followup.send("Invalid GameID format.")
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_gameid_visualizer, game_id, wave))
                 pool.shutdown()
                 if len(response) > 0:
@@ -373,6 +385,36 @@ def run_discord_bot():
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
+    @tree.command(name="jules", description="Unit synergy stats.")
+    @app_commands.describe(playername='Enter playername or "all" for all available data.',
+                           unit="Enter unit name, or multiple unit names separated by commas.",
+                           mastermind="Enter mastermind name.",
+                           spell="Enter legion spell name.",
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           min_elo='Enter minium average game elo to include in the data set',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           sort="Sort by?")
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def jules(interaction: discord.Interaction, playername: str, unit: str, mastermind: str="all", spell: str="all", games: int = 0, min_elo: int = 0, patch: str = current_season, sort: discord.app_commands.Choice[str] = "date"):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_jules, str(playername).lower(), unit, games, min_elo, patch, sort=sort, mastermind=mastermind, spell=spell))
+                pool.shutdown()
+                if len(response) > 0:
+                    await interaction.followup.send(response)
+            except Exception:
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
+    
     @tree.command(name="spellstats", description="Spell stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
@@ -421,6 +463,7 @@ def run_discord_bot():
                 sort = sort.value
             except AttributeError:
                 pass
+            try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_winrate, playername1, playername2, option.value, games, patch, min_elo = min_elo, sort=sort))
                 pool.shutdown()
                 if len(response) > 0:
@@ -459,6 +502,8 @@ def run_discord_bot():
                 playernames = [playernames]
             if "-" in waves:
                 waves_list = [int(waves.split("-")[0]),int(waves.split("-")[1])]
+                if waves_list[0] > waves_list[1] or waves_list[0] < 1:
+                    await interaction.followup.send("Invalid waves input.")
             else:
                 await interaction.followup.send("Invalid waves input.")
                 return
@@ -467,7 +512,7 @@ def run_discord_bot():
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_statsgraph, playernames=playernames, waves=waves_list, games=games, patch=patch, key=key.value, sort=sort))
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_statsgraph, playernames=playernames, min_elo=min_elo, waves=waves_list, games=games, patch=patch, key=key.value, sort=sort))
                 pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
@@ -582,7 +627,7 @@ def run_discord_bot():
                         return
                 await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, update=True))
                 pool.shutdown()
-                await interaction.followup.send("Use http://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
+                await interaction.followup.send("Use https://overlay.drachbot.site/"+playername+'_output.html as a OBS browser source.')
             except Exception:
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
@@ -684,12 +729,14 @@ def run_discord_bot():
                             if playername in desc3[1]:
                                 elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
                                 if os.path.isfile("sessions/session_" + playername + ".json"):
+                                    loop = asyncio.get_running_loop()
                                     with concurrent.futures.ProcessPoolExecutor() as pool:
                                         await loop.run_in_executor(pool, functools.partial(responses.stream_overlay, playername, elo_change=elo_change))
                                         pool.shutdown()
                             elif playername in desc3[2]:
                                 elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
                                 if os.path.isfile("sessions/session_" + playername + ".json"):
+                                    loop = asyncio.get_running_loop()
                                     with concurrent.futures.ProcessPoolExecutor() as pool:
                                         await loop.run_in_executor(pool,functools.partial(responses.stream_overlay, playername,elo_change=elo_change))
                                         pool.shutdown()

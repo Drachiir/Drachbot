@@ -1,4 +1,5 @@
 import io
+import shutil
 import requests
 import json
 from collections import Counter
@@ -32,7 +33,7 @@ with open('Files/Secrets.json') as f:
     f.close()
 
 header = {'x-api-key': secret_file.get('apikey')}
-site = "http://overlay.drachbot.site/Images/"
+site = "https://overlay.drachbot.site/Images/"
 shared_folder = "/shared/Images/"
 
 def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
@@ -1431,7 +1432,7 @@ def handle_response(message, author) -> str:
     if 'shea' in p_message:         return 'sister? <:sheastare:1121047323464712273>'
     if 'aviator' in p_message:      return '<:aviator:1180232477537738944>'
     if 'lucy' in p_message:         return 'snail angle <:Dice:1180232938399469588>'
-    if 'king' in p_message:         return "like its the most fun i've had playing legion pretty much"
+    if 'kingdan' in p_message:         return "like its the most fun i've had playing legion pretty much"
     if 'genom' in p_message:        return ":rat:"
     if 'quacker' in p_message:      return ":duck: quack"
     if 'toikan' in p_message:       return "nyctea, :older_man:"
@@ -1666,7 +1667,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             elif sort_by == "elo":
                 sorted_json_files = sorted(json_files, key=lambda x: x.split("_")[-2], reverse=True)
             for i, x in enumerate(sorted_json_files):
-                with (open(path + '/gamedata/' + x) as f):
+                with open(path + '/gamedata/' + x) as f:
                     raw_data_partial = json.load(f)
                     f.close()
                     if raw_data_partial['gameElo'] >= min_elo:
@@ -1739,8 +1740,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             elif sort_by == "elo":
                 sorted_json_files = sorted(json_files, key=lambda x: x.split("_")[-2], reverse=True)
         count = 0
-        print(len(sorted_json_files))
-        if len(sorted_json_files) > 25000:
+        if games == 0 and len(sorted_json_files) > 25000 or games > 25000:
             return "Too many games, please limit the data."
         for i, x in enumerate(sorted_json_files):
             if count == games and games != 0:
@@ -1758,6 +1758,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                         count += 1
                         raw_data.append(raw_data_partial)
     if update == 0:
+        print(len(raw_data))
         return raw_data
     else:
         if new_profile:
@@ -1820,7 +1821,7 @@ def pull_games_by_id(file, name):
 
 def apicall_matchhistorydetails(playerid):
     playername = apicall_getprofile(playerid)['playerName']
-    history_raw = apicall_getmatchistory(playerid, 10)
+    history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
     player_names = extract_values(history_raw, 'playerName')
     game_results = extract_values(history_raw, 'gameResult')
     wins = count_value(str(playername).lower(), 'won', player_names, game_results)
@@ -2026,11 +2027,14 @@ def apicall_elograph(playername, games, patch, transparency = False):
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
 
-def apicall_statsgraph(playernames: list, games, patch, key, transparency = False, sort="date", waves = [1,21]) -> str:
+def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparency = False, sort="date", waves = [1,21]) -> str:
     playerids = set()
     total_games = 0
     for name in playernames:
-        playerid = apicall_getid(name)
+        if name == "all":
+            playerid = "all"
+        else:
+            playerid = apicall_getid(name)
         if playerid == 0:
             return name + ' not found.'
         if playerid == 1:
@@ -2040,7 +2044,7 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
     print("Starting stats graph command...")
     patch_list = []
     for j, id in enumerate(playerids):
-        history_raw = apicall_getmatchistory(id, games, 0, patch, sort_by=sort)
+        history_raw = apicall_getmatchistory(id, games, min_elo, patch, sort_by=sort)
         if type(history_raw) == str:
             return history_raw
         games2 = len(history_raw)
@@ -2062,7 +2066,7 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
             playerids_ranked = playerids[count]
             data_ranked = data[count]
             for i, x in enumerate(playerids_ranked):
-                if x == id:
+                if x == id or id == "all":
                     if id in players_dict:
                         players_dict[id]["Data"].append(data_ranked[i])
                     else:
@@ -2126,7 +2130,11 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
     for v in range(waves[0],waves[1]+1):
         waves_list.append(str(v))
     for index, player in enumerate(players_dict):
-        ax.plot(waves_list, players_dict[player]["FinalData"], color=colors[index], marker=marker_plot, linewidth=2, label=apicall_getprofile(player)["playerName"])
+        if player == "all":
+            label_string = "All"
+        else:
+            label_string = apicall_getprofile(player)["playerName"]
+        ax.plot(waves_list, players_dict[player]["FinalData"], color=colors[index], marker=marker_plot, linewidth=2, label=label_string)
     ax.legend(bbox_to_anchor=(0.57, 1.07), prop={'size': 13})
     img_buf = io.BytesIO()
     fig.savefig(img_buf, transparent=True, format='png')
@@ -2135,6 +2143,7 @@ def apicall_statsgraph(playernames: list, games, patch, key, transparency = Fals
     im.paste(elo_graph, (-100,30), elo_graph)
     
     image_id = id_generator()
+    im.show()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
 
@@ -3045,6 +3054,185 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
         'Patches: ' + ', '.join(patches2)
 
+def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermind = "all", spell = "all"):
+    if "," in unit:
+        unit = unit.split(",")
+    else:
+        unit = [unit]
+    mms = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard']
+    if mastermind != "all":
+        for x in mms:
+            if mastermind.lower() == x.lower():
+                mastermind = x
+                break
+        else:
+            return "Mastermind not found."
+    if spell != "all":
+        spell_list = []
+        with open('Files/spells.json', 'r') as f:
+            spells_json = json.load(f)
+            spells_extracted = extract_values(spells_json, '_id')
+        for i, x in enumerate(spells_extracted[1]):
+            string = x
+            string = string.replace('_powerup_id', '')
+            string = string.replace('_spell_damage', '')
+            string = string.replace("_", " ")
+            spell_list.append(string)
+        spell_list.append("taxed allowance")
+        if spell != "all":
+            if spell in slang:
+                spell = slang.get(spellname)
+            if spell not in spell_list:
+                return spellname + " not found."
+    unit_list = []
+    with open('Files/units.json', 'r') as f:
+        units_json = json.load(f)
+        units_extracted = extract_values(units_json, 'unitId')
+        value_extracted = extract_values(units_json, 'totalValue')[1]
+    for i, x in enumerate(units_extracted[1]):
+        if value_extracted[i] and int(value_extracted[i]) > 0:
+            string = x
+            string = string.replace('_', ' ')
+            string = string.replace(' unit id', '')
+            unit_list.append(string)
+    unit_list.append('pack rat nest')
+    for i, unit_name in enumerate(unit):
+        if unit_name.startswith(" "):
+            unit_name = unit_name[1:]
+            unit[i] = unit_name
+        if unit_name not in unit_list:
+            return unit_name + " unit not found."
+        if unit_name in slang:
+            unit[i] = slang.get(unit_name)
+    unit = set(unit)
+    novacup = False
+    if playername == 'all':
+        playerid = 'all'
+    elif 'nova cup' in playername:
+        novacup = True
+        playerid = playername
+    else:
+        playerid = apicall_getid(playername)
+        avatar = apicall_getprofile(playerid)['avatarUrl']
+        if playerid == 0:
+            return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached, you can still use "all" commands.'
+    history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+    if type(history_raw) == str:
+        return history_raw
+    if len(history_raw) == 0:
+        return 'No games found.'
+    games = len(history_raw)
+    if novacup:
+        playerid = 'all'
+    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
+    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
+    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
+    spells = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
+    fighters = list(divide_chunks(extract_values(history_raw, 'fighters')[1], 4))
+    playerelos = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
+    gameelo = extract_values(history_raw, 'gameElo')
+    patches = extract_values(history_raw, 'version')
+    gameid = extract_values(history_raw, '_id')
+    patches = list(dict.fromkeys(patches[1]))
+    new_patches = []
+    gameelo_list = []
+    playerelo_list = []
+    count = 0
+    occurrence_count = 0
+    win_count = 0
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    print('Starting jules command...')
+    while count < games:
+        playerids_ranked = playerids[count]
+        masterminds_ranked = masterminds[count]
+        gameresult_ranked = gameresult[count]
+        spells_ranked = spells[count]
+        fighters_ranked = fighters[count]
+        playerelos_ranked = playerelos[count]
+        gameelo_list.append(gameelo[1][count])
+        for i, x in enumerate(playerids_ranked):
+            if x == playerid or playerid == "all":
+                expected = len(unit)
+                current = 0
+                if mastermind != "all":
+                    expected += 1
+                if spell != "all":
+                    expected += 1
+                fighter_list = fighters_ranked[i].lower()
+                for un in unit:
+                    if un.lower() in fighter_list:
+                        current += 1
+                if mastermind == masterminds_ranked[i]:
+                    current += 1
+                if spell.lower() == spells_ranked[i].lower():
+                    spell = spells_ranked[i]
+                    current += 1
+                if current == expected:
+                    occurrence_count += 1
+                    playerelo_list.append(playerelos_ranked[i])
+                    if gameresult_ranked[i] == "won":
+                        win_count += 1
+        count += 1
+    if occurrence_count == 0:
+        return "No occurances found."
+    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    mode = 'RGB'
+    colors = (49, 51, 56)
+    im = PIL.Image.new(mode=mode, size=(1000, 300), color=colors)
+    I1 = ImageDraw.Draw(im)
+    ttf = 'Files/RobotoCondensed-Regular.ttf'
+    myFont_small = ImageFont.truetype(ttf, 20)
+    myFont = ImageFont.truetype(ttf, 25)
+    myFont_title = ImageFont.truetype(ttf, 30)
+    jules_url = "https://overlay.drachbot.site/emotes/JULES.png"
+    if playername == 'all' or 'nova cup' in playername:
+        jules_response = requests.get(jules_url)
+        jules_image = Image.open(BytesIO(jules_response.content))
+        im.paste(jules_image.resize((64, 64)), (10, 10), mask=jules_image.resize((64, 64)))
+        string = ''
+    else:
+        string = "'s"
+        avatar_url = 'https://cdn.legiontd2.com/' + avatar
+        avatar_response = requests.get(avatar_url)
+        av_image = Image.open(BytesIO(avatar_response.content))
+        gold_border = Image.open('Files/gold_64.png')
+        if im_has_alpha(np.array(av_image)):
+            im.paste(av_image, (10, 10), mask=av_image)
+        else:
+            im.paste(av_image, (10, 10))
+        im.paste(gold_border, (10, 10), mask=gold_border)
+    I1.text((80, 10), str(playername.capitalize()) + string + " JULES stats (From " + str(games) + " ranked games, Avg elo: " + str(avg_gameelo) + ")", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((80, 50), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    jules_response = requests.get(jules_url)
+    jules_image = Image.open(BytesIO(jules_response.content))
+    im.paste(jules_image.resize((64,64)), (10, 80), mask=jules_image.resize((64,64)))
+    offset = 80
+    for i, x in enumerate(unit):
+        I1.text((offset*(i+1)-5, 100), "+", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        im.paste(get_icons_image("icon", x), (10+offset*(i+1), 80))
+    if mastermind != "all":
+        i += 1
+        I1.text((offset * (i + 1) - 5, 100), "+", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        im.paste(get_icons_image("legion", mastermind), (10 + offset * (i + 1), 80))
+    if spell != "all":
+        i += 1
+        I1.text((offset * (i + 1) - 5, 100), "+", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        im.paste(get_icons_image("icon_send", spell), (10 + offset * (i + 1), 80))
+    I1.text((offset * (i + 2) - 5, 100), "=", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((10, 160), 'Games: ' + str(occurrence_count) + "           Player Elo: " + str(round(sum(playerelo_list) / len(playerelo_list))), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((10, 200), 'Winrate: ' + str(round(win_count/occurrence_count*100,1))+"%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((10, 240), 'Appearance rate: ' + str(round(occurrence_count / games * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
+
 def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
     unit_dict = {}
     with open('Files/units.json', 'r') as f:
@@ -3570,6 +3758,8 @@ def get_icons_image(type, name):
             image_path = 'Files/icons/' + new_name + ".png"
             if image_path == "Files/icons/Aps.png":
                 image_path = "Files/icons/APS.png"
+            if image_path == "Files/icons/HellRaiserBuffed.png":
+                image_path = "Files/icons/HellRaiser.png"
             if image_path == "Files/icons/Mps.png":
                 image_path = "Files/icons/MPS.png"
             if image_path == "Files/icons/PriestessOfTheAbyss.png":
@@ -3594,7 +3784,7 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
     gamedata = json.loads(api_response.text)
     units_dict = json.load(open("Files/units.json"))
     if (gamedata == {'message': 'Internal server error'}) or (gamedata == {'err': 'Entry not found.'}):
-        return "GameID not found. (Games older than 1 year are not available in the API)"
+        return "GameID not found. (Games that are not concluded or older than 1 year are not available in the API)"
     player_dict = {}
     for player in gamedata["playersData"]:
         player_dict[player["playerName"]] = {"avatar_url": apicall_getprofile(player["playerId"])["avatarUrl"],
@@ -3606,6 +3796,7 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
         return "Game ended on Wave " + str(gamedata["endingWave"])
     else:
         waves = range(gamedata["endingWave"])
+    first = True
     for wave in waves:
         mode = 'RGB'
         colors = (30, 30, 30)
@@ -3711,14 +3902,19 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
                     break
                 leak_count += 1
             x += offset * 10
-        image_id = id_generator()
-        im.save(shared_folder + image_id + '.png')
-        image_ids.append(image_id)
-        image_link = site + image_id + '.png'
+        if first:
+            first =  False
+            image_id = id_generator()
+            os.umask(0)
+            Path(shared_folder + image_id + "/").mkdir(parents=True, exist_ok=True)
+        im = im.resize((int(20 + offset * 39 / 2), int(1750 / 2)))
+        im.save(shared_folder + image_id + "/"+str(wave+1)+'.png')
+        image_link = site+image_id+"/"+str(wave+1)+'.png'
     if start_wave != 0:
-        return "Game ID: "+gameid+"\n"+image_link
+        return image_link
     else:
-        return "Not implemented yet."
+        shutil.copy("Files/index.php", shared_folder + image_id + "/")
+        return "Game ID: [" + gameid + "](" +site +image_id+")"
 
 def apicall_elo(playername, rank):
     playerid = apicall_getid(playername)
@@ -3792,27 +3988,26 @@ def apicall_showlove(playername, playername2):
         return 'Player ' + str(playername) + ' not found.'
     if playerid == 1:
         return 'API limit reached.'
-    else:
-        request_type = 'players/bestFriends/' + playerid
-        url = 'https://apiv2.legiontd2.com/' + request_type + '?limit=50&offset=0'
-        api_response = requests.get(url, headers=header)
-        bestie = json.loads(api_response.text)
-        count = 0
-        nextvaluesave = 0
-        while count < len(bestie):
-            for bestie_new in bestie[count].values():
-                if isinstance(bestie_new, dict):
-                    name = bestie_new['playerName']
-                    if str(name).lower() == str(playername2).lower():
-                        print('found target')
-                        nextvaluesave = 1
-                    count = count + 1
-                else:
-                    if nextvaluesave == 1:
-                        love_count = bestie_new
-                        print(love_count)
-                        return playername.capitalize() + ' has played ' + str(
-                            love_count) + ' games with ' + playername2.capitalize() + ' :heart:'
+    request_type = 'players/bestFriends/' + playerid
+    url = 'https://apiv2.legiontd2.com/' + request_type + '?limit=50&offset=0'
+    api_response = requests.get(url, headers=header)
+    bestie = json.loads(api_response.text)
+    count = 0
+    nextvaluesave = 0
+    while count < len(bestie):
+        for bestie_new in bestie[count].values():
+            if isinstance(bestie_new, dict):
+                name = bestie_new['playerName']
+                if str(name).lower() == str(playername2).lower():
+                    print('found target')
+                    nextvaluesave = 1
+                count = count + 1
+            else:
+                if nextvaluesave == 1:
+                    love_count = bestie_new
+                    print(love_count)
+                    return playername.capitalize() + ' has played ' + str(
+                        love_count) + ' games with ' + playername2.capitalize() + ' :heart:'
     return 'Not enough games played together'
 
 def apicall_rank(rank):
@@ -3846,5 +4041,3 @@ def apicall_gamestats(playername):
         'Games played: ') + str(wins + loses) + ('\n'
         'Winrate: ') + str(round(winrate * 100)) + ('%\n'
         'Behavior score: ') + str(stats['behaviorScore'] / 10)
-
-
