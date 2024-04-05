@@ -21,6 +21,8 @@ with open('Files/Secrets.json') as f:
 
 current_season = "11"
 
+current_min_elo = 2400
+
 async def twitch_get_streams(names: list, playernames: list = []) -> dict:
     twitch = await Twitch(secret_file.get("twitchappid"), secret_file.get("twitchsecret"))
     streams_dict = {}
@@ -142,7 +144,12 @@ def run_discord_bot():
     intents2 = discord.Intents.default()
     intents2.message_content = True
     client2 = discord.Client(intents=intents)
-
+    
+    mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
+    mm_choices = []
+    for mm in mm_list:
+        mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
+    
     @tree.command(name= "elo", description= "Shows rank, elo and playtime.")
     @app_commands.describe(playername='Enter the playername.')
     async def elo(interaction: discord.Interaction, playername: str):
@@ -272,14 +279,12 @@ def run_discord_bot():
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                option = option.value
-            except AttributeError:
-                pass
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
+            try: option = option.value
+            except AttributeError: pass
+            try: sort = sort.value
+            except AttributeError: pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_wave1tendency, playername, option, games, min_elo, patch, sort))
                 pool.shutdown()
@@ -305,14 +310,12 @@ def run_discord_bot():
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                option = option.value
-            except AttributeError:
-                pass
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
+            try: option = option.value
+            except AttributeError: pass
+            try: sort = sort.value
+            except AttributeError: pass
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_elcringo, playername, games, patch, min_elo, option, sort = sort))
                 pool.shutdown()
@@ -327,12 +330,7 @@ def run_discord_bot():
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            mastermind= 'Select a Mastermind for specific stats, or All for a general overview.', sort="Sort by?")
-    @app_commands.choices(mastermind=[
-        discord.app_commands.Choice(name='All', value="All"),
-        discord.app_commands.Choice(name='Fiesta', value="Fiesta"),
-        discord.app_commands.Choice(name='Megamind', value="Megamind"),
-        discord.app_commands.Choice(name='Champion', value="Champion")
-    ])
+    @app_commands.choices(mastermind=mm_choices)
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
@@ -341,14 +339,12 @@ def run_discord_bot():
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                mastermind = mastermind.value
-            except AttributeError:
-                pass
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
+            try: mastermind = mastermind.value
+            except AttributeError: pass
+            try: sort = sort.value
+            except AttributeError: pass
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort = sort))
                 pool.shutdown()
@@ -372,10 +368,10 @@ def run_discord_bot():
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
+            try: sort = sort.value
+            except AttributeError: pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_openstats, str(playername).lower(), games, min_elo, patch, sort = sort, unit= unit))
                 pool.shutdown()
@@ -394,18 +390,21 @@ def run_discord_bot():
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            sort="Sort by?")
+    @app_commands.choices(mastermind=mm_choices)
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def jules(interaction: discord.Interaction, playername: str, unit: str, mastermind: str="all", spell: str="all", games: int = 0, min_elo: int = 0, patch: str = current_season, sort: discord.app_commands.Choice[str] = "date"):
+    async def jules(interaction: discord.Interaction, playername: str, unit: str, mastermind: discord.app_commands.Choice[str] = "all", spell: str = "all", games: int = 0, min_elo: int = 0, patch: str = current_season, sort: discord.app_commands.Choice[str] = "date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
+            try: sort = sort.value
+            except AttributeError: pass
+            try: mastermind = mastermind.value
+            except AttributeError: pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_jules, str(playername).lower(), unit, games, min_elo, patch, sort=sort, mastermind=mastermind, spell=spell))
                 pool.shutdown()
@@ -429,10 +428,10 @@ def run_discord_bot():
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
+            try: sort = sort.value
+            except AttributeError: pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_spellstats, str(playername).lower(), games, min_elo, patch, sort=sort, spellname=spell))
                 pool.shutdown()
@@ -644,7 +643,10 @@ def run_discord_bot():
     async def on_message(message):
         if '!' in message.content:
             if "!sync" == message.content and "drachir_" == str(message.author):
-                print(await tree.sync(guild=None))
+                try:
+                    print(await tree.sync(guild=None))
+                except Exception:
+                    traceback.print_exc()
             username = str(message.author)
             user_message = str(message.content)
             channel = str(message.channel)
