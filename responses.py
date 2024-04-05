@@ -287,7 +287,10 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
         try:
             data = Counter(dict[mm]['Opener'])
             data2 = Counter(dict[mm]['Spell'])
-            return [data.most_common(1)[0][0], data2.most_common(1)[0][0]]
+            if data2.most_common(2)[0][0] == "none":
+                return [data.most_common(2)[0][0], data2.most_common(2)[1][0]]
+            else:
+                return [data.most_common(2)[0][0], data2.most_common(2)[0][0]]
         except IndexError as e:
             return 'No data'
     def get_open_wrpr(dict, mm):
@@ -904,7 +907,7 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
             return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1)]
         except ZeroDivisionError as e:
             return '000'
-    keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spells:','', 'Games:', 'Winrate:', 'Playrate:']
+    keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:','', 'Games:', 'Winrate:', 'Playrate:']
     url = 'https://cdn.legiontd2.com/icons/Items/'
     url2 = 'https://cdn.legiontd2.com/icons/'
     if transparency:
@@ -933,9 +936,9 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
     I1.text((82, 10), str(playername) + suffix + " "+mastermind+" stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
     try:
-        I1.text((10, 80), "Games: "+str(dict[mastermind]["Count"])+" Wins: "+str(dict[mastermind]["Wins"])+" Losses: "+str(dict[mastermind]["Count"]-dict[mastermind]["Wins"])+" Winrate: "+str(round(dict[mastermind]["Wins"]/dict[mastermind]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: "+str(dict[mastermind]["Count"])+", Wins: "+str(dict[mastermind]["Wins"])+", Losses: "+str(dict[mastermind]["Count"]-dict[mastermind]["Wins"])+", Winrate: "+str(round(dict[mastermind]["Wins"]/dict[mastermind]["Count"]*100,1))+"%" + ", W10: "+str(get_w10(dict, mastermind)), font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[mastermind]["Count"]) + " Wins: " + str(dict[mastermind]["Wins"]) + " Losses: " + str(dict[mastermind]["Count"] - dict[mastermind]["Wins"]) + " Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[mastermind]["Count"]) + ", Wins: " + str(dict[mastermind]["Wins"]) + ", Losses: " + str(dict[mastermind]["Count"] - dict[mastermind]["Wins"]) + ", Winrate: " + str(0) + "%" + ", W10: "+str(get_w10(dict, mastermind)), font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 175-46
     offset = 45
@@ -974,20 +977,19 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
         I1.text((x, y + 95 + offset * 6), str(get_spell_wrpr(dict, mastermind, spell[0])[2]) + '%',font=myFont, fill=(255, 255, 255))
         x += 106
     for k in keys:
-        if (k != 'Open:') and (k != '') and (k != 'Spells:'):
+        if (k != 'Open:') and (k != '') and (k != 'Spell:'):
             im.paste(im3, (10, y+30))
-        if k == 'Spells:':
+        if k == 'Spell:':
             I1.text((10, y-5), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
         else:
             I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        if (k != 'Open:') and (k != '') and (k != 'Spells:'):
+        if (k != 'Open:') and (k != '') and (k != 'Spell:'):
             y += offset
         else:
             y += offset - 10
-    im.show()
-    #image_id = id_generator()
-    #im.save(shared_folder + image_id + '.png')
-    #return site + image_id + '.png'
+    image_id = id_generator()
+    im.save(shared_folder + image_id + '.png')
+    return site + image_id + '.png'
 
 def create_image_openstats(dict, games, playerid, avgelo, patch, transparency = False, unit_name = "all"):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -3225,7 +3227,7 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
             if spell in slang:
                 spell = slang.get(spell)
             if spell not in spell_list:
-                return spellname + " not found."
+                return spell + " not found."
     unit_list = []
     with open('Files/units.json', 'r') as f:
         units_json = json.load(f)
@@ -3275,7 +3277,9 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
     gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
     spells = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
     fighters = list(divide_chunks(extract_values(history_raw, 'fighters')[1], 4))
+    buildPerWave = list(divide_chunks(extract_values(history_raw, 'buildPerWave')[1], 4))
     playerelos = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
+    chosenSpellLocation = list(divide_chunks(extract_values(history_raw, 'chosenSpellLocation')[1], 4))
     gameelo = extract_values(history_raw, 'gameElo')
     patches = extract_values(history_raw, 'version')
     gameid = extract_values(history_raw, '_id')
@@ -3283,6 +3287,7 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
     new_patches = []
     gameelo_list = []
     playerelo_list = []
+    excluded_buffs = ["hero", "vampire", "magician", "protector"]
     count = 0
     occurrence_count = 0
     win_count = 0
@@ -3300,24 +3305,33 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
         spells_ranked = spells[count]
         fighters_ranked = fighters[count]
         playerelos_ranked = playerelos[count]
+        chosenSpellLocation_ranked = chosenSpellLocation[count]
+        buildPerWave_ranked = buildPerWave[count]
         gameelo_list.append(gameelo[1][count])
         for i, x in enumerate(playerids_ranked):
             if x == playerid or playerid == "all":
                 expected = len(unit)
                 current = 0
+                fighter_list = fighters_ranked[i].lower()
                 if mastermind != "all":
                     expected += 1
-                if spell != "all":
-                    expected += 1
-                fighter_list = fighters_ranked[i].lower()
-                for un in unit:
-                    if un.lower() in fighter_list:
+                    if mastermind == masterminds_ranked[i]:
                         current += 1
-                if mastermind == masterminds_ranked[i]:
-                    current += 1
-                if spell.lower() == spells_ranked[i].lower():
-                    spell = spells_ranked[i]
-                    current += 1
+                if spell != "all" and chosenSpellLocation_ranked[i] != "-1|-1" and spell.lower() == spells_ranked[i].lower() and spell.lower() not in excluded_buffs:
+                    expected += 1
+                    for pos in buildPerWave_ranked[i][-1]:
+                        if pos.split(":")[1] == chosenSpellLocation_ranked[i] and pos.split(":")[0].replace("_unit_id", "").replace("_", " ") in unit:
+                            spell = spells_ranked[i]
+                            current += 2
+                else:
+                    if spell != "all":
+                        expected += 1
+                        if spell.lower() == spells_ranked[i].lower():
+                            spell = spells_ranked[i]
+                            current += 1
+                    for un in unit:
+                        if un.lower() in fighter_list:
+                            current += 1
                 if current == expected:
                     occurrence_count += 1
                     playerelo_list.append(playerelos_ranked[i])
@@ -3325,7 +3339,7 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
                         win_count += 1
         count += 1
     if occurrence_count == 0:
-        return "No occurances found."
+        return "No occurences found."
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     mode = 'RGB'
     colors = (49, 51, 56)
@@ -3369,7 +3383,7 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
         i += 1
         I1.text((offset * (i + 1) - 5, 100), "+", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
         im.paste(get_icons_image("icon", spell), (10 + offset * (i + 1), 80))
-    I1.text((10, 160), 'Games: ' + str(occurrence_count) + 'Win: '+str(win_count)+' Lose: '+str(occurrence_count-win_count), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((10, 160), 'Games: ' + str(occurrence_count) + ', Win: '+str(win_count)+', Lose: '+str(occurrence_count-win_count), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     if round(win_count/occurrence_count*100,1) < 50:
         wr_rgb = (255,0,0)
     else: wr_rgb = (0,255,0)
@@ -3571,7 +3585,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": [], "Results": [], "Opener": [], "Spell": [], "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
     gameelo_list = []
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -3641,11 +3655,16 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
                         if megamind != 'N/A' and megamind_ranked[i] == True:
                             mastermind_current = 'Megamind'
                         else:
+                            if masterminds_ranked[i] == "Mastermind":
+                                continue
                             mastermind_current = masterminds_ranked[i]
                         masterminds_dict[mastermind_current]["Count"] += 1
                         if gameresult_ranked[i] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
-                        masterminds_dict[mastermind_current]["W10"].append(workers_ranked[i][9])
+                        try:
+                            masterminds_dict[mastermind_current]["W10"].append(workers_ranked[i][9])
+                        except IndexError:
+                            pass
                         masterminds_dict[mastermind_current]['Results'].append(gameresult_ranked[i])
                         masterminds_dict[mastermind_current]['Spell'].append(spell_ranked[i])
                         masterminds_dict[mastermind_current]['Elo'] += elo_ranked[i]
@@ -3662,7 +3681,10 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
                         masterminds_dict[mastermind_current]["Count"] += 1
                         if gameresult_ranked[i] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
-                        masterminds_dict[mastermind_current]["W10"].append(workers_ranked[i][9])
+                        try:
+                            masterminds_dict[mastermind_current]["W10"].append(workers_ranked[i][9])
+                        except IndexError:
+                            pass
                         masterminds_dict[mastermind_current]['Results'].append(gameresult_ranked[i])
                         masterminds_dict[mastermind_current]['Spell'].append(spell_ranked[i])
                         masterminds_dict[mastermind_current]['Elo'] += elo_ranked[i]
@@ -3712,7 +3734,10 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
                                 masterminds_dict[masterminds_ranked[i]]["Count"] += 1
                                 if gameresult_ranked[i] == 'won':
                                     masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                                masterminds_dict[masterminds_ranked[i]]["W10"].append(workers_ranked[i][9])
+                                try:
+                                    masterminds_dict[masterminds_ranked[i]]["W10"].append(workers_ranked[i][9])
+                                except IndexError:
+                                    pass
                                 masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
                                 masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
                                 masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
@@ -3761,14 +3786,20 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
                                                 masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["Wins"] += 1
                                             masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Spell'].append(spell_ranked[i])
                                             masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Results'].append(gameresult_ranked[i])
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["W10"] += workers_ranked[i][9]
+                                            try:
+                                                masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["W10"] += workers_ranked[i][9]
+                                            except IndexError:
+                                                pass
                                         else:
                                             masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name] = {"Count": 1, "Wins": 0, "Spell": [], "W10": 0, "Results": []}
                                             if gameresult_ranked[i] == 'won':
                                                 masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["Wins"] += 1
                                             masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Spell'].append(spell_ranked[i])
                                             masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Results'].append(gameresult_ranked[i])
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["W10"] += workers_ranked[i][9]
+                                            try:
+                                                masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["W10"] += workers_ranked[i][9]
+                                            except IndexError:
+                                                pass
                                         champ_found = True
         count += 1
     if mastermind == 'Champion':
