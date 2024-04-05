@@ -27,6 +27,7 @@ import concurrent.futures
 import functools
 import string
 import random
+import time
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -104,17 +105,6 @@ def calc_leak(leak, wave):
         else:
             leak_amount += mercs.get(x)[1]
     return round(leak_amount / wave_total * 100, 1)
-
-def count_elochange(playername, player_names, data):
-    value_count = 0
-    for i in range(len(player_names[1])):
-        if str(player_names[1][i]).lower() == playername:
-            value_count = value_count + data[1][i]
-    return value_count
-
-def divide_chunks(l, n):
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
 
 def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
@@ -328,8 +318,6 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
         except ZeroDivisionError as e:
             return '0'
     keys = ['Games:', 'Winrate:', 'Pickrate', 'Elo:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:','Spells:', '', 'Games:', 'Winrate:', 'Playrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
     if transparency:
         mode = 'RGBA'
         colors = (0,0,0,0)
@@ -351,9 +339,7 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
         string = ''
     else:
         string = "'s"
-        avatar_url = 'https://cdn.legiontd2.com/' + avatar
-        avatar_response = requests.get(avatar_url)
-        av_image = Image.open(BytesIO(avatar_response.content))
+        av_image = get_icons_image("avatar", avatar)
         gold_border = Image.open('Files/gold_64.png')
         if im_has_alpha(np.array(av_image)):
             im.paste(av_image, (24, 100), mask=av_image)
@@ -369,9 +355,7 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
     y = 190
     for i in dict:
         im.paste(im2, (x-12, 100))
-        url_new = url + i + '.png'
-        response = requests.get(url_new)
-        mm_image = Image.open(BytesIO(response.content))
+        mm_image = get_icons_image("legion", i)
         im.paste(mm_image, (x, 112))
         I1.text((x, 190), str(dict[i]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, 240), str(calc_wr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
@@ -384,21 +368,9 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
         I1.text((x, 750), str(get_spell_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
         I1.text((x, 800), str(get_spell_wrpr(dict, i)[1]) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, 850), str(get_spell_wrpr(dict, i)[2]) + '%', font=myFont, fill=(255, 255, 255))
-        url_new = url2 + str(most_common(dict, i)[0]).replace(' ', '') + '.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/N.png':
-            url_new = 'https://cdn.legiontd2.com/icons/Secret/SadHopper.png'
-        response = requests.get(url_new)
-        unit_image = Image.open(BytesIO(response.content))
+        unit_image = get_icons_image("icon", most_common(dict, i)[0])
         im.paste(unit_image, (x, 440))
-        url_new = url2 + str(most_common(dict, i)[1]).replace(' ', '') + '.png'
-        if 'none' in url_new:
-            url_new = 'https://cdn.legiontd2.com/icons/Granddaddy.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/PresstheAttack.png':
-            url_new = 'https://cdn.legiontd2.com/icons/PressTheAttack.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/o.png':
-            url_new = 'https://cdn.legiontd2.com/icons/Secret/HermitHas0Friends.png'
-        response = requests.get(url_new)
-        spell_image = Image.open(BytesIO(response.content))
+        spell_image = get_icons_image("icon", most_common(dict, i)[1])
         im.paste(spell_image, (x, 670))
         x += 106
     for k in keys:
@@ -1537,24 +1509,6 @@ def create_image_spellstats_specific(dict, games, playerid, avgelo, patch, trans
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
 
-def extract_values(obj, key):
-    arr = []
-
-    def extract(obj, arr, key):
-        if isinstance(obj, dict):
-            for k, v in obj.items():
-                if k == key:
-                    arr.append(v)
-                elif isinstance(v, (dict, list)):
-                    extract(v, arr, key)
-        elif isinstance(obj, list):
-            for item in obj:
-                extract(item, arr, key)
-        return key + ":", arr
-
-    results = extract(obj, arr, key)
-    return results
-
 def count_value(playername, value, player_names, data):
     value_count = 0
     for i in range(len(player_names[1])):
@@ -1883,26 +1837,31 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             elif sort_by == "elo":
                 sorted_json_files = sorted(json_files, key=lambda x: x.split("_")[-2], reverse=True)
         count = 0
-        if games == 0 and len(sorted_json_files) > 30000 or games > 10000:
-            return "Too many games, please limit the data."
+        ids = []
         for i, x in enumerate(sorted_json_files):
             if count == games and games != 0:
                 break
             with open(x) as f:
                 raw_data_partial = json.load(f)
+                if raw_data_partial['_id'] not in ids:
+                    ids.append(raw_data_partial['_id'])
+                else:
+                    continue
                 f.close()
                 # print(x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
                 # os.rename(x, x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
-                if (raw_data_partial not in raw_data):
-                    if earlier_than_wave10 == True:
-                        count += 1
-                        raw_data.append(raw_data_partial)
-                    elif raw_data_partial['endingWave'] > 10 and earlier_than_wave10 == False:
-                        count += 1
-                        raw_data.append(raw_data_partial)
+                if earlier_than_wave10 == True:
+                    count += 1
+                    raw_data.append(raw_data_partial)
+                elif raw_data_partial['endingWave'] > 10 and earlier_than_wave10 == False:
+                    count += 1
+                    raw_data.append(raw_data_partial)
     if update == 0:
         print(len(raw_data))
-        return raw_data
+        if len(raw_data) > 15000:
+            return "Too many games, please limit the data."
+        else:
+            return raw_data
     else:
         if new_profile:
             return data
@@ -1965,18 +1924,7 @@ def pull_games_by_id(file, name):
 def apicall_matchhistorydetails(playerid):
     playername = apicall_getprofile(playerid)['playerName']
     history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
-    player_names = extract_values(history_raw, 'playerName')
-    game_results = extract_values(history_raw, 'gameResult')
-    wins = count_value(str(playername).lower(), 'won', player_names, game_results)
-    elochanges = extract_values(history_raw, 'eloChange')
-    elochange_final = count_elochange(str(playername).lower(), player_names, elochanges)
-    output = []
-    if elochange_final > 0:
-        output.append('+' + str(elochange_final))
-    else:
-        output.append(elochange_final)
-    output.append(wins)
-    return output
+    return
 
 def apicall_leaderboard(ranks=10, transparency=False):
     url = 'https://apiv2.legiontd2.com/players/stats?limit=' + str(ranks) + '&sortBy=overallElo&sortDirection=-1'
@@ -2083,14 +2031,16 @@ def apicall_elograph(playername, games, patch, transparency = False):
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
-    elo = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
-    elo_change = list(divide_chunks(extract_values(history_raw, 'eloChange')[1], 4))
-    gameid = extract_values(history_raw, '_id')
-    date = extract_values(history_raw, 'date')
-    gametime = extract_values(history_raw, 'gameLength')
-    patches = extract_values(history_raw, 'version')[1]
+    patches = []
+    elo_per_game = []
+    date_per_game = []
+    for game in history_raw:
+        for player in game["playersData"]:
+            if player["playerId"] == playerid:
+                patches.append(game["version"])
+                elo_per_game.insert(0, player["overallElo"]+player["eloChange"])
+                date_this = game["date"].replace("T", "-").replace(":", "-").split(".")[0]
+                date_per_game.insert(0, datetime.strptime(date_this, "%Y-%m-%d-%H-%M-%S").strftime("%d/%m/%y"))
     new_patches = []
     for x in patches:
         string = x
@@ -2098,19 +2048,6 @@ def apicall_elograph(playername, games, patch, transparency = False):
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    count = 0
-    elo_per_game = []
-    date_per_game = []
-    while count < games:
-        playerids_ranked = playerids[count]
-        elo_ranked = elo[count]
-        elo_change_ranked = elo_change[count]
-        for i, x in enumerate(playerids_ranked):
-            if x == playerid:
-                elo_per_game.insert(0, elo_ranked[i]+elo_change_ranked[i])
-                date_this = date[1][count].replace("T", "-").replace(":", "-").split(".")[0]
-                date_per_game.insert(0, datetime.strptime(date_this, "%Y-%m-%d-%H-%M-%S").strftime("%d/%m/%y"))
-        count += 1
     #Image generation
     x = 126
     y = 160
@@ -2185,7 +2122,7 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
         playerids.add(playerid)
     players_dict = dict()
     print("Starting stats graph command...")
-    patch_list = []
+    patches = []
     for j, id in enumerate(playerids):
         history_raw = apicall_getmatchistory(id, games, min_elo, patch, sort_by=sort)
         if type(history_raw) == str:
@@ -2194,27 +2131,14 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
         total_games += games2
         if games2 == 0:
             return 'No games found for ' + playernames[j] + "."
-        playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-        match key:
-            case "Fighter Value":
-                data = list(divide_chunks(extract_values(history_raw, 'valuePerWave')[1], 4))
-            case "Workers":
-                data = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-            case "Income":
-                data = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
-        gameid = extract_values(history_raw, '_id')
-        patch_list.extend(extract_values(history_raw, 'version')[1])
-        count = 0
-        while count < games2:
-            playerids_ranked = playerids[count]
-            data_ranked = data[count]
-            for i, x in enumerate(playerids_ranked):
-                if x == id or id == "all":
+        for game in history_raw:
+            patches.append(game["version"])
+            for player in game["playersData"]:
+                if player["playerId"] == id or id == "all":
                     if id in players_dict:
-                        players_dict[id]["Data"].append(data_ranked[i])
+                        players_dict[id]["Data"].append(player[key])
                     else:
-                        players_dict[id] = {"Data": [data_ranked[i]]}
-            count += 1
+                        players_dict[id] = {"Data": [player[key]]}
     for player in players_dict:
         players_dict[player]["Waves"] = []
         for w in range(21):
@@ -2229,7 +2153,6 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
                 players_dict[player]["FinalData"].append(round(wave[1]/wave[0], 1))
         del players_dict[player]["Data"]
         del players_dict[player]["Waves"]
-    patches = list(dict.fromkeys(patch_list))
     new_patches = []
     count = 0
     for x in patches:
@@ -2237,6 +2160,7 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     #Image generation
     x = 126
     y = 160
@@ -2323,99 +2247,83 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         return 'No games found.'
     if 'nova cup' in playerid:
         playerid = 'all'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    sends = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
-    kingups = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
-    gameresults = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
-    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-    endingwaves = extract_values(history_raw, 'endingWave')
-    patches = extract_values(history_raw, 'version')
-    game_ids = extract_values(history_raw, '_id')
-    gameelo = extract_values(history_raw, 'gameElo')
     gameelo_list = []
-    patches2 = list(dict.fromkeys(patches[1]))
-    new_patches = []
-    for x in patches2:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches2 = list(dict.fromkeys(new_patches))
-    patches2 = sorted(patches2, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    patches = []
     print('starting sendstats command...')
-    count = 0
     send_count = 0
     game_count = 0
     sends_dict = {}
-    while count < games:
-        playerids_ranked = playerids[count]
-        sends_ranked = sends[count]
-        endingwave_ranked = endingwaves[1][count]
-        kingups_ranked = kingups[count]
-        gameresults_ranked = gameresults[count]
-        workers_ranked = workers[count]
-        for i, x in enumerate(playerids_ranked):
-            if playerid == 'all' or x == playerid:
+    for game in history_raw:
+        for player in game["playersData"]:
+            if player["playerId"] == playerid or playerid == 'all':
+                patches.append(game["version"])
                 save_on_1 = False
-                if endingwave_ranked < starting_wave+1:
+                if game["endingWave"] < starting_wave+1:
                     continue
                 else:
                     game_count += 1
-                    gameelo_list.append(gameelo[1][count])
+                    gameelo_list.append(game["gameElo"])
                 if starting_wave != -1:
-                    if len(sends_ranked[i][starting_wave]) == 0 and len(kingups_ranked[i][starting_wave]) == 0:
+                    if len(player["mercenariesSentPerWave"][starting_wave]) == 0 and len(player["kingUpgradesPerWave"][starting_wave]) == 0:
                         continue
                 elif starting_wave == -1:
-                    if len(sends_ranked[i][0]) == 0 and len(kingups_ranked[i][0]) == 0:
+                    if len(player["mercenariesSentPerWave"][0]) == 0 and len(player["kingUpgradesPerWave"][0]) == 0:
                         save_on_1 = True
                     else:
                         continue
-                send = count_mythium(sends_ranked[i][starting_wave]) + len(kingups_ranked[i][starting_wave]) * 20
-                small_send = (workers_ranked[i][starting_wave] - 5) / 4 * 20
+                send = count_mythium(player["mercenariesSentPerWave"][starting_wave]) + len(player["kingUpgradesPerWave"][starting_wave]) * 20
+                small_send = (player["workersPerWave"][starting_wave] - 5) / 4 * 20
                 if (save_on_1 == False) and (send > small_send):
                     send_count += 1
                     if "Wave " + str(starting_wave + 1) in sends_dict:
                         sends_dict["Wave " + str(starting_wave+1)]["Count"] += 1
-                        sends_dict["Wave " + str(starting_wave+1)]["Sends"].extend(sends_ranked[i][starting_wave])
-                        if len(kingups_ranked[i][starting_wave]) > 0:
-                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(kingups_ranked[i][starting_wave])
+                        sends_dict["Wave " + str(starting_wave+1)]["Sends"].extend(player["mercenariesSentPerWave"][starting_wave])
+                        if len(player["kingUpgradesPerWave"][starting_wave]) > 0:
+                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave])
                     else:
-                        sends_dict["Wave " + str(starting_wave+1)] = {"Count": 1, "Sends": sends_ranked[i][starting_wave]}
-                        if len(kingups_ranked[i][starting_wave]) > 0:
-                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(kingups_ranked[i][starting_wave])
-                    for n in range(endingwave_ranked-starting_wave-1):
+                        sends_dict["Wave " + str(starting_wave+1)] = {"Count": 1, "Sends": player["mercenariesSentPerWave"][starting_wave]}
+                        if len(player["kingUpgradesPerWave"][starting_wave]) > 0:
+                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave])
+                    for n in range(game["endingWave"]-starting_wave-1):
                         try:
-                            send2 = count_mythium(sends_ranked[i][starting_wave+n+1]) + len(kingups_ranked[i][starting_wave+n+1]) * 20
+                            send2 = count_mythium(player["mercenariesSentPerWave"][starting_wave+n+1]) + len(player["kingUpgradesPerWave"][starting_wave+n+1]) * 20
                         except IndexError:
                             break
-                        small_send2 = (workers_ranked[i][starting_wave + n + 1] - 5) / 4 * 20
+                        small_send2 = (player["workersPerWave"][starting_wave+n+1] - 5) / 4 * 20
                         if send2 > small_send2:
                             if "Wave " + str(starting_wave+n+2) in sends_dict:
                                 sends_dict["Wave " + str(starting_wave+n+2)]["Count"] += 1
-                                sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(sends_ranked[i][starting_wave+n+1])
-                                if len(kingups_ranked[i][starting_wave+n+1]) > 0:
-                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(kingups_ranked[i][starting_wave+n+1])
+                                sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(player["mercenariesSentPerWave"][starting_wave+n+1])
+                                if len(player["kingUpgradesPerWave"][starting_wave+n+1]) > 0:
+                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave+n+1])
                                 break
                             else:
-                                sends_dict["Wave " + str(starting_wave+n+2)] = {"Count": 1, "Sends": sends_ranked[i][starting_wave+n+1]}
-                                if len(kingups_ranked[i][starting_wave+n+1]) > 0:
-                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(kingups_ranked[i][starting_wave+n+1])
+                                sends_dict["Wave " + str(starting_wave+n+2)] = {"Count": 1, "Sends": player["mercenariesSentPerWave"][starting_wave+n+1]}
+                                if len(player["kingUpgradesPerWave"][starting_wave+n+1]) > 0:
+                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave+n+1])
                                 break
                 elif save_on_1 == True:
                     send_count += 1
-                    for n in range(endingwave_ranked-1):
-                        if len(sends_ranked[i][n+1]) > 0 or len(kingups_ranked[i][n+1]) > 0:
+                    for n in range(game["endingWave"]-1):
+                        if len(player["mercenariesSentPerWave"][n+1]) > 0 or len(player["kingUpgradesPerWave"][n+1]) > 0:
                             if "Wave " + str(n+2) in sends_dict:
                                 sends_dict["Wave " + str(n+2)]["Count"] += 1
-                                sends_dict["Wave " + str(n+2)]["Sends"].extend(sends_ranked[i][n+1])
-                                if len(kingups_ranked[i][n+1]) > 0:
-                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(kingups_ranked[i][n+1])
+                                sends_dict["Wave " + str(n+2)]["Sends"].extend(player["mercenariesSentPerWave"][n+1])
+                                if len(player["kingUpgradesPerWave"][n+1]) > 0:
+                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(player["kingUpgradesPerWave"][n+1])
                                 break
                             else:
-                                sends_dict["Wave " + str(n+2)] = {"Count": 1,"Sends": sends_ranked[i][n+1]}
-                                if len(kingups_ranked[i][n+1]) > 0:
-                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(kingups_ranked[i][n+1])
+                                sends_dict["Wave " + str(n+2)] = {"Count": 1,"Sends": player["mercenariesSentPerWave"][n+1]}
+                                if len(player["kingUpgradesPerWave"][n+1]) > 0:
+                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(player["kingUpgradesPerWave"][n+1])
                                 break
-        count += 1
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     if not sends_dict:
         return "No Wave" + str(starting_wave+1) + " sends found."
     else:
@@ -2428,7 +2336,7 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         else:
             mode = 'RGB'
             colors = (49, 51, 56)
-        im = PIL.Image.new(mode=mode, size=(1300, 1100), color=colors)
+        im = PIL.Image.new(mode=mode, size=(1300, 1120), color=colors)
         im2 = PIL.Image.new(mode="RGB", size=(1300, 76), color=(25, 25, 25))
         I1 = ImageDraw.Draw(im)
         ttf = 'Files/RobotoCondensed-Regular.ttf'
@@ -2454,7 +2362,7 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         else:
             string_2 = "Wave 1 save"
         I1.text((80, 10), str(playername.capitalize()) + string + " " + string_2 + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avg_gameelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        I1.text((80, 50), 'Patches: ' + ', '.join(patches2), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+        I1.text((80, 50), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
         x = 400
         y = 100
         for wave in sends_dict:
@@ -2549,68 +2457,59 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
         return 'No games found.'
     if 'nova cup' in playerid:
         playerid = 'all'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    if option == 'send' or playerid == 'all':
-        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
-        kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
-    elif option == 'received':
-        snail = list(divide_chunks(extract_values(history_raw, 'mercenariesReceivedPerWave')[1], 4))
-        kingup = list(divide_chunks(extract_values(history_raw, 'opponentKingUpgradesPerWave')[1], 4))
-    leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
-    gameid = extract_values(history_raw, '_id')
-    gameelo = extract_values(history_raw, 'gameElo')
-    patches = extract_values(history_raw, 'version')
-    patches2 = list(dict.fromkeys(patches[1]))
-    new_patches = []
-    for x in patches2:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches2 = list(dict.fromkeys(new_patches))
-    patches2 = sorted(patches2, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    patches = []
     gameelo_list = []
-    while count < games:
-        playerids_ranked = playerids[count]
-        snail_ranked = snail[count]
-        kingup_ranked = kingup[count]
-        leaks_ranked = leaks[count]
-        gameelo_list.append(gameelo[1][count])
-        for i, x in enumerate(playerids_ranked):
-            if playerid == 'all' or x == playerid:
-                if len(snail_ranked[i][0]) > 0:
-                    if str(snail_ranked[i][0][0]) == 'Snail':
+    if option == "send":
+        option_key = "mercenariesSentPerWave"
+        option_key2 = "kingUpgradesPerWave"
+    else:
+        option_key = "mercenariesReceivedPerWave"
+        option_key2 = "opponentKingUpgradesPerWave"
+    for game in history_raw:
+        patches.append(game["version"])
+        gameelo_list.append(game["gameElo"])
+        for i, player in enumerate(game["playersData"]):
+            if player["playerId"] == playerid or playerid == 'all':
+                if len(player[option_key][0]) > 0:
+                    if player[option_key][0][0] == 'Snail':
                         snail_count = snail_count + 1
                         if option == 'send' and playerid != 'all':
                             if i == 0:
-                                if len(leaks_ranked[2][0]) != 0:
+                                if len(game["playersData"][2]["leaksPerWave"][0]) != 0:
                                     leaks_count += 1
                             if i == 1:
-                                if len(leaks_ranked[3][0]) != 0:
+                                if len(game["playersData"][3]["leaksPerWave"][0]) != 0:
                                     leaks_count += 1
                             if i == 2:
-                                if len(leaks_ranked[1][0]) != 0:
+                                if len(game["playersData"][1]["leaksPerWave"][0]) != 0:
                                     leaks_count += 1
                             if i == 3:
-                                if len(leaks_ranked[0][0]) != 0:
+                                if len(game["playersData"][0]["leaksPerWave"][0]) != 0:
                                     leaks_count += 1
                         if option == 'received' or playerid == 'all':
-                            if len(leaks_ranked[i][0]) != 0:
+                            if len(player["leaksPerWave"][0]) != 0:
                                 leaks_count += 1
                         continue
-                elif len(kingup_ranked[i][0]) > 0:
-                    if str(kingup_ranked[i][0][0]) == 'Upgrade King Attack':
+                elif len(player[option_key2][0]) > 0:
+                    if str(player[option_key2][0][0]) == 'Upgrade King Attack':
                         kingup_atk_count = kingup_atk_count + 1
                         continue
-                    if str(kingup_ranked[i][0][0]) == 'Upgrade King Regen':
+                    if str(player[option_key2][0][0]) == 'Upgrade King Regen':
                         kingup_regen_count = kingup_regen_count + 1
                         continue
-                    if str(kingup_ranked[i][0][0]) == 'Upgrade King Spell':
+                    if str(player[option_key2][0][0]) == 'Upgrade King Spell':
                         kingup_spell_count = kingup_spell_count + 1
                         continue
                 else:
                     save_count = save_count + 1
                     continue
-        count += 1
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
@@ -2621,7 +2520,7 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
             str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
             ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))'+\
             '\nSave: ' + str(save_count)) + ' | '  + str(round(save_count/send_total*100,1)) + '%\n' +\
-            'Patches: ' + ', '.join(patches2)
+            'Patches: ' + ', '.join(patches)
     else:
         return 'Not enough ranked data'
 
@@ -2672,7 +2571,6 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         return 'Player ' + playername2 + ' not found.'
     if playerid2 == 1:
         return 'API limit reached.'
-    count = 0
     win_count = 0
     game_count = 0
     queue_count = 0
@@ -2688,39 +2586,32 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
-    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
-    elo_change = list(divide_chunks(extract_values(history_raw, 'eloChange')[1], 4))
-    gameid = extract_values(history_raw, '_id')[1]
-    patches = extract_values(history_raw, 'version')[1]
-    gameelo = extract_values(history_raw, 'gameElo')
     gameelo_list = []
     patches_list = []
     all_dict = {}
     elo_change_list = []
-    while count < games:
-        gameresult_ranked_west = gameresult[count][0]
-        gameresult_ranked_east = gameresult[count][2]
-        playerids_ranked_west = [playerids[count][0], playerids[count][1]]
-        playerids_ranked_east = [playerids[count][2], playerids[count][3]]
-        masterminds_ranked_west = [masterminds[count][0], masterminds[count][1]]
-        masterminds_ranked_east = [masterminds[count][2], masterminds[count][3]]
-        elo_change_ranked_west = elo_change[count][0]
-        elo_change_ranked_east = elo_change[count][2]
-        gameelo_list.append(gameelo[1][count])
+    for game in history_raw:
+        gameresult_ranked_west = game["playersData"][0]["gameResult"]
+        gameresult_ranked_east = game["playersData"][2]["gameResult"]
+        playerids_ranked_west = [game["playersData"][0]["playerId"], game["playersData"][2]["playerId"]]
+        playerids_ranked_east = [game["playersData"][2]["playerId"], game["playersData"][3]["playerId"]]
+        masterminds_ranked_west = [game["playersData"][0]["legion"], game["playersData"][2]["legion"]]
+        masterminds_ranked_east = [game["playersData"][2]["legion"], game["playersData"][3]["legion"]]
+        elo_change_ranked_west = game["playersData"][0]["eloChange"]
+        elo_change_ranked_east = game["playersData"][2]["eloChange"]
+        gameelo_list.append(game["gameElo"])
         if (playerid2 != 'all') or (playerid2 == "all" and mm2 != "" and mm2 != "All") or (playerid2 == "all" and mm1 != "" and mm2 == ""):
             for i, x in enumerate(playerids_ranked_west):
                 if (x == playerid and (mm1 == masterminds_ranked_west[i] or mm1 == "")) or (playerid == "all" and x != playerid2 and (mm1 == masterminds_ranked_west[i] or mm1 == "")):
                     if option == 'against':
                         if (playerids_ranked_east[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[0] or mm2 == ""):
-                            patches_list.append(patches[count])
+                            patches_list.append(game["version"])
                             elo_change_list.append(elo_change_ranked_west)
                             game_count += 1
                             if gameresult_ranked_west == 'won':
                                 win_count += 1
                         elif (playerids_ranked_east[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[1] or mm2 == ""):
-                            patches_list.append(patches[count])
+                            patches_list.append(game["version"])
                             elo_change_list.append(elo_change_ranked_west)
                             game_count += 1
                             if gameresult_ranked_west == 'won':
@@ -2732,20 +2623,20 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                             teammate = 0
                         if type(playername) != list and type(playername2) != list and playername.lower() == playername2.lower():
                             if (playerids_ranked_west[0] == playerid2) and (mm2 == masterminds_ranked_west[0] or mm2 == ""):
-                                patches_list.append(patches[count])
+                                patches_list.append(game["version"])
                                 elo_change_list.append(elo_change_ranked_west)
                                 game_count += 1
                                 if gameresult_ranked_west == 'won':
                                     win_count += 1
                             elif (playerids_ranked_west[1] == playerid2) and (mm2 == masterminds_ranked_west[1] or mm2 == ""):
-                                patches_list.append(patches[count])
+                                patches_list.append(game["version"])
                                 elo_change_list.append(elo_change_ranked_west)
                                 game_count += 1
                                 if gameresult_ranked_west == 'won':
                                     win_count += 1
                         else:
                             if (playerids_ranked_west[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[teammate] or mm2 == ""):
-                                patches_list.append(patches[count])
+                                patches_list.append(game["version"])
                                 elo_change_list.append(elo_change_ranked_west)
                                 game_count += 1
                                 if gameresult_ranked_west == 'won':
@@ -2754,13 +2645,13 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                 if (x == playerid and (mm1 == masterminds_ranked_east[i] or mm1 == "")) or (playerid == "all" and x != playerid2 and (mm1 == masterminds_ranked_east[i] or mm1 == "")):
                     if option == 'against':
                         if (playerids_ranked_west[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[0] or mm2 == ""):
-                            patches_list.append(patches[count])
+                            patches_list.append(game["version"])
                             elo_change_list.append(elo_change_ranked_east)
                             game_count += 1
                             if gameresult_ranked_east == 'won':
                                 win_count += 1
                         elif (playerids_ranked_west[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[1] or mm2 == ""):
-                            patches_list.append(patches[count])
+                            patches_list.append(game["version"])
                             elo_change_list.append(elo_change_ranked_east)
                             game_count += 1
                             if gameresult_ranked_east == 'won':
@@ -2772,26 +2663,26 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                             teammate = 0
                         if type(playername) != list and type(playername2) != list and playername.lower() == playername2.lower():
                             if (playerids_ranked_east[0] == playerid2) and (mm2 == masterminds_ranked_east[0] or mm2 == ""):
-                                patches_list.append(patches[count])
+                                patches_list.append(game["version"])
                                 elo_change_list.append(elo_change_ranked_east)
                                 game_count += 1
                                 if gameresult_ranked_east == 'won':
                                     win_count += 1
                             elif (playerids_ranked_east[1] == playerid2) and (mm2 == masterminds_ranked_east[1] or mm2 == ""):
-                                patches_list.append(patches[count])
+                                patches_list.append(game["version"])
                                 elo_change_list.append(elo_change_ranked_east)
                                 game_count += 1
                                 if gameresult_ranked_east == 'won':
                                     win_count += 1
                         else:
                             if (playerids_ranked_east[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[teammate] or mm2 == ""):
-                                patches_list.append(patches[count])
+                                patches_list.append(game["version"])
                                 elo_change_list.append(elo_change_ranked_east)
                                 game_count += 1
                                 if gameresult_ranked_east == 'won':
                                     win_count += 1
         elif playerid != "all" and playerid2 == "all" and mm1 == "" and mm2 == "":
-            patches_list.append(patches[count])
+            patches_list.append(game["version"])
             for i, x in enumerate(playerids_ranked_west):
                 if x == playerid:
                     if option == 'against':
@@ -2877,7 +2768,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[1]]["Wins"] += 1
         else:
-            patches_list.append(patches[count])
+            patches_list.append(game["version"])
             for i, x in enumerate(playerids_ranked_west):
                 if x == playerid and (masterminds_ranked_west[i] == mm1 or mm1 == "" or mm1 == "All"):
                     if option == 'against':
@@ -2966,7 +2857,6 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                                 all_dict[masterminds_ranked_east[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east}
                                 if gameresult_ranked_east == "won":
                                     all_dict[masterminds_ranked_east[1]]["Wins"] += 1
-        count += 1
     patches = list(dict.fromkeys(patches_list))
     new_patches = []
     for x in patches:
@@ -3062,6 +2952,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     kinghp_enemy_list = []
     leaks_list = []
     leaks_pre10_list = []
+    gameelo_list = []
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
@@ -3074,56 +2965,31 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         return 'No games found.'
     if 'nova cup' in playerid:
         playerid = 'all'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    endingwaves = extract_values(history_raw, 'endingWave')
-    snail = list(divide_chunks(extract_values(history_raw, 'mercenariesSentPerWave')[1], 4))
-    kingup = list(divide_chunks(extract_values(history_raw, 'kingUpgradesPerWave')[1], 4))
-    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-    income = list(divide_chunks(extract_values(history_raw, 'incomePerWave')[1], 4))
-    leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
-    kinghp_left = extract_values(history_raw, 'leftKingPercentHp')
-    kinghp_right = extract_values(history_raw, 'rightKingPercentHp')
-    gameid = extract_values(history_raw, '_id')
-    gameelo = extract_values(history_raw, 'gameElo')
-    gameelo_list = []
-    patches = extract_values(history_raw, 'version')
-    patches2 = list(dict.fromkeys(patches[1]))
-    new_patches = []
-    for x in patches2:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches2 = list(dict.fromkeys(new_patches))
-    patches2 = sorted(patches2, key=lambda x: int(x.split(".")[0]+x.split(".")[1]), reverse=True)
+    patches = []
     print('starting elcringo command...')
-    while count < games:
-        ending_wave_list.append(endingwaves[1][count])
-        playerids_ranked = playerids[count]
-        snail_ranked = snail[count]
-        kingup_ranked = kingup[count]
-        workers_ranked = workers[count]
-        income_ranked = income[count]
-        leaks_ranked = leaks[count]
+    for game in history_raw:
+        patches.append(game["version"])
+        ending_wave_list.append(game["endingWave"])
+        gameelo_list.append(game["gameElo"])
         mythium_list_pergame.clear()
-        gameelo_list.append(gameelo[1][count])
-        for i, x in enumerate(playerids_ranked):
-            if x == playerid or playerid == 'all':
-                for n, s in enumerate(snail_ranked[i]):
+        for i, player in enumerate(game["playersData"]):
+            if player["playerId"] == playerid or playerid == 'all':
+                for n, s in enumerate(player["mercenariesSentPerWave"]):
                     small_send = 0
-                    send = count_mythium(snail_ranked[i][n]) + len(kingup_ranked[i][n]) * 20
+                    send = count_mythium(player["mercenariesSentPerWave"][n]) + len(player["kingUpgradesPerWave"][n]) * 20
                     mythium_list_pergame.append(send)
                     if n <= 9:
-                        if workers_ranked[i][n] > 5:
-                            small_send = (workers_ranked[i][n] - 5) / 4 * 20
+                        if player["workersPerWave"][n] > 5:
+                            small_send = (player["workersPerWave"][n] - 5) / 4 * 20
                         if send <= small_send and option == "Yes":
                             save_count_pre10 += 1
                         elif send == 0 and option == "No":
                             save_count_pre10 += 1
                     elif n > 9:
-                        if patches[1][count].startswith('v11') or patches[1][count].startswith('v9'):
-                            worker_adjusted = workers_ranked[i][n]
-                        elif patches[1][count].startswith('v10'):
-                            worker_adjusted = workers_ranked[i][n] * (pow((1 + 6 / 100), n+1))
+                        if game["version"].startswith('v11') or game["version"].startswith('v9'):
+                            worker_adjusted = player["workersPerWave"][n]
+                        elif game["version"].startswith('v10'):
+                            worker_adjusted = player["workersPerWave"][n] * (pow((1 + 6 / 100), n+1))
                         small_send = worker_adjusted / 4 * 20
                         if send <= small_send and option == "Yes":
                             save_count += 1
@@ -3137,27 +3003,27 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
                         break
                 mythium_pre10_list.append(mythium_pre10)
                 try:
-                    worker_10_list.append(workers_ranked[i][9])
-                    income_10_list.append(income_ranked[i][9])
+                    worker_10_list.append(player["workersPerWave"][9])
+                    income_10_list.append(player["incomePerWave"][9])
                 except Exception:
                     pass
                 leak_amount = 0
                 leak_pre10_amount = 0
-                for y in range(endingwaves[1][count]):
-                    if len(leaks_ranked[i][y]) > 0:
-                        p = calc_leak(leaks_ranked[i][y], y)
+                for y in range(game["endingWave"]):
+                    if len(player["leaksPerWave"][y]) > 0:
+                        p = calc_leak(player["leaksPerWave"][y], y)
                         leak_amount += p
                         if y < 10:
                             leak_pre10_amount += p
-                leaks_list.append(leak_amount/endingwaves[1][count])
+                leaks_list.append(leak_amount/game["endingWave"])
                 leaks_pre10_list.append(leak_pre10_amount/10)
                 try:
                     if i == 0 or 1:
-                        kinghp_list.append(kinghp_left[1][count][9])
-                        kinghp_enemy_list.append(kinghp_right[1][count][9])
+                        kinghp_list.append(game["leftKingPercentHp"][9])
+                        kinghp_enemy_list.append(game["rightKingPercentHp"][9])
                     else:
-                        kinghp_list.append(kinghp_right[1][count][9])
-                        kinghp_enemy_list.append(kinghp_left[1][count][9])
+                        kinghp_list.append(game["rightKingPercentHp"][9])
+                        kinghp_enemy_list.append(game["leftKingPercentHp"][9])
                 except Exception:
                     pass
             mythium_list_pergame.clear()
@@ -3165,7 +3031,13 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         save_count_list.append(save_count)
         save_count_pre10 = 0
         save_count = 0
-        count += 1
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     waves_post10 = round(sum(ending_wave_list) / len(ending_wave_list), 2) - 10
     if playerid == 'all':
         saves_pre10 = round(sum(save_count_pre10_list) / len(save_count_pre10_list)/4, 2)
@@ -3195,7 +3067,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         string2 + \
         'Mythium sent: ' + str(mythium) + ' (Pre 10: '+str(mythium_pre10)+', Post 10: '+str(mythium-mythium_pre10)+')\n' + \
         'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
-        'Patches: ' + ', '.join(patches2)
+        'Patches: ' + ', '.join(patches)
 
 def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermind = "all", spell = "all"):
     if "," in unit:
@@ -3214,9 +3086,8 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
         spell_list = []
         with open('Files/spells.json', 'r') as f:
             spells_json = json.load(f)
-            spells_extracted = extract_values(spells_json, '_id')
-        for i, x in enumerate(spells_extracted[1]):
-            string = x
+        for s_js in spells_json:
+            string = s_js["_id"]
             string = string.replace('_powerup_id', '')
             string = string.replace('_spell_damage', '')
             string = string.replace("_", " ")
@@ -3231,14 +3102,13 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
     unit_list = []
     with open('Files/units.json', 'r') as f:
         units_json = json.load(f)
-        units_extracted = extract_values(units_json, 'unitId')
-        value_extracted = extract_values(units_json, 'totalValue')[1]
-    for i, x in enumerate(units_extracted[1]):
-        if value_extracted[i] and int(value_extracted[i]) > 0:
-            string = x
-            string = string.replace('_', ' ')
-            string = string.replace(' unit id', '')
-            unit_list.append(string)
+    for u_js in units_json:
+        if u_js["totalValue"] != '':
+            if u_js["unitId"] and int(u_js["totalValue"]) > 0:
+                string = u_js["unitId"]
+                string = string.replace('_', ' ')
+                string = string.replace(' unit id', '')
+                unit_list.append(string)
     unit_list.append('pack rat nest')
     for i, unit_name in enumerate(unit):
         unit_name = unit_name.lower()
@@ -3272,18 +3142,6 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
     games = len(history_raw)
     if novacup:
         playerid = 'all'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
-    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
-    spells = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
-    fighters = list(divide_chunks(extract_values(history_raw, 'fighters')[1], 4))
-    buildPerWave = list(divide_chunks(extract_values(history_raw, 'buildPerWave')[1], 4))
-    playerelos = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
-    chosenSpellLocation = list(divide_chunks(extract_values(history_raw, 'chosenSpellLocation')[1], 4))
-    gameelo = extract_values(history_raw, 'gameElo')
-    patches = extract_values(history_raw, 'version')
-    gameid = extract_values(history_raw, '_id')
-    patches = list(dict.fromkeys(patches[1]))
     new_patches = []
     gameelo_list = []
     playerelo_list = []
@@ -3291,55 +3149,49 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
     count = 0
     occurrence_count = 0
     win_count = 0
-    for x in patches:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches = list(dict.fromkeys(new_patches))
-    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    patches = []
     print('Starting jules command...')
-    while count < games:
-        playerids_ranked = playerids[count]
-        masterminds_ranked = masterminds[count]
-        gameresult_ranked = gameresult[count]
-        spells_ranked = spells[count]
-        fighters_ranked = fighters[count]
-        playerelos_ranked = playerelos[count]
-        chosenSpellLocation_ranked = chosenSpellLocation[count]
-        buildPerWave_ranked = buildPerWave[count]
-        gameelo_list.append(gameelo[1][count])
-        for i, x in enumerate(playerids_ranked):
-            if x == playerid or playerid == "all":
+    for game in history_raw:
+        patches.append(game["version"])
+        gameelo_list.append(game["gameElo"])
+        for player in game["playersData"]:
+            if player["playerId"] == playerid or playerid == "all":
                 expected = len(unit)
                 current = 0
-                fighter_list = fighters_ranked[i].lower()
+                fighter_list = player["fighters"].lower()
                 if mastermind != "all":
                     expected += 1
-                    if mastermind == masterminds_ranked[i]:
+                    if mastermind == player["legion"]:
                         current += 1
-                if spell != "all" and chosenSpellLocation_ranked[i] != "-1|-1" and spell.lower() == spells_ranked[i].lower() and spell.lower() not in excluded_buffs:
+                if spell != "all" and player["chosenSpellLocation"] != "-1|-1" and spell.lower() == player["chosenSpell"].lower() and spell.lower() not in excluded_buffs:
                     expected += 1
-                    for pos in buildPerWave_ranked[i][-1]:
-                        if pos.split(":")[1] == chosenSpellLocation_ranked[i] and pos.split(":")[0].replace("_unit_id", "").replace("_", " ") in unit:
-                            spell = spells_ranked[i]
+                    for pos in player["buildPerWave"][-1]:
+                        if pos.split(":")[1] == player["chosenSpellLocation"] and pos.split(":")[0].replace("_unit_id", "").replace("_", " ") in unit:
+                            spell = player["chosenSpell"]
                             current += 2
                 else:
                     if spell != "all":
                         expected += 1
-                        if spell.lower() == spells_ranked[i].lower():
-                            spell = spells_ranked[i]
+                        if spell.lower() == player["chosenSpell"].lower():
+                            spell = player["chosenSpell"]
                             current += 1
                     for un in unit:
                         if un.lower() in fighter_list:
                             current += 1
                 if current == expected:
                     occurrence_count += 1
-                    playerelo_list.append(playerelos_ranked[i])
-                    if gameresult_ranked[i] == "won":
+                    playerelo_list.append(player["overallElo"])
+                    if player["gameResult"] == "won":
                         win_count += 1
         count += 1
     if occurrence_count == 0:
         return "No occurences found."
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     mode = 'RGB'
     colors = (49, 51, 56)
@@ -3398,14 +3250,13 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     unit_dict = {}
     with open('Files/units.json', 'r') as f:
         units_json = json.load(f)
-        units_extracted = extract_values(units_json, 'unitId')
-        value_extracted = extract_values(units_json, 'totalValue')[1]
-    for i, x in enumerate(units_extracted[1]):
-        if value_extracted[i] and int(value_extracted[i]) > 0:
-            string = x
-            string = string.replace('_', ' ')
-            string = string.replace(' unit id', '')
-            unit_dict[string] = {'Count': 0, 'OpenWins': 0, 'W4': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+    for u_js in units_json:
+        if u_js["totalValue"] != '':
+            if u_js["unitId"] and int(u_js["totalValue"]) > 0:
+                string = u_js["unitId"]
+                string = string.replace('_', ' ')
+                string = string.replace(' unit id', '')
+                unit_dict[string] = {'Count': 0, 'OpenWins': 0, 'W4': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
     unit_dict['pack rat nest'] = {'Count': 0, 'OpenWins': 0, 'W4': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
     if unit != "all":
         if unit in slang:
@@ -3436,43 +3287,21 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     games = len(history_raw)
     if 'nova cup' in playerid:
         playerid = 'all'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
-    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
-    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-    spell = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
-    fighters = list(divide_chunks(extract_values(history_raw, 'buildPerWave')[1], 4))
-    gameelo = extract_values(history_raw, 'gameElo')
-    patches = extract_values(history_raw, 'version')
-    gameid = extract_values(history_raw, '_id')
-    patches = list(dict.fromkeys(patches[1]))
-    new_patches = []
+    patches = []
     gameelo_list = []
     count = 0
-    for x in patches:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches = list(dict.fromkeys(new_patches))
-    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    print('Starting openstats command...')
-    while count < games:
-        playerids_ranked = playerids[count]
-        masterminds_ranked = masterminds[count]
-        gameresult_ranked = gameresult[count]
-        workers_ranked = workers[count]
-        spell_ranked = spell[count]
-        gameelo_list.append(gameelo[1][count])
+    for game in history_raw:
+        patches.append(game["version"])
+        gameelo_list.append(game["gameElo"])
         if playerid.lower() != 'all' and 'nova cup' not in playerid:
-            for i, x in enumerate(playerids_ranked):
-                if x == playerid:
-                    opener_ranked_raw = [fighters[count][i][0],fighters[count][i][1],fighters[count][i][2],fighters[count][i][3]]
-                    player_num = i
+            for player in game["playersData"]:
+                if player["playerId"] == playerid:
+                    opener_ranked_raw = player["buildPerWave"][:4]
                     break
         else:
             opener_ranked_raw = []
             for i in range(4):
-                opener_ranked_raw.extend([fighters[count][i][0],fighters[count][i][1],fighters[count][i][2],fighters[count][i][3]])
+                opener_ranked_raw.extend(game["playersData"][i]["buildPerWave"][:4])
         opener_ranked = []
         for i, x in enumerate(opener_ranked_raw):
             opener_ranked.extend([[]])
@@ -3480,75 +3309,84 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
                 string = y.split('_unit_id:')
                 opener_ranked[i].append(string[0].replace('_', ' '))
         if playerid.lower() != 'all' and 'nova cup' not in playerid:
-            s = set()
-            for x in range(4):
-                for y in opener_ranked[x]:
-                    s.add(y)
-            for y in s:
-                try:
-                    if y != opener_ranked[0][0]:
-                        if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
-                            unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
-                            if gameresult_ranked[player_num] == 'won':
-                                unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                        else:
-                            unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                            if gameresult_ranked[player_num] == 'won':
-                                unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                    else:
-                        unit_dict[opener_ranked[0][0]]['Count'] += 1
-                        if masterminds_ranked[player_num] not in unit_dict[opener_ranked[0][0]]['MMs']:
-                            unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]] = {'Count': 1, 'Wins': 0}
-                        else:
-                            unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]]['Count'] += 1
-                        if spell_ranked[player_num] not in unit_dict[opener_ranked[0][0]]['Spells']:
-                            unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]] = {'Count': 1, 'Wins': 0}
-                        else:
-                            unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]]['Count'] += 1
-                        unit_dict[opener_ranked[0][0]]['W4'] += workers_ranked[player_num][3]
-                        if gameresult_ranked[player_num] == 'won':
-                            unit_dict[opener_ranked[0][0]]['OpenWins'] += 1
-                            unit_dict[opener_ranked[0][0]]['MMs'][masterminds_ranked[player_num]]['Wins'] += 1
-                            unit_dict[opener_ranked[0][0]]['Spells'][spell_ranked[player_num]]['Wins'] += 1
-                except IndexError:
-                    continue
+            for player in game["playersData"]:
+                if player["playerId"] == playerid:
+                    s = set()
+                    for x in range(4):
+                        for y in opener_ranked[x]:
+                            s.add(y)
+                    for y in s:
+                        try:
+                            if y != opener_ranked[0][0]:
+                                if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
+                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
+                                    if player["gameResult"] == 'won':
+                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
+                                else:
+                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
+                                    if player["gameResult"] == 'won':
+                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
+                            else:
+                                unit_dict[opener_ranked[0][0]]['Count'] += 1
+                                if player["legion"] not in unit_dict[opener_ranked[0][0]]['MMs']:
+                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]] = {'Count': 1, 'Wins': 0}
+                                else:
+                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Count'] += 1
+                                if player["chosenSpell"] not in unit_dict[opener_ranked[0][0]]['Spells']:
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
+                                else:
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
+                                unit_dict[opener_ranked[0][0]]['W4'] += player["workersPerWave"][3]
+                                if player["gameResult"] == 'won':
+                                    unit_dict[opener_ranked[0][0]]['OpenWins'] += 1
+                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Wins'] += 1
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
+                        except IndexError:
+                            continue
         else:
             counter = 0
-            for i in range(4):
+            for player in game["playersData"]:
                 s = set()
                 for x in range(counter, counter+4):
                     for y in opener_ranked[x]:
                         s.add(y)
                 for y in s:
                     try:
+                        i = 0
                         if y != opener_ranked[counter][0]:
                             if y in unit_dict[opener_ranked[counter][0]]['OpenWith']:
                                 unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Count'] += 1
-                                if gameresult_ranked[i] == 'won':
+                                if player["gameResult"] == 'won':
                                     unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
                             else:
                                 unit_dict[opener_ranked[counter][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                if gameresult_ranked[i] == 'won':
+                                if player["gameResult"] == 'won':
                                     unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
                         else:
                             unit_dict[opener_ranked[counter][0]]['Count'] += 1
-                            if masterminds_ranked[i] not in unit_dict[opener_ranked[counter][0]]['MMs']:
-                                unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]] = {'Count': 1,'Wins': 0}
+                            if player["legion"] not in unit_dict[opener_ranked[counter][0]]['MMs']:
+                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
                             else:
-                                unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]]['Count'] += 1
-                            if spell_ranked[i] not in unit_dict[opener_ranked[counter][0]]['Spells']:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]] = {'Count': 1, 'Wins': 0}
+                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Count'] += 1
+                            if player["chosenSpell"] not in unit_dict[opener_ranked[counter][0]]['Spells']:
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
                             else:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]]['Count'] += 1
-                            unit_dict[opener_ranked[counter][0]]['W4'] += workers_ranked[i][3]
-                            if gameresult_ranked[i] == 'won':
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
+                            unit_dict[opener_ranked[counter][0]]['W4'] += player["workersPerWave"][3]
+                            if player["gameResult"] == 'won':
                                 unit_dict[opener_ranked[counter][0]]['OpenWins'] += 1
-                                unit_dict[opener_ranked[counter][0]]['MMs'][masterminds_ranked[i]]['Wins'] += 1
-                                unit_dict[opener_ranked[counter][0]]['Spells'][spell_ranked[i]]['Wins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Wins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
                     except IndexError:
                         continue
                 counter += 4
-        count += 1
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
     unit_dict = {k: unit_dict[k] for k in newIndex}
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
@@ -3573,7 +3411,6 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-    count = 0
     if mastermind == 'All':
         mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
     elif mastermind == 'Megamind':
@@ -3596,212 +3433,165 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
     games = len(history_raw)
     if 'nova cup' in playerid:
         playerid = 'all'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
-    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
-    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-    opener = list(divide_chunks(extract_values(history_raw, 'firstWaveFighters')[1], 4))
-    elo = list(divide_chunks(extract_values(history_raw, 'overallElo')[1], 4))
-    endingwaves = extract_values(history_raw, 'endingWave')
-    spell = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
     case_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'DoubleLockIn', 'Kingsguard']
-    if mastermind == 'All' or mastermind == 'Megamind':
-        megamind = list(divide_chunks(extract_values(history_raw, 'megamind')[1], 4))
-        if len(megamind) < games:
-            megamind = 'N/A'
-    elif mastermind == 'Fiesta':
-        leaks = list(divide_chunks(extract_values(history_raw, 'leaksPerWave')[1], 4))
-    elif mastermind == 'Champion':
-        champ_location = []
-        for g in history_raw:
-            champ_location_temp = list(divide_chunks(extract_values(g, 'chosenChampionLocation')[1], 4))
-            if len(champ_location_temp) > 0:
-                champ_location.append(champ_location_temp[0])
-            else:
-                champ_location.append(champ_location_temp)
-        build_per_wave = list(divide_chunks(extract_values(history_raw, 'buildPerWave')[1], 4))
-    gameelo = extract_values(history_raw, 'gameElo')
-    patches = extract_values(history_raw, 'version')
-    gameid = extract_values(history_raw, '_id')
-    patches = list(dict.fromkeys(patches[1]))
-    new_patches = []
+    patches = set()
     megamind_count = 0
-    for x in patches:
-        if x.startswith('v10') and mastermind == 'Megamind':
-            return 'Only 11.XX patches for megamind.'
-        elif x.startswith('v10') and mastermind == 'Champion':
-            return 'Only 11.XX patches for champion.'
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '')+'.'+string.split('.', periods)[1])
-    patches = list(dict.fromkeys(new_patches))
-    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     print('Starting mmstats command...')
-    while count < games:
-        playerids_ranked = playerids[count]
-        masterminds_ranked = masterminds[count]
-        gameresult_ranked = gameresult[count]
-        workers_ranked = workers[count]
-        opener_ranked = opener[count]
-        elo_ranked = elo[count]
-        spell_ranked = spell[count]
-        gameelo_list.append(gameelo[1][count])
+    for game in history_raw:
+        if game["version"].startswith('v10') or game["version"].startswith('v9') and mastermind == 'Megamind':
+            continue
+        elif game["version"].startswith('v10') or game["version"].startswith('v9') and mastermind == 'Champion':
+            continue
+        patches.add(game["version"])
+        gameelo_list.append(game["gameElo"])
         match mastermind:
             case 'All':
-                if megamind != 'N/A':
-                    megamind_ranked = megamind[count]
-                for i, x in enumerate(playerids_ranked):
-                    if playerid == 'all' or x == playerid:
-                        if megamind != 'N/A' and megamind_ranked[i] == True:
+                for player in game["playersData"]:
+                    if player["playerId"] == playerid or playerid == "all":
+                        if player["megamind"] == True:
                             mastermind_current = 'Megamind'
                         else:
-                            if masterminds_ranked[i] == "Mastermind":
+                            if player["legion"] == "Mastermind":
                                 continue
-                            mastermind_current = masterminds_ranked[i]
+                            mastermind_current = player["legion"]
                         masterminds_dict[mastermind_current]["Count"] += 1
-                        if gameresult_ranked[i] == 'won':
+                        if player["gameResult"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["W10"].append(workers_ranked[i][9])
+                            masterminds_dict[mastermind_current]["W10"].append(player["workersPerWave"][9])
                         except IndexError:
                             pass
-                        masterminds_dict[mastermind_current]['Results'].append(gameresult_ranked[i])
-                        masterminds_dict[mastermind_current]['Spell'].append(spell_ranked[i])
-                        masterminds_dict[mastermind_current]['Elo'] += elo_ranked[i]
-                        if ',' in opener_ranked[i]:
-                            string = opener_ranked[i]
+                        masterminds_dict[mastermind_current]['Results'].append(player["gameResult"])
+                        masterminds_dict[mastermind_current]['Spell'].append(player["chosenSpell"])
+                        masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
+                        if ',' in player["firstWaveFighters"]:
+                            string = player["firstWaveFighters"]
                             commas = string.count(',')
                             masterminds_dict[mastermind_current]['Opener'].append(string.split(',', commas)[commas])
                         else:
-                            masterminds_dict[mastermind_current]['Opener'].append(opener_ranked[i])
+                            masterminds_dict[mastermind_current]['Opener'].append(player["firstWaveFighters"])
             case mastermind if mastermind in case_list:
-                for i, x in enumerate(playerids_ranked):
-                    if (playerid == 'all' or x == playerid) and (mastermind == masterminds_ranked[i]):
-                        mastermind_current = masterminds_ranked[i]
+                for player in game["playersData"]:
+                    if (playerid == 'all' or player["playerId"] == playerid) and (mastermind == player["legion"]):
+                        mastermind_current = player["legion"]
                         masterminds_dict[mastermind_current]["Count"] += 1
-                        if gameresult_ranked[i] == 'won':
+                        if player["gameResult"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["W10"].append(workers_ranked[i][9])
+                            masterminds_dict[mastermind_current]["W10"].append(player["workersPerWave"][9])
                         except IndexError:
                             pass
-                        masterminds_dict[mastermind_current]['Results'].append(gameresult_ranked[i])
-                        masterminds_dict[mastermind_current]['Spell'].append(spell_ranked[i])
-                        masterminds_dict[mastermind_current]['Elo'] += elo_ranked[i]
-                        if ',' in opener_ranked[i]:
-                            string = opener_ranked[i]
+                        masterminds_dict[mastermind_current]['Results'].append(player["gameResult"])
+                        masterminds_dict[mastermind_current]['Spell'].append(player["chosenSpell"])
+                        masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
+                        if ',' in player["firstWaveFighters"]:
+                            string = player["firstWaveFighters"]
                             commas = string.count(',')
                             masterminds_dict[mastermind_current]['Opener'].append(string.split(',', commas)[commas])
                         else:
-                            masterminds_dict[mastermind_current]['Opener'].append(opener_ranked[i])
+                            masterminds_dict[mastermind_current]['Opener'].append(player["firstWaveFighters"])
             case 'Fiesta':
-                leaks_ranked = leaks[count]
-                for i, x in enumerate(playerids_ranked):
-                    if playerid == 'all' or x == playerid:
-                        if masterminds_ranked[i] == 'Fiesta':
-                            masterminds_dict[masterminds_ranked[i]]["Count"] += 1
-                            if gameresult_ranked[i] == 'won':
-                                masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                            masterminds_dict[masterminds_ranked[i]]["W10"].append(workers_ranked[i])
-                            masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
-                            masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                            masterminds_dict[masterminds_ranked[i]]['PlayerIds'].append(playerids_ranked[i])
-                            masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
+                for player in game["playersData"]:
+                    if playerid == 'all' or player["playerId"] == playerid:
+                        if player["legion"] == 'Fiesta':
+                            masterminds_dict['Fiesta']["Count"] += 1
+                            if player["gameResult"] == 'won':
+                                masterminds_dict['Fiesta']["Wins"] += 1
+                            masterminds_dict['Fiesta']["W10"].append(player["workersPerWave"])
+                            masterminds_dict['Fiesta']['Results'].append(player["gameResult"])
+                            masterminds_dict['Fiesta']['Spell'].append(player["chosenSpell"])
+                            masterminds_dict['Fiesta']['PlayerIds'].append(player["playerId"])
+                            masterminds_dict['Fiesta']['Elo'] += player["overallElo"]
                             leaks_temp = []
-                            for y in range(endingwaves[1][count]):
-                                if len(leaks_ranked[i][y]) > 0:
-                                    p = calc_leak(leaks_ranked[i][y], y)
+                            for y in range(game["endingWave"]):
+                                if len(player["leaksPerWave"][y]) > 0:
+                                    p = calc_leak(player["leaksPerWave"][y], y)
                                     leaks_temp.append(p)
                                 else:
                                     leaks_temp.append(0)
-                            masterminds_dict[masterminds_ranked[i]]['Leaks'].append(leaks_temp)
-                            if ',' in opener_ranked[i]:
-                                string = opener_ranked[i]
+                            masterminds_dict['Fiesta']['Leaks'].append(leaks_temp)
+                            if ',' in player["firstWaveFighters"]:
+                                string = player["firstWaveFighters"]
                                 commas = string.count(',')
-                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',', commas)[commas])
+                                masterminds_dict['Fiesta']['Opener'].append(string.split(',', commas)[commas])
                             else:
-                                masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
+                                masterminds_dict['Fiesta']['Opener'].append(player["firstWaveFighters"])
             case 'Megamind':
-                if megamind != 'N/A':
-                    megamind_ranked = megamind[count]
-                for i, x in enumerate(playerids_ranked):
-                    if playerid == 'all' or x == playerid:
-                        if megamind != 'N/A' and megamind_ranked[i] == True:
-                            if masterminds_ranked[i] == 'Megamind':
+                for player in game["playersData"]:
+                    if playerid == 'all' or player["playerId"] == playerid:
+                        if player["megamind"] == True:
+                            if player["legion"] == 'Megamind':
                                 continue
                             else:
                                 megamind_count += 1
-                                masterminds_dict[masterminds_ranked[i]]["Count"] += 1
-                                if gameresult_ranked[i] == 'won':
-                                    masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
+                                masterminds_dict[player["legion"]]["Count"] += 1
+                                if player["gameResult"] == 'won':
+                                    masterminds_dict[player["legion"]]["Wins"] += 1
                                 try:
-                                    masterminds_dict[masterminds_ranked[i]]["W10"].append(workers_ranked[i][9])
+                                    masterminds_dict[player["legion"]]["W10"].append(player["workersPerWave"][9])
                                 except IndexError:
                                     pass
-                                masterminds_dict[masterminds_ranked[i]]['Results'].append(gameresult_ranked[i])
-                                masterminds_dict[masterminds_ranked[i]]['Spell'].append(spell_ranked[i])
-                                masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
-                                if ',' in opener_ranked[i]:
-                                    string = opener_ranked[i]
+                                masterminds_dict[player["legion"]]['Results'].append(player["gameResult"])
+                                masterminds_dict[player["legion"]]['Spell'].append(player["chosenSpell"])
+                                masterminds_dict[player["legion"]]['Elo'] += player["overallElo"]
+                                if ',' in player["firstWaveFighters"]:
+                                    string = player["firstWaveFighters"]
                                     commas = string.count(',')
-                                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(string.split(',', commas)[commas])
+                                    masterminds_dict[player["legion"]]['Opener'].append(string.split(',', commas)[commas])
                                 else:
-                                    masterminds_dict[masterminds_ranked[i]]['Opener'].append(opener_ranked[i])
+                                    masterminds_dict[player["legion"]]['Opener'].append(player["firstWaveFighters"])
             case 'Champion':
                 unit_dict = {}
-                with open('Files/units.json', 'r') as f:
-                    units_json = json.load(f)
-                    units_extracted = extract_values(units_json, 'unitId')
-                    value_extracted = extract_values(units_json, 'totalValue')[1]
-                for i, x in enumerate(units_extracted[1]):
-                    if value_extracted[i] and int(value_extracted[i]) > 0:
-                        string = x
+                for u_js in units_json:
+                    if u_js["unitId"] and int(u_js["totalValue"]) > 0:
+                        string = u_js["unitId"]
                         string = string.replace('_', ' ')
                         string = string.replace(' unit id', '')
-                        unit_dict[string] = int(value_extracted[i])
-                champ_location_ranked = champ_location[count]
-                build_per_wave_ranked = build_per_wave[count]
-                for i, x in enumerate(playerids_ranked):
-                    if playerid == 'all' or x == playerid and masterminds_ranked[i] == 'Champion':
-                        if len(champ_location_ranked) > 0:
-                            champ_location_current = champ_location_ranked[i]
-                            if champ_location_current == '-1|-1':
-                                continue
-                            masterminds_dict[masterminds_ranked[i]]["Count"] += 1
-                            if gameresult_ranked[i] == 'won':
-                                masterminds_dict[masterminds_ranked[i]]["Wins"] += 1
-                            masterminds_dict[masterminds_ranked[i]]['Elo'] += elo_ranked[i]
-                            champ_found = False
-                            for wave in build_per_wave_ranked[i]:
-                                if champ_found == True:
-                                    break
-                                for unit in wave:
-                                    unit_name = unit.split('_unit_id:')[0].replace('_', ' ')
-                                    if unit.split(':')[1] == champ_location_current and 'grarl' not in unit and 'pirate' not in unit and unit_dict[unit_name] > 50:
-                                        if "seedling" in unit_name:
-                                            print(gameid[1][count])
-                                        if unit_name in masterminds_dict[masterminds_ranked[i]]['ChampionUnit']:
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Count'] += 1
-                                            if gameresult_ranked[i] == 'won':
-                                                masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["Wins"] += 1
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Spell'].append(spell_ranked[i])
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Results'].append(gameresult_ranked[i])
-                                            try:
-                                                masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["W10"] += workers_ranked[i][9]
-                                            except IndexError:
-                                                pass
-                                        else:
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name] = {"Count": 1, "Wins": 0, "Spell": [], "W10": 0, "Results": []}
-                                            if gameresult_ranked[i] == 'won':
-                                                masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["Wins"] += 1
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Spell'].append(spell_ranked[i])
-                                            masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]['Results'].append(gameresult_ranked[i])
-                                            try:
-                                                masterminds_dict[masterminds_ranked[i]]['ChampionUnit'][unit_name]["W10"] += workers_ranked[i][9]
-                                            except IndexError:
-                                                pass
-                                        champ_found = True
-        count += 1
+                        unit_dict[string] = int(u_js["totalValue"])
+                for player in game["playersData"]:
+                    if playerid == 'all' or player["playerId"] == playerid and player["legion"] == 'Champion':
+                        champ_location_current = player["chosenChampionLocation"]
+                        if champ_location_current == '-1|-1':
+                            continue
+                        masterminds_dict['Champion']["Count"] += 1
+                        if player["gameResult"] == 'won':
+                            masterminds_dict['Champion']["Wins"] += 1
+                        masterminds_dict['Champion']['Elo'] += player["overallElo"]
+                        champ_found = False
+                        for wave in player["buildPerWave"]:
+                            if champ_found == True:
+                                break
+                            for unit in wave:
+                                unit_name = unit.split('_unit_id:')[0].replace('_', ' ')
+                                if unit.split(':')[1] == champ_location_current and 'grarl' not in unit and 'pirate' not in unit and unit_dict[unit_name] > 50:
+                                    if unit_name in masterminds_dict['Champion']['ChampionUnit']:
+                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Count'] += 1
+                                        if player["gameResult"] == 'won':
+                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["Wins"] += 1
+                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Spell'].append(player["chosenSpell"])
+                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Results'].append(player["gameResult"])
+                                        try:
+                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["W10"] += player["workersPerWave"][9]
+                                        except IndexError:
+                                            pass
+                                    else:
+                                        masterminds_dict['Champion']['ChampionUnit'][unit_name] = {"Count": 1, "Wins": 0, "Spell": [], "W10": 0, "Results": []}
+                                        if player["gameResult"] == 'won':
+                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["Wins"] += 1
+                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Spell'].append(player["chosenSpell"])
+                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Results'].append(player["gameResult"])
+                                        try:
+                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["W10"] += player["workersPerWave"][9]
+                                        except IndexError:
+                                            pass
+                                    champ_found = True
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     if mastermind == 'Champion':
         unit_dict = masterminds_dict['Champion']['ChampionUnit']
         newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
@@ -3814,26 +3604,25 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
         playerid = playername
     match mastermind:
         case 'All':
-            return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches)
+            return create_image_mmstats(masterminds_dict, games, playerid, avg_gameelo, patches)
         case mastermind if mastermind in case_list:
-            return create_image_mmstats_specific(masterminds_dict, count, playerid, avg_gameelo, patches, mastermind=mastermind)
+            return create_image_mmstats_specific(masterminds_dict, games, playerid, avg_gameelo, patches, mastermind=mastermind)
         case 'Fiesta':
-            return create_image_mmstats_fiesta(masterminds_dict, count, playerid, avg_gameelo, patches)
+            return create_image_mmstats_fiesta(masterminds_dict, games, playerid, avg_gameelo, patches)
         case 'Megamind':
-            return create_image_mmstats(masterminds_dict, count, playerid, avg_gameelo, patches, True, megamind_count)
+            return create_image_mmstats(masterminds_dict, games, playerid, avg_gameelo, patches, True, megamind_count)
         case 'Champion':
-            return create_image_mmstats_champion(masterminds_dict, unit_dict, count, playerid, avg_gameelo, patches)
+            return create_image_mmstats_champion(masterminds_dict, unit_dict, games, playerid, avg_gameelo, patches)
 
 def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"):
     spell_dict = {}
     with open('Files/spells.json', 'r') as f:
         spells_json = json.load(f)
-        spells_extracted = extract_values(spells_json, '_id')
-    for i, x in enumerate(spells_extracted[1]):
-        string = x
-        string = string.replace('_powerup_id', '')
-        string = string.replace('_spell_damage', '')
-        string = string.replace("_", " ")
+    for s_js in spells_json:
+        string = s_js["_id"]
+        string = string.replace('_', ' ')
+        string = string.replace(' powerup id', '')
+        string = string.replace(' spell damage', '')
         spell_dict[string] = {'Count': 0, 'Wins': 0, 'W10': 0, 'Openers': {}, 'MMs': {}}
     spell_dict["taxed allowance"] = {'Count': 0, 'Wins': 0, 'W10': 0, 'Openers': {}, 'MMs': {}}
     if spellname != "all":
@@ -3865,64 +3654,48 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
     games = len(history_raw)
     if 'nova cup' in playerid:
         playerid = 'all'
-    playerids = list(divide_chunks(extract_values(history_raw, 'playerId')[1], 4))
-    masterminds = list(divide_chunks(extract_values(history_raw, 'legion')[1], 4))
-    gameresult = list(divide_chunks(extract_values(history_raw, 'gameResult')[1], 4))
-    workers = list(divide_chunks(extract_values(history_raw, 'workersPerWave')[1], 4))
-    spell = list(divide_chunks(extract_values(history_raw, 'chosenSpell')[1], 4))
-    opener = list(divide_chunks(extract_values(history_raw, 'firstWaveFighters')[1], 4))
-    gameelo = extract_values(history_raw, 'gameElo')
-    patches = extract_values(history_raw, 'version')
-    gameid = extract_values(history_raw, '_id')
-    patches = list(dict.fromkeys(patches[1]))
-    new_patches = []
+    patches = []
     gameelo_list = []
-    count = 0
+    print('Starting spellstats command...')
+    for game in history_raw:
+        patches.append(game["version"])
+        gameelo_list.append(game["gameElo"])
+        for player in game["playersData"]:
+            if (player["playerId"] == playerid) or (playerid.lower() == 'all' or 'nova cup' in playerid):
+                spell_name = player["chosenSpell"].lower()
+                spell_dict[spell_name]["Count"] += 1
+                if player["gameResult"] == "won":
+                    spell_dict[spell_name]["Wins"] += 1
+                spell_dict[spell_name]["W10"] += player["workersPerWave"][9]
+                if "," in player["workersPerWave"]:
+                    opener_current = player["firstWaveFighters"].split(",")[-1].replace(" ", "")
+                else:
+                    opener_current = player["firstWaveFighters"].replace(" ", "")
+                if opener_current in spell_dict[spell_name]["Openers"]:
+                    spell_dict[spell_name]["Openers"][opener_current]["Count"] += 1
+                    spell_dict[spell_name]["Openers"][opener_current]["W10"] += player["workersPerWave"][9]
+                    if player["gameResult"] == "won":
+                        spell_dict[spell_name]["Openers"][opener_current]["Wins"] += 1
+                else:
+                    spell_dict[spell_name]["Openers"][opener_current] = {"Count": 1, "Wins": 0, "W10": player["workersPerWave"][9]}
+                    if player["gameResult"] == "won":
+                        spell_dict[spell_name]["Openers"][opener_current]["Wins"] += 1
+                if player["legion"] in spell_dict[spell_name]["MMs"]:
+                    spell_dict[spell_name]["MMs"][player["legion"]]["Count"] += 1
+                    spell_dict[spell_name]["MMs"][player["legion"]]["W10"] += player["workersPerWave"][9]
+                    if player["gameResult"] == "won":
+                        spell_dict[spell_name]["MMs"][player["legion"]]["Wins"] += 1
+                else:
+                    spell_dict[spell_name]["MMs"][player["legion"]] = {"Count": 1, "Wins": 0, "W10": player["workersPerWave"][9]}
+                    if player["gameResult"] == "won":
+                        spell_dict[spell_name]["MMs"][player["legion"]]["Wins"] += 1
+    new_patches = []
     for x in patches:
         string = x
         periods = string.count('.')
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    print('Starting spellstats command...')
-    while count < games:
-        playerids_ranked = playerids[count]
-        masterminds_ranked = masterminds[count]
-        gameresult_ranked = gameresult[count]
-        workers_ranked = workers[count]
-        spell_ranked = spell[count]
-        opener_ranked = opener[count]
-        gameelo_list.append(gameelo[1][count])
-        for i, x in enumerate(playerids_ranked):
-            if (x == playerid) or (playerid.lower() == 'all' or 'nova cup' in playerid):
-                spell_name = spell_ranked[i].lower()
-                spell_dict[spell_name]["Count"] += 1
-                if gameresult_ranked[i] == "won":
-                    spell_dict[spell_name]["Wins"] += 1
-                spell_dict[spell_name]["W10"] += workers_ranked[i][9]
-                if "," in opener_ranked[i]:
-                    opener_current = opener_ranked[i].split(",")[-1].replace(" ", "")
-                else:
-                    opener_current = opener_ranked[i].replace(" ", "")
-                if opener_current in spell_dict[spell_name]["Openers"]:
-                    spell_dict[spell_name]["Openers"][opener_current]["Count"] += 1
-                    spell_dict[spell_name]["Openers"][opener_current]["W10"] += workers_ranked[i][9]
-                    if gameresult_ranked[i] == "won":
-                        spell_dict[spell_name]["Openers"][opener_current]["Wins"] += 1
-                else:
-                    spell_dict[spell_name]["Openers"][opener_current] = {"Count": 1, "Wins": 0, "W10": workers_ranked[i][9]}
-                    if gameresult_ranked[i] == "won":
-                        spell_dict[spell_name]["Openers"][opener_current]["Wins"] += 1
-                if masterminds_ranked[i] in spell_dict[spell_name]["MMs"]:
-                    spell_dict[spell_name]["MMs"][masterminds_ranked[i]]["Count"] += 1
-                    spell_dict[spell_name]["MMs"][masterminds_ranked[i]]["W10"] += workers_ranked[i][9]
-                    if gameresult_ranked[i] == "won":
-                        spell_dict[spell_name]["MMs"][masterminds_ranked[i]]["Wins"] += 1
-                else:
-                    spell_dict[spell_name]["MMs"][masterminds_ranked[i]] = {"Count": 1, "Wins": 0, "W10": workers_ranked[i][9]}
-                    if gameresult_ranked[i] == "won":
-                        spell_dict[spell_name]["MMs"][masterminds_ranked[i]]["Wins"] += 1
-        count += 1
     newIndex = sorted(spell_dict, key=lambda x: spell_dict[x]['Count'], reverse=True)
     spell_dict = {k: spell_dict[k] for k in newIndex}
     avgelo = round(sum(gameelo_list)/len(gameelo_list))

@@ -14,6 +14,7 @@ from twitchAPI.helper import first
 import discord_timestamps
 from discord_timestamps import TimestampType
 from pathlib import Path
+import time
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -480,9 +481,9 @@ def run_discord_bot():
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            sort="Sort by?")
     @app_commands.choices(key=[
-        discord.app_commands.Choice(name='Workers', value="Workers"),
-        discord.app_commands.Choice(name='Income', value="Income"),
-        discord.app_commands.Choice(name='Fighter Value', value="Fighter Value")
+        discord.app_commands.Choice(name='Workers', value="workersPerWave"),
+        discord.app_commands.Choice(name='Income', value="incomePerWave"),
+        discord.app_commands.Choice(name='Fighter Value', value="valuePerWave")
     ])
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
@@ -579,6 +580,8 @@ def run_discord_bot():
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
             try:
                 sort = sort.value
             except AttributeError:
