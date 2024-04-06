@@ -254,7 +254,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
         f.write(html_file)
     return playername+'_output.html'
 
-def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind = False, megamind_count = 0, transparency = False):
+def create_image_mmstats(dict, games, playerid, avgelo, patch, megamind = False, megamind_count = 0, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
@@ -267,57 +267,15 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
             return '0'
     def calc_pr(dict, mm):
         try:
-            if megamind:
-                return str(round(dict[mm]['Count'] / megamind_count * 100, 1))
-            else:
-                return str(round(dict[mm]['Count'] / ranked_count * 100, 1))
+            return str(round(dict[mm]['Count'] / games * 100, 1))
         except ZeroDivisionError as e:
             return '0'
-    def most_common(dict, mm):
+    def get_w10(dict, mm):
         try:
-            data = Counter(dict[mm]['Opener'])
-            data2 = Counter(dict[mm]['Spell'])
-            if data2.most_common(2)[0][0] == "none":
-                return [data.most_common(2)[0][0], data2.most_common(2)[1][0]]
-            else:
-                return [data.most_common(2)[0][0], data2.most_common(2)[0][0]]
-        except IndexError as e:
-            return 'No data'
-    def get_open_wrpr(dict, mm):
-        wins = 0
-        count = 0
-        for i, x in enumerate(dict[mm]['Opener']):
-            if most_common(dict, mm)[0] in x:
-                count += 1
-                if dict[mm]['Results'][i] == 'won':
-                    wins += 1
-        try:
-            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1)]
-        except ZeroDivisionError as e:
-            return '000'
-    def get_w10(dict, i):
-        try:
-            return round(sum(dict[i]['W10']) / dict[i]['Count'], 1)
+            return round(dict[mm]['W10'] / dict[mm]['Count'], 1)
         except ZeroDivisionError as e:
             return '0'
-    def get_spell_wrpr(dict, mm):
-        wins = 0
-        count = 0
-        for i, x in enumerate(dict[mm]['Spell']):
-            if most_common(dict, mm)[1] in x:
-                count += 1
-                if dict[mm]['Results'][i] == 'won':
-                    wins += 1
-        try:
-            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1)]
-        except ZeroDivisionError as e:
-            return '000'
-    def calc_elo(dict, mm):
-        try:
-            return round(dict[mm]['Elo'] / dict[mm]['Count'])
-        except ZeroDivisionError as e:
-            return '0'
-    keys = ['Games:', 'Winrate:', 'Pickrate', 'Elo:', 'W on 10:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:','Spells:', '', 'Games:', 'Winrate:', 'Playrate:']
+    keys = ['Games:', 'Winrate:', 'Pickrate', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
     if transparency:
         mode = 'RGBA'
         colors = (0,0,0,0)
@@ -325,9 +283,9 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
         mode = 'RGB'
         colors = (49,51,56)
     if megamind:
-        im = PIL.Image.new(mode=mode, size=(1490-106, 895), color=colors)
+        im = PIL.Image.new(mode=mode, size=(1380-106, 770), color=colors)
     else:
-        im = PIL.Image.new(mode=mode, size=(1490, 895), color=colors)
+        im = PIL.Image.new(mode=mode, size=(1380, 770), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
     im3 = PIL.Image.new(mode="RGB", size=(1495, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -347,479 +305,55 @@ def create_image_mmstats(dict, ranked_count, playerid, avgelo, patch, megamind =
             im.paste(av_image, (24, 100))
         im.paste(gold_border, (24, 100), mask=gold_border)
     if megamind:
-        I1.text((10, 15), str(playername)+string+" Megamind stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+        I1.text((10, 15), str(playername)+string+" Megamind stats (From "+str(games)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     else:
-        I1.text((10, 15), str(playername) + string + " Mastermind stats (From " + str(ranked_count) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 15), str(playername) + string + " Mastermind stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     x = 126
-    y = 190
-    for i in dict:
-        im.paste(im2, (x-12, 100))
-        mm_image = get_icons_image("legion", i)
-        im.paste(mm_image, (x, 112))
-        I1.text((x, 190), str(dict[i]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 240), str(calc_wr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 290), str(calc_pr(dict, i))+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 340), str(calc_elo(dict, i)), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 390), str(get_w10(dict, i)), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 520), str(get_open_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 570), str(get_open_wrpr(dict, i)[1])+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 620), str(get_open_wrpr(dict, i)[2])+'%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 750), str(get_spell_wrpr(dict, i)[0]), font=myFont, fill=(255, 255, 255))
-        I1.text((x, 800), str(get_spell_wrpr(dict, i)[1]) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, 850), str(get_spell_wrpr(dict, i)[2]) + '%', font=myFont, fill=(255, 255, 255))
-        unit_image = get_icons_image("icon", most_common(dict, i)[0])
-        im.paste(unit_image, (x, 440))
-        spell_image = get_icons_image("icon", most_common(dict, i)[1])
-        im.paste(spell_image, (x, 670))
+    y = 175
+    offset = 45
+    for i, mm in enumerate(dict):
+        im.paste(im2, (x - 12, 88))
+        mm_image = get_icons_image("legion", mm)
+        im.paste(mm_image, (x, 100))
+        if dict[mm]["Count"] == 0:
+            continue
+        I1.text((x, y), str(dict[mm]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset), str(calc_wr(dict, mm)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset * 2), str(calc_pr(dict, mm)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset * 3), str(get_w10(dict, mm)), font=myFont, fill=(255, 255, 255))
+        def get_perf_score(dict2, key):
+            new_dict = {}
+            for xy in dict2[key]:
+                if dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] < dict2['Wins'] / dict2['Count']:
+                    continue
+                new_dict[xy] = dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] * (dict2[key][xy]['Count'] / dict2['Count'])
+            newIndex = sorted(new_dict, key=lambda k: new_dict[k], reverse=True)
+            return newIndex
+        newIndex = get_perf_score(dict[mm], 'Opener')
+        temp_image = get_icons_image("icon", newIndex[0])
+        im.paste(temp_image, (x, y + offset * 4))
+        I1.text((x, y + 25 + offset * 5), str(dict[mm]['Opener'][newIndex[0]]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 25 + offset * 6), str(round(dict[mm]['Opener'][newIndex[0]]['Wins'] / dict[mm]['Opener'][newIndex[0]]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 25 + offset * 7), str(round(dict[mm]['Opener'][newIndex[0]]['Count'] / dict[mm]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+        newIndex = get_perf_score(dict[mm], 'Spell')
+        if newIndex[0] == "none": index = newIndex[1]
+        else: index = newIndex[0]
+        temp_image = get_icons_image("icon", index)
+        im.paste(temp_image, (x, y + 25 + offset * 8))
+        I1.text((x, y + 50 + offset * 9), str(dict[mm]['Spell'][index]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 50 + offset * 10), str(round(dict[mm]['Spell'][index]['Wins'] / dict[mm]['Spell'][index]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 50 + offset * 11), str(round(dict[mm]['Spell'][index]['Count'] / dict[mm]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         x += 106
     for k in keys:
-        if (k != 'Open:') and (k != 'Spells:') and (k != ''):
-            im.paste(im3, (10, y+30))
-        I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-        if (k != 'Open:') and (k != 'Spells:') and (k != ''):
-            y += 50
+        if (k != 'Best Open:') and (k != 'Best Spell:') and (k != ''):
+            im.paste(im3, (8, y+30))
+        I1.text((8, y), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+        if (k != 'Best Open:') and (k != 'Best Spell:') and (k != ''):
+            y += offset
         else:
-            y += 40
-    image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
-
-def create_image_mmstats_fiesta(dict, ranked_count, playerid, avgelo, patch, transparency = False):
-    if playerid != 'all' and 'nova cup' not in playerid:
-        playername = apicall_getprofile(playerid)['playerName']
-        avatar = apicall_getprofile(playerid)['avatarUrl']
-    else:
-        playername = playerid.capitalize()
-    def calc_wr(dict, mm):
-        try:
-            return str(round(dict[mm]['Wins']/dict[mm]['Count'] * 100, 1))
-        except ZeroDivisionError as e:
-            return '0'
-    def calc_pr(dict, mm):
-        try:
-            return str(round(dict[mm]['Count'] / ranked_count * 100, 1))
-        except ZeroDivisionError as e:
-            return '0'
-    def most_common(dict, mm, amount, key):
-        try:
-            data = Counter(dict[mm][key])
-            return [data.most_common(amount)]
-        except IndexError as e:
-            return 'No data'
-    def get_wrpr(dict, mm, opener, key):
-        wins = 0
-        count = 0
-        for i, x in enumerate(dict[mm][key]):
-            if opener in x:
-                count += 1
-                if dict[mm]['Results'][i] == 'won':
-                    wins += 1
-        try:
-            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1), wins]
-        except ZeroDivisionError as e:
-            return '000'
-    def get_open_w10(dict, mm, opener):
-        count = 0
-        w10 = 0
-        for i, x in enumerate(dict[mm]['Opener']):
-            if opener in x:
-                w10 += dict[mm]['W10'][i][9]
-                count += 1
-        return round(w10/count, 1)
-    def get_worker_list(dict, mm, waves):
-        workers = []
-        count = 0
-        for c in range(waves):
-            workers.append(0)
-        for x in dict[mm]['W10']:
-            count += 1
-            for i, y in enumerate(workers):
-                workers[i] += x[i]
-        for w, n in enumerate(workers):
-            workers[w] = round(workers[w]/count, 1)
-        return workers
-    def get_leak_list(dict, mm, waves):
-        leaks = []
-        count = 0
-        for c in range(waves):
-            leaks.append(0)
-        for x in dict[mm]['Leaks']:
-            count += 1
-            for i, y in enumerate(leaks):
-                leaks[i] += x[i]
-        for w, n in enumerate(leaks):
-            leaks[w] = round(leaks[w]/count, 1)
-        return leaks
-    def get_open_leak(dict, mm, opener):
-        count = 0
-        waves = 0
-        leak = 0
-        leak_w1 = 0
-        for i, x in enumerate(dict[mm]['Opener']):
-            if opener in x:
-                for counter, l in enumerate(dict[mm]['Leaks'][i]):
-                    if counter == 0:
-                        count += 1
-                        waves += 1
-                        leak_w1 += l
-                        leak += l
-                    else:
-                        leak += l
-                        waves += 1
-        return [round(leak_w1/count, 1), round(leak/waves, 1)]
-
-        return round(w10/count, 1)
-    def calc_elo(dict, mm):
-        try:
-            return round(dict[mm]['Elo'] / dict[mm]['Count'])
-        except ZeroDivisionError as e:
-            return '0'
-    keys = ['Games:', 'Winrate:', 'Pickrate:', 'W on 10:', 'Leaks:', 'W1 Leak:']
-    keys2 = ['Games:', 'Winrate:', 'Playrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
-    if transparency:
-        mode = 'RGBA'
-        colors = (0,0,0,0)
-    else:
-        mode = 'RGB'
-        colors = (49,51,56)
-    if playername != 'All':
-        im = PIL.Image.new(mode=mode, size=(1470, 770), color=colors)
-    else:
-        im = PIL.Image.new(mode=mode, size=(1810, 780), color=colors)
-    im2 = PIL.Image.new(mode="RGB", size=(88, 365), color=(25,25,25))
-    im4 = PIL.Image.new(mode="RGB", size=(812, 760), color=(25, 25, 25))
-    im5 = PIL.Image.new(mode="RGB", size=(320, 760), color=(25, 25, 25))
-    I1 = ImageDraw.Draw(im)
-    ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont_small = ImageFont.truetype(ttf, 20)
-    myFont = ImageFont.truetype(ttf, 25)
-    myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All' or 'Nova cup' in playername:
-        string = ''
-    else:
-        string = "'s"
-        avatar_url = 'https://cdn.legiontd2.com/' + avatar
-        avatar_response = requests.get(avatar_url)
-        av_image = Image.open(BytesIO(avatar_response.content))
-        gold_border = Image.open('Files/gold_64.png')
-        if im_has_alpha(np.array(av_image)):
-            im.paste(av_image, (24, 100), mask=av_image)
-        else:
-            im.paste(av_image, (24, 100))
-        im.paste(gold_border, (24, 100), mask=gold_border)
-    I1.text((10, 15), str(playername)+string+" Fiesta stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-    I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-    x = 126
-    y = 160
-    y2 = 570
-    y3 = 138
-    step = 106
-    offset = 50
-    I1.text((x - 12, 90), "Most common Fiesta openers:", font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-    I1.text((x - 12, y2-70), "Most common Legion Spells with Fiesta:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-    if playername != 'All':
-        I1.text((114+106*5, 90), "Fiesta stats:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        im.paste(im4, (114+106*5, y - 32))
-        fiesta_image_response = requests.get('https://cdn.legiontd2.com/icons/Items/Fiesta.png')
-        fiesta_image = Image.open(BytesIO(fiesta_image_response.content))
-        im.paste(fiesta_image, (x + step * 5, y - 20))
-        I1.text((x + 70 + step * 5, y - 20), "Wins:", font=myFont, fill=(255, 255, 255))
-        I1.text((x + 70 + step * 5, y + 10), "Losses:", font=myFont, fill=(255, 255, 255))
-        I1.text((x + 50 + step * 6, y - 20), str(dict['Fiesta']['Wins']), font=myFont, fill=(0, 255, 0))
-        I1.text((x + 50 + step * 6, y + 10), str(dict['Fiesta']['Count']-dict['Fiesta']['Wins']), font=myFont, fill=(255, 0, 0))
-        winrate = round(dict['Fiesta']['Wins']/dict['Fiesta']['Count']*100, 1)
-        if winrate >= 50:
-            rgb = (0, 255, 0)
-        else:
-            rgb = (255, 0, 0)
-        I1.text((x + 10 + step * 7, y - 5), "Winrate:", font=myFont, fill=(255, 255, 255))
-        I1.text((x + step * 8, y - 5), str(winrate)+'%', font=myFont, fill=(rgb))
-        workers = get_worker_list(dict, 'Fiesta', 10)
-        leaks = get_leak_list(dict, 'Fiesta', 10)
-        waves = ['1','2','3','4','5','6','7','8','9','10']
-        plt.rcParams["figure.figsize"] = (9, 6.2)
-        plt.rcParams['axes.autolimit_mode'] = 'round_numbers'
-        params = {"ytick.color": "w",
-                  "xtick.color": "w",
-                  "axes.labelcolor": "w",
-                  "axes.edgecolor": "w"}
-        plt.rcParams.update(params)
-        plt.grid()
-        plt.plot(waves, workers,color='green',linewidth=3,marker='o',label='Workers')
-        plt.xlabel('Waves')
-        plt.ylabel('Workers')
-        plt.legend(bbox_to_anchor=(0.45,1.07))
-        plt.twinx()
-        plt.plot(waves, leaks, color='red', linewidth=3, marker='o', label='Leak%')
-        plt.ylabel('Leak%')
-        plt.legend(bbox_to_anchor=(0.7,1.07))
-        img_buf = io.BytesIO()
-        plt.savefig(img_buf,transparent=True, format='png')
-        plt.close()
-        worker_graph = Image.open(img_buf)
-        im.paste(worker_graph, (x-60 + step * 5, y), worker_graph)
-    else:
-        offset2 = 30
-        I1.text((114 + 106 * 5, 90), "Fiesta Players:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        leaderboard_ids = most_common(dict, 'Fiesta', 10, 'PlayerIds')
-        im.paste(im5, (114 + 106 * 5, y - 32))
-        for player in leaderboard_ids[0]:
-            player_stats = get_wrpr(dict, 'Fiesta', player[0], 'PlayerIds')
-            player_profile = apicall_getprofile(player[0])
-            avatar = player_profile['avatarUrl']
-            avatar_url = 'https://cdn.legiontd2.com/' + avatar
-            avatar_response = requests.get(avatar_url)
-            av_image = Image.open(BytesIO(avatar_response.content))
-            gold_border = Image.open('Files/gold_64.png')
-            av_image = av_image.resize((48,48))
-            gold_border = gold_border.resize((48,48))
-            if im_has_alpha(np.array(av_image)):
-                im.paste(av_image, (126 + 106 * 5, y3), mask=av_image)
-            else:
-                im.paste(av_image, (126 + 106 * 5, y3))
-            im.paste(gold_border, (126 + 106 * 5, y3), mask=gold_border)
-            I1.text((180 + 106 * 5, y3-5), player_profile['playerName'], font=myFont_small,fill=(255, 255, 255))
-            if player_stats[1] >= 50:
-                rgb = (0,255,0)
-            else:
-                rgb = (255,0,0)
-            I1.text((180 + 106 * 5, y3 - 5 + offset2),'(' + str(player_stats[1]) + '% wr, ' + str(player_stats[0]) + ' games)', font=myFont_small,fill=(rgb))
-            y3 += 65
-        #Graph
-        x2 = 452
-        I1.text((x2 + 106 * 5, 90), "Fiesta stats:", font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),
-                fill=(255, 255, 255))
-        im.paste(im4, (x2 + 106 * 5, y - 32))
-        fiesta_image_response = requests.get('https://cdn.legiontd2.com/icons/Items/Fiesta.png')
-        fiesta_image = Image.open(BytesIO(fiesta_image_response.content))
-        im.paste(fiesta_image, (x2+12 + step * 5, y - 20))
-        I1.text((x2 + 80 + step * 5, y - 20), "Wins:", font=myFont, fill=(255, 255, 255))
-        I1.text((x2 + 80 + step * 5, y + 10), "Losses:", font=myFont, fill=(255, 255, 255))
-        I1.text((x2 + 60 + step * 6, y - 20), str(dict['Fiesta']['Wins']), font=myFont, fill=(0, 255, 0))
-        I1.text((x2 + 60 + step * 6, y + 10), str(dict['Fiesta']['Count'] - dict['Fiesta']['Wins']), font=myFont,
-                fill=(255, 0, 0))
-        winrate = round(dict['Fiesta']['Wins'] / dict['Fiesta']['Count'] * 100, 1)
-        if winrate >= 50:
-            rgb = (0, 255, 0)
-        else:
-            rgb = (255, 0, 0)
-        I1.text((x2 + 20 + step * 7, y - 5), "Winrate:", font=myFont, fill=(255, 255, 255))
-        I1.text((x2 + 10 + step * 8, y - 5), str(winrate) + '%', font=myFont, fill=(rgb))
-        workers = get_worker_list(dict, 'Fiesta', 10)
-        leaks = get_leak_list(dict, 'Fiesta', 10)
-        waves = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-        plt.rcParams["figure.figsize"] = (9, 6.2)
-        plt.rcParams['axes.autolimit_mode'] = 'round_numbers'
-        params = {"ytick.color": "w",
-                  "xtick.color": "w",
-                  "axes.labelcolor": "w",
-                  "axes.edgecolor": "w"}
-        plt.rcParams.update(params)
-        plt.grid()
-        plt.plot(waves, workers, color='green', linewidth=3, marker='o', label='Workers')
-        plt.xlabel('Waves')
-        plt.ylabel('Workers')
-        plt.legend(bbox_to_anchor=(0.45, 1.07))
-        plt.twinx()
-        plt.plot(waves, leaks, color='red', linewidth=3, marker='o', label='Leak%')
-        plt.ylabel('Leak%')
-        plt.legend(bbox_to_anchor=(0.7, 1.07))
-        img_buf = io.BytesIO()
-        plt.savefig(img_buf, transparent=True, format='png')
-        plt.close()
-        worker_graph = Image.open(img_buf)
-        im.paste(worker_graph, (x2 - 60 + step * 5, y), worker_graph)
-    most_common_opens = most_common(dict, 'Fiesta', 5, 'Opener')[0]
-    most_common_spells = most_common(dict, 'Fiesta', 5, 'Spell')[0]
-    for unit in most_common_opens:
-        im.paste(im2, (x-12, y-32))
-        url_new = url2 + unit[0].replace(' ', '') + '.png'
-        response = requests.get(url_new)
-        opener_image = Image.open(BytesIO(response.content))
-        im.paste(opener_image, (x, y-20))
-        I1.text((x, y+offset*1), str(get_wrpr(dict, 'Fiesta', unit[0], 'Opener')[0]), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*2), str(get_wrpr(dict, 'Fiesta', unit[0], 'Opener')[1]) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*3), str(get_wrpr(dict, 'Fiesta', unit[0], 'Opener')[2]) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*4), str(get_open_w10(dict, 'Fiesta', unit[0])), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y+offset*5), str(get_open_leak(dict, 'Fiesta', unit[0])[1]) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*6), str(get_open_leak(dict, 'Fiesta', unit[0])[0]) + '%', font=myFont, fill=(255, 255, 255))
-        x += 106
-    x = 126
-    for spell in most_common_spells:
-        im.paste(im2, (x - 12, y2 - 32))
-        url_new = url2 + spell[0].replace(' ', '') + '.png'
-        if 'none' in url_new:
-            url_new = 'https://cdn.legiontd2.com/icons/Granddaddy.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/PresstheAttack.png':
-            url_new = 'https://cdn.legiontd2.com/icons/PressTheAttack.png'
-        response = requests.get(url_new)
-        spell_image = Image.open(BytesIO(response.content))
-        im.paste(spell_image, (x, y2 - 20))
-        I1.text((x, y2+offset*1), str(get_wrpr(dict, 'Fiesta', spell[0], 'Spell')[0]), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y2+offset*2), str(get_wrpr(dict, 'Fiesta', spell[0], 'Spell')[1]) + '%', font=myFont,fill=(255, 255, 255))
-        I1.text((x, y2+offset*3), str(get_wrpr(dict, 'Fiesta', spell[0], 'Spell')[2]) + '%', font=myFont,fill=(255, 255, 255))
-        x += 106
-    im3 = PIL.Image.new(mode="RGB", size=(86+106*len(most_common_opens), 4), color=(169, 169, 169))
-    for k in keys:
-        im.paste(im3, (10, y+80))
-        I1.text((10, y+50), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-        y += 50
-    for k in keys2:
-        if k == 'Spells:':
-            I1.text((10, y2 + 50), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-            y2 += 50
-        else:
-            im.paste(im3, (10, y2+80))
-            I1.text((10, y2+50), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-            y2 += 50
-    image_id = id_generator()
-    im.save(shared_folder+image_id+'.png')
-    return site+image_id+'.png'
-
-def create_image_mmstats_champion(dict, unit_dict, ranked_count, playerid, avgelo, patch, transparency = False):
-    if playerid != 'all' and 'nova cup' not in playerid:
-        playername = apicall_getprofile(playerid)['playerName']
-        avatar = apicall_getprofile(playerid)['avatarUrl']
-    else:
-        playername = playerid.capitalize()
-    def most_common(mm, amount, key):
-        try:
-            data = Counter(dict[mm][key].keys())
-            return data.most_common(amount)
-        except IndexError as e:
-            return 'No data'
-    def most_common_spell(unit):
-        try:
-            data = Counter(dict['Champion']['ChampionUnit'][unit]['Spell'])
-            return [data.most_common(50)]
-        except IndexError as e:
-            return 'No data'
-    def get_w10(unit):
-        try:
-            return round(dict['Champion']['ChampionUnit'][unit]['W10'] / dict['Champion']['ChampionUnit'][unit]['Count'], 1)
-        except ZeroDivisionError as e:
-            return '0'
-    def calc_elo(mm):
-        try:
-            return round(dict[mm]['Elo'] / dict[mm]['Count'])
-        except ZeroDivisionError as e:
-            return '0'
-    def calc_unit_wr(unit):
-        try:
-            return round(dict['Champion']['ChampionUnit'][unit]['Wins'] / dict['Champion']['ChampionUnit'][unit]['Count'] * 100, 1)
-        except ZeroDivisionError as e:
-            return '0'
-    def get_spell_wr(unit, spell):
-        wins = 0
-        count = 0
-        for i, x in enumerate(dict['Champion']['ChampionUnit'][unit]['Spell']):
-            if spell in x:
-                count += 1
-                if dict['Champion']['ChampionUnit'][unit]['Results'][i] == 'won':
-                    wins += 1
-        try:
-            return round(wins / count * 100, 1)
-        except ZeroDivisionError as e:
-            return '0'
-    keys = ['Games:', 'Winrate:', 'W on 10:', 'Spell:', '', 'Games:', 'Winrate:','Games:', 'Winrate:', 'W on 10:', 'Spell:', '', 'Games:', 'Winrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
-    if transparency:
-        mode = 'RGBA'
-        colors = (0,0,0,0)
-    else:
-        mode = 'RGB'
-        colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1485, 940), color=colors)
-    im2 = PIL.Image.new(mode="RGB", size=(88, 425), color=(25,25,25))
-    I1 = ImageDraw.Draw(im)
-    ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont_small = ImageFont.truetype(ttf, 20)
-    myFont = ImageFont.truetype(ttf, 25)
-    myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All' or 'Nova cup' in playername:
-        string = ''
-    else:
-        string = "'s"
-        avatar_url = 'https://cdn.legiontd2.com/' + avatar
-        avatar_response = requests.get(avatar_url)
-        av_image = Image.open(BytesIO(avatar_response.content))
-        gold_border = Image.open('Files/gold_64.png')
-        if im_has_alpha(np.array(av_image)):
-            im.paste(av_image, (24, 100), mask=av_image)
-        else:
-            im.paste(av_image, (24, 100))
-        im.paste(gold_border, (24, 100), mask=gold_border)
-    I1.text((10, 15), str(playername)+string+" Champion stats (From "+str(ranked_count)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-    I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-    x = 126
-    y = 190
-    offset = 50
-    count = 0
-    line_1 = 0
-    line_2 = 0
-    for unit in unit_dict:
-        if count == 13:
-            line_1 = 13
-            y = 600
-            x = 126
-        elif count < 13:
-            line_1 = count+1
-        if count == 26:
-            line_2 = 13
-            break
-        elif count < 26 and count > 13:
-            line_2 = count - 12
-        im.paste(im2, (x - 12, y-90))
-        if ' ' in unit:
-            unit_string = unit.split(' ')
-            unit_new = ''
-            for s in unit_string:
-                unit_new = unit_new + s.capitalize()
-            url_new = url2 + unit_new + '.png'
-        else:
-            url_new = url2 + unit.capitalize() + '.png'
-        response = requests.get(url_new)
-        opener_image = Image.open(BytesIO(response.content))
-        im.paste(opener_image, (x, y-78))
-        I1.text((x, y), str(dict['Champion']['ChampionUnit'][unit]['Count']), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + offset * 1), str(calc_unit_wr(unit)) + '%', font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + offset * 2), str(get_w10(unit)), font=myFont,fill=(255, 255, 255))
-        spell_name = most_common_spell(unit)[0][0]
-        url_new = url2 + spell_name[0].replace(' ', '') + '.png'
-        if 'none' in url_new:
-            url_new = 'https://cdn.legiontd2.com/icons/Granddaddy.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/PresstheAttack.png':
-            url_new = 'https://cdn.legiontd2.com/icons/PressTheAttack.png'
-        response = requests.get(url_new)
-        spell_image = Image.open(BytesIO(response.content))
-        im.paste(spell_image, (x, y + offset * 3))
-        I1.text((x, y + offset * 4.6), str(spell_name[1]), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + offset * 5.6), str(get_spell_wr(unit, spell_name[0])) + '%', font=myFont, fill=(255, 255, 255))
-        x += 106
-        count += 1
-    im3 = PIL.Image.new(mode="RGB", size=(86 + 106 * line_1, 4), color=(169, 169, 169))
-    x = 126
-    y = 190
-    count2 = 0
-    for k in keys:
-        if count2 == 7 and count > 13:
-            y = 600
-            x = 126
-            im3 = PIL.Image.new(mode="RGB", size=(86 + 106 * line_2, 4), color=(169, 169, 169))
-        elif count2 == 7 and line_2 == 0:
-            break
-        if (k != 'Open:') and (k != 'Spell:') and (k != ''):
-            im.paste(im3, (10, y + 30))
-        I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        if (k != 'Open:') and (k != 'Spell:') and (k != ''):
-            y += 50
-        else:
-            y += 40
-        count2 += 1
+            y += offset-10
+    im.show()
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -830,65 +364,29 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
         playername = playerid.capitalize()
-    def calc_wr(dict, mm):
+    def calc_wr(dict, unit):
         try:
-            return str(round(dict[mm]['Wins']/dict[mm]['Count'] * 100, 1))
+            return str(round(dict[unit]['OpenWins'] / dict[unit]['Count'] * 100, 1))
         except ZeroDivisionError as e:
             return '0'
-    def calc_pr(dict, mm):
+    def calc_pr(dict, unit):
         try:
-            if megamind:
-                return str(round(dict[mm]['Count'] / megamind_count * 100, 1))
-            else:
-                return str(round(dict[mm]['Count'] / ranked_count * 100, 1))
+            return str(round(dict[unit]['Count'] / games * 100, 1))
         except ZeroDivisionError as e:
             return '0'
-    def most_common(dict, mm):
-        try:
-            data = Counter(dict[mm]['Opener'])
-            data2 = Counter(dict[mm]['Spell'])
-            return [data.most_common(15), data2.most_common(15)]
-        except IndexError as e:
-            return 'No data'
-    def get_open_wrpr(dict, mm, open):
-        wins = 0
-        count = 0
-        for i, x in enumerate(dict[mm]['Opener']):
-            if open in x:
-                count += 1
-                if dict[mm]['Results'][i] == 'won':
-                    wins += 1
-        try:
-            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1)]
-        except ZeroDivisionError as e:
-            return '000'
     def get_w10(dict, i):
         try:
-            return round(sum(dict[i]['W10']) / dict[i]['Count'], 1)
+            return round(dict[i]['W4'] / dict[i]['Count'], 1)
         except ZeroDivisionError as e:
             return '0'
-    def get_spell_wrpr(dict, mm, spell):
-        wins = 0
-        count = 0
-        for i, x in enumerate(dict[mm]['Spell']):
-            if spell in x:
-                count += 1
-                if dict[mm]['Results'][i] == 'won':
-                    wins += 1
-        try:
-            return [count, round(wins / count * 100, 1), round(count / dict[mm]['Count'] * 100, 1)]
-        except ZeroDivisionError as e:
-            return '000'
-    keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:','', 'Games:', 'Winrate:', 'Playrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
+    keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
     if transparency:
         mode = 'RGBA'
-        colors = (0,0,0,0)
+        colors = (0, 0, 0, 0)
     else:
         mode = 'RGB'
-        colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1700, 550), color=colors)
+        colors = (49, 51, 56)
+    im = PIL.Image.new(mode=mode, size=(1700, 545), color=colors)
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
     im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
@@ -900,65 +398,56 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
         suffix = ''
     else:
         suffix = "'s"
-    im.paste(get_icons_image("legion", mastermind), (10,10))
-    list_open = most_common(dict, mastermind)[0]
-    list_spell = most_common(dict, mastermind)[1]
-    if dict[mastermind]["Count"] == 0:
-        return "No " + mastermind + " games found."
-    I1.text((82, 10), str(playername) + suffix + " "+mastermind+" stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    unit_name = mastermind
     try:
-        I1.text((10, 80), "Games: "+str(dict[mastermind]["Count"])+", Wins: "+str(dict[mastermind]["Wins"])+", Losses: "+str(dict[mastermind]["Count"]-dict[mastermind]["Wins"])+", Winrate: "+str(round(dict[mastermind]["Wins"]/dict[mastermind]["Count"]*100,1))+"%" + ", W10: "+str(get_w10(dict, mastermind)), font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        im.paste(get_icons_image("legion", unit_name), (10, 10))
+        dict_open = dict[unit_name]["Opener"]
+        dict_spell = dict[unit_name]["Spell"]
+    except KeyError:
+        return unit_name + " not found."
+    if dict[unit_name]["Count"] == 0:
+        return "No " + unit_name + " openings found."
+    I1.text((82, 10), str(playername) + suffix + " " + mastermind + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    try:
+        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + " Wins: " + str(dict[unit_name]["Wins"]) + " Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + " Winrate: " + str(round(dict[unit_name]["Wins"] / dict[unit_name]["Count"] * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[mastermind]["Count"]) + ", Wins: " + str(dict[mastermind]["Wins"]) + ", Losses: " + str(dict[mastermind]["Count"] - dict[mastermind]["Wins"]) + ", Winrate: " + str(0) + "%" + ", W10: "+str(get_w10(dict, mastermind)), font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + " Wins: " + str(dict[unit_name]["Wins"]) + " Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + " Winrate: " + str(0) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
-    y = 175-46
+    y = 175 - 46
     offset = 45
     for i in range(15):
-        im.paste(im2, (x - 12, 88+30))
+        im.paste(im2, (x - 12, 88 + 30))
         x += 106
     x = 126
-    newIndex = sorted(list_open, key=lambda k: k[1], reverse=True)
-    for unit in newIndex:
-        temp_image = get_icons_image("icon", unit[0])
-        im.paste(temp_image, (x, y))
-        I1.text((x, y + 70), str(get_open_wrpr(dict, mastermind, unit[0])[0]), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 70+offset), str(get_open_wrpr(dict, mastermind, unit[0])[1]) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 70+offset * 2), str(get_open_wrpr(dict, mastermind, unit[0])[2]) + '%',font=myFont, fill=(255, 255, 255))
+    newIndex = sorted(dict_open, key=lambda k: int(dict_open[k]["Count"]), reverse=True)
+    for add in newIndex:
+        im.paste(get_icons_image("icon", add), (x, y))
+        I1.text((x, y + 25 + offset * 1), str(dict_open[add]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 25 + offset * 2), str(round(dict_open[add]['Wins'] / dict_open[add]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 25 + offset * 3), str(round(dict_open[add]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         x += 106
-    newIndex = sorted(list_spell, key=lambda k: k[1], reverse=True)
+    newIndex = sorted(dict_spell, key=lambda k: int(dict_spell[k]["Count"]), reverse=True)
     x = 126
     for spell in newIndex:
-        if ' ' in spell[0]:
-            string = spell[0].split(' ')
-            spell_new = ''
-            for s in string:
-                spell_new = spell_new + s.capitalize()
-            url_new = url2 + spell_new + '.png'
-        else:
-            url_new = url2 + spell[0].capitalize() + '.png'
-        if 'None' in url_new:
-            url_new = 'https://cdn.legiontd2.com/icons/Granddaddy.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/PresstheAttack.png':
-            url_new = 'https://cdn.legiontd2.com/icons/PressTheAttack.png'
-        response = requests.get(url_new)
-        temp_image = Image.open(BytesIO(response.content))
-        im.paste(temp_image, (x, y + 70+offset * 3))
-        I1.text((x, y + 95 + offset * 4),  str(get_spell_wrpr(dict, mastermind, spell[0])[0]), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 95 + offset * 5), str(get_spell_wrpr(dict, mastermind, spell[0])[1]) + '%',font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 95 + offset * 6), str(get_spell_wrpr(dict, mastermind, spell[0])[2]) + '%',font=myFont, fill=(255, 255, 255))
+        if spell == "none": continue
+        im.paste(get_icons_image("icon", spell), (x, y + 25 + offset * 4))
+        I1.text((x, y + 50 + offset * 5), str(dict_spell[spell]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 50 + offset * 6), str(round(dict_spell[spell]['Wins'] / dict_spell[spell]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + 50 + offset * 7), str(round(dict_spell[spell]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         x += 106
     for k in keys:
         if (k != 'Open:') and (k != '') and (k != 'Spell:'):
-            im.paste(im3, (10, y+30))
+            im.paste(im3, (10, y + 30))
         if k == 'Spell:':
-            I1.text((10, y-5), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+            I1.text((10, y - 5), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
         else:
             I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
         if (k != 'Open:') and (k != '') and (k != 'Spell:'):
             y += offset
         else:
             y += offset - 10
+    im.show()
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -1158,8 +647,6 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
         except ZeroDivisionError as e:
             return '0'
     keys = ['Adds:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:', 'Spells:','', 'Games:', 'Winrate:', 'Playrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
     if transparency:
         mode = 'RGBA'
         colors = (0,0,0,0)
@@ -1206,19 +693,7 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
     x = 126
     newIndex = sorted(dict_open, key=lambda k: int(dict_open[k]["Count"]), reverse=True)
     for add in newIndex:
-        if ' ' in add:
-            string = add.split(' ')
-            unit_new = ''
-            for s in string:
-                unit_new = unit_new + s.capitalize()
-            url_new = url2 + unit_new + '.png'
-        else:
-            url_new = url2 + add.capitalize() + '.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/PackRatNest.png':
-            url_new = 'https://cdn.legiontd2.com/icons/PackRat(Footprints).png'
-        response = requests.get(url_new)
-        temp_image = Image.open(BytesIO(response.content))
-        im.paste(temp_image, (x, y))
+        im.paste(get_icons_image("icon", add), (x, y))
         I1.text((x, y + 25+offset * 1), str(dict_open[add]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 25+offset * 2), str(round(dict_open[add]['Wins'] / dict_open[add]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 25+offset * 3), str(round(dict_open[add]['Count'] / dict[unit_name]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
@@ -1226,16 +701,7 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
     x = 126
     newIndex = sorted(dict_mms, key=lambda k: int(dict_mms[k]["Count"]), reverse=True)
     for mm in newIndex:
-        url_new = url + mm.capitalize() + '.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/Items/Cashout.png':
-            url_new = 'https://cdn.legiontd2.com/icons/Items/CashOut.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/Items/Lockin.png':
-            url_new = 'https://cdn.legiontd2.com/icons/Items/LockIn.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/Items/Doublelockin.png':
-            url_new = 'https://cdn.legiontd2.com/icons/Items/DoubleLockIn.png'
-        response = requests.get(url_new)
-        temp_image = Image.open(BytesIO(response.content))
-        im.paste(temp_image, (x, y + 25+offset * 4))
+        im.paste(get_icons_image("legion", mm), (x, y + 25+offset * 4))
         I1.text((x, y + 50+offset * 5), str(dict_mms[mm]['Count']), font=myFont,fill=(255, 255, 255))
         I1.text((x, y + 50+offset * 6), str(round(dict_mms[mm]['Wins'] / dict_mms[mm]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 50+offset * 7),str(round(dict_mms[mm]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
@@ -1243,21 +709,7 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
     newIndex = sorted(dict_spell, key=lambda k: int(dict_spell[k]["Count"]), reverse=True)
     x = 126
     for spell in newIndex:
-        if ' ' in spell:
-            string = spell.split(' ')
-            spell_new = ''
-            for s in string:
-                spell_new = spell_new + s.capitalize()
-            url_new = url2 + spell_new + '.png'
-        else:
-            url_new = url2 + spell.capitalize() + '.png'
-        if 'None' in url_new:
-            url_new = 'https://cdn.legiontd2.com/icons/Granddaddy.png'
-        if url_new == 'https://cdn.legiontd2.com/icons/PresstheAttack.png':
-            url_new = 'https://cdn.legiontd2.com/icons/PressTheAttack.png'
-        response = requests.get(url_new)
-        temp_image = Image.open(BytesIO(response.content))
-        im.paste(temp_image, (x, y + 50+offset * 8))
+        im.paste(get_icons_image("icon", spell), (x, y + 50+offset * 8))
         I1.text((x, y + 75 + offset * 9), str(dict_spell[spell]['Count']), font=myFont,fill=(255, 255, 255))
         I1.text((x, y + 75 + offset * 10), str(round(dict_spell[spell]['Wins'] / dict_spell[spell]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 75 + offset * 11),str(round(dict_spell[spell]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
@@ -1273,6 +725,7 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
             y += offset
         else:
             y += offset - 10
+    im.show()
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -1544,6 +997,25 @@ def handle_response(message, author) -> str:
         return ladder_update(input[1], old_games=False)
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
+    if '!script' and str(author) == "drachir_":
+        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
+        path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
+        games = sorted(os.listdir(path3))
+        for i, x in enumerate(games):
+            print(str(i+1) + " out of " + str(len(games)))
+            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + x + "/gamedata/"
+            try:
+                print(path2)
+                games2 = os.listdir(path2)
+            except FileNotFoundError:
+                print("not found")
+                continue
+            for game in games2:
+                file_name = os.path.join(path2, game)
+                try:
+                    shutil.copy(file_name, path1)
+                except shutil.Error:
+                    continue
 
 def apicall_getid(playername):
     request_type = 'players/byName/'
@@ -1619,14 +1091,16 @@ def apicall_pullgamedata(playerid, offset, path, expected, old_games = False):
             break
         if (x['queueType'] == 'Normal'):
             if Path(Path(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+ '_' + str(x['_id']) + ".json")).is_file():
-                if old_games:
-                    continue
-                else:
-                    print('File already there, breaking loop.')
-                    break
+                print('File already there, breaking loop.')
+                break
             ranked_count += 1
             with open(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_' + str(x['_id']) + ".json", "w") as f:
                 json.dump(x, f)
+                f.close()
+            if not Path(Path(str(pathlib.Path(__file__).parent.resolve()) + "/Games/"+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+ '_' + str(x['_id']) + ".json")).is_file():
+                with open(str(pathlib.Path(__file__).parent.resolve()) + "/Games/"+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_' + str(x['_id']) + ".json", "w") as f2:
+                    json.dump(x, f2)
+                    f2.close()
         games_count += 1
     output.append(ranked_count)
     output.append(games_count)
@@ -1803,53 +1277,30 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             except FileNotFoundError:
                 return playerid + " not found. :("
         else:
-            path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
-            playernames = sorted(os.listdir(path1))
+            path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
             raw_data = []
             json_files = []
             json_counter = 0
-            for i, x in enumerate(playernames):
-                if '.zip' in x:
-                    continue
-                # if x == "0":
-                #     continue
-                # playerid = apicall_getid(playernames[i])
-                # if playerid == 0:
-                #     print('invalid id')
-                #     continue
-                path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + '/gamedata/'
-                # print(path2)
-                # os.rename(path2, str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + str(playerid))
-                # os.rename(str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + str(playerid) + "/gamecount_" + playernames[i] + ".txt", str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + str(playerid) + "/gamecount_" + str(playerid) + ".txt")
-                if patch != '0':
-                    for y in patch_list:
-                        try:
-                            json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v'+y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
-                        except FileNotFoundError:
-                            continue
-                else:
-                    try:
-                        json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
-                    except FileNotFoundError:
-                        continue
+            if patch != '0':
+                for y in patch_list:
+                    json_files.extend([path1 + pos_json for pos_json in os.listdir(path1) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v'+y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
+            else:
+                    json_files.extend([path1 + pos_json for pos_json in os.listdir(path1) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
             if sort_by == "date":
                 sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1],"%Y-%m-%d-%H-%M-%S")), reverse=True)
             elif sort_by == "elo":
                 sorted_json_files = sorted(json_files, key=lambda x: x.split("_")[-2], reverse=True)
         count = 0
-        ids = []
         for i, x in enumerate(sorted_json_files):
             if count == games and games != 0:
                 break
             with open(x) as f:
-                raw_data_partial = json.load(f)
-                if raw_data_partial['_id'] not in ids:
-                    ids.append(raw_data_partial['_id'])
-                else:
-                    continue
+                try:
+                    raw_data_partial = json.load(f)
+                except json.decoder.JSONDecodeError:
+                    os.remove(x)
+                    print("file error")
                 f.close()
-                # print(x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
-                # os.rename(x, x.split('_')[0] + '-' + raw_data_partial['date'].split('T')[1].replace(':', '-').split('.')[0] + '_v10-' + x.split('_v10-')[1])
                 if earlier_than_wave10 == True:
                     count += 1
                     raw_data.append(raw_data_partial)
@@ -1858,10 +1309,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
                     raw_data.append(raw_data_partial)
     if update == 0:
         print(len(raw_data))
-        if len(raw_data) > 15000:
-            return "Too many games, please limit the data."
-        else:
-            return raw_data
+        return raw_data
     else:
         if new_profile:
             return data
@@ -1920,11 +1368,6 @@ def pull_games_by_id(file, name):
             with open(str(path + '/gamedata/') + x['date'].split('.')[0].replace('T', '-').replace(':','-') + '_' +x['version'].replace('.', '-') + '_' + str(x['gameElo']) + '_' + str(x['_id']) + ".json","w") as f:
                 json.dump(x, f)
     return 'Success'
-
-def apicall_matchhistorydetails(playerid):
-    playername = apicall_getprofile(playerid)['playerName']
-    history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
-    return
 
 def apicall_leaderboard(ranks=10, transparency=False):
     url = 'https://apiv2.legiontd2.com/players/stats?limit=' + str(ranks) + '&sortBy=overallElo&sortDirection=-1'
@@ -2222,8 +1665,6 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
     starting_wave -= 1
     if playername.lower() == 'all':
         playerid = 'all'
-        if ((games > get_games_saved_count(playerid)* 0.25)) and (min_elo < 2700) and (patch == '0'):
-            return 'Too many games, please limit data.'
     elif 'nova cup' in playername:
         playerid = playername
     else:
@@ -3168,7 +2609,10 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
                     for pos in player["buildPerWave"][-1]:
                         if pos.split(":")[1] == player["chosenSpellLocation"] and pos.split(":")[0].replace("_unit_id", "").replace("_", " ") in unit:
                             spell = player["chosenSpell"]
-                            current += 2
+                            current += 1
+                            for un in unit:
+                                if un.lower() in fighter_list:
+                                    current += 1
                 else:
                     if spell != "all":
                         expected += 1
@@ -3419,7 +2863,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
         mmnames_list = [mastermind]
     masterminds_dict = {}
     for x in mmnames_list:
-        masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": [], "Results": [], "Opener": [], "Spell": [], "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
+        masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
     gameelo_list = []
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
@@ -3433,7 +2877,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
     games = len(history_raw)
     if 'nova cup' in playerid:
         playerid = 'all'
-    case_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'DoubleLockIn', 'Kingsguard']
+    case_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard']
     patches = set()
     megamind_count = 0
     print('Starting mmstats command...')
@@ -3445,31 +2889,47 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
         patches.add(game["version"])
         gameelo_list.append(game["gameElo"])
         match mastermind:
-            case 'All':
+            case 'All' | 'Megamind':
                 for player in game["playersData"]:
                     if player["playerId"] == playerid or playerid == "all":
-                        if player["megamind"] == True:
+                        if player["megamind"] == True and mastermind != "Megamind":
                             mastermind_current = 'Megamind'
                         else:
                             if player["legion"] == "Mastermind":
+                                continue
+                            if mastermind == "Megamind" and player["legion"] == "Megamind":
                                 continue
                             mastermind_current = player["legion"]
                         masterminds_dict[mastermind_current]["Count"] += 1
                         if player["gameResult"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["W10"].append(player["workersPerWave"][9])
+                            masterminds_dict[mastermind_current]["W10"] += player["workersPerWave"][9]
                         except IndexError:
                             pass
-                        masterminds_dict[mastermind_current]['Results'].append(player["gameResult"])
-                        masterminds_dict[mastermind_current]['Spell'].append(player["chosenSpell"])
                         masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
                         if ',' in player["firstWaveFighters"]:
                             string = player["firstWaveFighters"]
                             commas = string.count(',')
-                            masterminds_dict[mastermind_current]['Opener'].append(string.split(',', commas)[commas])
+                            opener = string.split(',', commas)[commas]
                         else:
-                            masterminds_dict[mastermind_current]['Opener'].append(player["firstWaveFighters"])
+                            opener = player["firstWaveFighters"]
+                        if player["chosenSpell"] not in masterminds_dict[mastermind_current]['Spell']:
+                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]] = {"Count": 1, "Wins": 0}
+                            if player["gameResult"] == 'won':
+                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                        else:
+                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Count"] += 1
+                            if player["gameResult"] == 'won':
+                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                        if opener not in masterminds_dict[mastermind_current]['Opener']:
+                            masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
+                            if player["gameResult"] == 'won':
+                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                        else:
+                            masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
+                            if player["gameResult"] == 'won':
+                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
             case mastermind if mastermind in case_list:
                 for player in game["playersData"]:
                     if (playerid == 'all' or player["playerId"] == playerid) and (mastermind == player["legion"]):
@@ -3478,113 +2938,32 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
                         if player["gameResult"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["W10"].append(player["workersPerWave"][9])
+                            masterminds_dict[mastermind_current]["W10"] += player["workersPerWave"][9]
                         except IndexError:
                             pass
-                        masterminds_dict[mastermind_current]['Results'].append(player["gameResult"])
-                        masterminds_dict[mastermind_current]['Spell'].append(player["chosenSpell"])
                         masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
                         if ',' in player["firstWaveFighters"]:
                             string = player["firstWaveFighters"]
                             commas = string.count(',')
-                            masterminds_dict[mastermind_current]['Opener'].append(string.split(',', commas)[commas])
+                            opener = string.split(',', commas)[commas]
                         else:
-                            masterminds_dict[mastermind_current]['Opener'].append(player["firstWaveFighters"])
-            case 'Fiesta':
-                for player in game["playersData"]:
-                    if playerid == 'all' or player["playerId"] == playerid:
-                        if player["legion"] == 'Fiesta':
-                            masterminds_dict['Fiesta']["Count"] += 1
+                            opener = player["firstWaveFighters"]
+                        if player["chosenSpell"] not in masterminds_dict[mastermind_current]['Spell']:
+                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]] = {"Count": 1, "Wins": 0}
                             if player["gameResult"] == 'won':
-                                masterminds_dict['Fiesta']["Wins"] += 1
-                            masterminds_dict['Fiesta']["W10"].append(player["workersPerWave"])
-                            masterminds_dict['Fiesta']['Results'].append(player["gameResult"])
-                            masterminds_dict['Fiesta']['Spell'].append(player["chosenSpell"])
-                            masterminds_dict['Fiesta']['PlayerIds'].append(player["playerId"])
-                            masterminds_dict['Fiesta']['Elo'] += player["overallElo"]
-                            leaks_temp = []
-                            for y in range(game["endingWave"]):
-                                if len(player["leaksPerWave"][y]) > 0:
-                                    p = calc_leak(player["leaksPerWave"][y], y)
-                                    leaks_temp.append(p)
-                                else:
-                                    leaks_temp.append(0)
-                            masterminds_dict['Fiesta']['Leaks'].append(leaks_temp)
-                            if ',' in player["firstWaveFighters"]:
-                                string = player["firstWaveFighters"]
-                                commas = string.count(',')
-                                masterminds_dict['Fiesta']['Opener'].append(string.split(',', commas)[commas])
-                            else:
-                                masterminds_dict['Fiesta']['Opener'].append(player["firstWaveFighters"])
-            case 'Megamind':
-                for player in game["playersData"]:
-                    if playerid == 'all' or player["playerId"] == playerid:
-                        if player["megamind"] == True:
-                            if player["legion"] == 'Megamind':
-                                continue
-                            else:
-                                megamind_count += 1
-                                masterminds_dict[player["legion"]]["Count"] += 1
-                                if player["gameResult"] == 'won':
-                                    masterminds_dict[player["legion"]]["Wins"] += 1
-                                try:
-                                    masterminds_dict[player["legion"]]["W10"].append(player["workersPerWave"][9])
-                                except IndexError:
-                                    pass
-                                masterminds_dict[player["legion"]]['Results'].append(player["gameResult"])
-                                masterminds_dict[player["legion"]]['Spell'].append(player["chosenSpell"])
-                                masterminds_dict[player["legion"]]['Elo'] += player["overallElo"]
-                                if ',' in player["firstWaveFighters"]:
-                                    string = player["firstWaveFighters"]
-                                    commas = string.count(',')
-                                    masterminds_dict[player["legion"]]['Opener'].append(string.split(',', commas)[commas])
-                                else:
-                                    masterminds_dict[player["legion"]]['Opener'].append(player["firstWaveFighters"])
-            case 'Champion':
-                unit_dict = {}
-                for u_js in units_json:
-                    if u_js["unitId"] and int(u_js["totalValue"]) > 0:
-                        string = u_js["unitId"]
-                        string = string.replace('_', ' ')
-                        string = string.replace(' unit id', '')
-                        unit_dict[string] = int(u_js["totalValue"])
-                for player in game["playersData"]:
-                    if playerid == 'all' or player["playerId"] == playerid and player["legion"] == 'Champion':
-                        champ_location_current = player["chosenChampionLocation"]
-                        if champ_location_current == '-1|-1':
-                            continue
-                        masterminds_dict['Champion']["Count"] += 1
-                        if player["gameResult"] == 'won':
-                            masterminds_dict['Champion']["Wins"] += 1
-                        masterminds_dict['Champion']['Elo'] += player["overallElo"]
-                        champ_found = False
-                        for wave in player["buildPerWave"]:
-                            if champ_found == True:
-                                break
-                            for unit in wave:
-                                unit_name = unit.split('_unit_id:')[0].replace('_', ' ')
-                                if unit.split(':')[1] == champ_location_current and 'grarl' not in unit and 'pirate' not in unit and unit_dict[unit_name] > 50:
-                                    if unit_name in masterminds_dict['Champion']['ChampionUnit']:
-                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Count'] += 1
-                                        if player["gameResult"] == 'won':
-                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["Wins"] += 1
-                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Spell'].append(player["chosenSpell"])
-                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Results'].append(player["gameResult"])
-                                        try:
-                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["W10"] += player["workersPerWave"][9]
-                                        except IndexError:
-                                            pass
-                                    else:
-                                        masterminds_dict['Champion']['ChampionUnit'][unit_name] = {"Count": 1, "Wins": 0, "Spell": [], "W10": 0, "Results": []}
-                                        if player["gameResult"] == 'won':
-                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["Wins"] += 1
-                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Spell'].append(player["chosenSpell"])
-                                        masterminds_dict['Champion']['ChampionUnit'][unit_name]['Results'].append(player["gameResult"])
-                                        try:
-                                            masterminds_dict['Champion']['ChampionUnit'][unit_name]["W10"] += player["workersPerWave"][9]
-                                        except IndexError:
-                                            pass
-                                    champ_found = True
+                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                        else:
+                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Count"] += 1
+                            if player["gameResult"] == 'won':
+                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                        if opener not in masterminds_dict[mastermind_current]['Opener']:
+                            masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
+                            if player["gameResult"] == 'won':
+                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                        else:
+                            masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
+                            if player["gameResult"] == 'won':
+                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
     new_patches = []
     for x in patches:
         string = x
@@ -3734,6 +3113,8 @@ def get_icons_image(type, name):
                 image_path = "Files/icons/MPS.png"
             if image_path == "Files/icons/PriestessOfTheAbyss.png":
                 image_path = "Files/icons/PriestessoftheAbyss.png"
+            if image_path == "Files/icons/PackRat(footprints).png":
+                image_path = "Files/icons/PackRatNest.png"
         case "icon_send":
             image_path = 'Files/icons/' + name + ".png"
             if image_path == "Files/icons/PresstheAttack.png":
@@ -3887,45 +3268,76 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
         return "Game ID: [" + gameid + "](" +site +image_id+")"
 
 def apicall_elo(playername, rank):
-    playerid = apicall_getid(playername)
-    if playerid == 0:
-        return 'Player ' + str(playername) + ' not found.'
-    if playerid == 1:
-        return 'API limit reached.'
-    else:
-        stats = apicall_getstats(playerid)
-        playtime_minutes = stats['secondsPlayed'] / 60
-        playtime_hours = playtime_minutes / 60
+    if playername != None:
+        playerid = apicall_getid(playername)
+        if playerid == 0:
+            return 'Player ' + str(playername) + ' not found.'
+        if playerid == 1:
+            return 'API limit reached.'
+    win_count = 0
+    elo_change = 0
+    def elochange(elochange):
+        if elo_change >=0:
+            return "+" + str(elo_change)
+        else:
+            return str(elo_change)
+    if rank == 0:
         url = 'https://apiv2.legiontd2.com/players/stats?limit=100&sortBy=overallElo&sortDirection=-1'
         api_response = requests.get(url, headers=header)
         leaderboard = json.loads(api_response.text)
-        if stats['rankedWinsThisSeason'] + stats['rankedLossesThisSeason'] > 0:
-            history_details = apicall_matchhistorydetails(playerid)
+        for i, player in enumerate(leaderboard):
+            if player["_id"] == playerid:
+                rank = i+1
+                rank_emote = get_ranked_emote(player['overallElo'])
+                peak_emote = get_ranked_emote(player['overallPeakEloThisSeason'])
+                history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
+                for game in history_raw:
+                    for player2 in game["playersData"]:
+                        if player2["playerId"] == playerid:
+                            if player2["gameResult"] == "won":
+                                win_count += 1
+                            elo_change += player2["eloChange"]
+                return str(playername).capitalize() + ' is rank ' + str(i+1) + ' with ' + str(
+                    player['overallElo']) + rank_emote+' elo (Peak: ' + str(player['overallPeakEloThisSeason']) + peak_emote+') and ' + str(
+                    round((player['secondsPlayed'] / 60)/60)) + ' in game hours.\nThey have won ' + \
+                    str(win_count) + ' out of their last 10 games. (Elo change: ' + \
+                    elochange(elo_change) + ')'
         else:
-            history_details = [0,0]
-        new_dict = {item['_id']: item['_id'] for item in leaderboard}
-        rank_emote = get_ranked_emote(stats['overallElo'])
-        peak_emote = get_ranked_emote(stats['overallPeakEloThisSeason'])
-        if rank == 0:
-            for i, key in enumerate(new_dict.keys()):
-                if key == playerid:
-                    index = i
-                    return str(playername).capitalize() + ' is rank ' + str(index + 1) + ' with ' + str(
-                        stats['overallElo']) + rank_emote+' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + peak_emote+') and ' + str(
-                        round(playtime_hours)) + ' in game hours.\nThey have won ' + \
-                        str(history_details[1]) + ' out of their last 10 games. (Elo change: ' + \
-                        str(history_details[0]) + ')'
-            else:
-                return str(playername).capitalize() + ' has ' + str(stats['overallElo']) + rank_emote+ ' elo (Peak: ' + str(
-                    stats['overallPeakEloThisSeason']) + peak_emote+') with ' + str(round(playtime_hours)) + ' in game hours.\n' \
-                    'They have won ' + str(history_details[1]) + ' out of their last 10 games. ' \
-                    '(Elo change: ' + str(history_details[0]) + ')'
-        else:
-            return str(playername).capitalize() + ' is rank ' + str(rank) + ' with ' + str(
-                stats['overallElo']) + rank_emote+ ' elo (Peak: ' + str(stats['overallPeakEloThisSeason']) + peak_emote+') and ' + str(
-                round(playtime_hours)) + ' in game hours.\nThey have won ' + \
-                str(history_details[1]) + ' out of their last 10 games. (Elo change: ' + \
-                str(history_details[0]) + ')'
+            player = apicall_getstats(playerid)
+            rank_emote = get_ranked_emote(player['overallElo'])
+            peak_emote = get_ranked_emote(player['overallPeakEloThisSeason'])
+            history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
+            for game in history_raw:
+                for player2 in game["playersData"]:
+                    if player2["playerId"] == playerid:
+                        if player2["gameResult"] == "won":
+                            win_count += 1
+                        elo_change += player2["eloChange"]
+            return str(playername).capitalize() + ' has ' + str(
+                player['overallElo']) + rank_emote + ' elo (Peak: ' + str(player['overallPeakEloThisSeason']) + peak_emote + ') and ' + str(
+                round((player['secondsPlayed'] / 60)/60)) + ' in game hours.\nThey have won ' + \
+                str(win_count) + ' out of their last 10 games. (Elo change: ' + \
+                elochange(elo_change) + ')'
+    else:
+        url = 'https://apiv2.legiontd2.com/players/stats?limit=1&offset=' + str(int(rank)-1) + '&sortBy=overallElo&sortDirection=-1'
+        api_response = requests.get(url, headers=header)
+        player = json.loads(api_response.text)[0]
+        playerid = player["_id"]
+        playername = apicall_getprofile(playerid)["playerName"]
+        rank_emote = get_ranked_emote(player['overallElo'])
+        peak_emote = get_ranked_emote(player['overallPeakEloThisSeason'])
+        history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
+        for game in history_raw:
+            for player2 in game["playersData"]:
+                if player2["playerId"] == playerid:
+                    if player2["gameResult"] == "won":
+                        win_count += 1
+                    elo_change += player2["eloChange"]
+        return playername + ' is rank ' + str(rank) + ' with ' + str(
+            player['overallElo']) + rank_emote + ' elo (Peak: ' + str(player['overallPeakEloThisSeason']) + peak_emote + ') and ' + str(
+            round((player['secondsPlayed'] / 60)/60)) + ' in game hours.\nThey have won ' + \
+            str(win_count) + ' out of their last 10 games. (Elo change: ' + \
+            elochange(elo_change) + ')'
 
 def apicall_bestie(playername):
     playerid = apicall_getid(playername)
@@ -3979,19 +3391,6 @@ def apicall_showlove(playername, playername2):
                     return playername.capitalize() + ' has played ' + str(
                         love_count) + ' games with ' + playername2.capitalize() + ' :heart:'
     return 'Not enough games played together'
-
-def apicall_rank(rank):
-    url = 'https://apiv2.legiontd2.com/players/stats?limit=1&offset=' + str(
-        int(rank) - 1) + '&sortBy=overallElo&sortDirection=-1'
-    api_response = requests.get(url, headers=header)
-    player_info = json.loads(api_response.text)
-    if 'Limit Exceeded' in player_info:
-        return 'API limit reached.'
-    try:
-        name = apicall_getprofile(player_info[0]['_id'])
-    except Exception:
-        return 'Player not found.'
-    return apicall_elo(str(name['playerName']).lower(), rank)
 
 def apicall_gamestats(playername):
     playerid = apicall_getid(playername)

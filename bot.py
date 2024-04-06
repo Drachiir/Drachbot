@@ -22,7 +22,7 @@ with open('Files/Secrets.json') as f:
 
 current_season = "11"
 
-current_min_elo = 2400
+current_min_elo = 2300
 
 async def twitch_get_streams(names: list, playernames: list = []) -> dict:
     twitch = await Twitch(secret_file.get("twitchappid"), secret_file.get("twitchsecret"))
@@ -188,7 +188,7 @@ def run_discord_bot():
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
-                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_rank, rank))
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elo,None, rank))
                 pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
@@ -502,7 +502,7 @@ def run_discord_bot():
                 playernames = [playernames]
             if "-" in waves:
                 waves_list = [int(waves.split("-")[0]),int(waves.split("-")[1])]
-                if waves_list[0] > waves_list[1] or waves_list[0] < 1:
+                if waves_list[0] > waves_list[1] or waves_list[0] < 1 or waves_list[1] > 21:
                     await interaction.followup.send("Invalid waves input.")
             else:
                 await interaction.followup.send("Invalid waves input.")
