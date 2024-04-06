@@ -34,29 +34,10 @@ with open('Files/Secrets.json') as f:
     f.close()
 
 header = {'x-api-key': secret_file.get('apikey')}
+
 site = "https://overlay.drachbot.site/Images/"
+
 shared_folder = "/shared/Images/"
-
-def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
-
-def api_call_logger(request_type):
-    try:
-        with open("Files/api_calls.json", "r") as file:
-            dict = json.load(file)
-        date = datetime.now()
-        if "next_reset" not in dict:
-            dict["next_reset"] = (date + timedelta(days=1)).strftime("%m/%d/%Y")
-        elif datetime.strptime(dict["next_reset"], "%m/%d/%Y") < datetime.now():
-            dict = {"next_reset": (date + timedelta(days=1)).strftime("%m/%d/%Y")}
-        if request_type not in dict:
-            dict[request_type] = 1
-        else:
-            dict[request_type] += 1
-        with open("Files/api_calls.json", "w") as file:
-            json.dump(dict, file)
-    except Exception:
-        traceback.print_exc()
 
 mercs = {"Snail": (20, 6), "Giant Snail": (20, 6), "Robo": (40, 10), "Lizard": (40, 12), "Dragon Turtle": (40, 12), "Brute": (60, 15), "Fiend": (60, 18), "Dino": (80, 24),
          "Hermit": (80, 20), "Cannoneer": (100, 30), "Imp": (100, 13), "Safety Mole": (120, 30), "Drake": (120, 36), "Pack Leader": (160, 40),
@@ -80,12 +61,70 @@ with open("Files/slang.json", "r") as slang_file:
     slang = json.load(slang_file)
     slang_file.close()
 
+def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+def api_call_logger(request_type):
+    try:
+        with open("Files/api_calls.json", "r") as file:
+            dict = json.load(file)
+        date = datetime.now()
+        if "next_reset" not in dict:
+            dict["next_reset"] = (date + timedelta(days=1)).strftime("%m/%d/%Y")
+        elif datetime.strptime(dict["next_reset"], "%m/%d/%Y") < datetime.now():
+            dict = {"next_reset": (date + timedelta(days=1)).strftime("%m/%d/%Y")}
+        if request_type not in dict:
+            dict[request_type] = 1
+        else:
+            dict[request_type] += 1
+        with open("Files/api_calls.json", "w") as file:
+            json.dump(dict, file)
+    except Exception:
+        traceback.print_exc()
+
 def get_ranked_emote(rank):
     rank_emote = ""
     for emote in rank_emotes:
         if rank >= rank_emotes[emote][0]:
             rank_emote = rank_emotes[emote][1]
     return rank_emote
+
+def get_icons_image(type, name):
+    match type:
+        case "avatar":
+            name = name.split("Icons/")
+            image_path = 'Files/icons/' + name[1]
+        case "icon":
+            if "_" in name:
+                name = name.split("_")
+                new_name = ""
+                for string in name:
+                    new_name += string.capitalize()
+            elif " " in name:
+                name = name.split(" ")
+                new_name = ""
+                for string in name:
+                    new_name += string.capitalize()
+            else:
+                new_name = name.capitalize()
+            image_path = 'Files/icons/' + new_name + ".png"
+            if image_path == "Files/icons/Aps.png":
+                image_path = "Files/icons/APS.png"
+            if image_path == "Files/icons/HellRaiserBuffed.png":
+                image_path = "Files/icons/HellRaiser.png"
+            if image_path == "Files/icons/Mps.png":
+                image_path = "Files/icons/MPS.png"
+            if image_path == "Files/icons/PriestessOfTheAbyss.png":
+                image_path = "Files/icons/PriestessoftheAbyss.png"
+            if image_path == "Files/icons/PackRat(footprints).png":
+                image_path = "Files/icons/PackRatNest.png"
+        case "icon_send":
+            image_path = 'Files/icons/' + name + ".png"
+            if image_path == "Files/icons/PresstheAttack.png":
+                image_path = "Files/icons/PressTheAttack.png"
+        case "legion":
+            image_path = 'Files/icons/Items/' + name.replace(" ", "") + ".png"
+    return Image.open(open(image_path, "rb"))
 
 def count_mythium(send):
     send_amount = 0
@@ -267,7 +306,9 @@ def create_image_mmstats(dict, games, playerid, avgelo, patch, megamind = False,
             return '0'
     def calc_pr(dict, mm):
         try:
-            return str(round(dict[mm]['Count'] / games * 100, 1))
+            if megamind: games2 = megamind_count
+            else: games2 = games
+            return str(round(dict[mm]['Count'] / games2 * 100, 1))
         except ZeroDivisionError as e:
             return '0'
     def get_w10(dict, mm):
@@ -364,21 +405,6 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
         playername = playerid.capitalize()
-    def calc_wr(dict, unit):
-        try:
-            return str(round(dict[unit]['OpenWins'] / dict[unit]['Count'] * 100, 1))
-        except ZeroDivisionError as e:
-            return '0'
-    def calc_pr(dict, unit):
-        try:
-            return str(round(dict[unit]['Count'] / games * 100, 1))
-        except ZeroDivisionError as e:
-            return '0'
-    def get_w10(dict, i):
-        try:
-            return round(dict[i]['W4'] / dict[i]['Count'], 1)
-        except ZeroDivisionError as e:
-            return '0'
     keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
     if transparency:
         mode = 'RGBA'
@@ -410,9 +436,9 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
     I1.text((82, 10), str(playername) + suffix + " " + mastermind + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     try:
-        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + " Wins: " + str(dict[unit_name]["Wins"]) + " Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + " Winrate: " + str(round(dict[unit_name]["Wins"] / dict[unit_name]["Count"] * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + ", Wins: " + str(dict[unit_name]["Wins"]) + ", Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + ", Winrate: " + str(round(dict[unit_name]["Wins"] / dict[unit_name]["Count"] * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + " Wins: " + str(dict[unit_name]["Wins"]) + " Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + " Winrate: " + str(0) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + ", Wins: " + str(dict[unit_name]["Wins"]) + ", Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + ", Winrate: " + str(0) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 175 - 46
     offset = 45
@@ -421,7 +447,8 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
         x += 106
     x = 126
     newIndex = sorted(dict_open, key=lambda k: int(dict_open[k]["Count"]), reverse=True)
-    for add in newIndex:
+    for idx, add in enumerate(newIndex):
+        if idx == 15: break
         im.paste(get_icons_image("icon", add), (x, y))
         I1.text((x, y + 25 + offset * 1), str(dict_open[add]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + 25 + offset * 2), str(round(dict_open[add]['Wins'] / dict_open[add]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
@@ -429,7 +456,8 @@ def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermi
         x += 106
     newIndex = sorted(dict_spell, key=lambda k: int(dict_spell[k]["Count"]), reverse=True)
     x = 126
-    for spell in newIndex:
+    for idx, spell in enumerate(newIndex):
+        if idx == 16: break
         if spell == "none": continue
         im.paste(get_icons_image("icon", spell), (x, y + 25 + offset * 4))
         I1.text((x, y + 50 + offset * 5), str(dict_spell[spell]['Count']), font=myFont, fill=(255, 255, 255))
@@ -681,9 +709,9 @@ def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transp
     I1.text((82, 10), str(playername) + suffix + " "+string_title+" opener stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
     try:
-        I1.text((10, 80), "Games: "+str(dict[unit_name]["Count"])+" Wins: "+str(dict[unit_name]["OpenWins"])+" Losses: "+str(dict[unit_name]["Count"]-dict[unit_name]["OpenWins"])+" Winrate: "+str(round(dict[unit_name]["OpenWins"]/dict[unit_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: "+str(dict[unit_name]["Count"])+", Wins: "+str(dict[unit_name]["OpenWins"])+", Losses: "+str(dict[unit_name]["Count"]-dict[unit_name]["OpenWins"])+", Winrate: "+str(round(dict[unit_name]["OpenWins"]/dict[unit_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + " Wins: " + str(dict[unit_name]["OpenWins"]) + " Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["OpenWins"]) + " Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + ", Wins: " + str(dict[unit_name]["OpenWins"]) + ", Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["OpenWins"]) + ", Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 175-46
     offset = 45
@@ -904,9 +932,9 @@ def create_image_spellstats_specific(dict, games, playerid, avgelo, patch, trans
     I1.text((82, 10), str(playername) + suffix + " "+string_title+" stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
     try:
-        I1.text((10, 80), "Games: "+str(dict[spell_name]["Count"])+" Wins: "+str(dict[spell_name]["Wins"])+" Losses: "+str(dict[spell_name]["Count"]-dict[spell_name]["Wins"])+" Winrate: "+str(round(dict[spell_name]["Wins"]/dict[spell_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: "+str(dict[spell_name]["Count"])+", Wins: "+str(dict[spell_name]["Wins"])+", Losses: "+str(dict[spell_name]["Count"]-dict[spell_name]["Wins"])+", Winrate: "+str(round(dict[spell_name]["Wins"]/dict[spell_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[spell_name]["Count"]) + " Wins: " + str(dict[spell_name]["Wins"]) + " Losses: " + str(dict[spell_name]["Count"] - dict[spell_name]["Wins"]) + " Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[spell_name]["Count"]) + ", Wins: " + str(dict[spell_name]["Wins"]) + ", Losses: " + str(dict[spell_name]["Count"] - dict[spell_name]["Wins"]) + ", Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 175-46
     offset = 45
@@ -962,13 +990,6 @@ def create_image_spellstats_specific(dict, games, playerid, avgelo, patch, trans
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
 
-def count_value(playername, value, player_names, data):
-    value_count = 0
-    for i in range(len(player_names[1])):
-        if str(player_names[1][i]).lower() == playername and str(data[1][i]).lower() == value:
-            value_count = value_count + 1
-    return value_count
-
 def handle_response(message, author) -> str:
     p_message = message.lower()
     if '!elo fine' in p_message:    return str(apicall_elo('fine', 0) + ' :eggplant:')
@@ -982,7 +1003,7 @@ def handle_response(message, author) -> str:
     if 'shea' in p_message:         return 'sister? <:sheastare:1121047323464712273>'
     if 'aviator' in p_message:      return '<:aviator:1180232477537738944>'
     if 'lucy' in p_message:         return 'snail angle <:Dice:1180232938399469588>'
-    if 'kingdan' in p_message:         return "like its the most fun i've had playing legion pretty much"
+    if 'kingdan' in p_message:      return "like its the most fun i've had playing legion pretty much"
     if 'genom' in p_message:        return ":rat:"
     if 'quacker' in p_message:      return ":duck: quack"
     if 'toikan' in p_message:       return "nyctea, :older_man:"
@@ -993,8 +1014,8 @@ def handle_response(message, author) -> str:
     if '!github' in p_message:      return 'https://github.com/Drachiir/Legion-Elo-Bot'
     if '!test' in p_message:        return api_call_logger("yo")
     if '!update' in p_message and str(author) == 'drachir_':
-        input = p_message.split("|")
-        return ladder_update(input[1], old_games=False)
+        input = p_message.split(" ")
+        return ladder_update(input[1])
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
     if '!script' and str(author) == "drachir_":
@@ -1049,32 +1070,17 @@ def apicall_getstats(playerid):
     return stats
 
 def get_games_saved_count(playerid):
-    if playerid == 'all':
-        count = 0
-        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
-        playernames = os.listdir(path1)
-        for i, x in enumerate(playernames):
-            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playernames[i] + "/gamedata/"
-            try:
-                json_files = [pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json')]
-            except FileNotFoundError:
-                continue
-            except NotADirectoryError:
-                continue
-            count += len(json_files)
-        return count
-    else:
-        path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + "/gamedata/"
-        if Path(Path(str(path))).is_dir():
-            json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
-            if len(json_files) == 0:
-                return 200
-            else:
-                return len(json_files)
-        else:
+    path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + "/gamedata/"
+    if Path(Path(str(path))).is_dir():
+        json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
+        if len(json_files) == 0:
             return 200
+        else:
+            return len(json_files)
+    else:
+        return 200
 
-def apicall_pullgamedata(playerid, offset, path, expected, old_games = False):
+def apicall_pullgamedata(playerid, offset, path, expected):
     ranked_count = 0
     games_count = 0
     output = []
@@ -1106,9 +1112,9 @@ def apicall_pullgamedata(playerid, offset, path, expected, old_games = False):
     output.append(games_count)
     return output
 
-def get_games_loop(playerid, offset, path, expected, timeout_limit = 3, old_games = False):
+def get_games_loop(playerid, offset, path, expected, timeout_limit = 3):
     print("Starting get_games_loop, expecting " + str(expected) + " games.")
-    data = apicall_pullgamedata(playerid, offset, path, expected, old_games=old_games)
+    data = apicall_pullgamedata(playerid, offset, path, expected)
     count = data[0]
     games_count = data[1]
     timeout = 0
@@ -1116,19 +1122,9 @@ def get_games_loop(playerid, offset, path, expected, timeout_limit = 3, old_game
         if timeout == timeout_limit:
             print('Timeout while pulling games.')
             break
-        if old_games:
-            old_games_check = False
-            offset -= 50
-            if offset < 0 and old_games_check == False:
-                offset = 0
-                old_games_check = True
-            elif old_games_check:
-                print("Couldnt find missing games")
-                break
-        else:
-            offset += 50
-        data = apicall_pullgamedata(playerid, offset, path, expected, old_games=old_games)
-        if data[0] + data[1] == 0 and old_games == False:
+        offset += 50
+        data = apicall_pullgamedata(playerid, offset, path, expected)
+        if data[0] + data[1] == 0:
             timeout += 1
         count += data[0]
         games_count += data[1]
@@ -1136,7 +1132,7 @@ def get_games_loop(playerid, offset, path, expected, timeout_limit = 3, old_game
         print('All '+str(expected)+' required games pulled.')
     return games_count
 
-def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", old_games = False):
+def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date"):
     patch_list = []
     if patch != '0' and "," in patch:
         patch_list = patch.replace(" ", "").split(',')
@@ -1216,13 +1212,6 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
             json_files = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json')]
             if len(json_files) < games2:
                 games_count += get_games_loop(playerid, games_amount_old, path, games2-len(json_files))
-            if old_games:
-                json_files2 = [pos_json for pos_json in os.listdir(path + 'gamedata/') if pos_json.endswith('.json') and pos_json.split("_")[1].startswith("v11")]
-                print(len(json_files2))
-                print(ranked_games)
-                if len(json_files2) < ranked_games:
-                    print("Searching old games for " + playerid)
-                    games_count += get_games_loop(playerid, ranked_games, path, ranked_games-len(json_files2), old_games=old_games)
             with open(str(path) + "gamecount_" + playerid + ".txt", "w") as f:
                 f.truncate(0)
                 lines = [str(ranked_games), str(games_amount_old+games_count)]
@@ -1316,17 +1305,7 @@ def apicall_getmatchistory(playerid, games, min_elo=0, patch='0', update = 0, ea
         else:
             return games_diff
 
-def ffstats():
-    games = apicall_getmatchistory("all", 0, patch="11.01", earlier_than_wave10=True)
-    ff_count = 0
-    win_team = []
-    lose_team = []
-    for game in games:
-        if game["endingWave"] < 10:
-            ff_count += 1
-    return str(len(games)) + " " + str(ff_count)
-
-def ladder_update(amount=100, old_games = True):
+def ladder_update(amount=100):
     url = 'https://apiv2.legiontd2.com/players/stats?limit='+str(amount)+'&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=header)
     leaderboard = json.loads(api_response.text)
@@ -1336,12 +1315,12 @@ def ladder_update(amount=100, old_games = True):
         ranked_games = player['rankedWinsThisSeason'] + player['rankedLossesThisSeason']
         print(ranked_games)
         if ranked_games >= 200:
-            games_count += apicall_getmatchistory(player["_id"], 200, 0, '0', 1, old_games=old_games)
+            games_count += apicall_getmatchistory(player["_id"], 200, 0, '0', 1)
         elif ranked_games == 0:
             print('No games this season.')
             continue
         else:
-            games_count += apicall_getmatchistory(player["_id"], ranked_games, 0, '0', 1, old_games=old_games)
+            games_count += apicall_getmatchistory(player["_id"], ranked_games, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
 
 def pull_games_by_id(file, name):
@@ -1462,8 +1441,6 @@ def apicall_elograph(playername, games, patch, transparency = False):
         return 'Player ' + playername + ' not found.'
     if playerid == 1:
         return 'API limit reached.'
-    if games == 0:
-        games = get_games_saved_count(playerid)
     try:
         history_raw = apicall_getmatchistory(playerid, games, 0, patch, earlier_than_wave10=True)
     except TypeError as e:
@@ -2211,7 +2188,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         else:
             patches_list.append(game["version"])
             for i, x in enumerate(playerids_ranked_west):
-                if x == playerid and (masterminds_ranked_west[i] == mm1 or mm1 == "" or mm1 == "All"):
+                if (x == playerid or playerid == "all") and (masterminds_ranked_west[i] == mm1 or mm1 == "" or mm1 == "All"):
                     if option == 'against':
                         if masterminds_ranked_east[0] in all_dict:
                             all_dict[masterminds_ranked_east[0]]["Count"] += 1
@@ -2255,7 +2232,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                                 if gameresult_ranked_west == "won":
                                     all_dict[masterminds_ranked_west[1]]["Wins"] += 1
             for i, x in enumerate(playerids_ranked_east):
-                if x == playerid and (masterminds_ranked_east[i] == mm1 or mm1 == "" or mm1 == "All"):
+                if (x == playerid or playerid == "all") and (masterminds_ranked_east[i] == mm1 or mm1 == "" or mm1 == "All"):
                     if option == 'against':
                         if masterminds_ranked_west[0] in all_dict:
                             all_dict[masterminds_ranked_west[0]]["Count"] += 1
@@ -2327,7 +2304,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         output_string_2 = playername2[0].capitalize() + suffix + " " + mm2_str
     else:
         output_string_2 = playername2.capitalize()
-    if playerid2 == 'all' and playerid != "all" and mm1 == "" and (mm2 == "All" or mm2 == "") or (playerid != "all" and playerid2 == "all" and mm1 != "" and mm2 != ""):
+    if all_dict:
         reverse = True
         if sort == "EloChange+":
             sort = "EloChange"
@@ -2734,6 +2711,7 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     patches = []
     gameelo_list = []
     count = 0
+    print("starting openstats...")
     for game in history_raw:
         patches.append(game["version"])
         gameelo_list.append(game["gameElo"])
@@ -2892,12 +2870,17 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
             case 'All' | 'Megamind':
                 for player in game["playersData"]:
                     if player["playerId"] == playerid or playerid == "all":
-                        if player["megamind"] == True and mastermind != "Megamind":
-                            mastermind_current = 'Megamind'
+                        if player["megamind"] == True:
+                            megamind_count += 1
+                            if mastermind != "Megamind":
+                                mastermind_current = 'Megamind'
+                            else:
+                                if player["legion"] == "Megamind": continue
+                                mastermind_current = player["legion"]
                         else:
                             if player["legion"] == "Mastermind":
                                 continue
-                            if mastermind == "Megamind" and player["legion"] == "Megamind":
+                            if mastermind == "Megamind":
                                 continue
                             mastermind_current = player["legion"]
                         masterminds_dict[mastermind_current]["Count"] += 1
@@ -3085,43 +3068,6 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
         return create_image_spellstats(spell_dict, games, playerid, avgelo, patches)
     else:
         return create_image_spellstats_specific(spell_dict, games, playerid, avgelo, patches, spell_name=spellname)
-
-def get_icons_image(type, name):
-    match type:
-        case "avatar":
-            name = name.split("Icons/")
-            image_path = 'Files/icons/' + name[1]
-        case "icon":
-            if "_" in name:
-                name = name.split("_")
-                new_name = ""
-                for string in name:
-                    new_name += string.capitalize()
-            elif " " in name:
-                name = name.split(" ")
-                new_name = ""
-                for string in name:
-                    new_name += string.capitalize()
-            else:
-                new_name = name.capitalize()
-            image_path = 'Files/icons/' + new_name + ".png"
-            if image_path == "Files/icons/Aps.png":
-                image_path = "Files/icons/APS.png"
-            if image_path == "Files/icons/HellRaiserBuffed.png":
-                image_path = "Files/icons/HellRaiser.png"
-            if image_path == "Files/icons/Mps.png":
-                image_path = "Files/icons/MPS.png"
-            if image_path == "Files/icons/PriestessOfTheAbyss.png":
-                image_path = "Files/icons/PriestessoftheAbyss.png"
-            if image_path == "Files/icons/PackRat(footprints).png":
-                image_path = "Files/icons/PackRatNest.png"
-        case "icon_send":
-            image_path = 'Files/icons/' + name + ".png"
-            if image_path == "Files/icons/PresstheAttack.png":
-                image_path = "Files/icons/PressTheAttack.png"
-        case "legion":
-            image_path = 'Files/icons/Items/' + name.replace(" ", "") + ".png"
-    return Image.open(open(image_path, "rb"))
 
 def apicall_gameid_visualizer(gameid, start_wave=0):
     if start_wave > 21:

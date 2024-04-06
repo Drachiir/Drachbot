@@ -114,13 +114,8 @@ def get_top_games(queue):
                 f.close()
         path2 = path+game2
         mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2)).timestamp()
-        #date_diff = datetime.now() - mod_date
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-        # if platform.system() == "Linux":
-        #     minutes_diff = date_diff.total_seconds() / 60
-        # elif platform.system() == "Windows":
-        #     minutes_diff = date_diff.total_seconds() / 60 - 60
-        output += "**Top Game "+str(idx+1)+ ", Game Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+", [Gameid](<"+"https://overlay.drachbot.site/Gameids/"+game2+">),  Started "+str(timestamp)+".**\n"
+        output += "**Game "+str(idx+1)+ " Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+", [Gameid](<"+"https://overlay.drachbot.site/Gameids/"+game2+">),  Started "+str(timestamp)+".**\n"
         for c, data in enumerate(txt):
             if c == len(txt)-1:
                 output += "\n"
