@@ -43,14 +43,12 @@ async def twitch_get_streams(names: list, playernames: list = []) -> dict:
     await  twitch.close()
     return streams_dict
 
-async def send_message(message, user_message, is_private, username):
+async def send_message(message, user_message, username):
     loop = asyncio.get_running_loop()
     with concurrent.futures.ProcessPoolExecutor() as pool:
         try:
             response = await loop.run_in_executor(pool, functools.partial(responses.handle_response, user_message, username))
-            await message.author.send(response) if is_private else await message.channel.send(response)
-        except discord.DiscordException as e:
-            print(e)
+            await message.channel.send(response)
         except Exception:
             traceback.print_exc()
 
@@ -77,11 +75,8 @@ def save_live_game(gameid, playerlist):
             f.write('\n'.join(playerlist))
             f.close()
             
-def get_top_games(queue):
-    if queue == "Ranked":
-        path = "Livegame/Ranked/"
-    else:
-        path = "Livegame/Classic/"
+def get_top_games():
+    path = "Livegame/Ranked/"
     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
     livegame_files = sorted(livegame_files, key=lambda x: int(x.split("_")[1].split(".")[0]), reverse=True)
     topgames = []
@@ -549,16 +544,13 @@ def run_discord_bot():
     @tree.command(name="help", description="Gives some info on how to use all the commands.")
     async def help(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=False, thinking=True)
-        try:
-            await interaction.followup.send("Common Inputs:\n"
-                                            "**'playername'**: Needs to be a playername currently in use, or 'all' to retrieve data from any player if the command supports it\n"
-                                            "**'games'**: Any integer, or 0 to get all games available based on the other inputs.\n"
-                                            "**'min_elo'**: Any integer, defines minimum avg game elo that a game needs to be included into the set of games.\n"
-                                            "**'patch'**: Any patch in XX.XX format. Appending multiple patches with comas as delimiter is possible.\n"
-                                            "           -Also using a '+' infront of a single patch, counts as any all the patches that come after(including the initial one, works only within the same season version.)\n"
-                                            "           -Using a '-' between 2 patches takes the entire range from those patches.")
-        except discord.NotFound as e:
-            print(e)
+        await interaction.followup.send("Common Inputs:\n"
+                                        "**'playername'**: Needs to be a playername currently in use, or 'all' to retrieve data from any player in the Database if the command supports it\n"
+                                        "**'games'**: Any integer, or 0 to get all games available based on the other inputs.\n"
+                                        "**'min_elo'**: Any integer, defines minimum avg game elo that a game needs to be included into the set of games.\n"
+                                        "**'patch'**: Any patch in XX.XX format. Appending multiple patches with comas as delimiter is possible.\n"
+                                        "           -Also using a '+' infront of a single patch, counts as any all the patches that come after(including the initial one, works only within the same season version.)\n"
+                                        "           -Using a '-' between 2 patches takes the entire range from those patches.")
 
     @tree.command(name="sendstats", description="Send stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
@@ -596,7 +588,7 @@ def run_discord_bot():
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
-                response = await loop.run_in_executor(pool, functools.partial(get_top_games, "Ranked"))
+                response = await loop.run_in_executor(pool, get_top_games)
                 pool.shutdown()
                 if len(response) > 0:
                     await interaction.followup.send(response)
@@ -641,20 +633,13 @@ def run_discord_bot():
     async def on_message(message):
         if '!' in message.content:
             if "!sync" == message.content and "drachir_" == str(message.author):
-                try:
-                    print(await tree.sync(guild=None))
-                except Exception:
-                    traceback.print_exc()
+                print(await tree.sync(guild=None))
             username = str(message.author)
             user_message = str(message.content)
             channel = str(message.channel)
             print(f"{username} said: '{user_message}'({channel})")
         else: return
-        if user_message[0] == '?':
-            user_message = user_message[1:]
-            await send_message(message, user_message, is_private=True)
-        else:
-            await send_message(message, user_message, False, username)
+        await send_message(message, user_message, username)
 
     @client2.event
     async def on_message(message):
