@@ -108,6 +108,8 @@ def get_icons_image(type, name):
             else:
                 new_name = name.capitalize()
             image_path = 'Files/icons/' + new_name + ".png"
+            if image_path == "Files/icons/None.png":
+                image_path = "Files/icons/Granddaddy.png"
             if image_path == "Files/icons/Aps.png":
                 image_path = "Files/icons/APS.png"
             if image_path == "Files/icons/HellRaiserBuffed.png":
@@ -293,30 +295,43 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
         f.write(html_file)
     return playername+'_output.html'
 
-def create_image_mmstats(dict, games, playerid, avgelo, patch, megamind = False, megamind_count = 0, transparency = False):
+def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = False, megamind_count = 0, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
         playername = playerid.capitalize()
     def calc_pr(dict, mm):
-        try:
-            if megamind: games2 = megamind_count
-            else: games2 = games
-            return str(round(dict[mm]['Count'] / games2 * 100, 1))
-        except ZeroDivisionError as e:
-            return '0'
-    keys = ['Games:', 'Winrate:', 'Pickrate', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
-    if transparency:
-        mode = 'RGBA'
-        colors = (0,0,0,0)
-    else:
-        mode = 'RGB'
-        colors = (49,51,56)
-    if megamind:
-        im = PIL.Image.new(mode=mode, size=(1380, 770), color=colors)
-    else:
-        im = PIL.Image.new(mode=mode, size=(1485, 770), color=colors)
+        if megamind: games2 = megamind_count
+        else: games2 = games
+        return str(round(dict[mm]['Count'] / games2 * 100, 1))
+    def get_perf_score(dict2, key):
+        new_dict = {}
+        for xy in dict2[key]:
+            if dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] < dict2['Wins'] / dict2['Count']:
+                continue
+            new_dict[xy] = dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] * (dict2[key][xy]['Count'] / dict2['Count'])
+        newIndex = sorted(new_dict, key=lambda k: new_dict[k], reverse=True)
+        return newIndex
+    if transparency: config = ['RGBA', (0,0,0,0)]
+    else: config = ['RGB', (49,51,56)]
+    match mode:
+        case "Mastermind":
+            if megamind: im = PIL.Image.new(mode=config[0], size=(1380, 770), color=config[1])
+            else: im = PIL.Image.new(mode=config[0], size=(1485, 770), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Pickrate', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["Opener", "Spell"]
+            icon_type = "legion"
+        case "Open":
+            im = PIL.Image.new(mode=config[0], size=(1700, 975), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 4:', 'Best Add:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["OpenWith", "MMs", "Spells"]
+            icon_type = "icon"
+        case "Spell":
+            im = PIL.Image.new(mode=config[0], size=(1700, 770), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["Opener", "MMs"]
+            icon_type = "icon"
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
@@ -334,53 +349,52 @@ def create_image_mmstats(dict, games, playerid, avgelo, patch, megamind = False,
         else:
             im.paste(av_image, (24, 100))
         im.paste(gold_border, (24, 100), mask=gold_border)
-    if megamind:
-        I1.text((10, 15), str(playername)+string+" Megamind stats (From "+str(games)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-    else:
-        I1.text((10, 15), str(playername) + string + " Mastermind stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    if megamind: I1.text((10, 15), str(playername)+string+" Megamind stats (From "+str(games)+" ranked games, Avg elo: "+str(avgelo)+")", font=myFont_title, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
+    else: I1.text((10, 15), str(playername) + string + " "+mode+" stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
     x = 126
     y = 175
     offset = 45
-    for i, mm in enumerate(dict):
-        if dict[mm]["Count"] == 0:
-            continue
+    offset2 = 25
+    offset3 = 0
+    offset_counter = 4
+    for i, dict_key in enumerate(dict):
+        if dict[dict_key]["Count"] == 0 or i == 15:
+            break
         im.paste(im2, (x - 12, 88))
-        mm_image = get_icons_image("legion", mm)
-        im.paste(mm_image, (x, 100))
-        I1.text((x, y), str(dict[mm]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + offset), str(round(dict[mm]['Wins']/dict[mm]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + offset * 2), str(calc_pr(dict, mm)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + offset * 3), str(round(dict[mm]['W10'] / dict[mm]['Count'], 1)), font=myFont, fill=(255, 255, 255))
-        def get_perf_score(dict2, key):
-            new_dict = {}
-            for xy in dict2[key]:
-                if dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] < dict2['Wins'] / dict2['Count']:
-                    continue
-                new_dict[xy] = dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] * (dict2[key][xy]['Count'] / dict2['Count'])
-            newIndex = sorted(new_dict, key=lambda k: new_dict[k], reverse=True)
-            return newIndex
-        newIndex = get_perf_score(dict[mm], 'Opener')
-        temp_image = get_icons_image("icon", newIndex[0])
-        im.paste(temp_image, (x, y + offset * 4))
-        I1.text((x, y + 25 + offset * 5), str(dict[mm]['Opener'][newIndex[0]]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25 + offset * 6), str(round(dict[mm]['Opener'][newIndex[0]]['Wins'] / dict[mm]['Opener'][newIndex[0]]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25 + offset * 7), str(round(dict[mm]['Opener'][newIndex[0]]['Count'] / dict[mm]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        newIndex = get_perf_score(dict[mm], 'Spell')
-        if newIndex[0] == "none": index = newIndex[1]
-        else: index = newIndex[0]
-        temp_image = get_icons_image("icon", index)
-        im.paste(temp_image, (x, y + 25 + offset * 8))
-        I1.text((x, y + 50 + offset * 9), str(dict[mm]['Spell'][index]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50 + offset * 10), str(round(dict[mm]['Spell'][index]['Wins'] / dict[mm]['Spell'][index]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50 + offset * 11), str(round(dict[mm]['Spell'][index]['Count'] / dict[mm]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+        im.paste(get_icons_image(icon_type, dict_key), (x, 100))
+        I1.text((x, y), str(dict[dict_key]['Count']), font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset), str(round(dict[dict_key]['Wins']/dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset * 2), str(calc_pr(dict, dict_key)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset * 3), str(round(dict[dict_key]['Worker'] / dict[dict_key]['Count'], 1)), font=myFont, fill=(255, 255, 255))
+        for val in dict_values:
+            newIndex = get_perf_score(dict[dict_key], val)
+            if newIndex:
+                if newIndex[0] == "none":
+                    try:
+                        index = newIndex[1]
+                    except IndexError:
+                        index = newIndex[0]
+                else:
+                    index = newIndex[0]
+                if val != "MMs": type = "icon"
+                else: type = "legion"
+                im.paste(get_icons_image(type, newIndex[0]), (x, y + offset3 + offset * offset_counter))
+                I1.text((x, y + offset2 + offset * (offset_counter+1)), str(dict[dict_key][val][newIndex[0]]['Count']), font=myFont, fill=(255, 255, 255))
+                I1.text((x, y + offset2 + offset * (offset_counter+2)), str(round(dict[dict_key][val][newIndex[0]]['Wins'] / dict[dict_key][val][newIndex[0]]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+                I1.text((x, y + offset2 + offset * (offset_counter+3)), str(round(dict[dict_key][val][newIndex[0]]['Count'] / dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+            offset2 += 25
+            offset3 += 25
+            offset_counter += 4
+        offset2 = 25
+        offset3 = 0
+        offset_counter = 4
         x += 106
-    im3 = PIL.Image.new(mode="RGB", size=(x-offset, 4), color=(169, 169, 169))
+    im3 = PIL.Image.new(mode="RGB", size=(x-38, 4), color=(169, 169, 169))
     for k in keys:
-        if (k != 'Best Open:') and (k != 'Best Spell:') and (k != ''):
-            im.paste(im3, (8, y+30))
         I1.text((8, y), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-        if (k != 'Best Open:') and (k != 'Best Spell:') and (k != ''):
+        if k.startswith("Best") == False and (k != ''):
+            im.paste(im3, (8, y + 30))
             y += offset
         else:
             y += offset-10
@@ -388,421 +402,87 @@ def create_image_mmstats(dict, games, playerid, avgelo, patch, megamind = False,
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
 
-def create_image_mmstats_specific(dict, games, playerid, avgelo, patch, mastermind, transparency = False):
+def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, specific_value, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
     else:
         playername = playerid.capitalize()
-    keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
     if transparency:
-        mode = 'RGBA'
-        colors = (0, 0, 0, 0)
+        config = ['RGBA', (0, 0, 0, 0)]
     else:
-        mode = 'RGB'
-        colors = (49, 51, 56)
-    im = PIL.Image.new(mode=mode, size=(1700, 545), color=colors)
-    im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
-    im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
+        config = ['RGB', (49, 51, 56)]
+    match mode:
+        case "Mastermind":
+            im = PIL.Image.new(mode=config[0], size=(1700, 545), color=config[1])
+            keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["Opener", "Spell"]
+            icon_type = "legion"
+        case "Open":
+            im = PIL.Image.new(mode=config[0], size=(1700, 745), color=config[1])
+            keys = ['Adds:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:', 'Spell:','', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["OpenWith", "MMs", "Spells"]
+            icon_type = "icon"
+        case "Spell":
+            im = PIL.Image.new(mode=config[0], size=(1700, 545), color=config[1])
+            keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["Opener", "MMs"]
+            icon_type = "icon"
+    im2 = PIL.Image.new(mode="RGB", size=(88, 205), color=(25, 25, 25))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
     myFont_small = ImageFont.truetype(ttf, 20)
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
+    unit_name = ""
     if playername == 'All' or 'Nova cup' in playername:
         suffix = ''
     else:
         suffix = "'s"
-    unit_name = mastermind
-    try:
-        im.paste(get_icons_image("legion", unit_name), (10, 10))
-        dict_open = dict[unit_name]["Opener"]
-        dict_spell = dict[unit_name]["Spell"]
-    except KeyError:
-        return unit_name + " not found."
-    if dict[unit_name]["Count"] == 0:
-        return "No " + unit_name + " openings found."
-    I1.text((82, 10), str(playername) + suffix + " " + mastermind + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    im.paste(get_icons_image(icon_type, specific_value), (10, 10))
+    if dict[specific_value]["Count"] == 0:
+        return "No " + specific_value + " games found."
+    I1.text((82, 10), str(playername) + suffix + " " + specific_value.capitalize() + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     try:
-        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + ", Wins: " + str(dict[unit_name]["Wins"]) + ", Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + ", Winrate: " + str(round(dict[unit_name]["Wins"] / dict[unit_name]["Count"] * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[specific_value]["Count"]) + ", Wins: " + str(dict[specific_value]["Wins"]) + ", Losses: " + str(dict[specific_value]["Count"] - dict[specific_value]["Wins"]) + ", Winrate: " + str(round(dict[specific_value]["Wins"] / dict[specific_value]["Count"] * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + ", Wins: " + str(dict[unit_name]["Wins"]) + ", Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["Wins"]) + ", Winrate: " + str(0) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        I1.text((10, 80), "Games: " + str(dict[specific_value]["Count"]) + ", Wins: " + str(dict[specific_value]["Wins"]) + ", Losses: " + str(dict[specific_value]["Count"] - dict[specific_value]["Wins"]) + ", Winrate: " + str(0) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
-    y = 175 - 46
+    y = 130
     offset = 45
-    for i in range(15):
-        im.paste(im2, (x - 12, 88 + 30))
-        x += 106
-    x = 126
-    newIndex = sorted(dict_open, key=lambda k: int(dict_open[k]["Count"]), reverse=True)
-    for idx, add in enumerate(newIndex):
-        if idx == 15: break
-        im.paste(get_icons_image("icon", add), (x, y))
-        I1.text((x, y + 25 + offset * 1), str(dict_open[add]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25 + offset * 2), str(round(dict_open[add]['Wins'] / dict_open[add]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25 + offset * 3), str(round(dict_open[add]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        x += 106
-    newIndex = sorted(dict_spell, key=lambda k: int(dict_spell[k]["Count"]), reverse=True)
-    x = 126
-    for idx, spell in enumerate(newIndex):
-        if idx == 16: break
-        if spell == "none": continue
-        im.paste(get_icons_image("icon", spell), (x, y + 25 + offset * 4))
-        I1.text((x, y + 50 + offset * 5), str(dict_spell[spell]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50 + offset * 6), str(round(dict_spell[spell]['Wins'] / dict_spell[spell]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50 + offset * 7), str(round(dict_spell[spell]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        x += 106
-    for k in keys:
-        if (k != 'Open:') and (k != '') and (k != 'Spell:'):
-            im.paste(im3, (10, y + 30))
-        if k == 'Spell:':
-            I1.text((10, y - 5), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        else:
-            I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        if (k != 'Open:') and (k != '') and (k != 'Spell:'):
+    offset2 = 25
+    offset3 = 0
+    offset_counter = 0
+    max_x = []
+    for i, val in enumerate(dict_values):
+        newIndex = sorted(dict[specific_value][val], key=lambda k: int(dict[specific_value][val][k]["Count"]), reverse=True)
+        for idx, val2 in enumerate(newIndex):
+            if idx == 15: break
+            im.paste(im2, (x - 12, y - 12 + offset3 + (offset * offset_counter)))
+            if val != "MMs": type = "icon"
+            else: type = "legion"
+            im.paste(get_icons_image(type, val2), (x, y + offset3 + (offset * offset_counter)))
+            I1.text((x, y + offset2 + offset * (offset_counter+1)), str(dict[specific_value][val][val2]['Count']), font=myFont, fill=(255, 255, 255))
+            I1.text((x, y + offset2 + offset * (offset_counter+2)), str(round(dict[specific_value][val][val2]['Wins'] / dict[specific_value][val][val2]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+            I1.text((x, y + offset2 + offset * (offset_counter+3)), str(round(dict[specific_value][val][val2]['Count'] / dict[specific_value]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+            x += 106
+        max_x.append(x)
+        offset2 += 25
+        offset3 += 25
+        offset_counter += 4
+        x = 126
+    exclude = ["Open:", "Adds:", "MMs:", "Spell:"]
+    dict_values_counter = 0
+    for i, k in enumerate(keys):
+        I1.text((8, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        if k not in exclude and (k != ''):
+            im3 = PIL.Image.new(mode="RGB", size=(max_x[dict_values_counter] - 38, 4), color=(169, 169, 169))
+            im.paste(im3, (8, y + 30))
             y += offset
         else:
             y += offset - 10
-    image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
-
-def create_image_openstats(dict, games, playerid, avgelo, patch, transparency = False):
-    if playerid != 'all' and 'nova cup' not in playerid:
-        playername = apicall_getprofile(playerid)['playerName']
-        avatar = apicall_getprofile(playerid)['avatarUrl']
-    else:
-        playername = playerid.capitalize()
-    keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 4:', 'Best add:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:','', 'Games:', 'Winrate:', 'Playrate:', 'Best\nSpells:','', 'Games:', 'Winrate:', 'Playrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
-    if transparency:
-        mode = 'RGBA'
-        colors = (0,0,0,0)
-    else:
-        mode = 'RGB'
-        colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1700, 975), color=colors)
-    im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
-    I1 = ImageDraw.Draw(im)
-    ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont_small = ImageFont.truetype(ttf, 20)
-    myFont = ImageFont.truetype(ttf, 25)
-    myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All' or 'Nova cup' in playername:
-        suffix = ''
-    else:
-        suffix = "'s"
-        avatar_url = 'https://cdn.legiontd2.com/' + avatar
-        avatar_response = requests.get(avatar_url)
-        av_image = Image.open(BytesIO(avatar_response.content))
-        gold_border = Image.open('Files/gold_64.png')
-        if im_has_alpha(np.array(av_image)):
-            im.paste(av_image, (24, 100), mask=av_image)
-        else:
-            im.paste(av_image, (24, 100))
-        im.paste(gold_border, (24, 100), mask=gold_border)
-    I1.text((10, 15), str(playername) + suffix + " Opener stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-    x = 126
-    y = 175
-    offset = 45
-    for i, unit in enumerate(dict):
-        if i == 15 or dict[unit]['Count'] == 0:
-            break
-        im.paste(im2, (x - 12, 88))
-        im.paste(get_icons_image("icon", unit), (x, 100))
-        I1.text((x, y), str(dict[unit]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset), str(round(dict[unit]['OpenWins']/dict[unit]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*2), str(round(dict[unit]['Count'] / games * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*3), str(round(dict[unit]['W4'] / dict[unit]['Count'], 1)), font=myFont, fill=(255, 255, 255))
-        def get_perf_score(dict2, key):
-            new_dict = {}
-            for xy in dict2[key]:
-                if dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] < dict2['OpenWins'] / dict2['Count']:
-                    continue
-                new_dict[xy] = dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] * (dict2[key][xy]['Count'] / dict2['Count'])
-            newIndex = sorted(new_dict,key=lambda k: new_dict[k], reverse=True)
-            return newIndex
-        perf_score_dict = dict[unit]
-        newIndex = get_perf_score(perf_score_dict, 'OpenWith')
-        im.paste(get_icons_image("icon", newIndex[0]), (x, y + offset * 4))
-        I1.text((x, y + 25+offset * 5), str(dict[unit]['OpenWith'][newIndex[0]]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 6), str(round(dict[unit]['OpenWith'][newIndex[0]]['Wins'] / dict[unit]['OpenWith'][newIndex[0]]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 7), str(round(dict[unit]['OpenWith'][newIndex[0]]['Count'] / dict[unit]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        newIndex = get_perf_score(perf_score_dict, 'MMs')
-        im.paste(get_icons_image("legion", newIndex[0]), (x, y + 25+offset * 8))
-        I1.text((x, y + 50+offset * 9), str(dict[unit]['MMs'][newIndex[0]]['Count']), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 10), str(round(dict[unit]['MMs'][newIndex[0]]['Wins'] / dict[unit]['MMs'][newIndex[0]]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 11),str(round(dict[unit]['MMs'][newIndex[0]]['Count'] / dict[unit]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        newIndex = get_perf_score(perf_score_dict, 'Spells')
-        im.paste(get_icons_image("icon", newIndex[0]), (x, y + 50+offset * 12))
-        I1.text((x, y + 75 + offset * 13), str(dict[unit]['Spells'][newIndex[0]]['Count']), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 75 + offset * 14), str(round(dict[unit]['Spells'][newIndex[0]]['Wins'] / dict[unit]['Spells'][newIndex[0]]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 75 + offset * 15),str(round(dict[unit]['Spells'][newIndex[0]]['Count'] / dict[unit]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        x += 106
-    im3 = PIL.Image.new(mode="RGB", size=(x-offset, 4), color=(169, 169, 169))
-    for k in keys:
-        if (k != 'Best add:') and (k != 'Best MMs:') and (k != '') and (k != 'Best\nSpells:'):
-            im.paste(im3, (10, y+30))
-        if k == 'Best\nSpells:':
-            I1.text((10, y-5), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-        else:
-            I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        if (k != 'Best add:') and (k != 'Best MMs:') and (k != '') and (k != 'Best\nSpells:'):
-            y += offset
-        else:
-            y += offset - 10
-    image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
-
-def create_image_openstats_specific(dict, games, playerid, avgelo, patch, transparency = False, unit_name = "all"):
-    if playerid != 'all' and 'nova cup' not in playerid:
-        playername = apicall_getprofile(playerid)['playerName']
-        avatar = apicall_getprofile(playerid)['avatarUrl']
-    else:
-        playername = playerid.capitalize()
-    keys = ['Adds:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:', 'Spells:','', 'Games:', 'Winrate:', 'Playrate:']
-    if transparency:
-        mode = 'RGBA'
-        colors = (0,0,0,0)
-    else:
-        mode = 'RGB'
-        colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1700, 800-46), color=colors)
-    im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
-    im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
-    I1 = ImageDraw.Draw(im)
-    ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont_small = ImageFont.truetype(ttf, 20)
-    myFont = ImageFont.truetype(ttf, 25)
-    myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All' or 'Nova cup' in playername:
-        suffix = ''
-    else:
-        suffix = "'s"
-    unit_name = unit_name.lower()
-    string_title = unit_name.capitalize()
-    try:
-        if unit_name in slang:
-            unit_name = slang.get(unit_name)
-        im.paste(get_icons_image("icon", unit_name.capitalize()), (10,10))
-        dict_open = dict[unit_name]["OpenWith"]
-        dict_spell = dict[unit_name]["Spells"]
-        dict_mms = dict[unit_name]["MMs"]
-    except KeyError:
-        return unit_name + " not found."
-    if dict[unit_name]["Count"] == 0:
-        return "No " + unit_name + " openings found."
-    I1.text((82, 10), str(playername) + suffix + " "+string_title+" opener stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-    try:
-        I1.text((10, 80), "Games: "+str(dict[unit_name]["Count"])+", Wins: "+str(dict[unit_name]["OpenWins"])+", Losses: "+str(dict[unit_name]["Count"]-dict[unit_name]["OpenWins"])+", Winrate: "+str(round(dict[unit_name]["OpenWins"]/dict[unit_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[unit_name]["Count"]) + ", Wins: " + str(dict[unit_name]["OpenWins"]) + ", Losses: " + str(dict[unit_name]["Count"] - dict[unit_name]["OpenWins"]) + ", Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    x = 126
-    y = 175-46
-    offset = 45
-    for i in range(15):
-        im.paste(im2, (x - 12, 88+30))
-        x += 106
-    x = 126
-    newIndex = sorted(dict_open, key=lambda k: int(dict_open[k]["Count"]), reverse=True)
-    for add in newIndex:
-        im.paste(get_icons_image("icon", add), (x, y))
-        I1.text((x, y + 25+offset * 1), str(dict_open[add]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 2), str(round(dict_open[add]['Wins'] / dict_open[add]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 3), str(round(dict_open[add]['Count'] / dict[unit_name]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        x += 106
-    x = 126
-    newIndex = sorted(dict_mms, key=lambda k: int(dict_mms[k]["Count"]), reverse=True)
-    for mm in newIndex:
-        im.paste(get_icons_image("legion", mm), (x, y + 25+offset * 4))
-        I1.text((x, y + 50+offset * 5), str(dict_mms[mm]['Count']), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 6), str(round(dict_mms[mm]['Wins'] / dict_mms[mm]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 7),str(round(dict_mms[mm]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        x += 106
-    newIndex = sorted(dict_spell, key=lambda k: int(dict_spell[k]["Count"]), reverse=True)
-    x = 126
-    for spell in newIndex:
-        im.paste(get_icons_image("icon", spell), (x, y + 50+offset * 8))
-        I1.text((x, y + 75 + offset * 9), str(dict_spell[spell]['Count']), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 75 + offset * 10), str(round(dict_spell[spell]['Wins'] / dict_spell[spell]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 75 + offset * 11),str(round(dict_spell[spell]['Count'] / dict[unit_name]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        x += 106
-    for k in keys:
-        if (k != 'Adds:') and (k != 'MMs:') and (k != '') and (k != 'Spells:'):
-            im.paste(im3, (10, y+30))
-        if k == 'Spells:':
-            I1.text((10, y-5), k, font=myFont, stroke_width=2, stroke_fill=(0,0,0), fill=(255, 255, 255))
-        else:
-            I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        if (k != 'Adds:') and (k != 'MMs:') and (k != '') and (k != 'Spells:'):
-            y += offset
-        else:
-            y += offset - 10
-    image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
-
-def create_image_spellstats(dict, games, playerid, avgelo, patch, transparency = False):
-    if playerid != 'all' and 'nova cup' not in playerid:
-        playername = apicall_getprofile(playerid)['playerName']
-        avatar = apicall_getprofile(playerid)['avatarUrl']
-    else:
-        playername = playerid.capitalize()
-    keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:','', 'Games:', 'Winrate:', 'Playrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
-    if transparency:
-        mode = 'RGBA'
-        colors = (0,0,0,0)
-    else:
-        mode = 'RGB'
-        colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1700, 780), color=colors)
-    im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
-    I1 = ImageDraw.Draw(im)
-    ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont_small = ImageFont.truetype(ttf, 20)
-    myFont = ImageFont.truetype(ttf, 25)
-    myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All' or 'Nova cup' in playername:
-        suffix = ''
-    else:
-        suffix = "'s"
-        avatar_url = 'https://cdn.legiontd2.com/' + avatar
-        avatar_response = requests.get(avatar_url)
-        av_image = Image.open(BytesIO(avatar_response.content))
-        gold_border = Image.open('Files/gold_64.png')
-        if im_has_alpha(np.array(av_image)):
-            im.paste(av_image, (24, 100), mask=av_image)
-        else:
-            im.paste(av_image, (24, 100))
-        im.paste(gold_border, (24, 100), mask=gold_border)
-    I1.text((10, 15), str(playername) + suffix + " Spell stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((10, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-    x = 126
-    y = 175
-    offset = 45
-    for i, spell in enumerate(dict):
-        if i == 15 or dict[spell]['Count'] == 0:
-            break
-        im.paste(im2, (x - 12, 88))
-        im.paste(get_icons_image("icon", spell), (x, 100))
-        I1.text((x, y), str(dict[spell]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset), str(round(dict[spell]['Wins']/dict[spell]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*2), str(round(dict[spell]['Count'] / games * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y+offset*3), str(round(dict[spell]['W10'] / dict[spell]['Count'], 1)), font=myFont, fill=(255, 255, 255))
-        def get_perf_score(dict2, key):
-            new_dict = {}
-            for xy in dict2[key]:
-                if dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] < dict2['Wins'] / dict2['Count']:
-                    continue
-                new_dict[xy] = dict2[key][xy]['Wins'] / dict2[key][xy]['Count'] * (dict2[key][xy]['Count'] / dict2['Count'])
-            newIndex = sorted(new_dict,key=lambda k: new_dict[k], reverse=True)
-            return newIndex
-        newIndex = get_perf_score(dict[spell], 'Openers')
-        im.paste(get_icons_image("icon", newIndex[0]), (x, y + offset * 4))
-        I1.text((x, y + 25+offset * 5), str(dict[spell]['Openers'][newIndex[0]]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 6), str(round(dict[spell]['Openers'][newIndex[0]]['Wins'] / dict[spell]['Openers'][newIndex[0]]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 7), str(round(dict[spell]['Openers'][newIndex[0]]['Count'] / dict[spell]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        newIndex = get_perf_score(dict[spell], 'MMs')
-        im.paste(get_icons_image("legion", newIndex[0]), (x, y + 25+offset * 8))
-        I1.text((x, y + 50+offset * 9), str(dict[spell]['MMs'][newIndex[0]]['Count']), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 10), str(round(dict[spell]['MMs'][newIndex[0]]['Wins'] / dict[spell]['MMs'][newIndex[0]]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 11),str(round(dict[spell]['MMs'][newIndex[0]]['Count'] / dict[spell]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        x += 106
-    im3 = PIL.Image.new(mode="RGB", size=(x-offset, 4), color=(169, 169, 169))
-    for k in keys:
-        if (k != 'Best Open:') and (k != 'Best MMs:') and (k != '') and (k != 'Best\nSpells:'):
-            im.paste(im3, (10, y+30))
-        I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        if (k != 'Best Open:') and (k != 'Best MMs:') and (k != ''):
-            y += offset
-        else:
-            y += offset - 10
-    image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
-
-def create_image_spellstats_specific(dict, games, playerid, avgelo, patch, transparency = False, spell_name = ""):
-    if playerid != 'all' and 'nova cup' not in playerid:
-        playername = apicall_getprofile(playerid)['playerName']
-        avatar = apicall_getprofile(playerid)['avatarUrl']
-    else:
-        playername = playerid.capitalize()
-    keys = ['Opens:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:']
-    url = 'https://cdn.legiontd2.com/icons/Items/'
-    url2 = 'https://cdn.legiontd2.com/icons/'
-    if transparency:
-        mode = 'RGBA'
-        colors = (0,0,0,0)
-    else:
-        mode = 'RGB'
-        colors = (49,51,56)
-    im = PIL.Image.new(mode=mode, size=(1700, 550), color=colors)
-    im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25, 25, 25))
-    im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
-    I1 = ImageDraw.Draw(im)
-    ttf = 'Files/RobotoCondensed-Regular.ttf'
-    myFont_small = ImageFont.truetype(ttf, 20)
-    myFont = ImageFont.truetype(ttf, 25)
-    myFont_title = ImageFont.truetype(ttf, 30)
-    if playername == 'All' or 'Nova cup' in playername:
-        suffix = ''
-    else:
-        suffix = "'s"
-    spell_name = spell_name.lower()
-    string_title = spell_name.capitalize()
-    try:
-        if spell_name in slang:
-            spell_name = slang.get(spell_name)
-        im.paste(get_icons_image("icon", spell_name.capitalize()), (10,10))
-        dict_open = dict[spell_name]["Openers"]
-        dict_mms = dict[spell_name]["MMs"]
-    except KeyError:
-        return spell_name + " not found."
-    if dict[spell_name]["Count"] == 0:
-        return "No " + spell_name + " games found."
-    I1.text((82, 10), str(playername) + suffix + " "+string_title+" stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-    try:
-        I1.text((10, 80), "Games: "+str(dict[spell_name]["Count"])+", Wins: "+str(dict[spell_name]["Wins"])+", Losses: "+str(dict[spell_name]["Count"]-dict[spell_name]["Wins"])+", Winrate: "+str(round(dict[spell_name]["Wins"]/dict[spell_name]["Count"]*100,1))+"%", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[spell_name]["Count"]) + ", Wins: " + str(dict[spell_name]["Wins"]) + ", Losses: " + str(dict[spell_name]["Count"] - dict[spell_name]["Wins"]) + ", Winrate: " + str(0) + "%", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    x = 126
-    y = 175-46
-    offset = 45
-    for i in range(15):
-        im.paste(im2, (x - 12, 88+30))
-        x += 106
-    x = 126
-    newIndex = sorted(dict_open, key=lambda k: int(dict_open[k]["Count"]), reverse=True)
-    for opener in newIndex:
-        im.paste(get_icons_image("icon", opener), (x, y))
-        I1.text((x, y + 25+offset * 1), str(dict_open[opener]['Count']), font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 2), str(round(dict_open[opener]['Wins'] / dict_open[opener]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 25+offset * 3), str(round(dict_open[opener]['Count'] / dict[spell_name]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        x += 106
-    x = 126
-    newIndex = sorted(dict_mms, key=lambda k: int(dict_mms[k]["Count"]), reverse=True)
-    for mm in newIndex:
-        im.paste(get_icons_image("legion", mm), (x, y + 25+offset * 4))
-        I1.text((x, y + 50+offset * 5), str(dict_mms[mm]['Count']), font=myFont,fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 6), str(round(dict_mms[mm]['Wins'] / dict_mms[mm]['Count']*100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + 50+offset * 7),str(round(dict_mms[mm]['Count'] / dict[spell_name]['Count'] * 100, 1)) + '%',font=myFont, fill=(255, 255, 255))
-        x += 106
-    for k in keys:
-        if (k != 'Opens:') and (k != 'MMs:') and (k != ''):
-            im.paste(im3, (10, y+30))
-        I1.text((10, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        if (k != 'Opens:') and (k != 'MMs:') and (k != ''):
-            y += offset
-        else:
-            y += offset - 10
+        if i == 4 or i == 9: dict_values_counter += 1
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -2465,159 +2145,6 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
 
-def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
-    unit_dict = {}
-    with open('Files/units.json', 'r') as f:
-        units_json = json.load(f)
-    for u_js in units_json:
-        if u_js["totalValue"] != '':
-            if u_js["unitId"] and int(u_js["totalValue"]) > 0:
-                string = u_js["unitId"]
-                string = string.replace('_', ' ')
-                string = string.replace(' unit id', '')
-                unit_dict[string] = {'Count': 0, 'OpenWins': 0, 'W4': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
-    unit_dict['pack rat nest'] = {'Count': 0, 'OpenWins': 0, 'W4': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
-    if unit != "all":
-        if unit in slang:
-            unit = slang.get(unit)
-        if unit not in unit_dict:
-            return "Unit not found."
-    novacup = False
-    if playername == 'all':
-        playerid = 'all'
-    elif 'nova cup' in playername:
-        novacup = True
-        playerid = playername
-    else:
-        playerid = apicall_getid(playername)
-        if playerid == 0:
-            return 'Player ' + playername + ' not found.'
-        if playerid == 1:
-            return 'API limit reached, you can still use "all" commands.'
-    try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
-    if type(history_raw) == str:
-        return history_raw
-    if len(history_raw) == 0:
-        return 'No games found.'
-    games = len(history_raw)
-    if 'nova cup' in playerid:
-        playerid = 'all'
-    patches = []
-    gameelo_list = []
-    count = 0
-    print("starting openstats...")
-    for game in history_raw:
-        patches.append(game["version"])
-        gameelo_list.append(game["gameElo"])
-        if playerid.lower() != 'all' and 'nova cup' not in playerid:
-            for player in game["playersData"]:
-                if player["playerId"] == playerid:
-                    opener_ranked_raw = player["buildPerWave"][:4]
-                    break
-        else:
-            opener_ranked_raw = []
-            for i in range(4):
-                opener_ranked_raw.extend(game["playersData"][i]["buildPerWave"][:4])
-        opener_ranked = []
-        for i, x in enumerate(opener_ranked_raw):
-            opener_ranked.extend([[]])
-            for v, y in enumerate(x):
-                string = y.split('_unit_id:')
-                opener_ranked[i].append(string[0].replace('_', ' '))
-        if playerid.lower() != 'all' and 'nova cup' not in playerid:
-            for player in game["playersData"]:
-                if player["playerId"] == playerid:
-                    s = set()
-                    for x in range(4):
-                        for y in opener_ranked[x]:
-                            s.add(y)
-                    for y in s:
-                        try:
-                            if y != opener_ranked[0][0]:
-                                if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
-                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
-                                    if player["gameResult"] == 'won':
-                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                                else:
-                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                    if player["gameResult"] == 'won':
-                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                            else:
-                                unit_dict[opener_ranked[0][0]]['Count'] += 1
-                                if player["legion"] not in unit_dict[opener_ranked[0][0]]['MMs']:
-                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]] = {'Count': 1, 'Wins': 0}
-                                else:
-                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Count'] += 1
-                                if player["chosenSpell"] not in unit_dict[opener_ranked[0][0]]['Spells']:
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
-                                else:
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
-                                unit_dict[opener_ranked[0][0]]['W4'] += player["workersPerWave"][3]
-                                if player["gameResult"] == 'won':
-                                    unit_dict[opener_ranked[0][0]]['OpenWins'] += 1
-                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Wins'] += 1
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
-                        except IndexError:
-                            continue
-        else:
-            counter = 0
-            for player in game["playersData"]:
-                s = set()
-                for x in range(counter, counter+4):
-                    for y in opener_ranked[x]:
-                        s.add(y)
-                for y in s:
-                    try:
-                        i = 0
-                        if y != opener_ranked[counter][0]:
-                            if y in unit_dict[opener_ranked[counter][0]]['OpenWith']:
-                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Count'] += 1
-                                if player["gameResult"] == 'won':
-                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
-                            else:
-                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                if player["gameResult"] == 'won':
-                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
-                        else:
-                            unit_dict[opener_ranked[counter][0]]['Count'] += 1
-                            if player["legion"] not in unit_dict[opener_ranked[counter][0]]['MMs']:
-                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
-                            else:
-                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Count'] += 1
-                            if player["chosenSpell"] not in unit_dict[opener_ranked[counter][0]]['Spells']:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
-                            else:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
-                            unit_dict[opener_ranked[counter][0]]['W4'] += player["workersPerWave"][3]
-                            if player["gameResult"] == 'won':
-                                unit_dict[opener_ranked[counter][0]]['OpenWins'] += 1
-                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Wins'] += 1
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
-                    except IndexError:
-                        continue
-                counter += 4
-    new_patches = []
-    for x in patches:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches = list(dict.fromkeys(new_patches))
-    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
-    unit_dict = {k: unit_dict[k] for k in newIndex}
-    avgelo = round(sum(gameelo_list)/len(gameelo_list))
-    if novacup:
-        playerid = playername
-    unit = unit.lower()
-    if unit == "all":
-        return create_image_openstats(unit_dict, games, playerid, avgelo, patches)
-    else:
-        return create_image_openstats_specific(unit_dict, games, playerid, avgelo, patches, unit_name=unit)
-
 def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
     novacup = False
     if playername == 'all':
@@ -2639,7 +2166,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
         mmnames_list = [mastermind]
     masterminds_dict = {}
     for x in mmnames_list:
-        masterminds_dict[x] = {"Count": 0, "Wins": 0, "W10": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
+        masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
     gameelo_list = []
     try:
         history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
@@ -2685,7 +2212,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
                         if player["gameResult"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["W10"] += player["workersPerWave"][9]
+                            masterminds_dict[mastermind_current]["Worker"] += player["workersPerWave"][9]
                         except IndexError:
                             pass
                         masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
@@ -2719,7 +2246,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
                         if player["gameResult"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["W10"] += player["workersPerWave"][9]
+                            masterminds_dict[mastermind_current]["Worker"] += player["workersPerWave"][9]
                         except IndexError:
                             pass
                         masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
@@ -2752,27 +2279,172 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
         new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
     patches = list(dict.fromkeys(new_patches))
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    if mastermind == 'Champion':
-        unit_dict = masterminds_dict['Champion']['ChampionUnit']
-        newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
-        unit_dict = {k: unit_dict[k] for k in newIndex}
-    else:
-        newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
-        masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
+    newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
+    masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
     avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
     if novacup:
         playerid = playername
     match mastermind:
         case 'All':
-            return create_image_mmstats(masterminds_dict, games, playerid, avg_gameelo, patches)
+            return create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind")
         case mastermind if mastermind in case_list:
-            return create_image_mmstats_specific(masterminds_dict, games, playerid, avg_gameelo, patches, mastermind=mastermind)
-        case 'Fiesta':
-            return create_image_mmstats_fiesta(masterminds_dict, games, playerid, avg_gameelo, patches)
+            return create_image_stats_specific(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind", specific_value=mastermind)
         case 'Megamind':
-            return create_image_mmstats(masterminds_dict, games, playerid, avg_gameelo, patches, True, megamind_count)
-        case 'Champion':
-            return create_image_mmstats_champion(masterminds_dict, unit_dict, games, playerid, avg_gameelo, patches)
+            return create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, "Mastermind", True, megamind_count)
+
+def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
+    unit_dict = {}
+    with open('Files/units.json', 'r') as f:
+        units_json = json.load(f)
+    for u_js in units_json:
+        if u_js["totalValue"] != '':
+            if u_js["unitId"] and int(u_js["totalValue"]) > 0:
+                string = u_js["unitId"]
+                string = string.replace('_', ' ')
+                string = string.replace(' unit id', '')
+                unit_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+    unit_dict['pack rat nest'] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+    if unit != "all":
+        if unit in slang:
+            unit = slang.get(unit)
+        if unit not in unit_dict:
+            return "Unit not found."
+    novacup = False
+    if playername == 'all':
+        playerid = 'all'
+    elif 'nova cup' in playername:
+        novacup = True
+        playerid = playername
+    else:
+        playerid = apicall_getid(playername)
+        if playerid == 0:
+            return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached, you can still use "all" commands.'
+    try:
+        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+    except TypeError as e:
+        print(e)
+        return playername + ' has not played enough games.'
+    if type(history_raw) == str:
+        return history_raw
+    if len(history_raw) == 0:
+        return 'No games found.'
+    games = len(history_raw)
+    if 'nova cup' in playerid:
+        playerid = 'all'
+    patches = []
+    gameelo_list = []
+    count = 0
+    print("starting openstats...")
+    for game in history_raw:
+        if game["endingWave"] < 4: continue
+        patches.append(game["version"])
+        gameelo_list.append(game["gameElo"])
+        if playerid.lower() != 'all' and 'nova cup' not in playerid:
+            for player in game["playersData"]:
+                if player["playerId"] == playerid:
+                    opener_ranked_raw = player["buildPerWave"][:4]
+                    break
+        else:
+            opener_ranked_raw = []
+            for i in range(4):
+                opener_ranked_raw.extend(game["playersData"][i]["buildPerWave"][:4])
+        opener_ranked = []
+        for i, x in enumerate(opener_ranked_raw):
+            opener_ranked.extend([[]])
+            for v, y in enumerate(x):
+                string = y.split('_unit_id:')
+                opener_ranked[i].append(string[0].replace('_', ' '))
+        if playerid.lower() != 'all' and 'nova cup' not in playerid:
+            for player in game["playersData"]:
+                if player["playerId"] == playerid:
+                    s = set()
+                    for x in range(4):
+                        for y in opener_ranked[x]:
+                            s.add(y)
+                    for y in s:
+                        try:
+                            if y != opener_ranked[0][0]:
+                                if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
+                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
+                                    if player["gameResult"] == 'won':
+                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
+                                else:
+                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
+                                    if player["gameResult"] == 'won':
+                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
+                            else:
+                                unit_dict[opener_ranked[0][0]]['Count'] += 1
+                                if player["legion"] not in unit_dict[opener_ranked[0][0]]['MMs']:
+                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]] = {'Count': 1, 'Wins': 0}
+                                else:
+                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Count'] += 1
+                                if player["chosenSpell"] not in unit_dict[opener_ranked[0][0]]['Spells']:
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
+                                else:
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
+                                unit_dict[opener_ranked[0][0]]['Worker'] += player["workersPerWave"][3]
+                                if player["gameResult"] == 'won':
+                                    unit_dict[opener_ranked[0][0]]['Wins'] += 1
+                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Wins'] += 1
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
+                        except IndexError:
+                            continue
+        else:
+            counter = 0
+            for player in game["playersData"]:
+                s = set()
+                for x in range(counter, counter+4):
+                    for y in opener_ranked[x]:
+                        s.add(y)
+                for y in s:
+                    try:
+                        i = 0
+                        if y != opener_ranked[counter][0]:
+                            if y in unit_dict[opener_ranked[counter][0]]['OpenWith']:
+                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Count'] += 1
+                                if player["gameResult"] == 'won':
+                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
+                            else:
+                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
+                                if player["gameResult"] == 'won':
+                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
+                        else:
+                            unit_dict[opener_ranked[counter][0]]['Count'] += 1
+                            if player["legion"] not in unit_dict[opener_ranked[counter][0]]['MMs']:
+                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
+                            else:
+                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Count'] += 1
+                            if player["chosenSpell"] not in unit_dict[opener_ranked[counter][0]]['Spells']:
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
+                            else:
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
+                            unit_dict[opener_ranked[counter][0]]['Worker'] += player["workersPerWave"][3]
+                            if player["gameResult"] == 'won':
+                                unit_dict[opener_ranked[counter][0]]['Wins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Wins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
+                    except IndexError:
+                        continue
+                counter += 4
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
+    unit_dict = {k: unit_dict[k] for k in newIndex}
+    avgelo = round(sum(gameelo_list)/len(gameelo_list))
+    if novacup:
+        playerid = playername
+    unit = unit.lower()
+    if unit == "all":
+        return create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Open")
+    else:
+        return create_image_stats_specific(unit_dict, games, playerid, avgelo, patches, mode="Open", specific_value=unit)
 
 def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"):
     spell_dict = {}
@@ -2783,8 +2455,8 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
         string = string.replace('_', ' ')
         string = string.replace(' powerup id', '')
         string = string.replace(' spell damage', '')
-        spell_dict[string] = {'Count': 0, 'Wins': 0, 'W10': 0, 'Openers': {}, 'MMs': {}}
-    spell_dict["taxed allowance"] = {'Count': 0, 'Wins': 0, 'W10': 0, 'Openers': {}, 'MMs': {}}
+        spell_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Opener': {}, 'MMs': {}}
+    spell_dict["taxed allowance"] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Opener': {}, 'MMs': {}}
     if spellname != "all":
         if spellname in slang:
             spellname = slang.get(spellname)
@@ -2826,27 +2498,25 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
                 spell_dict[spell_name]["Count"] += 1
                 if player["gameResult"] == "won":
                     spell_dict[spell_name]["Wins"] += 1
-                spell_dict[spell_name]["W10"] += player["workersPerWave"][9]
-                if "," in player["workersPerWave"]:
+                spell_dict[spell_name]["Worker"] += player["workersPerWave"][9]
+                if "," in player["firstWaveFighters"]:
                     opener_current = player["firstWaveFighters"].split(",")[-1]
                 else:
                     opener_current = player["firstWaveFighters"]
-                if opener_current in spell_dict[spell_name]["Openers"]:
-                    spell_dict[spell_name]["Openers"][opener_current]["Count"] += 1
-                    spell_dict[spell_name]["Openers"][opener_current]["W10"] += player["workersPerWave"][9]
+                if opener_current in spell_dict[spell_name]["Opener"]:
+                    spell_dict[spell_name]["Opener"][opener_current]["Count"] += 1
                     if player["gameResult"] == "won":
-                        spell_dict[spell_name]["Openers"][opener_current]["Wins"] += 1
+                        spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
                 else:
-                    spell_dict[spell_name]["Openers"][opener_current] = {"Count": 1, "Wins": 0, "W10": player["workersPerWave"][9]}
+                    spell_dict[spell_name]["Opener"][opener_current] = {"Count": 1, "Wins": 0}
                     if player["gameResult"] == "won":
-                        spell_dict[spell_name]["Openers"][opener_current]["Wins"] += 1
+                        spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
                 if player["legion"] in spell_dict[spell_name]["MMs"]:
                     spell_dict[spell_name]["MMs"][player["legion"]]["Count"] += 1
-                    spell_dict[spell_name]["MMs"][player["legion"]]["W10"] += player["workersPerWave"][9]
                     if player["gameResult"] == "won":
                         spell_dict[spell_name]["MMs"][player["legion"]]["Wins"] += 1
                 else:
-                    spell_dict[spell_name]["MMs"][player["legion"]] = {"Count": 1, "Wins": 0, "W10": player["workersPerWave"][9]}
+                    spell_dict[spell_name]["MMs"][player["legion"]] = {"Count": 1, "Wins": 0}
                     if player["gameResult"] == "won":
                         spell_dict[spell_name]["MMs"][player["legion"]]["Wins"] += 1
     new_patches = []
@@ -2861,11 +2531,10 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
     if novacup:
         playerid = playername
-    spellname = spellname.lower()
     if spellname == "all":
-        return create_image_spellstats(spell_dict, games, playerid, avgelo, patches)
+        return create_image_stats(spell_dict, games, playerid, avgelo, patches, mode="Spell")
     else:
-        return create_image_spellstats_specific(spell_dict, games, playerid, avgelo, patches, spell_name=spellname)
+        return create_image_stats_specific(spell_dict, games, playerid, avgelo, patches, mode="Spell", specific_value=spellname)
 
 def apicall_gameid_visualizer(gameid, start_wave=0):
     if start_wave > 21:
@@ -3141,7 +2810,7 @@ def apicall_gamestats(playername):
     if playerid == 1:
         return 'API limit reached.'
     if playerid == 0:
-        return "API error."
+        return playername + "not found."
     stats = apicall_getstats(playerid)
     try: wins = stats['rankedWinsThisSeason']
     except KeyError: wins = 0
