@@ -49,6 +49,8 @@ async def send_message(message, user_message, username):
         try:
             response = await loop.run_in_executor(pool, functools.partial(responses.handle_response, user_message, username))
             await message.channel.send(response)
+        except discord.errors.DiscordException:
+            return
         except Exception:
             traceback.print_exc()
 
@@ -153,6 +155,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -168,6 +171,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -183,6 +187,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -198,6 +203,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -215,6 +221,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -234,6 +241,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -249,6 +257,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -282,6 +291,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -313,6 +323,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -342,6 +353,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -369,6 +381,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
@@ -402,6 +415,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
@@ -429,6 +443,38 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
+    
+    @tree.command(name="unitstats", description="Fighter stats.")
+    @app_commands.describe(playername='Enter playername or "all" for all available data.',
+                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
+                           min_elo='Enter minium average game elo to include in the data set',
+                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
+                           sort="Sort by?", unit="Fighter name for specific stats, or 'all' for all Spells.",
+                           min_cost="Min Gold cost of a unit.")
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='date', value="date"),
+        discord.app_commands.Choice(name='elo', value="elo")
+    ])
+    async def unitstats(interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                min_elo = current_min_elo
+            try:
+                sort = sort.value
+            except AttributeError:
+                pass
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(responses.apicall_unitstats, str(playername).lower(), games, min_elo, patch, sort=sort, unit=unit, min_cost = min_cost))
+                pool.shutdown()
+                if len(response) > 0:
+                    await interaction.followup.send(response)
+            except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -459,6 +505,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
@@ -507,6 +554,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -524,6 +572,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -579,6 +628,7 @@ def run_discord_bot():
                 if len(response) > 0:
                     await interaction.followup.send(response)
             except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
@@ -634,6 +684,7 @@ def run_discord_bot():
         if '!' in message.content:
             if "!sync" == message.content and "drachir_" == str(message.author):
                 print(await tree.sync(guild=None))
+                return
             username = str(message.author)
             user_message = str(message.content)
             channel = str(message.channel)

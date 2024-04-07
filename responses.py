@@ -92,6 +92,8 @@ def get_ranked_emote(rank):
 def get_icons_image(type, name):
     match type:
         case "avatar":
+            if name == "icons/DefaultAvatar.png":
+                name = "Icons/DefaultAvatar.png"
             name = name.split("Icons/")
             image_path = 'Files/icons/' + name[1]
         case "icon":
@@ -332,6 +334,11 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
             keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "MMs"]
             icon_type = "icon"
+        case "Unit":
+            im = PIL.Image.new(mode=config[0], size=(1700, 930), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'Best\nCombo:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MM:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["ComboUnit", "MMs", "Spells"]
+            icon_type = "icon"
     im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
@@ -366,7 +373,9 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
         I1.text((x, y), str(dict[dict_key]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset), str(round(dict[dict_key]['Wins']/dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset * 2), str(calc_pr(dict, dict_key)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + offset * 3), str(round(dict[dict_key]['Worker'] / dict[dict_key]['Count'], 1)), font=myFont, fill=(255, 255, 255))
+        try:
+            I1.text((x, y + offset * 3), str(round(dict[dict_key]['Worker'] / dict[dict_key]['Count'], 1)), font=myFont, fill=(255, 255, 255))
+        except KeyError: offset_counter = 3
         for val in dict_values:
             newIndex = get_perf_score(dict[dict_key], val)
             if newIndex:
@@ -379,10 +388,10 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
                     index = newIndex[0]
                 if val != "MMs": type = "icon"
                 else: type = "legion"
-                im.paste(get_icons_image(type, newIndex[0]), (x, y + offset3 + offset * offset_counter))
-                I1.text((x, y + offset2 + offset * (offset_counter+1)), str(dict[dict_key][val][newIndex[0]]['Count']), font=myFont, fill=(255, 255, 255))
-                I1.text((x, y + offset2 + offset * (offset_counter+2)), str(round(dict[dict_key][val][newIndex[0]]['Wins'] / dict[dict_key][val][newIndex[0]]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-                I1.text((x, y + offset2 + offset * (offset_counter+3)), str(round(dict[dict_key][val][newIndex[0]]['Count'] / dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+                im.paste(get_icons_image(type, index), (x, y + offset3 + offset * offset_counter))
+                I1.text((x, y + offset2 + offset * (offset_counter+1)), str(dict[dict_key][val][index]['Count']), font=myFont, fill=(255, 255, 255))
+                I1.text((x, y + offset2 + offset * (offset_counter+2)), str(round(dict[dict_key][val][index]['Wins'] / dict[dict_key][val][index]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
+                I1.text((x, y + offset2 + offset * (offset_counter+3)), str(round(dict[dict_key][val][index]['Count'] / dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
             offset2 += 25
             offset3 += 25
             offset_counter += 4
@@ -398,6 +407,7 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
             y += offset
         else:
             y += offset-10
+    im.show()
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -427,6 +437,11 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
             im = PIL.Image.new(mode=config[0], size=(1700, 545), color=config[1])
             keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "MMs"]
+            icon_type = "icon"
+        case "Unit":
+            im = PIL.Image.new(mode=config[0], size=(1700, 745), color=config[1])
+            keys = ['Combo:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            dict_values = ["ComboUnit", "MMs", "Spells"]
             icon_type = "icon"
     im2 = PIL.Image.new(mode="RGB", size=(88, 205), color=(25, 25, 25))
     I1 = ImageDraw.Draw(im)
@@ -472,7 +487,7 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
         offset3 += 25
         offset_counter += 4
         x = 126
-    exclude = ["Open:", "Adds:", "MMs:", "Spell:"]
+    exclude = ["Open:", "Adds:", "MMs:", "Spell:", "Combo:"]
     dict_values_counter = 0
     for i, k in enumerate(keys):
         I1.text((8, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
@@ -483,6 +498,7 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
         else:
             y += offset - 10
         if i == 4 or i == 9: dict_values_counter += 1
+    im.show()
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -515,25 +531,25 @@ def handle_response(message, author) -> str:
         return ladder_update(input[1])
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
-    if '!script' and str(author) == "drachir_":
-        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
-        path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
-        games = sorted(os.listdir(path3))
-        for i, x in enumerate(games):
-            print(str(i+1) + " out of " + str(len(games)))
-            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + x + "/gamedata/"
-            try:
-                print(path2)
-                games2 = os.listdir(path2)
-            except FileNotFoundError:
-                print("not found")
-                continue
-            for game in games2:
-                file_name = os.path.join(path2, game)
-                try:
-                    shutil.copy(file_name, path1)
-                except shutil.Error:
-                    continue
+    # if '!script' and str(author) == "drachir_":
+    #     path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
+    #     path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
+    #     games = sorted(os.listdir(path3))
+    #     for i, x in enumerate(games):
+    #         print(str(i+1) + " out of " + str(len(games)))
+    #         path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + x + "/gamedata/"
+    #         try:
+    #             print(path2)
+    #             games2 = os.listdir(path2)
+    #         except FileNotFoundError:
+    #             print("not found")
+    #             continue
+    #         for game in games2:
+    #             file_name = os.path.join(path2, game)
+    #             try:
+    #                 shutil.copy(file_name, path1)
+    #             except shutil.Error:
+    #                 continue
 
 def apicall_getid(playername):
     request_type = 'players/byName/'
@@ -2108,9 +2124,7 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
         string = ''
     else:
         string = "'s"
-        avatar_url = 'https://cdn.legiontd2.com/' + avatar
-        avatar_response = requests.get(avatar_url)
-        av_image = Image.open(BytesIO(avatar_response.content))
+        av_image = get_icons_image("avatar", avatar)
         gold_border = Image.open('Files/gold_64.png')
         if im_has_alpha(np.array(av_image)):
             im.paste(av_image, (10, 10), mask=av_image)
@@ -2294,6 +2308,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
 
 def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
     unit_dict = {}
+    unit = unit.lower()
     with open('Files/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
@@ -2440,7 +2455,6 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
     if novacup:
         playerid = playername
-    unit = unit.lower()
     if unit == "all":
         return create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Open")
     else:
@@ -2448,6 +2462,7 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
 
 def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"):
     spell_dict = {}
+    spellname = spellname.lower()
     with open('Files/spells.json', 'r') as f:
         spells_json = json.load(f)
     for s_js in spells_json:
@@ -2535,6 +2550,102 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
         return create_image_stats(spell_dict, games, playerid, avgelo, patches, mode="Spell")
     else:
         return create_image_stats_specific(spell_dict, games, playerid, avgelo, patches, mode="Spell", specific_value=spellname)
+
+def apicall_unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0):
+    unit_dict = {}
+    unit = unit.lower()
+    with open('Files/units.json', 'r') as f:
+        units_json = json.load(f)
+    for u_js in units_json:
+        if u_js["totalValue"] != '':
+            if u_js["unitId"] and int(u_js["totalValue"]) > min_cost and u_js["sortOrder"].split(".")[1].endswith("U"):
+                string = u_js["unitId"]
+                string = string.replace('_', ' ')
+                string = string.replace(' unit id', '')
+                if u_js["upgradesFrom"]:
+                    string2 = u_js["upgradesFrom"][0]
+                    string2 = string2.replace('_', ' ').replace(' unit id', '').replace('units ', '')
+                else:
+                    string2 = ""
+                unit_dict[string] = {'Count': 0, 'Wins': 0, 'ComboUnit': {}, 'MMs': {}, 'Spells': {}, "upgradesFrom": string2}
+    if min_cost <= 75:
+        unit_dict['pack rat (footprints)'] = {'Count': 0, 'Wins': 0, 'ComboUnit': {}, 'MMs': {}, 'Spells': {}, "upgradesFrom": "looter"}
+    if not unit_dict:
+        return "No units found"
+    if unit != "all":
+        if unit in slang:
+            unit = slang.get(unit)
+        if unit not in unit_dict:
+            return "Unit not found. (Upgraded units only)"
+    novacup = False
+    if playername == 'all':
+        playerid = 'all'
+    elif 'nova cup' in playername:
+        novacup = True
+        playerid = playername
+    else:
+        playerid = apicall_getid(playername)
+        if playerid == 0:
+            return 'Player ' + playername + ' not found.'
+        if playerid == 1:
+            return 'API limit reached, you can still use "all" commands.'
+    history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+    if type(history_raw) == str:
+        return history_raw
+    if len(history_raw) == 0:
+        return 'No games found.'
+    games = len(history_raw)
+    if 'nova cup' in playerid:
+        playerid = 'all'
+    patches = []
+    gameelo_list = []
+    count = 0
+    print("starting fighterstats...")
+    for game in history_raw:
+        patches.append(game["version"])
+        gameelo_list.append(game["gameElo"])
+        for player in game["playersData"]:
+            if player["playerId"] != playerid and playerid != "all": continue
+            fighter_set = set(player["fighters"].lower().split(","))
+            for fighter in fighter_set:
+                if fighter == "" or fighter not in unit_dict: continue
+                unit_dict[fighter]["Count"] += 1
+                if player["chosenSpell"] in unit_dict[fighter]["Spells"]:
+                    unit_dict[fighter]["Spells"][player["chosenSpell"]]["Count"] += 1
+                else:
+                    unit_dict[fighter]["Spells"][player["chosenSpell"]] = {"Count": 1, "Wins": 0}
+                if player["legion"] in unit_dict[fighter]["MMs"]:
+                    unit_dict[fighter]["MMs"][player["legion"]]["Count"] += 1
+                else:
+                    unit_dict[fighter]["MMs"][player["legion"]] = {"Count": 1, "Wins": 0}
+                if player["gameResult"] == "won":
+                    unit_dict[fighter]["Wins"] += 1
+                    unit_dict[fighter]["MMs"][player["legion"]]["Wins"] += 1
+                    unit_dict[fighter]["Spells"][player["chosenSpell"]]["Wins"] += 1
+                for combo_unit in fighter_set:
+                    if combo_unit == fighter or combo_unit == unit_dict[fighter]["upgradesFrom"]: continue
+                    if combo_unit in unit_dict[fighter]["ComboUnit"]:
+                        unit_dict[fighter]["ComboUnit"][combo_unit]["Count"] += 1
+                    else:
+                        unit_dict[fighter]["ComboUnit"][combo_unit] = {"Count": 1, "Wins": 0}
+                    if player["gameResult"] == "won":
+                        unit_dict[fighter]["ComboUnit"][combo_unit]["Wins"] += 1
+    new_patches = []
+    for x in patches:
+        string = x
+        periods = string.count('.')
+        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
+    patches = list(dict.fromkeys(new_patches))
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    newIndex = sorted(unit_dict, key=lambda x: unit_dict[x]['Count'], reverse=True)
+    unit_dict = {k: unit_dict[k] for k in newIndex}
+    avgelo = round(sum(gameelo_list)/len(gameelo_list))
+    if novacup:
+        playerid = playername
+    if unit == "all":
+        return create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Unit")
+    else:
+        return create_image_stats_specific(unit_dict, games, playerid, avgelo, patches, mode="Unit", specific_value=unit)
 
 def apicall_gameid_visualizer(gameid, start_wave=0):
     if start_wave > 21:
