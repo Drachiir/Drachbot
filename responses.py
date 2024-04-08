@@ -28,6 +28,7 @@ import functools
 import string
 import random
 import time
+import difflib
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -407,7 +408,6 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
             y += offset
         else:
             y += offset-10
-    im.show()
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -498,7 +498,6 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
         else:
             y += offset - 10
         if i == 4 or i == 9: dict_values_counter += 1
-    im.show()
     image_id = id_generator()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
@@ -2010,7 +2009,11 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
             if spell in slang:
                 spell = slang.get(spell)
             if spell not in spell_list:
-                return spell + " not found."
+                close_matches = difflib.get_close_matches(spell, spell_list)
+                if len(close_matches) > 0:
+                    spell = close_matches[0]
+                else:
+                    return spell + " spell not found."
     unit_list = []
     with open('Files/units.json', 'r') as f:
         units_json = json.load(f)
@@ -2032,7 +2035,11 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
             unit_name = slang.get(unit_name)
             unit[i] = unit_name
         if unit_name not in unit_list:
-            return unit_name + " unit not found."
+            close_matches = difflib.get_close_matches(unit_name, unit_list)
+            if len(close_matches) > 0:
+                unit[i] = close_matches[0]
+            else:
+                return unit_name + " unit not found."
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -2182,11 +2189,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
     gameelo_list = []
-    try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
+    history_raw = apicall_getmatchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -2199,9 +2202,7 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
     megamind_count = 0
     print('Starting mmstats command...')
     for game in history_raw:
-        if game["version"].startswith('v10') or game["version"].startswith('v9') and mastermind == 'Megamind':
-            continue
-        elif game["version"].startswith('v10') or game["version"].startswith('v9') and mastermind == 'Champion':
+        if (game["version"].startswith('v10') or game["version"].startswith('v9')) and (mastermind == 'Megamind' or mastermind == 'Champion'):
             continue
         patches.add(game["version"])
         gameelo_list.append(game["gameElo"])
@@ -2209,6 +2210,8 @@ def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort=
             case 'All' | 'Megamind':
                 for player in game["playersData"]:
                     if player["playerId"] == playerid or playerid == "all":
+                        if (game["version"].startswith('v10') or game["version"].startswith('v9')):
+                            player["megamind"] = False
                         if player["megamind"] == True:
                             megamind_count += 1
                             if mastermind != "Megamind":
@@ -2323,7 +2326,11 @@ def apicall_openstats(playername, games, min_elo, patch, sort="date", unit = "al
         if unit in slang:
             unit = slang.get(unit)
         if unit not in unit_dict:
-            return "Unit not found."
+            close_matches = difflib.get_close_matches(unit, list(unit_dict.keys()))
+            if len(close_matches) > 0:
+                unit = close_matches[0]
+            else:
+                return unit + " unit not found."
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -2476,7 +2483,11 @@ def apicall_spellstats(playername, games, min_elo, patch, sort="date", spellname
         if spellname in slang:
             spellname = slang.get(spellname)
         if spellname not in spell_dict:
-            return spellname + " not found."
+            close_matches = difflib.get_close_matches(spellname, list(spell_dict.keys()))
+            if len(close_matches) > 0:
+                spellname = close_matches[0]
+            else:
+                return spellname + " spell not found."
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -2558,7 +2569,7 @@ def apicall_unitstats(playername, games, min_elo, patch, sort="date", unit = "al
         units_json = json.load(f)
     for u_js in units_json:
         if u_js["totalValue"] != '':
-            if u_js["unitId"] and int(u_js["totalValue"]) > min_cost and u_js["sortOrder"].split(".")[1].endswith("U"):
+            if u_js["unitId"] and int(u_js["totalValue"]) > min_cost: #and (u_js["sortOrder"].split(".")[1].endswith("U") or u_js["sortOrder"].split(".")[1].endswith("U2") or "neko" in u_js["unitId"]):
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
@@ -2576,7 +2587,11 @@ def apicall_unitstats(playername, games, min_elo, patch, sort="date", unit = "al
         if unit in slang:
             unit = slang.get(unit)
         if unit not in unit_dict:
-            return "Unit not found. (Upgraded units only)"
+            close_matches = difflib.get_close_matches(unit, list(unit_dict.keys()))
+            if len(close_matches) > 0:
+                unit = close_matches[0]
+            else:
+                return unit + " unit not found."
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -2600,7 +2615,7 @@ def apicall_unitstats(playername, games, min_elo, patch, sort="date", unit = "al
     patches = []
     gameelo_list = []
     count = 0
-    print("starting fighterstats...")
+    print("starting unitstats...")
     for game in history_raw:
         patches.append(game["version"])
         gameelo_list.append(game["gameElo"])
