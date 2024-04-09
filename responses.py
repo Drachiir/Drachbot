@@ -30,6 +30,7 @@ import random
 import time
 import difflib
 import json_to_csv
+import discord
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -1780,6 +1781,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
     patches = list(dict.fromkeys(new_patches))
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    embed = discord.Embed(color=0x21eb1e, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) +" "+get_ranked_emote(avg_gameelo)+ ")")
     if type(playername) == list:
         if playername[0] != 'all':
             suffix = "'s"
@@ -1800,6 +1802,11 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         output_string_2 = playername2[0].capitalize() + suffix + " " + mm2_str
     else:
         output_string_2 = playername2.capitalize()
+    if playerid == "all":
+        avatar = "https://cdn.legiontd2.com/icons/Items/"+mm1+".png"
+    else:
+        avatar = "https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl']
+    embed.set_author(name=output_string_1 + output_string_2, icon_url=avatar)
     if all_dict:
         reverse = True
         if sort == "EloChange+":
@@ -1819,9 +1826,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                 p_name = apicall_getprofile(player)['playerName']
             else:
                 p_name = player
-            final_output += p_name + ': ' + str(all_dict[player]["Wins"]) + ' win - ' + str(all_dict[player]["Count"]-all_dict[player]["Wins"]) + ' lose (' + str(round(all_dict[player]["Wins"]/all_dict[player]["Count"]*100,1)) + '%wr, elo change: '+elo_prefix+str(all_dict[player]["EloChange"])+')\n'
-        return output_string_1 + output_string_2 + ' (From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n" +\
-            final_output + 'Patches: ' + ', '.join(patches)
+            embed.add_field(name="", value="**"+p_name + ': ' + str(all_dict[player]["Wins"]) + ' win - ' + str(all_dict[player]["Count"]-all_dict[player]["Wins"]) + ' lose** ('+str(round(all_dict[player]["Wins"]/all_dict[player]["Count"]*100,1)) + '%WR, '+elo_prefix+str(all_dict[player]["EloChange"])+" Elo)", inline=False)
     else:
         if len(elo_change_list) > 0:
             sum_elo = sum(elo_change_list)
@@ -1830,13 +1835,16 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
             elo_change_sum = ", Elo change: "+string_pm+str(sum_elo)
         else:
             elo_change_sum = ""
-        try: return output_string_1 + output_string_2 + ' (From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n" +\
-            str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(round(win_count / game_count * 100, 2)) +\
-            '% winrate'+elo_change_sum+')\nPatches: ' + ', '.join(patches)
+        round(win_count / game_count * 100, 2)
+        try:
+            winrate = round(win_count / game_count * 100, 2)
         except ZeroDivisionError as e:
             print(e)
             return "No games found."
-    
+        embed.add_field(name=str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(winrate) +'% winrate'+elo_change_sum+')', value="", inline=False)
+    embed.set_footer(text='Patches: ' + ', '.join(patches))
+    return embed
+        
 def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'

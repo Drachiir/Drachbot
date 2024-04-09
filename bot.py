@@ -5,6 +5,7 @@ import traceback
 from datetime import datetime, timezone
 import discord
 import responses
+from discord.ext import commands
 from discord import app_commands, ui
 import os
 import concurrent.futures
@@ -94,24 +95,19 @@ def get_top_games():
             continue
         if len(topgames) < 3:
             topgames.append(game)
-    output = ""
     if len(topgames) == 0:
         return "No games found."
+    embed = discord.Embed(color=0x8c00ff)
+    embed.set_author(name="Top Games", icon_url="https://overlay.drachbot.site/drachia.png")
     for idx, game2 in enumerate(topgames):
         with open(path+game2, "r", encoding="utf_8") as f2:
             txt = f2.readlines()
             f2.close()
         gameid = game2.split("_")[0].split(".")[0]
-        if not Path("/shared/Gameids/"+game2).is_file():
-            with open("/shared/Gameids/"+game2, "w") as f:
-                f.truncate(0)
-                lines = [gameid+"\n"]+txt
-                f.write("\n".join(lines))
-                f.close()
         path2 = path+game2
         mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc).timestamp()
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-        output += "**Game "+str(idx+1)+ " Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+", [Gameid](<"+"https://overlay.drachbot.site/Gameids/"+game2+">),  Started "+str(timestamp)+".**\n"
+        output = ""
         for c, data in enumerate(txt):
             if c == len(txt)-1:
                 output += "\n"
@@ -120,7 +116,8 @@ def get_top_games():
             if c == (len(txt)-1)/2:
                 output += "\n"
             output += data + responses.get_ranked_emote(int(data.split(":")[1]))+ " "
-    return output
+        embed.add_field(name="**Game " + str(idx + 1) + "**, " + txt[-1] + responses.get_ranked_emote(int(txt[-1])) + "  Started " + str(timestamp), value=output, inline=False)
+    return embed
 
 def run_discord_bot():
     loop = asyncio.new_event_loop()
@@ -142,19 +139,23 @@ def run_discord_bot():
     for mm in mm_list:
         mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
     
-    class MyView(discord.ui.View):
+    class RefreshButton(discord.ui.View):
         def __init__(self):
-            super().__init__()
-        @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple)
-        async def asdf(self, interaction: discord.Interaction, button: discord.ui.Button):
+            super().__init__(timeout=None)
+            self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+        @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh')
+        async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
             try:
                 await interaction.response.defer()
+                bucket = self.cd_mapping.get_bucket(interaction.message)
+                retry_after = bucket.update_rate_limit()
+                if retry_after:
+                    return print(interaction.user.name + " likes to press buttons.")
                 loop = asyncio.get_running_loop()
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     response = await loop.run_in_executor(pool, get_top_games)
                     pool.shutdown()
-                    if len(response) > 0:
-                        await interaction.edit_original_response(content=response, view=MyView())
+                    await interaction.edit_original_response(embed=response)
             except Exception:
                 traceback.print_exc()
                 
@@ -510,6 +511,9 @@ def run_discord_bot():
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
+            if "," in playername1:
+                if playername1.split(",")[0].lower() == "all" and games == 0 and min_elo == 0 and patch == current_season:
+                    min_elo = current_min_elo
             try:
                 sort = sort.value
             except AttributeError:
@@ -517,7 +521,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_winrate, playername1, playername2, option.value, games, patch, min_elo = min_elo, sort=sort))
                 pool.shutdown()
-                if len(response) > 0:
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response)
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -656,7 +662,7 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, get_top_games)
                 pool.shutdown()
                 if len(response) > 0:
-                    await interaction.followup.send(response, view=MyView())
+                    await interaction.followup.send(embed=response, view=RefreshButton())
             except Exception:
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
