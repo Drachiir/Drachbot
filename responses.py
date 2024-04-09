@@ -29,6 +29,7 @@ import string
 import random
 import time
 import difflib
+import json_to_csv
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -492,7 +493,9 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
     for i, k in enumerate(keys):
         I1.text((8, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
         if k not in exclude and (k != ''):
-            im3 = PIL.Image.new(mode="RGB", size=(max_x[dict_values_counter] - 38, 4), color=(169, 169, 169))
+            if k == "Playrate:": rgb =(200,20,0)
+            else: rgb = (169, 169, 169)
+            im3 = PIL.Image.new(mode="RGB", size=(max_x[dict_values_counter] - 38, 4), color=rgb)
             im.paste(im3, (8, y + 30))
             y += offset
         else:
@@ -519,17 +522,18 @@ def handle_response(message, author) -> str:
     if 'genom' in p_message:        return ":rat:"
     if 'quacker' in p_message:      return ":duck: quack"
     if 'toikan' in p_message:       return "nyctea, :older_man:"
-    if 'jokeonu' in p_message:      return "look dis brah, snacc"
+    if 'jokeonu' in p_message:      return "look dis brah, snacc <:snacc:1225281693393616936>"
     if 'mrbuzz' in p_message:       return "(On his smurf)"
     if 'nyctea' in p_message:       return "toikan,"
     if 'lwon' in p_message:         return "<:AgentEggwon:1215622131187191828> fucking teamates, nothing you can do"
-    if '!github' in p_message:      return 'https://github.com/Drachiir/Legion-Elo-Bot'
+    if '!github' in p_message:      return 'https://github.com/Drachiir/Drachbot'
     if '!test' in p_message:        return api_call_logger("yo")
     if '!update' in p_message and str(author) == 'drachir_':
         input = p_message.split(" ")
         return ladder_update(input[1])
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
+    if "!csv_data" in p_message and (str(author) == 'drachir_' or str(author) == 'pennywiseuk'): return json_to_csv.legion_json_to_csv()
     # if '!script' and str(author) == "drachir_":
     #     path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
     #     path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
@@ -994,7 +998,6 @@ def apicall_elograph(playername, games, patch, transparency = False):
     im3 = PIL.Image.new(mode="RGB", size=(1676, 4), color=(169, 169, 169))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
-    #player_profile = apicall_getprofile(playerid)
     myFont_small = ImageFont.truetype(ttf, 20)
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
@@ -1833,7 +1836,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         except ZeroDivisionError as e:
             print(e)
             return "No games found."
-
+    
 def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
@@ -2752,7 +2755,7 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
                 im.paste(get_icons_image("icon", unit2[0]), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
                 if player["chosenSpellLocation"] != "-1|-1":
                     if unit2_list[1] == player["chosenSpellLocation"] and wave > 9:
-                        im.paste(get_icons_image("icon", player["chosenSpell"]).resize((42,42)),(int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+                        im.paste(get_icons_image("icon", player["chosenSpell"]).resize((28,28)),(int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
             im.paste(get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=get_icons_image("icon", "Value32").resize((64,64)))
             I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
             im.paste(get_icons_image("icon", "Worker"), (x+230, y2 + 150))

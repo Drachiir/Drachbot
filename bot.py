@@ -2,10 +2,10 @@ import asyncio
 import functools
 import json
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 import discord
 import responses
-from discord import app_commands
+from discord import app_commands, ui
 import os
 import concurrent.futures
 import platform
@@ -56,7 +56,6 @@ async def send_message(message, user_message, username):
 
 def custom_exception_handler(loop, context):
     loop.default_exception_handler(context)
-
     exception = context.get('exception')
     if isinstance(exception, Exception):
         print(context)
@@ -110,7 +109,7 @@ def get_top_games():
                 f.write("\n".join(lines))
                 f.close()
         path2 = path+game2
-        mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2)).timestamp()
+        mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc).timestamp()
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
         output += "**Game "+str(idx+1)+ " Elo: " +txt[-1]+responses.get_ranked_emote(int(txt[-1]))+", [Gameid](<"+"https://overlay.drachbot.site/Gameids/"+game2+">),  Started "+str(timestamp)+".**\n"
         for c, data in enumerate(txt):
@@ -143,6 +142,22 @@ def run_discord_bot():
     for mm in mm_list:
         mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
     
+    class MyView(discord.ui.View):
+        def __init__(self):
+            super().__init__()
+        @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple)
+        async def asdf(self, interaction: discord.Interaction, button: discord.ui.Button):
+            try:
+                await interaction.response.defer()
+                loop = asyncio.get_running_loop()
+                with concurrent.futures.ProcessPoolExecutor() as pool:
+                    response = await loop.run_in_executor(pool, get_top_games)
+                    pool.shutdown()
+                    if len(response) > 0:
+                        await interaction.edit_original_response(content=response, view=MyView())
+            except Exception:
+                traceback.print_exc()
+                
     @tree.command(name= "elo", description= "Shows rank, elo and playtime.")
     @app_commands.describe(playername='Enter the playername.')
     async def elo(interaction: discord.Interaction, playername: str):
@@ -641,7 +656,7 @@ def run_discord_bot():
                 response = await loop.run_in_executor(pool, get_top_games)
                 pool.shutdown()
                 if len(response) > 0:
-                    await interaction.followup.send(response)
+                    await interaction.followup.send(response, view=MyView())
             except Exception:
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
@@ -788,4 +803,3 @@ def run_discord_bot():
     loop.create_task(client.start(TOKEN))
     loop.create_task(client2.start(TOKEN2))
     loop.run_forever()
-
