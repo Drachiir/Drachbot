@@ -528,7 +528,6 @@ def handle_response(message, author) -> str:
     if 'nyctea' in p_message:       return "toikan,"
     if 'lwon' in p_message:         return "<:AgentEggwon:1215622131187191828> fucking teamates, nothing you can do"
     if '!github' in p_message:      return 'https://github.com/Drachiir/Drachbot'
-    if '!test' in p_message:        return api_call_logger("yo")
     if '!update' in p_message and str(author) == 'drachir_':
         input = p_message.split(" ")
         return ladder_update(input[1])
@@ -1445,16 +1444,22 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     send_total = kingup_atk_count+kingup_regen_count+kingup_spell_count+snail_count+save_count
     kingup_total = kingup_atk_count+kingup_regen_count+kingup_spell_count
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
-    if playerid == 'all':
-        option = ''
-    if send_total > 4:
-        return ((playername).capitalize() +suffix+" Wave 1 " + option + " stats: (Last " + str(games) + " ranked games, Avg. Elo: "+str(avg_gameelo)+") <:Stare:1148703530039902319>\nKingup: " + \
-            str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + \
-            ' Spell: ' + str(kingup_spell_count) + ')\nSnail: ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))'+\
-            '\nSave: ' + str(save_count)) + ' | '  + str(round(save_count/send_total*100,1)) + '%\n' +\
-            'Patches: ' + ', '.join(patches)
-    else:
+    if send_total == 0:
         return 'Not enough ranked data'
+    if playerid == "all":
+        avatar = ""
+        option = ''
+    else:
+        profile = apicall_getprofile(playerid)
+        avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+        playername = profile["playerName"]
+    embed = discord.Embed(color=0xE73333, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + get_ranked_emote(avg_gameelo) + ")\n\n"+
+                          '**Kingup:** '+str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + ' Spell: ' + str(kingup_spell_count) + ')\n'+
+                          '**Snail:** ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))\n'+
+                          '**Save:** ' + str(save_count) + ' | '  + str(round(save_count/send_total*100,1)) + '%')
+    embed.set_author(name=playername + suffix+" Wave 1 " + option + " stats", icon_url=avatar)
+    embed.set_footer(text='Patches: ' + ', '.join(patches))
+    return embed
 
 def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "Count"):
     mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', "All"]
@@ -1624,7 +1629,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[0]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west}
+                            all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["playersData"][2]["playerName"]}
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[0]]["Wins"] += 1
                         if playerids_ranked_east[1] in all_dict:
@@ -1633,7 +1638,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[1]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west}
+                            all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["playersData"][3]["playerName"]}
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[1]]["Wins"] += 1
                     elif option == 'with':
@@ -1644,7 +1649,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[0]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west}
+                                all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["playersData"][0]["playerName"]}
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[0]]["Wins"] += 1
                         elif playerids_ranked_west[1] != playerid:
@@ -1654,7 +1659,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[1]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west}
+                                all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["playersData"][1]["playerName"]}
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[1]]["Wins"] += 1
             for i, x in enumerate(playerids_ranked_east):
@@ -1666,7 +1671,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[0]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east}
+                            all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["playersData"][0]["playerName"]}
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[0]]["Wins"] += 1
                         if playerids_ranked_west[1] in all_dict:
@@ -1675,7 +1680,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[1]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east}
+                            all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["playersData"][1]["playerName"]}
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[1]]["Wins"] += 1
                     elif option == 'with':
@@ -1686,7 +1691,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[0]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east}
+                                all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["playersData"][2]["playerName"]}
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[0]]["Wins"] += 1
                         elif playerids_ranked_east[1] != playerid:
@@ -1696,7 +1701,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[1]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east}
+                                all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["playersData"][3]["playerName"]}
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[1]]["Wins"] += 1
         else:
@@ -1781,7 +1786,6 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
     patches = list(dict.fromkeys(new_patches))
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
-    embed = discord.Embed(color=0x21eb1e, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) +" "+get_ranked_emote(avg_gameelo)+ ")")
     if type(playername) == list:
         if playername[0] != 'all':
             suffix = "'s"
@@ -1806,6 +1810,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         avatar = "https://cdn.legiontd2.com/icons/Items/"+mm1+".png"
     else:
         avatar = "https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl']
+    embed = discord.Embed(color=0x21eb1e, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + get_ranked_emote(avg_gameelo) + ")")
     embed.set_author(name=output_string_1 + output_string_2, icon_url=avatar)
     if all_dict:
         reverse = True
@@ -1820,19 +1825,23 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         final_output = ""
         for indx, player in enumerate(all_dict):
             if indx == 6: break
-            if all_dict[player]["EloChange"] > 0: elo_prefix = "+"
-            else: elo_prefix = ""
+            if all_dict[player]["EloChange"] > 0:
+                elo_prefix = "+"
+            else:
+                elo_prefix = ""
             if mm2 != "All":
-                p_name = apicall_getprofile(player)['playerName']
+                p_name = all_dict[player]["playername"]
             else:
                 p_name = player
-            embed.add_field(name="", value="**"+p_name + ': ' + str(all_dict[player]["Wins"]) + ' win - ' + str(all_dict[player]["Count"]-all_dict[player]["Wins"]) + ' lose** ('+str(round(all_dict[player]["Wins"]/all_dict[player]["Count"]*100,1)) + '%WR, '+elo_prefix+str(all_dict[player]["EloChange"])+" Elo)", inline=False)
+            embed.add_field(name="", value="**" + p_name + ': ' + str(all_dict[player]["Wins"]) + ' win - ' + str(all_dict[player]["Count"] - all_dict[player]["Wins"]) + ' lose** (' + str(round(all_dict[player]["Wins"] / all_dict[player]["Count"] * 100, 1)) + '%WR, ' + elo_prefix + str(all_dict[player]["EloChange"]) + " Elo)", inline=False)
     else:
         if len(elo_change_list) > 0:
             sum_elo = sum(elo_change_list)
-            if sum_elo > 0: string_pm = "+"
-            else: string_pm = ""
-            elo_change_sum = ", Elo change: "+string_pm+str(sum_elo)
+            if sum_elo > 0:
+                string_pm = "+"
+            else:
+                string_pm = ""
+            elo_change_sum = ", Elo change: " + string_pm + str(sum_elo)
         else:
             elo_change_sum = ""
         round(win_count / game_count * 100, 2)
@@ -1841,7 +1850,7 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         except ZeroDivisionError as e:
             print(e)
             return "No games found."
-        embed.add_field(name=str(win_count) + ' win - ' + str(game_count-win_count) + ' lose (' + str(winrate) +'% winrate'+elo_change_sum+')', value="", inline=False)
+        embed.add_field(name=str(win_count) + ' win - ' + str(game_count - win_count) + ' lose (' + str(winrate) + '% winrate' + elo_change_sum + ')', value="", inline=False)
     embed.set_footer(text='Patches: ' + ', '.join(patches))
     return embed
         
@@ -1978,18 +1987,24 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2))+'%\n'
     else:
         string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%, Enemy King: '+str(round(king_hp_enemy_10*100,2))+'%\n'
-    avg_gameelo = sum(gameelo_list) / len(gameelo_list)
-
-    return (playername).capitalize() +suffix+" elcringo stats(Averages from " + str(games) +" ranked games):<:GK:1161013811927601192>\n" \
-        'Saves first 10: ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +\
-        'Saves after 10: ' + str(saves_post10)+'/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n'\
-        'Worker on 10: ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n" \
-        'Leaks: ' + str(leaks_total) + "% (First 10: "+str(leaks_pre10_total)+"%)\n" \
-        'Income on 10: ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n"+\
-        string2 + \
-        'Mythium sent: ' + str(mythium) + ' (Pre 10: '+str(mythium_pre10)+', Post 10: '+str(mythium-mythium_pre10)+')\n' + \
-        'Game elo: ' + str(round(avg_gameelo)) + '\n' + \
-        'Patches: ' + ', '.join(patches)
+    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    if playerid == "all":
+        avatar = ""
+    else:
+        profile = apicall_getprofile(playerid)
+        avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+        playername = profile["playerName"]
+    embed = discord.Embed(color=0x4565d9, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + get_ranked_emote(avg_gameelo) + ")\n\n"+
+                          '**Saves first 10:** ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n'+
+                          '**Saves after 10:** ' + str(saves_post10)+'/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n'+
+                          '**Worker on 10:** ' + str(round(sum(worker_10_list) / len(worker_10_list), 2))+"\n"+
+                          '**Leaks:** ' + str(leaks_total) + "% (First 10: "+str(leaks_pre10_total)+"%)\n"+
+                          '**Income on 10:** ' + str(round(sum(income_10_list) / len(income_10_list), 1))+"\n"+
+                          '**Mythium sent:** ' + str(mythium) + ' (Pre 10: '+str(mythium_pre10)+', Post 10: '+str(mythium-mythium_pre10)+')\n'+
+                          '**Game elo:** ' + str(round(avg_gameelo)))
+    embed.set_author(name=playername + suffix + " elcringo stats", icon_url=avatar)
+    embed.set_footer(text='Patches: ' + ', '.join(patches))
+    return embed
 
 def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermind = "all", spell = "all"):
     if "," in unit:
@@ -2818,14 +2833,26 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
         return "Game ID: [" + gameid + "](" +site +image_id+")"
 
 def apicall_elo(playername, rank):
+    win_count = 0
+    elo_change = 0
+    history_list = []
     if playername != None:
         playerid = apicall_getid(playername)
         if playerid == 0:
             return 'Player ' + str(playername) + ' not found.'
         if playerid == 1:
             return 'API limit reached.'
-    win_count = 0
-    elo_change = 0
+        history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
+        for game in history_raw:
+            for player2 in game["playersData"]:
+                if player2["playerId"] == playerid:
+                    playername = player2["playerName"]
+                    if player2["gameResult"] == "won":
+                        history_list.append("W")
+                        win_count += 1
+                    else:
+                        history_list.append("L")
+                    elo_change += player2["eloChange"]
     def elochange(elochange):
         if elo_change >=0:
             return "+" + str(elo_change)
@@ -2840,34 +2867,22 @@ def apicall_elo(playername, rank):
                 rank = i+1
                 rank_emote = get_ranked_emote(player['overallElo'])
                 peak_emote = get_ranked_emote(player['overallPeakEloThisSeason'])
-                history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
-                for game in history_raw:
-                    for player2 in game["playersData"]:
-                        if player2["playerId"] == playerid:
-                            if player2["gameResult"] == "won":
-                                win_count += 1
-                            elo_change += player2["eloChange"]
-                return str(playername).capitalize() + ' is rank ' + str(i+1) + ' with ' + str(
-                    player['overallElo']) + rank_emote+' elo (Peak: ' + str(player['overallPeakEloThisSeason']) + peak_emote+') and ' + str(
-                    round((player['secondsPlayed'] / 60)/60)) + ' in game hours.\nThey have won ' + \
-                    str(win_count) + ' out of their last 10 games. (Elo change: ' + \
-                    elochange(elo_change) + ')'
+                embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(i+1) + ' with ' + str(
+                    player['overallElo']) + " " + rank_emote+' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote+' and ' + str(
+                    round((player['secondsPlayed'] / 60)/60)) + ' hours.\n' + \
+                    str(win_count) + ' Win - '+str(10-win_count)+' Lose (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
+                embed.set_thumbnail(url="https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl'])
+                return embed
         else:
             player = apicall_getstats(playerid)
             rank_emote = get_ranked_emote(player['overallElo'])
             peak_emote = get_ranked_emote(player['overallPeakEloThisSeason'])
-            history_raw = apicall_getmatchistory(playerid, 10, earlier_than_wave10=True)
-            for game in history_raw:
-                for player2 in game["playersData"]:
-                    if player2["playerId"] == playerid:
-                        if player2["gameResult"] == "won":
-                            win_count += 1
-                        elo_change += player2["eloChange"]
-            return str(playername).capitalize() + ' has ' + str(
-                player['overallElo']) + rank_emote + ' elo (Peak: ' + str(player['overallPeakEloThisSeason']) + peak_emote + ') and ' + str(
-                round((player['secondsPlayed'] / 60)/60)) + ' in game hours.\nThey have won ' + \
-                str(win_count) + ' out of their last 10 games. (Elo change: ' + \
-                elochange(elo_change) + ')'
+            embed = discord.Embed(color=0xFFD136, description="**"+playername + '** has ' + str(player['overallElo']) + " " + rank_emote +
+                ' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote + ' and ' +
+                str(round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
+                str(win_count) + ' W - '+str(10-win_count)+' L (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
+            embed.set_thumbnail(url="https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl'])
+            return embed
     else:
         url = 'https://apiv2.legiontd2.com/players/stats?limit=1&offset=' + str(int(rank)-1) + '&sortBy=overallElo&sortDirection=-1'
         api_response = requests.get(url, headers=header)
@@ -2881,13 +2896,17 @@ def apicall_elo(playername, rank):
             for player2 in game["playersData"]:
                 if player2["playerId"] == playerid:
                     if player2["gameResult"] == "won":
+                        history_list.append("W")
                         win_count += 1
+                    else:
+                        history_list.append("L")
                     elo_change += player2["eloChange"]
-        return playername + ' is rank ' + str(rank) + ' with ' + str(
-            player['overallElo']) + rank_emote + ' elo (Peak: ' + str(player['overallPeakEloThisSeason']) + peak_emote + ') and ' + str(
-            round((player['secondsPlayed'] / 60)/60)) + ' in game hours.\nThey have won ' + \
-            str(win_count) + ' out of their last 10 games. (Elo change: ' + \
-            elochange(elo_change) + ')'
+        embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(rank) + ' with ' + str(
+            player['overallElo']) + " " + rank_emote + ' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote + ' and ' + str(
+            round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
+            str(win_count) + ' Win - ' + str(10 - win_count) + ' Lose (Elo change: ' + elochange(elo_change) + ")\n"+"-".join(history_list))
+        embed.set_thumbnail(url="https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl'])
+        return embed
 
 def apicall_bestie(playername):
     playerid = apicall_getid(playername)

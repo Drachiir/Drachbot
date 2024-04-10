@@ -2,7 +2,6 @@ import json
 import os
 import pathlib
 import csv
-import shutil
 
 def legion_json_to_csv():
     path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"

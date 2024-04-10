@@ -168,7 +168,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elo, playername, 0))
                 pool.shutdown()
-                if len(response) > 0:
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response)
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -200,7 +202,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elo,None, rank))
                 pool.shutdown()
-                if len(response) > 0:
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response)
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -304,7 +308,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_wave1tendency, playername, option, games, min_elo, patch, sort))
                 pool.shutdown()
-                if len(response) > 0:
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response)
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -336,7 +342,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_elcringo, playername, games, patch, min_elo, option, sort = sort))
                 pool.shutdown()
-                if len(response) > 0:
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response)
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -706,10 +714,13 @@ def run_discord_bot():
             if "!sync" == message.content and "drachir_" == str(message.author):
                 print(await tree.sync(guild=None))
                 return
+            if "!testsync" == message.content and "drachir_" == str(message.author):
+                guild = discord.Object(id=1090670011556823151)
+                tree.copy_global_to(guild=guild)
+                return
             username = str(message.author)
             user_message = str(message.content)
             channel = str(message.channel)
-            print(f"{username} said: '{user_message}'({channel})")
         else: return
         await send_message(message, user_message, username)
 
