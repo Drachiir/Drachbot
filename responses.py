@@ -31,6 +31,7 @@ import time
 import difflib
 import json_to_csv
 import discord
+from discord import utils
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -59,6 +60,14 @@ rank_emotes = {"bronze": [1000,"<:Bronze:1217999684484862057>"], "silver": [1200
                "plat": [1600,"<:Platinum:1217999701337571379>"], "dia": [1800,"<:Diamond:1217999686888325150>"], "ruby": [2000,"<:Expert:1217999688494747718>"],
                "purple": [2200,"<:Master:1217999699114590248>"], "sm": [2400,"<:SeniorMaster:1217999704349081701>"], "gm": [2600,"<:Grandmaster:1217999691883741224>"],
                "legend": [2800, "<:Legend:1217999693234176050>"]}
+
+wave_emotes = {"wave1": "<:Wave1:1228044855079600299>", "wave10": "<:Wave10:1228045034792681526>", "wave11": "\<:Wave11:1228044870082625698>",
+            "wave12": "<:Wave12:1228045036265013288>", "wave13": "<:Wave13:1228044874276671559>", "wave14": "<:Wave14:1228045037368115240>",
+            "wave15": "<:Wave15:1228044877795688459>", "wave16": "<:Wave16:1228044879750369280>", "wave17": "<:Wave17:1228045038509097000>",
+            "wave18": "<:Wave18:1228044883562856530>", "wave19": "<:Wave19:1228045039930839101>", "wave2": "<:Wave2:1228044857059315825>",
+            "wave20": "<:Wave20:1228044887195254784>", "wave21": "<:Wave21:1228045041998495774>", "wave3": "<:Wave3:1228044858644500490>",
+            "wave4": "<:Wave4:1228044860041199717>", "wave5": "<:Wave5:1228044861500948480>", "wave6": "<:Wave6:1228044862679678997>",
+            "wave7": "<:Wave7:1228044864126717973>", "wave8": "<:Wave8:1228044865468764280>", "wave9": "<:Wave9:1228044866764673054>"}
 
 with open("Files/slang.json", "r") as slang_file:
     slang = json.load(slang_file)
@@ -1355,6 +1364,39 @@ def novacup(division):
     elif division == "2":
         return output2
 
+def matchhistory_viewer(playername:str):
+    playerid = apicall_getid(playername)
+    if playerid == 0:
+        return playername + " player not found"
+    elif playerid == 1:
+        return "API error."
+    profile = apicall_getprofile(playerid)
+    avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+    playername = profile["playerName"]
+    history_raw = apicall_getmatchistory(playerid, 5, earlier_than_wave10=True)
+    site_link = "https://overlay.drachbot.site/Images/"
+    embed = discord.Embed(color=0x1cce3a, title="Match History")
+    embed.set_author(name=playername, icon_url=avatar)
+    for game in history_raw:
+        per_game_list = []
+        elo_prefix = ""
+        emoji = wave_emotes.get("wave"+str(game["endingWave"]))
+        for indx, player in enumerate(game["playersData"]):
+            per_game_list.append(player["playerName"] + " " + get_ranked_emote(player["overallElo"]))
+            if player["playerId"] != playerid: continue
+            else:
+                result = player["gameResult"].capitalize()
+                if player["eloChange"] > 0:
+                    elo_change = player["eloChange"]
+                    elo_prefix = "+"
+                else:
+                    elo_change = player["eloChange"]
+                    elo_prefix = ""
+        embed.add_field(name="", value=emoji + " [" + result + " on Wave " + str(game["endingWave"]) +
+                             "("+elo_prefix+str(elo_change)+" Elo)]("+apicall_gameid_visualizer(game["_id"], 0)+")\n"+
+                                per_game_list[0]+" "+per_game_list[2]+"\n"+per_game_list[1]+" "+per_game_list[3], inline=False)
+    return embed
+
 def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
@@ -1447,7 +1489,8 @@ def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"
     if send_total == 0:
         return 'Not enough ranked data'
     if playerid == "all":
-        avatar = ""
+        playername = "All"
+        avatar = "https://cdn.legiontd2.com/icons/Snail.png"
         option = ''
     else:
         profile = apicall_getprofile(playerid)
@@ -1810,8 +1853,8 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
         avatar = "https://cdn.legiontd2.com/icons/Items/"+mm1+".png"
     else:
         avatar = "https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl']
-    embed = discord.Embed(color=0x21eb1e, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + get_ranked_emote(avg_gameelo) + ")")
-    embed.set_author(name=output_string_1 + output_string_2, icon_url=avatar)
+    output = ""
+    longest_text = 0
     if all_dict:
         reverse = True
         if sort == "EloChange+":
@@ -1833,7 +1876,8 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
                 p_name = all_dict[player]["playername"]
             else:
                 p_name = player
-            embed.add_field(name="", value="**" + p_name + ': ' + str(all_dict[player]["Wins"]) + ' win - ' + str(all_dict[player]["Count"] - all_dict[player]["Wins"]) + ' lose** (' + str(round(all_dict[player]["Wins"] / all_dict[player]["Count"] * 100, 1)) + '%WR, ' + elo_prefix + str(all_dict[player]["EloChange"]) + " Elo)", inline=False)
+            win_lose_text = str(all_dict[player]["Wins"]) + 'W - ' + str(all_dict[player]["Count"] - all_dict[player]["Wins"]) + 'L**  ('
+            output += "**"+p_name + ": " + win_lose_text + str(round(all_dict[player]["Wins"] / all_dict[player]["Count"] * 100, 1)) + '% ' + elo_prefix + str(all_dict[player]["EloChange"]) + " Elo)\n"
     else:
         if len(elo_change_list) > 0:
             sum_elo = sum(elo_change_list)
@@ -1844,13 +1888,15 @@ def apicall_winrate(playername, playername2, option, games, patch, min_elo = 0, 
             elo_change_sum = ", Elo change: " + string_pm + str(sum_elo)
         else:
             elo_change_sum = ""
-        round(win_count / game_count * 100, 2)
         try:
             winrate = round(win_count / game_count * 100, 2)
         except ZeroDivisionError as e:
             print(e)
             return "No games found."
-        embed.add_field(name=str(win_count) + ' win - ' + str(game_count - win_count) + ' lose (' + str(winrate) + '% winrate' + elo_change_sum + ')', value="", inline=False)
+        output += "**"+str(win_count) + 'W - ' + str(game_count - win_count) + 'L (' + str(winrate) + '% winrate' + elo_change_sum + ')**'
+    embed = discord.Embed(color=0x21eb1e)
+    embed.add_field(name='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + get_ranked_emote(avg_gameelo) + ")", value=output)
+    embed.set_author(name=output_string_1 + output_string_2, icon_url=avatar)
     embed.set_footer(text='Patches: ' + ', '.join(patches))
     return embed
         
@@ -1989,7 +2035,8 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%, Enemy King: '+str(round(king_hp_enemy_10*100,2))+'%\n'
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     if playerid == "all":
-        avatar = ""
+        playername = "All"
+        avatar = "https://cdn.legiontd2.com/icons/Ogre.png"
     else:
         profile = apicall_getprofile(playerid)
         avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
@@ -2695,142 +2742,145 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
         return "Invalid wave number."
     image_ids = []
     image_link = ""
-    url = 'https://apiv2.legiontd2.com/games/byId/' + gameid + '?includeDetails=true'
-    api_response = requests.get(url, headers=header)
-    gamedata = json.loads(api_response.text)
-    units_dict = json.load(open("Files/units.json"))
-    if (gamedata == {'message': 'Internal server error'}) or (gamedata == {'err': 'Entry not found.'}):
-        return "GameID not found. (Games that are not concluded or older than 1 year are not available in the API)"
-    player_dict = {}
-    for player in gamedata["playersData"]:
-        player_dict[player["playerName"]] = {"avatar_url": apicall_getprofile(player["playerId"])["avatarUrl"],
-                                             "roll": player["rolls"].replace(" ", "").split(","), "legion": player["legion"], "elo": player["overallElo"],
-                                             "elo_change": player["eloChange"]}
-    if start_wave != 0:
-        waves = [start_wave-1]
-    elif start_wave > gamedata["endingWave"] and start_wave != 0:
-        return "Game ended on Wave " + str(gamedata["endingWave"])
-    else:
-        waves = range(gamedata["endingWave"])
-    first = True
-    for wave in waves:
-        mode = 'RGB'
-        colors = (30, 30, 30)
-        x = 10
-        y = 350
-        box_size = 64
-        line_width = 3
-        offset = box_size + line_width
-        im = PIL.Image.new(mode=mode, size=(20+offset*39, 1750), color=colors)
-        horz_line = PIL.Image.new(mode="RGB", size=(box_size*9+line_width*10, line_width), color=(155, 155, 155))
-        vert_line = PIL.Image.new(mode="RGB", size=(line_width, box_size*14+line_width*15), color=(155, 155, 155))
-        I1 = ImageDraw.Draw(im)
-        ttf = 'Files/RobotoCondensed-Regular.ttf'
-        myFont_small = ImageFont.truetype(ttf, 40)
-        myFont = ImageFont.truetype(ttf, 50)
-        myFont_title = ImageFont.truetype(ttf, 60)
-        y2 = 125
-        im.paste(Image.open(open("Files/Waves/Wave"+str(wave+1)+".png", "rb")), (10,10))
-        I1.text((80, 10), "Wave "+str(wave+1), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        if wave == 0:
-            left_kinghp_change = 0
-        elif gamedata["leftKingPercentHp"][wave-1] > gamedata["leftKingPercentHp"][wave]:
-            left_kinghp_change = "-"+str(round((gamedata["leftKingPercentHp"][wave-1]-gamedata["leftKingPercentHp"][wave])*100, 1))
-        else:
-            left_kinghp_change = "+"+str(round((gamedata["leftKingPercentHp"][wave] - gamedata["leftKingPercentHp"][wave-1]) * 100, 1))
-        if wave == 0:
-            right_kinghp_change = 0
-        elif gamedata["rightKingPercentHp"][wave-1] > gamedata["rightKingPercentHp"][wave]:
-            right_kinghp_change = "-"+str(round((gamedata["rightKingPercentHp"][wave-1]-gamedata["rightKingPercentHp"][wave])*100, 1))
-        else:
-            right_kinghp_change = "+" + str(round((gamedata["rightKingPercentHp"][wave] - gamedata["rightKingPercentHp"][wave-1]) * 100, 1))
-        I1.text((400, 10), "King HP: "+str(round(gamedata["leftKingPercentHp"][wave]*100, 1))+"% ("+str(left_kinghp_change)+"%)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        I1.text((1650, 10), "King HP: " + str(round(gamedata["rightKingPercentHp"][wave] * 100, 1)) + "% (" + str(right_kinghp_change) + "%)", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    if not Path(Path(shared_folder + gameid + "/")).is_dir():
+        url = 'https://apiv2.legiontd2.com/games/byId/' + gameid + '?includeDetails=true'
+        api_response = requests.get(url, headers=header)
+        gamedata = json.loads(api_response.text)
+        units_dict = json.load(open("Files/units.json"))
+        if (gamedata == {'message': 'Internal server error'}) or (gamedata == {'err': 'Entry not found.'}):
+            return "GameID not found. (Games that are not concluded or older than 1 year are not available in the API)"
+        player_dict = {}
         for player in gamedata["playersData"]:
-            av_image = get_icons_image("avatar", player_dict[player["playerName"]]["avatar_url"])
-            if im_has_alpha(np.array(av_image)):
-                im.paste(av_image, (x, y2), mask=av_image)
+            player_dict[player["playerName"]] = {"avatar_url": apicall_getprofile(player["playerId"])["avatarUrl"],
+                                                 "roll": player["rolls"].replace(" ", "").split(","), "legion": player["legion"], "elo": player["overallElo"],
+                                                 "elo_change": player["eloChange"]}
+        if start_wave != 0:
+            waves = [start_wave-1]
+        elif start_wave > gamedata["endingWave"] and start_wave != 0:
+            return "Game ended on Wave " + str(gamedata["endingWave"])
+        else:
+            waves = range(gamedata["endingWave"])
+        first = True
+        for wave in waves:
+            mode = 'RGB'
+            colors = (30, 30, 30)
+            x = 10
+            y = 350
+            box_size = 64
+            line_width = 3
+            offset = box_size + line_width
+            im = PIL.Image.new(mode=mode, size=(20+offset*39, 1750), color=colors)
+            horz_line = PIL.Image.new(mode="RGB", size=(box_size*9+line_width*10, line_width), color=(155, 155, 155))
+            vert_line = PIL.Image.new(mode="RGB", size=(line_width, box_size*14+line_width*15), color=(155, 155, 155))
+            I1 = ImageDraw.Draw(im)
+            ttf = 'Files/RobotoCondensed-Regular.ttf'
+            myFont_small = ImageFont.truetype(ttf, 40)
+            myFont = ImageFont.truetype(ttf, 50)
+            myFont_title = ImageFont.truetype(ttf, 60)
+            y2 = 125
+            im.paste(Image.open(open("Files/Waves/Wave"+str(wave+1)+".png", "rb")), (10,10))
+            I1.text((80, 10), "Wave "+str(wave+1), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+            if wave == 0:
+                left_kinghp_change = 0
+            elif gamedata["leftKingPercentHp"][wave-1] > gamedata["leftKingPercentHp"][wave]:
+                left_kinghp_change = "-"+str(round((gamedata["leftKingPercentHp"][wave-1]-gamedata["leftKingPercentHp"][wave])*100, 1))
             else:
-                im.paste(av_image, (x, y2))
-            I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
-            if wave > 9:
-                im.paste(get_icons_image("icon_send", player["chosenSpell"].replace(" ", "")), (x+500, y2))
-            im.paste(get_icons_image("legion", player_dict[player["playerName"]]["legion"]), (x, y2+80))
-            if len(player_dict[player["playerName"]]["roll"]) > 1:
-                for c, unit in enumerate(player_dict[player["playerName"]]["roll"]):
-                    im.paste(get_icons_image("icon", unit.replace("_unit_id", "")), (x+offset+16+(offset*c), y2 + 80))
-            for i in range(15):
-                im.paste(horz_line, (x,y+offset*i))
-            for i in range(10):
-                im.paste(vert_line, (x+offset*i,y))
-            build_per_wave = player["buildPerWave"][wave]
-            value = 0
-            for unit2 in build_per_wave:
-                unit2_list = unit2.split(":")
-                unit2_name = unit2_list[0]
-                for unitjson in units_dict:
-                    if unitjson["unitId"] == unit2_name:
-                        value += int(unitjson["totalValue"])
-                unit2 = unit2.split("_unit_id:")
-                unit_x = float(unit2[1].split("|")[0])-0.5
-                unit_y = 14-float(unit2[1].split("|")[1].split(":")[0])-0.5
-                unit_stacks = unit2[1].split("|")[1].split(":")[1]
-                im.paste(get_icons_image("icon", unit2[0]), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
-                if player["chosenSpellLocation"] != "-1|-1":
-                    if unit2_list[1] == player["chosenSpellLocation"] and wave > 9:
-                        im.paste(get_icons_image("icon", player["chosenSpell"]).resize((28,28)),(int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
-            im.paste(get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=get_icons_image("icon", "Value32").resize((64,64)))
-            I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
-            im.paste(get_icons_image("icon", "Worker"), (x+230, y2 + 150))
-            I1.text((x + 300, y2 + 160), str(round(player["workersPerWave"][wave], 1)), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-            im.paste(get_icons_image("icon", "Income").resize((64,64)), (x + 450, y2 + 150), mask=get_icons_image("icon", "Income").resize((64,64)))
-            I1.text((x + 520, y2 + 160), str(round(player["incomePerWave"][wave], 1)), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-            im.paste(get_icons_image("icon", "Mythium32").resize((64, 64)), (x, y+20+offset*14),mask=get_icons_image("icon", "Mythium32").resize((64, 64)))
-            I1.text((x+70, y+20+offset*14), str(count_mythium(player["mercenariesReceivedPerWave"][wave])+len(player["opponentKingUpgradesPerWave"][wave])*20), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-            send_count = 0
-            for send in player["mercenariesReceivedPerWave"][wave]:
-                if send_count < 9:
-                    im.paste(get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
-                elif send_count >= 9:
-                    im.paste(get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
-                elif send_count >18:
-                    break
-                send_count += 1
-            for send in player["opponentKingUpgradesPerWave"][wave]:
-                if send_count < 9:
-                    im.paste(get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
-                elif send_count >= 9:
-                    im.paste(get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
-                elif send_count >18:
-                    break
-                send_count += 1
-            im.paste(get_icons_image("icon", "Leaked"), (x, y+220+offset*14))
-            leak = calc_leak(player["leaksPerWave"][wave], wave)
-            if leak > 0:
-                I1.text((x+offset, y+220+offset*14), str(leak)+"%", font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-            leak_count = 0
-            for leak in player["leaksPerWave"][wave]:
-                if leak_count < 9:
-                    im.paste(get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * leak_count, y + 225 + offset * 15))
-                elif leak_count >= 9:
-                    im.paste(get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * (leak_count - 9), y + 225 + offset * 16))
-                elif leak_count > 18:
-                    break
-                leak_count += 1
-            x += offset * 10
-        if first:
-            first =  False
-            image_id = id_generator()
-            os.umask(0)
-            Path(shared_folder + image_id + "/").mkdir(parents=True, exist_ok=True)
-        im = im.resize((int(20 + offset * 39 / 2), int(1750 / 2)))
-        im.save(shared_folder + image_id + "/"+str(wave+1)+'.png')
-        image_link = site+image_id+"/"+str(wave+1)+'.png'
+                left_kinghp_change = "+"+str(round((gamedata["leftKingPercentHp"][wave] - gamedata["leftKingPercentHp"][wave-1]) * 100, 1))
+            if wave == 0:
+                right_kinghp_change = 0
+            elif gamedata["rightKingPercentHp"][wave-1] > gamedata["rightKingPercentHp"][wave]:
+                right_kinghp_change = "-"+str(round((gamedata["rightKingPercentHp"][wave-1]-gamedata["rightKingPercentHp"][wave])*100, 1))
+            else:
+                right_kinghp_change = "+" + str(round((gamedata["rightKingPercentHp"][wave] - gamedata["rightKingPercentHp"][wave-1]) * 100, 1))
+            I1.text((400, 10), "King HP: "+str(round(gamedata["leftKingPercentHp"][wave]*100, 1))+"% ("+str(left_kinghp_change)+"%)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+            I1.text((1650, 10), "King HP: " + str(round(gamedata["rightKingPercentHp"][wave] * 100, 1)) + "% (" + str(right_kinghp_change) + "%)", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+            for player in gamedata["playersData"]:
+                av_image = get_icons_image("avatar", player_dict[player["playerName"]]["avatar_url"])
+                if im_has_alpha(np.array(av_image)):
+                    im.paste(av_image, (x, y2), mask=av_image)
+                else:
+                    im.paste(av_image, (x, y2))
+                I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
+                if wave > 9:
+                    im.paste(get_icons_image("icon_send", player["chosenSpell"].replace(" ", "")), (x+500, y2))
+                im.paste(get_icons_image("legion", player_dict[player["playerName"]]["legion"]), (x, y2+80))
+                if len(player_dict[player["playerName"]]["roll"]) > 1:
+                    for c, unit in enumerate(player_dict[player["playerName"]]["roll"]):
+                        im.paste(get_icons_image("icon", unit.replace("_unit_id", "")), (x+offset+16+(offset*c), y2 + 80))
+                for i in range(15):
+                    im.paste(horz_line, (x,y+offset*i))
+                for i in range(10):
+                    im.paste(vert_line, (x+offset*i,y))
+                build_per_wave = player["buildPerWave"][wave]
+                value = 0
+                for unit2 in build_per_wave:
+                    unit2_list = unit2.split(":")
+                    unit2_name = unit2_list[0]
+                    for unitjson in units_dict:
+                        if unitjson["unitId"] == unit2_name:
+                            value += int(unitjson["totalValue"])
+                    unit2 = unit2.split("_unit_id:")
+                    unit_x = float(unit2[1].split("|")[0])-0.5
+                    unit_y = 14-float(unit2[1].split("|")[1].split(":")[0])-0.5
+                    unit_stacks = unit2[1].split("|")[1].split(":")[1]
+                    im.paste(get_icons_image("icon", unit2[0]), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+                    if player["chosenSpellLocation"] != "-1|-1":
+                        if unit2_list[1] == player["chosenSpellLocation"] and wave > 9:
+                            im.paste(get_icons_image("icon", player["chosenSpell"]).resize((28,28)),(int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+                im.paste(get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=get_icons_image("icon", "Value32").resize((64,64)))
+                I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
+                im.paste(get_icons_image("icon", "Worker"), (x+230, y2 + 150))
+                I1.text((x + 300, y2 + 160), str(round(player["workersPerWave"][wave], 1)), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+                im.paste(get_icons_image("icon", "Income").resize((64,64)), (x + 450, y2 + 150), mask=get_icons_image("icon", "Income").resize((64,64)))
+                I1.text((x + 520, y2 + 160), str(round(player["incomePerWave"][wave], 1)), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+                im.paste(get_icons_image("icon", "Mythium32").resize((64, 64)), (x, y+20+offset*14),mask=get_icons_image("icon", "Mythium32").resize((64, 64)))
+                I1.text((x+70, y+20+offset*14), str(count_mythium(player["mercenariesReceivedPerWave"][wave])+len(player["opponentKingUpgradesPerWave"][wave])*20), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+                send_count = 0
+                for send in player["mercenariesReceivedPerWave"][wave]:
+                    if send_count < 9:
+                        im.paste(get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
+                    elif send_count >= 9:
+                        im.paste(get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
+                    elif send_count >18:
+                        break
+                    send_count += 1
+                for send in player["opponentKingUpgradesPerWave"][wave]:
+                    if send_count < 9:
+                        im.paste(get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
+                    elif send_count >= 9:
+                        im.paste(get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
+                    elif send_count >18:
+                        break
+                    send_count += 1
+                im.paste(get_icons_image("icon", "Leaked"), (x, y+220+offset*14))
+                leak = calc_leak(player["leaksPerWave"][wave], wave)
+                if leak > 0:
+                    I1.text((x+offset, y+220+offset*14), str(leak)+"%", font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+                leak_count = 0
+                for leak in player["leaksPerWave"][wave]:
+                    if leak_count < 9:
+                        im.paste(get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * leak_count, y + 225 + offset * 15))
+                    elif leak_count >= 9:
+                        im.paste(get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * (leak_count - 9), y + 225 + offset * 16))
+                    elif leak_count > 18:
+                        break
+                    leak_count += 1
+                x += offset * 10
+            if first:
+                first =  False
+                os.umask(0)
+                Path(shared_folder + gameid + "/").mkdir(parents=True, exist_ok=True)
+            im = im.resize((int(20 + offset * 39 / 3), int(1750 / 3)))
+            im.save(shared_folder + gameid + "/"+str(wave+1)+'.png')
+            image_link = site+gameid+"/"+str(wave+1)+'.png'
+    else:
+        image_link = site + gameid + "/" + str(start_wave) + '.png'
     if start_wave != 0:
         return image_link
     else:
-        shutil.copy("Files/index.php", shared_folder + image_id + "/")
-        return "Game ID: [" + gameid + "](" +site +image_id+")"
+        if not Path(Path(shared_folder + gameid + "/index.php")).is_file():
+            shutil.copy("Files/index.php", shared_folder + gameid + "/")
+        return site+gameid
 
 def apicall_elo(playername, rank):
     win_count = 0
@@ -2870,7 +2920,7 @@ def apicall_elo(playername, rank):
                 embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(i+1) + ' with ' + str(
                     player['overallElo']) + " " + rank_emote+' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote+' and ' + str(
                     round((player['secondsPlayed'] / 60)/60)) + ' hours.\n' + \
-                    str(win_count) + ' Win - '+str(10-win_count)+' Lose (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
+                    str(win_count) + ' Win - '+str(len(history_raw)-win_count)+' Lose (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
                 embed.set_thumbnail(url="https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl'])
                 return embed
         else:
@@ -2880,7 +2930,7 @@ def apicall_elo(playername, rank):
             embed = discord.Embed(color=0xFFD136, description="**"+playername + '** has ' + str(player['overallElo']) + " " + rank_emote +
                 ' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote + ' and ' +
                 str(round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
-                str(win_count) + ' W - '+str(10-win_count)+' L (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
+                str(win_count) + ' W - '+str(len(history_raw)-win_count)+' L (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
             embed.set_thumbnail(url="https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl'])
             return embed
     else:
@@ -2904,7 +2954,7 @@ def apicall_elo(playername, rank):
         embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(rank) + ' with ' + str(
             player['overallElo']) + " " + rank_emote + ' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote + ' and ' + str(
             round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
-            str(win_count) + ' Win - ' + str(10 - win_count) + ' Lose (Elo change: ' + elochange(elo_change) + ")\n"+"-".join(history_list))
+            str(win_count) + ' Win - ' + str(len(history_raw)-win_count) + ' Lose (Elo change: ' + elochange(elo_change) + ")\n"+"-".join(history_list))
         embed.set_thumbnail(url="https://cdn.legiontd2.com/" + apicall_getprofile(playerid)['avatarUrl'])
         return embed
 

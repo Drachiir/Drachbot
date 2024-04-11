@@ -244,6 +244,24 @@ def run_discord_bot():
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
+    
+    @tree.command(name="matchhistory", description="Shows Match History of a player.")
+    @app_commands.describe(playername="Enter playername.")
+    async def gameid_viewer(interaction: discord.Interaction, playername:str):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(responses.matchhistory_viewer, playername))
+                pool.shutdown()
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response)
+                else:
+                    await interaction.followup.send(response)
+            except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
 
     @tree.command(name="novacup", description="Shows current teams in each novacup division 1 or 2.")
     @app_commands.describe(division='Enter division.')
