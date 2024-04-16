@@ -6,6 +6,7 @@ from collections import Counter
 import pathlib
 from pathlib import Path
 import datetime
+from datetime import datetime, timezone
 import traceback
 import os
 import os.path
@@ -32,6 +33,8 @@ import difflib
 import json_to_csv
 import discord
 from discord import utils
+import discord_timestamps
+from discord_timestamps import TimestampType
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -61,7 +64,7 @@ rank_emotes = {"bronze": [1000,"<:Bronze:1217999684484862057>"], "silver": [1200
                "purple": [2200,"<:Master:1217999699114590248>"], "sm": [2400,"<:SeniorMaster:1217999704349081701>"], "gm": [2600,"<:Grandmaster:1217999691883741224>"],
                "legend": [2800, "<:Legend:1217999693234176050>"]}
 
-wave_emotes = {"wave1": "<:Wave1:1228044855079600299>", "wave10": "<:Wave10:1228045034792681526>", "wave11": "\<:Wave11:1228044870082625698>",
+wave_emotes = {"wave1": "<:Wave1:1228044855079600299>", "wave10": "<:Wave10:1228045034792681526>", "wave11": "<:Wave11:1228044870082625698>",
             "wave12": "<:Wave12:1228045036265013288>", "wave13": "<:Wave13:1228044874276671559>", "wave14": "<:Wave14:1228045037368115240>",
             "wave15": "<:Wave15:1228044877795688459>", "wave16": "<:Wave16:1228044879750369280>", "wave17": "<:Wave17:1228045038509097000>",
             "wave18": "<:Wave18:1228044883562856530>", "wave19": "<:Wave19:1228045039930839101>", "wave2": "<:Wave2:1228044857059315825>",
@@ -517,7 +520,10 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
 
 def handle_response(message, author) -> str:
     p_message = message.lower()
-    if '!elo fine' in p_message:    return str(apicall_elo('fine', 0) + ' :eggplant:')
+    if '!elo fine' in p_message:
+        embed = apicall_elo('fine', 0)
+        embed.add_field(name="", value=":eggplant:")
+        return embed
     if 'julian' in p_message:       return 'julian sucks'
     if 'penny' in p_message:        return 'penny sucks'
     if 'green' in p_message:        return '<:green:1136426397619978391> & aggressive'
@@ -543,25 +549,25 @@ def handle_response(message, author) -> str:
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
     if "!csv_data" in p_message and (str(author) == 'drachir_' or str(author) == 'pennywiseuk'): return json_to_csv.legion_json_to_csv()
-    # if '!script' and str(author) == "drachir_":
-    #     path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
-    #     path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
-    #     games = sorted(os.listdir(path3))
-    #     for i, x in enumerate(games):
-    #         print(str(i+1) + " out of " + str(len(games)))
-    #         path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + x + "/gamedata/"
-    #         try:
-    #             print(path2)
-    #             games2 = os.listdir(path2)
-    #         except FileNotFoundError:
-    #             print("not found")
-    #             continue
-    #         for game in games2:
-    #             file_name = os.path.join(path2, game)
-    #             try:
-    #                 shutil.copy(file_name, path1)
-    #             except shutil.Error:
-    #                 continue
+    if '!script' and str(author) == "drachir_":
+        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
+        path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
+        games = sorted(os.listdir(path3))
+        for i, x in enumerate(games):
+            print(str(i+1) + " out of " + str(len(games)))
+            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + x + "/gamedata/"
+            try:
+                print(path2)
+                games2 = os.listdir(path2)
+            except FileNotFoundError:
+                print("not found")
+                continue
+            for game in games2:
+                file_name = os.path.join(path2, game)
+                try:
+                    shutil.copy(file_name, path1)
+                except shutil.Error:
+                    continue
 
 def apicall_getid(playername):
     request_type = 'players/byName/'
@@ -1094,7 +1100,10 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
         players_dict[player]["FinalData"] = []
         for index, wave in enumerate(players_dict[player]["Waves"]):
             if index+1 >= waves[0] and index+1 <= waves[1]:
-                players_dict[player]["FinalData"].append(round(wave[1]/wave[0], 1))
+                try:
+                    players_dict[player]["FinalData"].append(round(wave[1]/wave[0], 1))
+                except ZeroDivisionError:
+                    players_dict[player]["FinalData"].append(0)
         del players_dict[player]["Data"]
         del players_dict[player]["Waves"]
     new_patches = []
@@ -1153,6 +1162,7 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
     elo_graph = Image.open(img_buf)
     im.paste(elo_graph, (-100,30), elo_graph)
     image_id = id_generator()
+    im.show()
     im.save(shared_folder + image_id + '.png')
     return site + image_id + '.png'
 
@@ -1375,7 +1385,8 @@ def matchhistory_viewer(playername:str):
     playername = profile["playerName"]
     history_raw = apicall_getmatchistory(playerid, 5, earlier_than_wave10=True)
     site_link = "https://overlay.drachbot.site/Images/"
-    embed = discord.Embed(color=0x1cce3a, title="Match History")
+    mod_date = datetime.fromtimestamp(time.mktime(time.strptime(history_raw[0]["date"].split(".")[0].replace("T", "-").replace(":", "-"), "%Y-%m-%d-%H-%M-%S")), tz=timezone.utc).timestamp()
+    embed = discord.Embed(color=0x1cce3a, title="Match History\nLast game: "+discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE))
     embed.set_author(name=playername, icon_url=avatar)
     for game in history_raw:
         per_game_list = []
@@ -1393,8 +1404,8 @@ def matchhistory_viewer(playername:str):
                     elo_change = player["eloChange"]
                     elo_prefix = ""
         embed.add_field(name="", value=emoji + " [" + result + " on Wave " + str(game["endingWave"]) +
-                             "("+elo_prefix+str(elo_change)+" Elo)]("+apicall_gameid_visualizer(game["_id"], 0)+")\n"+
-                                per_game_list[0]+" "+per_game_list[2]+"\n"+per_game_list[1]+" "+per_game_list[3], inline=False)
+                             "("+elo_prefix+str(elo_change)+" Elo)]("+apicall_gameid_visualizer(game["_id"], 0)+")\nWest: "+
+                                per_game_list[0]+" "+per_game_list[1]+"\nEast: "+per_game_list[2]+" "+per_game_list[3], inline=False)
     return embed
 
 def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"):
@@ -2803,7 +2814,10 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
                 I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
                 if wave > 9:
                     im.paste(get_icons_image("icon_send", player["chosenSpell"].replace(" ", "")), (x+500, y2))
-                im.paste(get_icons_image("legion", player_dict[player["playerName"]]["legion"]), (x, y2+80))
+                try:
+                    im.paste(get_icons_image("legion", player_dict[player["playerName"]]["legion"]), (x, y2+80))
+                except FileNotFoundError:
+                    im.paste(get_icons_image("icon", player_dict[player["playerName"]]["legion"]), (x, y2 + 80))
                 if len(player_dict[player["playerName"]]["roll"]) > 1:
                     for c, unit in enumerate(player_dict[player["playerName"]]["roll"]):
                         im.paste(get_icons_image("icon", unit.replace("_unit_id", "")), (x+offset+16+(offset*c), y2 + 80))

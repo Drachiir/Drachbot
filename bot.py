@@ -49,7 +49,10 @@ async def send_message(message, user_message, username):
     with concurrent.futures.ProcessPoolExecutor() as pool:
         try:
             response = await loop.run_in_executor(pool, functools.partial(responses.handle_response, user_message, username))
-            await message.channel.send(response)
+            if type(response) == discord.Embed:
+                await message.channel.send(embed=response)
+            else:
+                await message.channel.send(response)
         except discord.errors.DiscordException:
             return
         except Exception:
@@ -107,14 +110,14 @@ def get_top_games():
         path2 = path+game2
         mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc).timestamp()
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-        output = ""
+        output = "West: "
         for c, data in enumerate(txt):
             if c == len(txt)-1:
                 output += "\n"
                 break
             data = data.replace("\n", "")
             if c == (len(txt)-1)/2:
-                output += "\n"
+                output += "\nEast: "
             output += data + responses.get_ranked_emote(int(data.split(":")[1]))+ " "
         embed.add_field(name="**Game " + str(idx + 1) + "**, " + txt[-1] + responses.get_ranked_emote(int(txt[-1])) + "  Started " + str(timestamp), value=output, inline=False)
     return embed
