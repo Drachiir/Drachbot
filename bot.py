@@ -21,7 +21,7 @@ with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
     f.close()
 
-current_season = "11"
+current_season = "11.01-11.03"
 
 current_min_elo = 2300
 
@@ -173,6 +173,24 @@ def run_discord_bot():
                 pool.shutdown()
                 if type(response) == discord.Embed:
                     await interaction.followup.send(embed=response)
+                else:
+                    await interaction.followup.send(response)
+            except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
+    
+    @tree.command(name="emote", description="Shows a emote.")
+    @app_commands.describe(emotename='Enter emote name.')
+    async def elo(interaction: discord.Interaction, emotename: str):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(responses.get_emote, emotename))
+                pool.shutdown()
+                if type(response) != str:
+                    await interaction.followup.send(file=response)
                 else:
                     await interaction.followup.send(response)
             except Exception:
@@ -395,7 +413,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort = sort))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -423,7 +443,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_openstats, str(playername).lower(), games, min_elo, patch, sort = sort, unit= unit))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -457,7 +479,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_jules, str(playername).lower(), unit, games, min_elo, patch, sort=sort, mastermind=mastermind, spell=spell))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -485,7 +509,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_spellstats, str(playername).lower(), games, min_elo, patch, sort=sort, spellname=spell))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -516,7 +542,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_unitstats, str(playername).lower(), games, min_elo, patch, sort=sort, unit=unit, min_cost = min_cost))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -581,7 +609,10 @@ def run_discord_bot():
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             if "," in playernames:
-                playernames = playernames.replace(" ", "").split(",")
+                playernames = playernames.split(",")
+                for i, name in enumerate(playernames):
+                    if name.startswith(" "):
+                        playernames[i] = name[1:]
                 if len(playernames) > 3:
                     await interaction.followup.send("Only enter 3 playernames at a time.")
                     return
@@ -601,7 +632,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_statsgraph, playernames=playernames, min_elo=min_elo, waves=waves_list, games=games, patch=patch, key=key.value, sort=sort))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -619,7 +652,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_elograph,playername, games, patch))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
@@ -634,7 +669,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool,functools.partial(responses.apicall_leaderboard))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 traceback.print_exc()
@@ -675,7 +712,9 @@ def run_discord_bot():
             try:
                 response = await loop.run_in_executor(pool, functools.partial(responses.apicall_sendstats, str(playername).lower(), starting_wave, games, min_elo, patch, sort = sort))
                 pool.shutdown()
-                if len(response) > 0:
+                if response.endswith(".png"):
+                    await interaction.followup.send(file=discord.File(response))
+                else:
                     await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))

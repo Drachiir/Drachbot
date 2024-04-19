@@ -6,75 +6,48 @@ from collections import Counter
 import pathlib
 from pathlib import Path
 import datetime
-from datetime import datetime, timezone
 import traceback
 import os
 import os.path
 import glob
-import re
-import time
-import bot
 import PIL
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from io import BytesIO
 import numpy as np
-import math
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bs4 import BeautifulSoup
 import csv
-import asyncio
-import concurrent.futures
-import functools
 import string
 import random
 import time
 import difflib
 import json_to_csv
 import discord
-from discord import utils
 import discord_timestamps
 from discord_timestamps import TimestampType
 
-with open('Files/Secrets.json') as f:
+with open('Files/Secrets.json', 'r') as f:
     secret_file = json.load(f)
     f.close()
 
-header = {'x-api-key': secret_file.get('apikey')}
-
-site = "https://overlay.drachbot.site/Images/"
-
-shared_folder = "/shared/Images/"
-
-mercs = {"Snail": (20, 6), "Giant Snail": (20, 6), "Robo": (40, 10), "Lizard": (40, 12), "Dragon Turtle": (40, 12), "Brute": (60, 15), "Fiend": (60, 18), "Dino": (80, 24),
-         "Hermit": (80, 20), "Cannoneer": (100, 30), "Imp": (100, 13), "Safety Mole": (120, 30), "Drake": (120, 36), "Pack Leader": (160, 40),
-         "Mimic": (160, 40), "Witch": (200, 50), "Ogre": (200, 50), "Ghost Knight": (240, 60), "Four Eyes": (240, 60), "Centaur": (280, 70),
-         "Shaman": (320, 80), "Siege Ram": (320, 80), "Needler": (360, 90), "Kraken": (400, 100), "Froggo": (0, 3)}
-
-creep_values = {"Crab": (72, 6), "Wale": (84, 7), "Hopper": (90, 5), "Flying Chicken": (96, 8), "Scorpion": (108, 9), "Scorpion King": (108, 36),
-                "Rocko": (114, 19), "Sludge": (120, 10), "Blob": (120, 2), "Kobra": (132, 11), "Carapace": (144, 12), "Granddaddy": (150, 63),
-                "Quill Shooter": (156, 13), "Mantis": (168, 14), "Drill Golem": (180, 30), "Killer Slug": (192, 16), "Quadrapus": (204, 17),
-                "Giant Quadrapus": (204, 68), "Cardinal": (216, 12), "Metal Dragon": (228, 19), "Wale Chief": (252, 42), "Dire Toad": (276, 23),
-                "Maccabeus": (300, 126), "Legion Lord": (360, 30), "Legion King": (360, 120)}
-
-wave_values = (72,84,90,96,108,114,120,132,144,150,156,168,180,192,204,216,228,252,276,300,360)
-
-rank_emotes = {"bronze": [1000,"<:Bronze:1217999684484862057>"], "silver": [1200,"<:Silver:1217999706555158631>"], "gold": [1400,"<:Gold:1217999690369335407>"],
-               "plat": [1600,"<:Platinum:1217999701337571379>"], "dia": [1800,"<:Diamond:1217999686888325150>"], "ruby": [2000,"<:Expert:1217999688494747718>"],
-               "purple": [2200,"<:Master:1217999699114590248>"], "sm": [2400,"<:SeniorMaster:1217999704349081701>"], "gm": [2600,"<:Grandmaster:1217999691883741224>"],
-               "legend": [2800, "<:Legend:1217999693234176050>"]}
-
-wave_emotes = {"wave1": "<:Wave1:1228044855079600299>", "wave10": "<:Wave10:1228045034792681526>", "wave11": "<:Wave11:1228044870082625698>",
-            "wave12": "<:Wave12:1228045036265013288>", "wave13": "<:Wave13:1228044874276671559>", "wave14": "<:Wave14:1228045037368115240>",
-            "wave15": "<:Wave15:1228044877795688459>", "wave16": "<:Wave16:1228044879750369280>", "wave17": "<:Wave17:1228045038509097000>",
-            "wave18": "<:Wave18:1228044883562856530>", "wave19": "<:Wave19:1228045039930839101>", "wave2": "<:Wave2:1228044857059315825>",
-            "wave20": "<:Wave20:1228044887195254784>", "wave21": "<:Wave21:1228045041998495774>", "wave3": "<:Wave3:1228044858644500490>",
-            "wave4": "<:Wave4:1228044860041199717>", "wave5": "<:Wave5:1228044861500948480>", "wave6": "<:Wave6:1228044862679678997>",
-            "wave7": "<:Wave7:1228044864126717973>", "wave8": "<:Wave8:1228044865468764280>", "wave9": "<:Wave9:1228044866764673054>"}
+with open('Files/const.json', 'r') as f:
+    const_file = json.load(f)
+    f.close()
 
 with open("Files/slang.json", "r") as slang_file:
     slang = json.load(slang_file)
     slang_file.close()
+
+header = {'x-api-key': secret_file.get('apikey')}
+site = "https://overlay.drachbot.site/Images/"
+shared_folder = "/shared/Images/"
+output_folder = "Files/output/"
+mercs = const_file.get("mercs")
+creep_values = const_file.get("creep_values")
+wave_values = const_file.get("wave_values")
+rank_emotes = const_file.get("rank_emotes")
+wave_emotes = const_file.get("wave_emotes")
 
 def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -82,18 +55,18 @@ def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase 
 def api_call_logger(request_type):
     try:
         with open("Files/api_calls.json", "r") as file:
-            dict = json.load(file)
+            api_call_dict = json.load(file)
         date = datetime.now()
-        if "next_reset" not in dict:
-            dict["next_reset"] = (date + timedelta(days=1)).strftime("%m/%d/%Y")
-        elif datetime.strptime(dict["next_reset"], "%m/%d/%Y") < datetime.now():
-            dict = {"next_reset": (date + timedelta(days=1)).strftime("%m/%d/%Y")}
-        if request_type not in dict:
-            dict[request_type] = 1
+        if "next_reset" not in api_call_dict:
+            api_call_dict["next_reset"] = (date + timedelta(days=1)).strftime("%m/%d/%Y")
+        elif datetime.strptime(api_call_dict["next_reset"], "%m/%d/%Y") < datetime.now():
+            api_call_dict = {"next_reset": (date + timedelta(days=1)).strftime("%m/%d/%Y")}
+        if request_type not in api_call_dict:
+            api_call_dict[request_type] = 1
         else:
-            dict[request_type] += 1
+            api_call_dict[request_type] += 1
         with open("Files/api_calls.json", "w") as file:
-            json.dump(dict, file)
+            json.dump(api_call_dict, file)
     except Exception:
         traceback.print_exc()
 
@@ -115,13 +88,13 @@ def get_icons_image(type, name):
             if "_" in name:
                 name = name.split("_")
                 new_name = ""
-                for string in name:
-                    new_name += string.capitalize()
+                for icon_string in name:
+                    new_name += icon_string.capitalize()
             elif " " in name:
                 name = name.split(" ")
                 new_name = ""
-                for string in name:
-                    new_name += string.capitalize()
+                for icon_string in name:
+                    new_name += icon_string.capitalize()
             else:
                 new_name = name.capitalize()
             image_path = 'Files/icons/' + new_name + ".png"
@@ -143,6 +116,8 @@ def get_icons_image(type, name):
                 image_path = "Files/icons/PressTheAttack.png"
         case "legion":
             image_path = 'Files/icons/Items/' + name.replace(" ", "") + ".png"
+        case _:
+            image_path = "Files/icons/Granddaddy.png"
     return Image.open(open(image_path, "rb"))
 
 def count_mythium(send):
@@ -179,33 +154,33 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
         initial_losses = stats["rankedLossesThisSeason"]
         current_losses = stats["rankedLossesThisSeason"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
-            json.dump(dict, f, default=str)
+            session_dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            json.dump(session_dict, f, default=str)
     else:
         with open("sessions/session_" + playername + ".json", "r") as f:
-            dict = json.load(f)
-            initial_elo = dict["int_elo"]
-            initial_wins = dict["int_wins"]
-            initial_losses = dict["int_losses"]
-            if update == True:
+            session_dict = json.load(f)
+            initial_elo = session_dict["int_elo"]
+            initial_wins = session_dict["int_wins"]
+            initial_losses = session_dict["int_losses"]
+            if update:
                 playerid = apicall_getid(playername)
                 stats = apicall_getstats(playerid)
                 current_elo = stats["overallElo"]
                 current_wins = stats["rankedWinsThisSeason"]
                 current_losses = stats["rankedLossesThisSeason"]
             else:
-                current_elo = dict["current_elo"]+elo_change
+                current_elo = session_dict["current_elo"] + elo_change
                 if elo_change > 0:
-                    current_wins = dict["current_wins"]+1
+                    current_wins = session_dict["current_wins"] + 1
                 else:
-                    current_wins = dict["current_wins"]
+                    current_wins = session_dict["current_wins"]
                 if elo_change < 0:
-                    current_losses = dict["current_losses"] + 1
+                    current_losses = session_dict["current_losses"] + 1
                 else:
-                    current_losses = dict["current_losses"]
+                    current_losses = session_dict["current_losses"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            dict = {"started_at": dict["started_at"], "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
-            json.dump(dict, f, default=str)
+            session_dict = {"started_at": session_dict["started_at"], "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            json.dump(session_dict, f, default=str)
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
     try:
@@ -244,11 +219,11 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Gold.png'
         elif elo >= 1200:
             rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Silver.png'
+        else:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Bronze.png'
         return rank_url
     html_file = """
-    <!doctype html>
-        <html>
-        <head>
+    <!doctype html><html><head>
           <meta http-equiv="refresh" content="5">
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -423,8 +398,8 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
         else:
             y += offset-10
     image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
+    im.save(output_folder + image_id + '.png')
+    return output_folder + image_id + '.png'
 
 def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, specific_value, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
@@ -515,8 +490,8 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
             y += offset - 10
         if i == 4 or i == 9: dict_values_counter += 1
     image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
+    im.save(output_folder + image_id + '.png')
+    return output_folder + image_id + '.png'
 
 def handle_response(message, author) -> str:
     p_message = message.lower()
@@ -549,25 +524,25 @@ def handle_response(message, author) -> str:
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return pull_games_by_id(message.split('|')[1],message.split('|')[2])
     if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
     if "!csv_data" in p_message and (str(author) == 'drachir_' or str(author) == 'pennywiseuk'): return json_to_csv.legion_json_to_csv()
-    if '!script' and str(author) == "drachir_":
-        path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
-        path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
-        games = sorted(os.listdir(path3))
-        for i, x in enumerate(games):
-            print(str(i+1) + " out of " + str(len(games)))
-            path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + x + "/gamedata/"
-            try:
-                print(path2)
-                games2 = os.listdir(path2)
-            except FileNotFoundError:
-                print("not found")
-                continue
-            for game in games2:
-                file_name = os.path.join(path2, game)
-                try:
-                    shutil.copy(file_name, path1)
-                except shutil.Error:
-                    continue
+    # if '!script' and str(author) == "drachir_":
+    #     path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
+    #     path3 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/"
+    #     games = sorted(os.listdir(path3))
+    #     for i, x in enumerate(games):
+    #         print(str(i+1) + " out of " + str(len(games)))
+    #         path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + x + "/gamedata/"
+    #         try:
+    #             print(path2)
+    #             games2 = os.listdir(path2)
+    #         except FileNotFoundError:
+    #             print("not found")
+    #             continue
+    #         for game in games2:
+    #             file_name = os.path.join(path2, game)
+    #             try:
+    #                 shutil.copy(file_name, path1)
+    #             except shutil.Error:
+    #                 continue
 
 def apicall_getid(playername):
     request_type = 'players/byName/'
@@ -916,7 +891,7 @@ def apicall_leaderboard(ranks=10, transparency=False):
         im.paste(gold_border, (x, y), mask=gold_border)
         last_game = apicall_getmatchistory(player["_id"], 1, earlier_than_wave10=True)
         game_date = datetime.strptime(last_game[0]["date"].split(".000Z")[0].replace("T", "-"), '%Y-%m-%d-%H:%M:%S')
-        if game_date < datetime.now() - timedelta(days=2) or player["profile"][0]["playerName"] == "InDaHole":
+        if game_date < datetime.now() - timedelta(days=2):
             tent = Image.open('Files/tent.png')
             im.paste(tent, (x, y), mask=tent)
         I1.text((x + offset, y), str(i+1)+". "+player["profile"][0]["playerName"], font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
@@ -963,8 +938,8 @@ def apicall_leaderboard(ranks=10, transparency=False):
         I1.text((x + offset + 142 + width2, y + 33), " LP: "+str(player["ladderPoints"]), font=myFont_small, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255,255,255))
         y += offset
     image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
+    im.save(output_folder + image_id + '.png')
+    return output_folder + image_id + '.png'
 
 def apicall_elograph(playername, games, patch, transparency = False):
     playerid = apicall_getid(playername)
@@ -992,6 +967,9 @@ def apicall_elograph(playername, games, patch, transparency = False):
                 elo_per_game.insert(0, player["overallElo"]+player["eloChange"])
                 date_this = game["date"].replace("T", "-").replace(":", "-").split(".")[0]
                 date_per_game.insert(0, datetime.strptime(date_this, "%Y-%m-%d-%H-%M-%S").strftime("%d/%m/%y"))
+                break
+        else:
+            games -= 1
     new_patches = []
     for x in patches:
         string = x
@@ -1054,8 +1032,8 @@ def apicall_elograph(playername, games, patch, transparency = False):
     im.paste(elo_graph, (-100,40), elo_graph)
     
     image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
+    im.save(output_folder + image_id + '.png')
+    return output_folder + image_id + '.png'
 
 def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparency = False, sort="date", waves = [1,21]) -> str:
     playerids = set()
@@ -1074,7 +1052,7 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
     print("Starting stats graph command...")
     patches = []
     for j, id in enumerate(playerids):
-        history_raw = apicall_getmatchistory(id, games, min_elo, patch, sort_by=sort)
+        history_raw = apicall_getmatchistory(id, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
         if type(history_raw) == str:
             return history_raw
         games2 = len(history_raw)
@@ -1162,9 +1140,8 @@ def apicall_statsgraph(playernames: list, games, min_elo, patch, key, transparen
     elo_graph = Image.open(img_buf)
     im.paste(elo_graph, (-100,30), elo_graph)
     image_id = id_generator()
-    im.show()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
+    im.save(output_folder + image_id + '.png')
+    return output_folder + image_id + '.png'
 
 def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="date", transparency = False):
     if starting_wave > 20:
@@ -1186,7 +1163,7 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
         playername = apicall_getprofile(playerid)['playerName']
         avatar = apicall_getprofile(playerid)['avatarUrl']
     try:
-        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort)
+        history_raw = apicall_getmatchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -1336,8 +1313,8 @@ def apicall_sendstats(playername, starting_wave, games, min_elo, patch, sort="da
                 y += 100
             x = 400
         image_id = id_generator()
-        im.save(shared_folder + image_id + '.png')
-        return site + image_id + '.png'
+        im.save(output_folder + image_id + '.png')
+        return output_folder + image_id + '.png'
 
 def novacup(division):
     html = requests.get('https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pubhtml#').text
@@ -1408,6 +1385,43 @@ def matchhistory_viewer(playername:str):
                                 per_game_list[0]+" "+per_game_list[1]+"\nEast: "+per_game_list[2]+" "+per_game_list[3], inline=False)
     return embed
 
+def get_emote(emote_name):
+    seventvapi = "https://7tv.io/v3/emote-sets/65a6d017888d90ac522693b8"
+    response = json.loads(requests.get(seventvapi).text)
+    for emote in response["emotes"]:
+        if emote["data"]["name"] == emote_name:
+            image_response = requests.get("https:"+emote["data"]["host"]["url"]+"/4x.webp")
+            im = Image.open(BytesIO(image_response.content))
+            im.info.pop('background', None)
+            #if not os.path.isfile('/shared/emotes/'+emote["data"]["name"]+'.gif'):
+            try:
+                frame = ImageSequence.Iterator(im)[1]
+                im.save('/shared/emotes/'+emote["data"]["name"]+'.gif', 'gif', save_all=True, disposal=2)
+                return discord.File('/shared/emotes/'+emote["data"]["name"]+'.gif')
+            except IndexError:
+                im.save('/shared/emotes/' + emote["data"]["name"] + '.webp', 'webp', save_all=True)
+                return discord.File('/shared/emotes/' + emote["data"]["name"] + '.webp')
+    for emote in response["emotes"]:
+        if emote["data"]["name"].casefold() == emote_name.casefold():
+            image_response = requests.get("https:"+emote["data"]["host"]["url"]+"/4x.webp")
+            im = Image.open(BytesIO(image_response.content))
+            im.info.pop('background', None)
+            #if not os.path.isfile('/shared/emotes/'+emote["data"]["name"]+'.gif'):
+            try:
+                frame = ImageSequence.Iterator(im)[1]
+                im.save('/shared/emotes/' + emote["data"]["name"] + '.gif', 'gif', save_all=True, disposal=2)
+                return discord.File('/shared/emotes/' + emote["data"]["name"] + '.gif')
+            except IndexError:
+                im.save('/shared/emotes/' + emote["data"]["name"] + '.webp', 'webp', save_all=True)
+                return discord.File('/shared/emotes/' + emote["data"]["name"] + '.webp')
+    else:
+        emote_list = os.listdir("/shared/emotes")
+        close_matches = difflib.get_close_matches(emote_name, emote_list, cutoff=0.3)
+        if close_matches:
+            return discord.File('/shared/emotes/'+close_matches[0])
+        else:
+            return "Emote not found."
+    
 def apicall_wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     if playername.lower() == 'all':
         playerid = 'all'
@@ -2247,8 +2261,8 @@ def apicall_jules(playername, unit, games, min_elo, patch, sort="date", mastermi
     I1.text((115, 200),str(round(win_count/occurrence_count*100,1))+"%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=wr_rgb)
     I1.text((10, 240), 'Appearance rate: ' + str(round(occurrence_count / games * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     image_id = id_generator()
-    im.save(shared_folder + image_id + '.png')
-    return site + image_id + '.png'
+    im.save(output_folder + image_id + '.png')
+    return output_folder + image_id + '.png'
 
 def apicall_mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
     novacup = False
@@ -2884,11 +2898,11 @@ def apicall_gameid_visualizer(gameid, start_wave=0):
                 first =  False
                 os.umask(0)
                 Path(shared_folder + gameid + "/").mkdir(parents=True, exist_ok=True)
-            im = im.resize((int(20 + offset * 39 / 3), int(1750 / 3)))
-            im.save(shared_folder + gameid + "/"+str(wave+1)+'.png')
-            image_link = site+gameid+"/"+str(wave+1)+'.png'
+            im = im.resize((int(20 + offset * 39 / 2), int(1750 / 2)))
+            im.save(shared_folder + gameid + "/"+str(wave+1)+'.jpg')
+            image_link = site+gameid+"/"+str(wave+1)+'.jpg'
     else:
-        image_link = site + gameid + "/" + str(start_wave) + '.png'
+        image_link = site + gameid + "/" + str(start_wave) + '.jpg'
     if start_wave != 0:
         return image_link
     else:
