@@ -2,11 +2,11 @@ import asyncio
 import functools
 import json
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import discord
 import responses
 from discord.ext import commands
-from discord import app_commands, ui
+from discord import app_commands, ui, TextStyle
 import os
 import concurrent.futures
 import platform
@@ -16,6 +16,10 @@ import discord_timestamps
 from discord_timestamps import TimestampType
 from pathlib import Path
 import time
+import ltdle
+import random
+import pathlib
+from pathlib import Path
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -96,7 +100,7 @@ def get_top_games():
         if minutes_diff > 35:
             os.remove(path2)
             continue
-        if len(topgames) < 3:
+        if len(topgames) < 4:
             topgames.append(game)
     if len(topgames) == 0:
         return "No games found."
@@ -137,6 +141,20 @@ def run_discord_bot():
     intents2.message_content = True
     client2 = discord.Client(intents=intents)
     
+    with open("ltdle_data/ltdle.json", "r") as f:
+        json_data = json.load(f)
+        f.close()
+        if datetime.strptime(json_data["next_reset"], "%m/%d/%Y") < datetime.now():
+            json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
+            with open("Files/units.json", "r") as f2:
+                unit_json_dictlist = json.load(f2)
+                f2.close()
+            json_data["game_1_selected_unit"] = unit_json_dictlist[random.randint(0,len(unit_json_dictlist)-1)]
+            with open("ltdle_data/ltdle.json", "w") as f3:
+                json.dump(json_data, f3)
+                f3.close()
+        else: pass
+    
     mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
     mm_choices = []
     for mm in mm_list:
@@ -161,7 +179,44 @@ def run_discord_bot():
                     await interaction.edit_original_response(embed=response)
             except Exception:
                 traceback.print_exc()
-                
+
+    @tree.command(name="legiondle", description="Legion themed Wordle-type game.")
+    @app_commands.describe(input='Text Input.')
+    async def legiondle(interaction: discord.Interaction, input: str = ""):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            try:
+                if interaction.guild != None:
+                    await interaction.response.send_message("This command only works in DMs with Drachbot.", ephemeral=True)
+                    return
+                await interaction.response.defer(ephemeral=False, thinking=True)
+                path = str(pathlib.Path(__file__).parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                if not Path(Path(str(path))).is_dir():
+                    print(interaction.user.name + ' ltdle profile not found, creating new folder...')
+                    Path(str(path)).mkdir(parents=True, exist_ok=True)
+                    with open(path+"/data.json", "w") as f:
+                        date_now = datetime.now()
+                        data = {"name": interaction.user.name, "score": 0, "game1": {"last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "game_state": 0, "guesses": []}}
+                        json.dump(data, f)
+                        f.close()
+                else:
+                    with open(path+"/data.json", "r") as f:
+                        data = json.load(f)
+                        f.close()
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle, data, input, ltdle_data))
+                pool.shutdown()
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response)
+                else:
+                    await interaction.followup.send(response)
+            except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
+           
     @tree.command(name= "elo", description= "Shows rank, elo and playtime.")
     @app_commands.describe(playername='Enter the playername.')
     async def elo(interaction: discord.Interaction, playername: str):
