@@ -181,15 +181,30 @@ def run_discord_bot():
                 traceback.print_exc()
 
     @tree.command(name="legiondle", description="Legion themed Wordle-type game.")
-    @app_commands.describe(input='Text Input.')
-    async def legiondle(interaction: discord.Interaction, input: str = ""):
+    @app_commands.describe(input='Text Input.', option="Select an option.")
+    @app_commands.choices(option=[
+        discord.app_commands.Choice(name='Leaderboard', value='Leaderboard')
+    ])
+    async def legiondle(interaction: discord.Interaction, input: str = "", option: discord.app_commands.Choice[str] = ""):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             try:
-                if interaction.guild != None:
+                if interaction.guild != None and option == "":
                     await interaction.response.send_message("This command only works in DMs with Drachbot.", ephemeral=True)
                     return
                 await interaction.response.defer(ephemeral=False, thinking=True)
+                try:
+                    option = option.value
+                except AttributeError:
+                    pass
+                if option == "Leaderboard":
+                    response = await loop.run_in_executor(pool, ltdle.ltdle_leaderboard)
+                    pool.shutdown()
+                    if type(response) == discord.Embed:
+                        await interaction.followup.send(embed=response)
+                    else:
+                        await interaction.followup.send(response)
+                    return
                 path = str(pathlib.Path(__file__).parent.resolve()) + "/ltdle_data/" + interaction.user.name
                 if not Path(Path(str(path))).is_dir():
                     print(interaction.user.name + ' ltdle profile not found, creating new folder...')

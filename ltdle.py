@@ -1,4 +1,6 @@
 import json
+import os
+
 import responses
 import random
 import discord
@@ -28,6 +30,33 @@ def ltdle(session: int, input: str, ltdle_data: dict):
         mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
         return "You already played todays Legiondle, next reset is "+timestamp+"."
+
+def ltdle_leaderboard():
+    color = random.randrange(0, 2 ** 24)
+    player_data_list = os.listdir("ltdle_data")
+    scores = []
+    for player in player_data_list:
+        if player.endswith(".json"): continue
+        with open("ltdle_data/"+player+"/data.json", "r") as f:
+            p_data = json.load(f)
+            f.close()
+        scores.append((p_data["name"].capitalize(), p_data["score"]))
+    scores = sorted(scores, key=lambda x: x[1], reverse=True)
+    output = ""
+    for index, pscore in enumerate(scores):
+        if index == 10: break
+        output += pscore[0] + " " + str(pscore[1]) + "pts "
+        if index == 0:
+            output += responses.get_ranked_emote(2800) + "\n"
+        elif 1 <= index <= 3:
+            output += responses.get_ranked_emote(2600) + "\n"
+        elif 4 <= index <= 6:
+            output += responses.get_ranked_emote(2400) + "\n"
+        else:
+            output += responses.get_ranked_emote(2200) + "\n"
+    embed = discord.Embed(color=color, title="Legiondle Leaderboard", description="**"+output+"**")
+    embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
+    return embed
         
 def ltdle_game1(session: int, text_input: str, ltdle_data: dict):
     color = random.randrange(0, 2 ** 24)
@@ -56,6 +85,7 @@ def ltdle_game1(session: int, text_input: str, ltdle_data: dict):
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
+                if string == "skyfish": string = "metaldragon"
                 if string == text_input or similar(string, text_input) > 0.8:
                     text_input = string
                     unit_data = u_js
@@ -118,17 +148,40 @@ def ltdle_game1(session: int, text_input: str, ltdle_data: dict):
                 output += lstring + ":red_square:"
                 output2 += ":red_square:"
             #upgraded
-            if len(unit_data["upgradesFrom"]) == 0:
+            if lstring == "Merc":
+                ustring = "Merc unit"
+            elif lstring == "Wave":
+                ustring = "Wave unit"
+            elif len(unit_data["upgradesFrom"]) == 0:
                 ustring = "Base unit"
             else:
                 ustring = "Upgraded unit"
-            if len(unit_data["upgradesFrom"]) == len(ltdle_data["game_1_selected_unit"]["upgradesFrom"]):
-                output += ustring + ":green_square:"
-                output2 += ":green_square:"
-                correct_count += 1
-            else:
-                output += ustring + ":red_square:"
-                output2 += ":red_square:"
+            unit_type = ltdle_data["game_1_selected_unit"]["legionId"].split("_")[0]
+            match ustring:
+                case "Base unit" | "Upgraded unit":
+                    if len(unit_data["upgradesFrom"]) == len(ltdle_data["game_1_selected_unit"]["upgradesFrom"]) and (unit_type != "creature" and unit_type != "nether"):
+                        output += ustring + ":green_square:"
+                        output2 += ":green_square:"
+                        correct_count += 1
+                    else:
+                        output += ustring + ":red_square:"
+                        output2 += ":red_square:"
+                case "Merc unit":
+                    if unit_type == "nether":
+                        output += ustring + ":green_square:"
+                        output2 += ":green_square:"
+                        correct_count += 1
+                    else:
+                        output += ustring + ":red_square:"
+                        output2 += ":red_square:"
+                case "Wave unit":
+                    if unit_type == "creature":
+                        output += ustring + ":green_square:"
+                        output2 += ":green_square:"
+                        correct_count += 1
+                    else:
+                        output += ustring + ":red_square:"
+                        output2 += ":red_square:"
             embed.add_field(name=output,value="",inline=False)
             session["game1"]["guesses"].append(output2)
             if len(session["game1"]["guesses"]) == 10:
