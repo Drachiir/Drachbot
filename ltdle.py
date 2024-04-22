@@ -40,20 +40,21 @@ def ltdle_leaderboard():
         with open("ltdle_data/"+player+"/data.json", "r") as f:
             p_data = json.load(f)
             f.close()
-        scores.append((p_data["name"].capitalize(), p_data["score"]))
+        scores.append((p_data["name"].capitalize(), p_data["score"], p_data["games_played"]))
     scores = sorted(scores, key=lambda x: x[1], reverse=True)
     output = ""
     for index, pscore in enumerate(scores):
+        ranked_emote = ""
         if index == 10: break
-        output += pscore[0] + " " + str(pscore[1]) + "pts "
         if index == 0:
-            output += responses.get_ranked_emote(2800) + "\n"
+            ranked_emote = responses.get_ranked_emote(2800)
         elif 1 <= index <= 3:
-            output += responses.get_ranked_emote(2600) + "\n"
+            ranked_emote = responses.get_ranked_emote(2600)
         elif 4 <= index <= 6:
-            output += responses.get_ranked_emote(2400) + "\n"
+            ranked_emote = responses.get_ranked_emote(2400)
         else:
-            output += responses.get_ranked_emote(2200) + "\n"
+            ranked_emote = responses.get_ranked_emote(2200)
+        output += pscore[0] + ": " + str(pscore[1]) + "pts "+ranked_emote+", Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2]))+"pts avg)\n"
     embed = discord.Embed(color=color, title="Legiondle Leaderboard", description="**"+output+"**")
     embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
     return embed
@@ -109,29 +110,33 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             else:
                 embed = discord.Embed(color=color, title="Guess "+str(len(session["game1"]["guesses"])+1)+": "+new_name+ " :red_square:")
             embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/" + new_name + ".png")
+            def correct_output(input):
+                return ":green_square:**" + input + "** "
+            def false_output(input):
+                return ":red_square:~~" + input + "~~ "
             # attack
             if unit_data["attackType"] == ltdle_data["game_1_selected_unit"]["attackType"]:
-                output += unit_data["attackType"] + ":green_square:"
+                output += correct_output(unit_data["attackType"])
                 output2 += ":green_square:"
                 correct_count += 1
             else:
-                output += unit_data["attackType"] + ":red_square:"
+                output += false_output(unit_data["attackType"])
                 output2 += ":red_square:"
             #armor
             if unit_data["armorType"] == ltdle_data["game_1_selected_unit"]["armorType"]:
-                output += unit_data["armorType"] + ":green_square:"
+                output += correct_output(unit_data["armorType"])
                 output2 += ":green_square:"
                 correct_count += 1
             else:
-                output += unit_data["armorType"] + ":red_square:"
+                output += false_output(unit_data["armorType"])
                 output2 += ":red_square:"
             #range
             if unit_data["attackMode"] == ltdle_data["game_1_selected_unit"]["attackMode"]:
-                output += unit_data["attackMode"] + ":green_square:"
+                output += correct_output(unit_data["attackMode"])
                 output2 += ":green_square:"
                 correct_count += 1
             else:
-                output += unit_data["attackMode"] + ":red_square:"
+                output += false_output(unit_data["attackMode"])
                 output2 += ":red_square:"
             #legion
             if unit_data["legionId"].split("_")[0] == "nether":
@@ -141,11 +146,11 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             else:
                 lstring = unit_data["legionId"].split("_")[0].capitalize()
             if unit_data["legionId"] == ltdle_data["game_1_selected_unit"]["legionId"]:
-                output += lstring + ":green_square:"
+                output += correct_output(lstring)
                 output2 += ":green_square:"
                 correct_count += 1
             else:
-                output += lstring + ":red_square:"
+                output += false_output(lstring)
                 output2 += ":red_square:"
             #upgraded
             if lstring == "Merc":
@@ -160,32 +165,33 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             match ustring:
                 case "Base unit" | "Upgraded unit":
                     if len(unit_data["upgradesFrom"]) == len(ltdle_data["game_1_selected_unit"]["upgradesFrom"]) and (unit_type != "creature" and unit_type != "nether"):
-                        output += ustring + ":green_square:"
+                        output += correct_output(ustring)
                         output2 += ":green_square:"
                         correct_count += 1
                     else:
-                        output += ustring + ":red_square:"
+                        output += false_output(ustring)
                         output2 += ":red_square:"
                 case "Merc unit":
                     if unit_type == "nether":
-                        output += ustring + ":green_square:"
+                        output += correct_output(ustring)
                         output2 += ":green_square:"
                         correct_count += 1
                     else:
-                        output += ustring + ":red_square:"
+                        output += false_output(ustring)
                         output2 += ":red_square:"
                 case "Wave unit":
                     if unit_type == "creature":
-                        output += ustring + ":green_square:"
+                        output += correct_output(ustring)
                         output2 += ":green_square:"
                         correct_count += 1
                     else:
-                        output += ustring + ":red_square:"
+                        output += false_output(ustring)
                         output2 += ":red_square:"
-            embed.add_field(name=output,value="",inline=False)
+            embed.add_field(name="",value=output,inline=False)
             session["game1"]["guesses"].append(output2)
             if len(session["game1"]["guesses"]) == 10:
                 session["game1"]["game_finished"] = True
+                session["games_played"] += 1
                 if correct_count < 6:
                     mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
                     timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
@@ -196,6 +202,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
                 session["game1"]["game_finished"] = True
                 session["score"] += 11 - len(session["game1"]["guesses"])
                 embed.add_field(name="You guessed the correct unit! Yay!", value="Your guess history:\n"+"\n".join(session["game1"]["guesses"]),inline=False)
+                session["games_played"] += 1
                 update_user_data()
                 return embed
             else:

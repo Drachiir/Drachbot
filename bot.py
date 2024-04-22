@@ -196,7 +196,7 @@ def run_discord_bot():
                     Path(str(path)).mkdir(parents=True, exist_ok=True)
                     with open(path+"/data.json", "w") as f:
                         date_now = datetime.now()
-                        data = {"name": interaction.user.name, "score": 0, "game1": {"last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "game_state": 0, "guesses": []}}
+                        data = {"name": interaction.user.name, "score": 0, "games_played": 0, "game1": {"last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "game_state": 0, "guesses": []}}
                         json.dump(data, f)
                         f.close()
                 else:
@@ -776,7 +776,7 @@ def run_discord_bot():
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
-    @tree.command(name="topgames", description="Shows the 3 highest elo game in Ranked.")
+    @tree.command(name="topgames", description="Shows the 4 highest elo games in Ranked.")
     async def topgames(interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
@@ -835,7 +835,7 @@ def run_discord_bot():
                     unit_json_dictlist = json.load(f2)
                     f2.close()
                 random_unit = unit_json_dictlist[random.randint(0, len(unit_json_dictlist) - 1)]
-                while random_unit["categoryClass"] == "Special":
+                while random_unit["categoryClass"] == "Special" or random_unit["categoryClass"] == "Passive":
                     random_unit = unit_json_dictlist[random.randint(0, len(unit_json_dictlist) - 1)]
                 json_data["game_1_selected_unit"] = random_unit
                 with open("ltdle_data/ltdle.json", "w") as f3:
