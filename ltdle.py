@@ -13,7 +13,7 @@ from difflib import SequenceMatcher
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
-def ltdle(session: int, input: str, ltdle_data: dict):
+def ltdle(session: dict, input: str, ltdle_data: dict):
     date_now = datetime.now()
     if not session["game1"]["game_finished"]:
         return ltdle_game1(session, input, ltdle_data)
@@ -58,7 +58,7 @@ def ltdle_leaderboard():
     embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
     return embed
         
-def ltdle_game1(session: int, text_input: str, ltdle_data: dict):
+def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
     color = random.randrange(0, 2 ** 24)
     def update_user_data():
         with open("ltdle_data/" + session["name"] + "/data.json", "w") as f:
@@ -86,7 +86,7 @@ def ltdle_game1(session: int, text_input: str, ltdle_data: dict):
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
                 if string == "skyfish": string = "metaldragon"
-                if string == text_input or similar(string, text_input) > 0.8:
+                if string.casefold() == text_input.casefold() or similar(string, text_input) > 0.8:
                     text_input = string
                     unit_data = u_js
                     break
@@ -108,7 +108,7 @@ def ltdle_game1(session: int, text_input: str, ltdle_data: dict):
                 correct_count += 1
             else:
                 embed = discord.Embed(color=color, title="Guess "+str(len(session["game1"]["guesses"])+1)+": "+new_name+ " :red_square:")
-            embed.set_thumbnail(url="https://cdn.legiontd2.com/splashes/" + new_name + ".png")
+            embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/" + new_name + ".png")
             # attack
             if unit_data["attackType"] == ltdle_data["game_1_selected_unit"]["attackType"]:
                 output += unit_data["attackType"] + ":green_square:"

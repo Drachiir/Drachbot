@@ -140,21 +140,6 @@ def run_discord_bot():
     intents2 = discord.Intents.default()
     intents2.message_content = True
     client2 = discord.Client(intents=intents)
-    
-    with open("ltdle_data/ltdle.json", "r") as f:
-        json_data = json.load(f)
-        f.close()
-        if datetime.strptime(json_data["next_reset"], "%m/%d/%Y") < datetime.now():
-            json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
-            with open("Files/units.json", "r") as f2:
-                unit_json_dictlist = json.load(f2)
-                f2.close()
-            json_data["game_1_selected_unit"] = unit_json_dictlist[random.randint(0,len(unit_json_dictlist)-1)]
-            with open("ltdle_data/ltdle.json", "w") as f3:
-                json.dump(json_data, f3)
-                f3.close()
-        else: pass
-    
     mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
     mm_choices = []
     for mm in mm_list:
@@ -832,6 +817,32 @@ def run_discord_bot():
 
     @client.event
     async def on_ready():
+        with open("ltdle_data/ltdle.json", "r") as f:
+            json_data = json.load(f)
+            f.close()
+            if datetime.strptime(json_data["next_reset"], "%m/%d/%Y") < datetime.now():
+                json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
+                try:
+                    guild = client.get_guild(723645273661767721)
+                    channel = guild.get_channel(1176596408300744814)
+                    guild2 = client.get_guild(1196160767171510392)
+                    channel2 = guild2.get_channel(1216887285325234207)
+                    await channel.send("New Legiondle is up! :brain: <a:dinkdonk:1120126536343896106>")
+                    await channel2.send("New Legiondle is up! :brain: <a:dinkdonk:1120126536343896106>")
+                except:
+                    pass
+                with open("Files/units.json", "r") as f2:
+                    unit_json_dictlist = json.load(f2)
+                    f2.close()
+                random_unit = unit_json_dictlist[random.randint(0, len(unit_json_dictlist) - 1)]
+                while random_unit["categoryClass"] == "Special":
+                    random_unit = unit_json_dictlist[random.randint(0, len(unit_json_dictlist) - 1)]
+                json_data["game_1_selected_unit"] = random_unit
+                with open("ltdle_data/ltdle.json", "w") as f3:
+                    json.dump(json_data, f3)
+                    f3.close()
+            else:
+                pass
         print(f'{client.user} is now running!')
 
     @client2.event
