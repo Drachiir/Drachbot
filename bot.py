@@ -168,7 +168,8 @@ def run_discord_bot():
     @tree.command(name="legiondle", description="Legion themed Wordle-type game.")
     @app_commands.describe(input='Text Input.', option="Select an option.")
     @app_commands.choices(option=[
-        discord.app_commands.Choice(name='Leaderboard', value='Leaderboard')
+        discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
+        discord.app_commands.Choice(name='Profile', value='Profile')
     ])
     async def legiondle(interaction: discord.Interaction, input: str = "", option: discord.app_commands.Choice[str] = ""):
         loop = asyncio.get_running_loop()
@@ -184,6 +185,14 @@ def run_discord_bot():
                     pass
                 if option == "Leaderboard":
                     response = await loop.run_in_executor(pool, ltdle.ltdle_leaderboard)
+                    pool.shutdown()
+                    if type(response) == discord.Embed:
+                        await interaction.followup.send(embed=response)
+                    else:
+                        await interaction.followup.send(response)
+                    return
+                elif option == "Profile":
+                    response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_profile, interaction.user.name))
                     pool.shutdown()
                     if type(response) == discord.Embed:
                         await interaction.followup.send(embed=response)

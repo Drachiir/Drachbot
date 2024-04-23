@@ -1361,6 +1361,8 @@ def matchhistory_viewer(playername:str):
     avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
     playername = profile["playerName"]
     history_raw = apicall_getmatchistory(playerid, 5, earlier_than_wave10=True)
+    if len(history_raw) == 0:
+        return "No games found."
     site_link = "https://overlay.drachbot.site/Images/"
     mod_date = datetime.fromtimestamp(time.mktime(time.strptime(history_raw[0]["date"].split(".")[0].replace("T", "-").replace(":", "-"), "%Y-%m-%d-%H-%M-%S")), tz=timezone.utc).timestamp()
     embed = discord.Embed(color=0x1cce3a, title="Match History\nLast game: "+discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE))
@@ -2060,7 +2062,7 @@ def apicall_elcringo(playername, games, patch, min_elo, option, sort="date"):
         string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%, Enemy King: '+str(round(king_hp_enemy_10*100,2))+'%\n'
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     if playerid == "all":
-        playername = "All"
+        playername = playername.capitalize()
         avatar = "https://cdn.legiontd2.com/icons/Ogre.png"
     else:
         profile = apicall_getprofile(playerid)
