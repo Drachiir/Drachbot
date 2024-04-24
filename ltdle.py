@@ -31,7 +31,7 @@ def ltdle(session: dict, input: str, ltdle_data: dict):
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
         return "You already played todays Legiondle, next reset is "+timestamp+"."
 
-def ltdle_leaderboard():
+def ltdle_leaderboard(daily):
     color = random.randrange(0, 2 ** 24)
     player_data_list = os.listdir("ltdle_data")
     scores = []
@@ -40,7 +40,17 @@ def ltdle_leaderboard():
         with open("ltdle_data/"+player+"/data.json", "r") as f:
             p_data = json.load(f)
             f.close()
-        scores.append((p_data["name"].capitalize(), p_data["score"], p_data["games_played"]))
+        if daily:
+            with open("ltdle_data/ltdle.json", "r") as f:
+                ltdle_data = json.load(f)
+                f.close()
+            if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y")-timedelta(days=1):
+                    if p_data["game1"]["game_finished"] == True:
+                        daily_score = 11-len(p_data["game1"]["guesses"])
+                        scores.append((p_data["name"].capitalize(), daily_score))
+        else:
+            scores.append((p_data["name"].capitalize(), p_data["score"], p_data["games_played"]))
     scores = sorted(scores, key=lambda x: x[1], reverse=True)
     output = ""
     for index, pscore in enumerate(scores):
@@ -54,12 +64,19 @@ def ltdle_leaderboard():
             ranked_emote = responses.get_ranked_emote(2400)
         else:
             ranked_emote = responses.get_ranked_emote(2200)
-        output += pscore[0] + ": " + str(pscore[1]) + "pts "+ranked_emote+", Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
-    embed = discord.Embed(color=color, title="Legiondle Leaderboard", description="**"+output+"**")
+        if daily:
+            output += ranked_emote+" "+pscore[0] + ": " + str(daily_score) + "pts " + "\n"
+        else:
+            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
+    if daily:
+        title = "Legiondle Daily Leaderboard"
+    else:
+        title = "Legiondle Leaderboard"
+    embed = discord.Embed(color=color, title=title, description="**"+output+"**")
     embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
     return embed
 
-def ltdle_profile(player):
+def ltdle_profile(player, avatar):
     color = random.randrange(0, 2 ** 24)
     try:
         with open("ltdle_data/" + player + "/data.json", "r") as f:
@@ -70,7 +87,7 @@ def ltdle_profile(player):
     embed = discord.Embed(color=color, title="Legiondle Profile", description="**Games played: " +str(p_data["games_played"])+
                                                                               "\nPoints: "+str(p_data["score"])+
                                                                               "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points**")
-    embed.set_author(name=player.capitalize(), icon_url="https://overlay.drachbot.site/favicon.ico")
+    embed.set_author(name=player.capitalize(), icon_url=avatar)
     return embed
 
 def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
@@ -79,6 +96,9 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         with open("ltdle_data/" + session["name"] + "/data.json", "w") as f:
             json.dump(session, f)
             f.close()
+    if session["games_played"] >= 1:
+        session["game1"]["game_state"] = 1
+    update_user_data()
     match session["game1"]["game_state"]:
         case 0:
             embed = discord.Embed(color=color, description=":exploding_head: **LEGIONDLE** :brain:\n**Standard mode!**")

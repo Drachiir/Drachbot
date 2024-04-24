@@ -169,9 +169,10 @@ def run_discord_bot():
     @app_commands.describe(input='Text Input.', option="Select an option.")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
+        discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
-    async def legiondle(interaction: discord.Interaction, input: str = "", option: discord.app_commands.Choice[str] = ""):
+    async def legiondle(interaction: discord.Interaction, input: str, option: discord.app_commands.Choice[str] = ""):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             try:
@@ -183,22 +184,36 @@ def run_discord_bot():
                     option = option.value
                 except AttributeError:
                     pass
-                if option == "Leaderboard":
-                    response = await loop.run_in_executor(pool, ltdle.ltdle_leaderboard)
-                    pool.shutdown()
-                    if type(response) == discord.Embed:
-                        await interaction.followup.send(embed=response)
-                    else:
-                        await interaction.followup.send(response)
-                    return
-                elif option == "Profile":
-                    response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_profile, interaction.user.name))
-                    pool.shutdown()
-                    if type(response) == discord.Embed:
-                        await interaction.followup.send(embed=response)
-                    else:
-                        await interaction.followup.send(response)
-                    return
+                match option:
+                    case "Leaderboard":
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_leaderboard, False))
+                        pool.shutdown()
+                        if type(response) == discord.Embed:
+                            await interaction.followup.send(embed=response)
+                        else:
+                            await interaction.followup.send(response)
+                        return
+                    case "Daily Leaderboard":
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_leaderboard, True))
+                        pool.shutdown()
+                        if type(response) == discord.Embed:
+                            await interaction.followup.send(embed=response)
+                        else:
+                            await interaction.followup.send(response)
+                        return
+                    case "Profile":
+                        avatar = interaction.user.avatar
+                        if avatar != None:
+                            avatar = avatar.url
+                        else:
+                            avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_profile, interaction.user.name, avatar))
+                        pool.shutdown()
+                        if type(response) == discord.Embed:
+                            await interaction.followup.send(embed=response)
+                        else:
+                            await interaction.followup.send(response)
+                        return
                 path = str(pathlib.Path(__file__).parent.resolve()) + "/ltdle_data/" + interaction.user.name
                 if not Path(Path(str(path))).is_dir():
                     print(interaction.user.name + ' ltdle profile not found, creating new folder...')
