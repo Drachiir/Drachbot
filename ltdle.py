@@ -13,7 +13,7 @@ from difflib import SequenceMatcher
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
-def ltdle(session: dict, input: str, ltdle_data: dict):
+def ltdle(session: dict, ltdle_data: dict, input: str=""):
     date_now = datetime.now()
     if not session["game1"]["game_finished"]:
         return ltdle_game1(session, input, ltdle_data)
@@ -96,9 +96,6 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         with open("ltdle_data/" + session["name"] + "/data.json", "w") as f:
             json.dump(session, f)
             f.close()
-    if session["games_played"] >= 1:
-        session["game1"]["game_state"] = 1
-    update_user_data()
     match session["game1"]["game_state"]:
         case 0:
             embed = discord.Embed(color=color, description=":exploding_head: **LEGIONDLE** :brain:\n**Standard mode!**")
@@ -107,7 +104,6 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             embed.add_field(name="", value="**Enter any unit! (Including waves and mercs!)**\nUsing the /legiondle input")
             date_now = datetime.now()
             session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
-            session["game1"]["game_state"] = 1
             update_user_data()
             return embed
         case 1:
@@ -230,6 +226,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
                     mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
                     timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
                     embed.add_field(name="You lost :frowning:. Try again next time "+timestamp, value="Your guess history:\n" + "\n".join(session["game1"]["guesses"]),inline=False)
+                    session["game1"]["game_state"] = 0
                     update_user_data()
                     return embed
             if correct_count == 6:
@@ -237,10 +234,12 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
                 session["score"] += 11 - len(session["game1"]["guesses"])
                 embed.add_field(name="You guessed the correct unit! Yay!", value="Your guess history:\n"+"\n".join(session["game1"]["guesses"]),inline=False)
                 session["games_played"] += 1
+                session["game1"]["game_state"] = 0
                 update_user_data()
-                return embed
+                return [embed]
             else:
                 embed.add_field(name="Try another unit.", value="",inline=False)
+                session["game1"]["game_state"] = 0
                 update_user_data()
                 return embed
             

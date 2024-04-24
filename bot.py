@@ -164,15 +164,51 @@ def run_discord_bot():
                     await interaction.edit_original_response(embed=response)
             except Exception:
                 traceback.print_exc()
+    
+    class UnitInput(ui.Modal, title='Enter a unit!'):
+        answer = ui.TextInput(label='Unit', style=discord.TextStyle.short)
+        async def on_submit(self, interaction: discord.Interaction):
+            await interaction.response.defer()
+            try:
+                loop = asyncio.get_running_loop()
+                with concurrent.futures.ProcessPoolExecutor() as pool:
+                    path = str(pathlib.Path(__file__).parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                    with open(path + "/data.json", "r") as f:
+                        data = json.load(f)
+                        f.close()
+                    with open("ltdle_data/ltdle.json", "r") as f:
+                        ltdle_data = json.load(f)
+                        f.close()
+                    data["game1"]["game_state"] = 1
+                    response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle, data, ltdle_data, input=self.answer.value))
+                    pool.shutdown()
+                    if type(response) == discord.Embed:
+                        await interaction.channel.send(embed=response, view=ModalButton())
+                    elif type(response) == list:
+                        await interaction.channel.send(embed=response[0])
+                    else:
+                        await interaction.channel.send(response)
+            except Exception:
+                traceback.print_exc()
+    
+    class ModalButton(discord.ui.View):
+        def __init__(self):
+            super().__init__(timeout=None)
+        @discord.ui.button(label='Enter unit', style=discord.ButtonStyle.green, custom_id='persistent_view:modal')
+        async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+            try:
+                await interaction.response.send_modal(UnitInput())
+            except Exception:
+                traceback.print_exc()
 
     @tree.command(name="legiondle", description="Legion themed Wordle-type game.")
-    @app_commands.describe(input='Text Input.', option="Select an option.")
+    @app_commands.describe(option="Select an option.")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
-    async def legiondle(interaction: discord.Interaction, input: str, option: discord.app_commands.Choice[str] = ""):
+    async def legiondle(interaction: discord.Interaction, option: discord.app_commands.Choice[str] = ""):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             try:
@@ -230,10 +266,10 @@ def run_discord_bot():
                 with open("ltdle_data/ltdle.json", "r") as f:
                     ltdle_data = json.load(f)
                     f.close()
-                response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle, data, input, ltdle_data))
+                response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle, data, ltdle_data))
                 pool.shutdown()
                 if type(response) == discord.Embed:
-                    await interaction.followup.send(embed=response)
+                    await interaction.followup.send(embed=response, view=ModalButton())
                 else:
                     await interaction.followup.send(response)
             except Exception:
