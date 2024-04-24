@@ -1,25 +1,24 @@
 import asyncio
+import concurrent.futures
 import functools
 import json
+import os
+import pathlib
+import platform
+import random
 import traceback
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 import discord
-import responses
-from discord.ext import commands
-from discord import app_commands, ui, TextStyle
-import os
-import concurrent.futures
-import platform
-from twitchAPI.twitch import Twitch
-from twitchAPI.helper import first
 import discord_timestamps
+from discord import app_commands, ui
+from discord.ext import commands
 from discord_timestamps import TimestampType
-from pathlib import Path
-import time
+from twitchAPI.helper import first
+from twitchAPI.twitch import Twitch
+
 import ltdle
-import random
-import pathlib
-from pathlib import Path
+import responses
 
 with open('Files/Secrets.json') as f:
     secret_file = json.load(f)
@@ -205,6 +204,7 @@ def run_discord_bot():
     @app_commands.describe(option="Select an option.")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
+        discord.app_commands.Choice(name='Avg Leaderboard', value='Avg Leaderboard'),
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
@@ -222,7 +222,15 @@ def run_discord_bot():
                     pass
                 match option:
                     case "Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_leaderboard, False))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_leaderboard, False, False))
+                        pool.shutdown()
+                        if type(response) == discord.Embed:
+                            await interaction.followup.send(embed=response)
+                        else:
+                            await interaction.followup.send(response)
+                        return
+                    case "Avg Leaderboard":
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_leaderboard, False, True))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             await interaction.followup.send(embed=response)
@@ -230,7 +238,7 @@ def run_discord_bot():
                             await interaction.followup.send(response)
                         return
                     case "Daily Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_leaderboard, True))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle.ltdle_leaderboard, True, False))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             await interaction.followup.send(embed=response)

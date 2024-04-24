@@ -1,31 +1,32 @@
-import io
-import shutil
-import requests
-import json
-from collections import Counter
-import pathlib
-from pathlib import Path
+import csv
 import datetime
-import traceback
+import difflib
+import glob
+import io
+import json
 import os
 import os.path
-import glob
-import PIL
-from PIL import Image, ImageDraw, ImageFont, ImageSequence
-from io import BytesIO
-import numpy as np
-import matplotlib.pyplot as plt
-from datetime import datetime, timedelta, timezone
-from bs4 import BeautifulSoup
-import csv
-import string
+import pathlib
 import random
+import shutil
+import string
 import time
-import difflib
-import json_to_csv
+import traceback
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+from io import BytesIO
+from pathlib import Path
+import PIL
 import discord
 import discord_timestamps
+import matplotlib.pyplot as plt
+import numpy as np
+import requests
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
+from bs4 import BeautifulSoup
 from discord_timestamps import TimestampType
+
+import json_to_csv
 
 with open('Files/Secrets.json', 'r') as f:
     secret_file = json.load(f)

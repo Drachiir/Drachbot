@@ -1,23 +1,22 @@
+import datetime
 import json
 import os
-
-import responses
 import random
+from datetime import datetime, timedelta
+from difflib import SequenceMatcher
 import discord
-import datetime
-from datetime import datetime, timedelta, timezone
 import discord_timestamps
 from discord_timestamps import TimestampType
-from difflib import SequenceMatcher
+
+import responses
+
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
 def ltdle(session: dict, ltdle_data: dict, input: str=""):
     date_now = datetime.now()
-    if not session["game1"]["game_finished"]:
-        return ltdle_game1(session, input, ltdle_data)
-    elif datetime.strptime(session["game1"]["last_played"], "%m/%d/%Y")+timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+    if datetime.strptime(session["game1"]["last_played"], "%m/%d/%Y")+timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
         session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
         session["game1"]["game_finished"] = False
         session["game1"]["game_state"] = 0
@@ -26,12 +25,14 @@ def ltdle(session: dict, ltdle_data: dict, input: str=""):
             json.dump(session, f)
             f.close()
         return ltdle_game1(session, input, ltdle_data)
+    elif not session["game1"]["game_finished"]:
+        return ltdle_game1(session, input, ltdle_data)
     else:
         mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
         return "You already played todays Legiondle, next reset is "+timestamp+"."
 
-def ltdle_leaderboard(daily):
+def ltdle_leaderboard(daily, avg):
     color = random.randrange(0, 2 ** 24)
     player_data_list = os.listdir("ltdle_data")
     scores = []
@@ -48,10 +49,15 @@ def ltdle_leaderboard(daily):
                 if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y")-timedelta(days=1):
                     if p_data["game1"]["game_finished"] == True:
                         daily_score = 11-len(p_data["game1"]["guesses"])
-                        scores.append((p_data["name"].capitalize(), daily_score))
+                        scores.append((p_data["name"].capitalize().replace("_", ""), daily_score))
         else:
-            scores.append((p_data["name"].capitalize(), p_data["score"], p_data["games_played"]))
-    scores = sorted(scores, key=lambda x: x[1], reverse=True)
+            try: avg_pts = p_data["score"]/p_data["games_played"]
+            except ZeroDivisionError: avg_pts = 0
+            scores.append((p_data["name"].capitalize().replace("_", ""), p_data["score"], p_data["games_played"], avg_pts))
+    if avg:
+        scores = sorted(scores, key=lambda x: x[3], reverse=True)
+    else:
+        scores = sorted(scores, key=lambda x: x[1], reverse=True)
     output = ""
     for index, pscore in enumerate(scores):
         ranked_emote = ""
@@ -65,11 +71,13 @@ def ltdle_leaderboard(daily):
         else:
             ranked_emote = responses.get_ranked_emote(2200)
         if daily:
-            output += ranked_emote+" "+pscore[0] + ": " + str(daily_score) + "pts " + "\n"
+            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts " + "\n"
         else:
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
     if daily:
         title = "Legiondle Daily Leaderboard"
+    elif avg:
+        title = "Legiondle Avg Leaderboard"
     else:
         title = "Legiondle Leaderboard"
     embed = discord.Embed(color=color, title=title, description="**"+output+"**")
@@ -84,6 +92,8 @@ def ltdle_profile(player, avatar):
             f.close()
     except FileNotFoundError:
         return "No Legiondle profile found for "+player
+    if p_data["games_played"] == 0:
+        return "No games played."
     embed = discord.Embed(color=color, title="Legiondle Profile", description="**Games played: " +str(p_data["games_played"])+
                                                                               "\nPoints: "+str(p_data["score"])+
                                                                               "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points**")
@@ -98,10 +108,9 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             f.close()
     match session["game1"]["game_state"]:
         case 0:
-            embed = discord.Embed(color=color, description=":exploding_head: **LEGIONDLE** :brain:\n**Standard mode!**")
+            embed = discord.Embed(color=color, description=":exploding_head: **LEGIONDLE** :brain:\n**Enter any unit\nUsing the button below\n:bangbang: Including waves/mercs :bangbang:**")
             embed.set_thumbnail(url="https://overlay.drachbot.site/ltdle/guesstheunit.png")
             embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
-            embed.add_field(name="", value="**Enter any unit! (Including waves and mercs!)**\nUsing the /legiondle input")
             date_now = datetime.now()
             session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
             update_user_data()
@@ -133,13 +142,6 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             output = ""
             output2 = ""
             correct_count = 0
-            # name
-            if unit_data["unitId"] == ltdle_data["game_1_selected_unit"]["unitId"]:
-                embed = discord.Embed(color=color, title="Guess "+str(len(session["game1"]["guesses"])+1)+": "+new_name + " :green_square:", description="*Bold text = correct*")
-                correct_count += 1
-            else:
-                embed = discord.Embed(color=color, title="Guess "+str(len(session["game1"]["guesses"])+1)+": "+new_name+ " :red_square:", description="*Bold text = correct*")
-            embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/" + new_name + ".png")
             def correct_output(input):
                 return ":green_square:**" + input + "** "
             def false_output(input):
@@ -217,7 +219,15 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
                     else:
                         output += false_output(ustring)
                         output2 += ":red_square:"
-            embed.add_field(name="",value=output,inline=False)
+            if unit_data["unitId"] == ltdle_data["game_1_selected_unit"]["unitId"]:
+                correct_count += 1
+            def create_embed(end_string):
+                if unit_data["unitId"] == ltdle_data["game_1_selected_unit"]["unitId"]:
+                    embed = discord.Embed(color=color, title="Guess " + str(len(session["game1"]["guesses"])) + ": " + new_name + " :green_square:",description="*Bold text = correct*\n\n"+output+"\n\n"+end_string)
+                else:
+                    embed = discord.Embed(color=color, title="Guess " + str(len(session["game1"]["guesses"])) + ": " + new_name + " :red_square:",description="*Bold text = correct*\n\n"+output+"\n\n"+end_string)
+                embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/" + new_name + ".png")
+                return embed
             session["game1"]["guesses"].append(output2+" "+new_name)
             if len(session["game1"]["guesses"]) == 10:
                 session["game1"]["game_finished"] = True
@@ -225,20 +235,21 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
                 if correct_count < 6:
                     mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
                     timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-                    embed.add_field(name="You lost :frowning:. Try again next time "+timestamp, value="Your guess history:\n" + "\n".join(session["game1"]["guesses"]),inline=False)
+                    embed = create_embed("You lost :frowning:. Try again next time "+timestamp+"\nYour guess history:\n" + "\n".join(session["game1"]["guesses"]))
                     session["game1"]["game_state"] = 0
                     update_user_data()
                     return embed
             if correct_count == 6:
+                print(session["name"]+ " found the right unit!")
                 session["game1"]["game_finished"] = True
                 session["score"] += 11 - len(session["game1"]["guesses"])
-                embed.add_field(name="You guessed the correct unit! Yay!", value="Your guess history:\n"+"\n".join(session["game1"]["guesses"]),inline=False)
+                embed = create_embed("**You guessed the correct unit! Yay!**(+"+str(11 - len(session["game1"]["guesses"]))+" points)\nYour guess history:\n"+"\n".join(session["game1"]["guesses"]))
                 session["games_played"] += 1
                 session["game1"]["game_state"] = 0
                 update_user_data()
                 return [embed]
             else:
-                embed.add_field(name="Try another unit.", value="",inline=False)
+                embed = create_embed("**Try another unit.**")
                 session["game1"]["game_state"] = 0
                 update_user_data()
                 return embed
