@@ -13,7 +13,7 @@ class ManageCommands(commands.Cog):
             for e in os.listdir("cogs2"):
                 if "__pycache__" in e: continue
                 elif "cog_template" in e: continue
-                new_exts.append("cogs." + e.split(".")[0])
+                new_exts.append("cogs2." + e.split(".")[0])
             for extension in new_exts:
                 await self.client.reload_extension(extension)
             await self.client.tree.sync(guild=None)

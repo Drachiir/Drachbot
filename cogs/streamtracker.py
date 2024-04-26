@@ -161,7 +161,6 @@ class Streamtracker(commands.Cog):
     async def streamtracker(self, interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
-            await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 if interaction.guild != None:
                     await interaction.response.send_message("This command only works in DMs.", ephemeral=True)
@@ -175,6 +174,7 @@ class Streamtracker(commands.Cog):
                     else:
                         await interaction.response.send_message("You are not whitelisted to be able to use this command. Message drachir_ to get access")
                         return
+                await interaction.response.defer(ephemeral=False, thinking=True)
                 await loop.run_in_executor(pool, functools.partial(stream_overlay, playername, update=True))
                 pool.shutdown()
                 await interaction.followup.send("Use https://overlay.drachbot.site/" + playername + '_output.html as a OBS browser source.')

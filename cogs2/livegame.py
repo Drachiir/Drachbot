@@ -10,7 +10,7 @@ from datetime import datetime
 from discord.ext import commands
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
-import cogs.streamtracker
+import legion_api
 
 with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
@@ -53,6 +53,149 @@ def get_game_elo(playerlist):
     new_list.append(str(round(elo / len(playerlist))))
     return new_list
 
+def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
+    if not os.path.isfile("sessions/session_" + playername + ".json"):
+        playerid = legion_api.getid(playername)
+        stats = legion_api.getstats(playerid)
+        initial_elo = stats["overallElo"]
+        current_elo = stats["overallElo"]
+        initial_wins = stats["rankedWinsThisSeason"]
+        current_wins = stats["rankedWinsThisSeason"]
+        initial_losses = stats["rankedLossesThisSeason"]
+        current_losses = stats["rankedLossesThisSeason"]
+        with open("sessions/session_" + playername + ".json", "w") as f:
+            session_dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            json.dump(session_dict, f, default=str)
+    else:
+        with open("sessions/session_" + playername + ".json", "r") as f:
+            session_dict = json.load(f)
+            initial_elo = session_dict["int_elo"]
+            initial_wins = session_dict["int_wins"]
+            initial_losses = session_dict["int_losses"]
+            if update:
+                playerid = legion_api.getid(playername)
+                stats = legion_api.getstats(playerid)
+                current_elo = stats["overallElo"]
+                current_wins = stats["rankedWinsThisSeason"]
+                current_losses = stats["rankedLossesThisSeason"]
+            else:
+                current_elo = session_dict["current_elo"] + elo_change
+                if elo_change > 0:
+                    current_wins = session_dict["current_wins"] + 1
+                else:
+                    current_wins = session_dict["current_wins"]
+                if elo_change < 0:
+                    current_losses = session_dict["current_losses"] + 1
+                else:
+                    current_losses = session_dict["current_losses"]
+        with open("sessions/session_" + playername + ".json", "w") as f:
+            session_dict = {"started_at": session_dict["started_at"], "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            json.dump(session_dict, f, default=str)
+    wins = current_wins-initial_wins
+    losses = current_losses-initial_losses
+    try:
+        winrate = round(wins/(wins+losses)*100)
+    except ZeroDivisionError:
+        winrate = 0
+    rgb = ""
+    rgb2 = ""
+    if winrate < 50:
+        rgb = 'class="redText"'
+    else:
+        rgb = 'class="greenText"'
+    elo_diff = current_elo-initial_elo
+    if elo_diff >= 0:
+        elo_str = "+"
+        rgb2 = 'class="greenText"'
+    else:
+        elo_str = ""
+        rgb2 = 'class="redText"'
+    def get_rank_url(elo):
+        if elo >= 2800:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
+        elif elo >= 2600:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Grandmaster.png'
+        elif elo >= 2400:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/SeniorMaster.png'
+        elif elo >= 2200:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Master.png'
+        elif elo >= 2000:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Expert.png'
+        elif elo >= 1800:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Diamond.png'
+        elif elo >= 1600:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Platinum.png'
+        elif elo >= 1400:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Gold.png'
+        elif elo >= 1200:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Silver.png'
+        else:
+            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Bronze.png'
+        return rank_url
+    html_file = """
+    <!doctype html><html><head>
+          <meta http-equiv="refresh" content="5">
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+        <style>
+          .container {
+            min-height: 0px;
+            max-height: 120px;
+            max-width: 700px;
+            display: flex;
+            flex-direction: right;
+            align-items: center;
+          }
+          r {
+            font-family: "Roboto", sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            font-size: 220%;
+            padding-left: 10px;
+            color: white;
+            letter-spacing: 1px;
+            text-shadow:
+            /* Outline */
+            -1px -1px 0 #000000,
+            1px -1px 0 #000000,
+            -1px 1px 0 #000000,
+            1px 1px 0 #000000,
+            -2px 0 0 #000000,
+            2px 0 0 #000000,
+            0 2px 0 #000000,
+            0 -2px 0 #000000;
+          }
+          .redText
+          {
+            color:rgb(219, 0, 0);
+          }
+          .greenText
+          {
+            color:rgb(0, 153, 0);
+          }
+        </style>
+        <title>"""+playername+"""</title>
+        </head>
+        <body>
+        <div class="container">
+              <r><b>Starting elo:</b></r>
+              <img src="""+get_rank_url(initial_elo)+""">
+              <r><b>"""+str(initial_elo)+"""</b></r>
+            </div>
+        <div class="container">
+              <r><b>Current elo:&nbsp;</b></r>
+              <img src="""+get_rank_url(current_elo)+""">
+              <r><b>"""+str(current_elo)+"""</b></r><r """+rgb2+""" ><b>("""+elo_str+str(elo_diff)+""")</b></r>
+            </div>
+        <div class="container">
+              <r><b>Win:"""+str(wins)+""",&thinsp;Lose:"""+str(losses)+""",&thinsp;Winrate:</b></r><r """+rgb+""" ><b>"""+str(winrate)+"""%</b></r>
+            </div>
+        </body>
+    </html>"""
+    with open('/shared/'+playername+'_output.html', "w") as f:
+        f.write(html_file)
+    return playername+'_output.html'
 
 async def handler(message) -> None:
     if str(message.channel) == "game-starts":
@@ -60,7 +203,7 @@ async def handler(message) -> None:
         gameid = str(message.author).split("#")[0].replace("Game started! ", "")
         if len(players) == 4:
             loop = asyncio.get_running_loop()
-            with concurrent.futures.ThreadPoolExecutor() as pool:
+            with concurrent.futures.ProcessPoolExecutor() as pool:
                 players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players))
                 pool.shutdown()
             save_live_game(gameid, players_new)
@@ -94,16 +237,16 @@ async def handler(message) -> None:
                                     minutes_diff = date_diff.total_seconds() / 60 - 60
                                 if minutes_diff > 10:
                                     loop = asyncio.get_running_loop()
-                                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, playername, update=True))
+                                    with concurrent.futures.ProcessPoolExecutor() as pool:
+                                        await loop.run_in_executor(pool, functools.partial(stream_overlay, playername, update=True))
                                         pool.shutdown()
             if len(twitch_list) > 0:
                 twitch_dict = await twitch_get_streams(twitch_list, playernames=playernames_list)
                 for streamer in twitch_dict:
                     if twitch_dict[streamer]["live"] == True:
                         loop = asyncio.get_running_loop()
-                        with concurrent.futures.ThreadPoolExecutor() as pool:
-                            print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, twitch_dict[streamer]["playername"], stream_started_at=str(twitch_dict[streamer]["started_at"]))) + " session started.")
+                        with concurrent.futures.ProcessPoolExecutor() as pool:
+                            print(await loop.run_in_executor(pool, functools.partial(stream_overlay, twitch_dict[streamer]["playername"], stream_started_at=str(twitch_dict[streamer]["started_at"]))) + " session started.")
                             pool.shutdown()
                     else:
                         print(streamer + " is not live.")
@@ -126,15 +269,15 @@ async def handler(message) -> None:
                         elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
                         if os.path.isfile("sessions/session_" + playername + ".json"):
                             loop = asyncio.get_running_loop()
-                            with concurrent.futures.ThreadPoolExecutor() as pool:
-                                await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, playername, elo_change=elo_change))
+                            with concurrent.futures.ProcessPoolExecutor() as pool:
+                                await loop.run_in_executor(pool, functools.partial(stream_overlay, playername, elo_change=elo_change))
                                 pool.shutdown()
                     elif playername in desc3[2]:
                         elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
                         if os.path.isfile("sessions/session_" + playername + ".json"):
                             loop = asyncio.get_running_loop()
-                            with concurrent.futures.ThreadPoolExecutor() as pool:
-                                await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, playername, elo_change=elo_change))
+                            with concurrent.futures.ProcessPoolExecutor() as pool:
+                                await loop.run_in_executor(pool, functools.partial(stream_overlay, playername, elo_change=elo_change))
                                 pool.shutdown()
         if "elo" in desc or "**TIED**" in desc2:
             path = 'Livegame/Ranked/'
