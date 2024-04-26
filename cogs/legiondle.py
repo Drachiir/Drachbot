@@ -266,7 +266,7 @@ class UnitInput(ui.Modal, title='Enter a unit!'):
         await interaction.response.defer()
         try:
             loop = asyncio.get_running_loop()
-            with concurrent.futures.ProcessPoolExecutor() as pool:
+            with concurrent.futures.ThreadPoolExecutor() as pool:
                 path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
                 with open(path + "/data.json", "r") as f:
                     data = json.load(f)
@@ -311,7 +311,7 @@ class Legiondle(commands.Cog):
     ])
     async def legiondle(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str] = ""):
         loop = asyncio.get_running_loop()
-        with concurrent.futures.ProcessPoolExecutor() as pool:
+        with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
                 if interaction.guild != None and option == "":
                     await interaction.response.send_message("This command only works in DMs with Drachbot.", ephemeral=True)

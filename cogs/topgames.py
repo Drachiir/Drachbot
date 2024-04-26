@@ -69,7 +69,7 @@ class RefreshButton(discord.ui.View):
             if retry_after:
                 return print(interaction.user.name + " likes to press buttons.")
             loop = asyncio.get_running_loop()
-            with concurrent.futures.ProcessPoolExecutor() as pool:
+            with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, get_top_games)
                 pool.shutdown()
                 await interaction.edit_original_response(embed=response)
@@ -83,13 +83,15 @@ class Topgames(commands.Cog):
     @app_commands.command(name="topgames", description="Shows the 4 highest elo games in Ranked.")
     async def topgames(self, interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
-        with concurrent.futures.ProcessPoolExecutor() as pool:
+        with concurrent.futures.ThreadPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
             try:
                 response = await loop.run_in_executor(pool, get_top_games)
                 pool.shutdown()
-                if len(response) > 0:
+                if type(response) == discord.Embed:
                     await interaction.followup.send(embed=response, view=RefreshButton())
+                else:
+                    await interaction.followup.send(response)
             except Exception:
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
