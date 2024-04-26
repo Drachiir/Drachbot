@@ -4,7 +4,6 @@ import os
 import random
 import traceback
 from datetime import datetime, timedelta
-import livegame
 
 import discord
 from discord.ext import commands
@@ -62,28 +61,31 @@ class Client(commands.Bot):
     async def on_ready(self):
         print(f'"{self.user.display_name}" is now running!')
 
-#livegame bot
-intents = discord.Intents.default()
-intents.message_content = True
-client2 = discord.Client(intents=intents)
-
-@client2.event
-async def on_ready():
-    print(f'{client2.user} is now running!')
-
-@client2.event
-async def on_message(message):
-    if message.author == client2.user:
-        return
-    try:
-        await livegame.handler(message)
-    except Exception:
-        traceback.print_exc()
+class Client2(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.message_content = True
+        super().__init__(command_prefix=commands.when_mentioned_or("."), intents=intents)
+        self.exts = []
+        for e in os.listdir("cogs2"):
+            if "__pycache__" in e:
+                continue
+            elif "cog_template" in e:
+                continue
+            self.exts.append("cogs2." + e.split(".")[0])
+    
+    async def setup_hook(self) -> None:
+        for extension in self.exts:
+            await self.load_extension(extension)
+    
+    async def on_ready(self):
+        print(f'"{self.user.display_name}" is now running!')
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     client = Client()
+    client2 = Client2()
     loop.create_task(client.start(secret_file["token"]))
     loop.create_task(client2.start(secret_file["livegametoken"]))
     loop.run_forever()

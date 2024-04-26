@@ -12,7 +12,7 @@ class ManageCommands(commands.Cog):
             new_exts = []
             for e in os.listdir("cogs"):
                 if "__pycache__" in e: continue
-                elif "cop_template" in e: continue
+                elif "cog_template" in e: continue
                 new_exts.append("cogs." + e.split(".")[0])
             for extension in new_exts:
                 await self.client.reload_extension(extension)
