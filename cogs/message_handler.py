@@ -29,11 +29,8 @@ def handle_response(message, author) -> str:
     if 'nyctea' in p_message:       return "toikan,"
     if 'lwon' in p_message:         return "<:AgentEggwon:1215622131187191828> fucking teamates, nothing you can do"
     if '!github' in p_message:      return 'https://github.com/Drachiir/Drachbot'
-    if '!update' in p_message and str(author) == 'drachir_':
-        input = p_message.split(" ")
-        return legion_api.ladder_update(input[1])
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return legion_api.pull_games_by_id(message.split('|')[1],message.split('|')[2])
-    if '!update' in p_message and str(author) != 'drachir_':    return 'thanks ' + str(author) + '!'
+    if '!update' in p_message:    return 'thanks ' + str(author) + '!'
     if "!csv_data" in p_message and (str(author) == 'drachir_' or str(author) == 'pennywiseuk'): return json_to_csv.legion_json_to_csv()
     # if '!script' and str(author) == "drachir_":
     #     path1 = str(pathlib.Path(__file__).parent.resolve()) + "/Games/"
