@@ -2,22 +2,23 @@ import asyncio
 import concurrent.futures
 import functools
 import json
-import time
 import os
 import os.path
 import shutil
+import time
 import traceback
+from datetime import datetime, timezone
 from pathlib import Path
+
 import PIL
 import discord
+import discord_timestamps
 import numpy as np
 import requests
 from PIL import Image, ImageDraw, ImageFont
 from discord import app_commands
 from discord.ext import commands
-import discord_timestamps
 from discord_timestamps import TimestampType
-from datetime import datetime, timezone
 
 import json_db
 import legion_api

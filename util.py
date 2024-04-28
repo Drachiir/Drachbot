@@ -1,6 +1,7 @@
 import random
 import string
 import json
+from difflib import SequenceMatcher
 from PIL import Image
 import discord
 from discord import app_commands
@@ -28,6 +29,9 @@ for mm in mm_list:
 
 def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 def get_ranked_emote(rank):
     rank_emote = ""

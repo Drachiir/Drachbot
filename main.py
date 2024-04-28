@@ -33,6 +33,8 @@ class Client(commands.Bot):
             await self.load_extension(extension)
         self.add_view(cogs.topgames.RefreshButton())
         self.add_view(cogs.legiondle.ModalButton())
+        self.add_view(cogs.legiondle.GameSelectionButtons())
+        self.add_view(cogs.legiondle.ModalLeakButton())
     
     async def on_ready(self):
         print(f'"{self.user.display_name}" is now running!')

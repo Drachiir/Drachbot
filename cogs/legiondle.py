@@ -8,7 +8,6 @@ import pathlib
 import random
 import traceback
 from datetime import datetime, timedelta
-from difflib import SequenceMatcher
 from pathlib import Path
 import discord
 import discord_timestamps
@@ -17,26 +16,55 @@ from discord.ext import commands
 from discord_timestamps import TimestampType
 import util
 
-def similar(a, b):
-    return SequenceMatcher(None, a, b).ratio()
+color = random.randrange(0, 2 ** 24)
 
-def ltdle(session: dict, ltdle_data: dict, input: str=""):
+def update_user_data(session, name):
+    with open("ltdle_data/" + name + "/data.json", "w") as f:
+        json.dump(session, f)
+        f.close()
+
+
+def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
     date_now = datetime.now()
-    if datetime.strptime(session["game1"]["last_played"], "%m/%d/%Y")+timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-        session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
-        session["game1"]["game_finished"] = False
-        session["game1"]["game_state"] = 0
-        session["game1"]["guesses"] = []
-        with open("ltdle_data/"+session["name"]+"/data.json", "w") as f:
-            json.dump(session, f)
-            f.close()
-        return ltdle_game1(session, input, ltdle_data)
-    elif not session["game1"]["game_finished"]:
-        return ltdle_game1(session, input, ltdle_data)
-    else:
-        mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
-        timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-        return "You already played todays Legiondle, next reset is "+timestamp+"."
+    match game:
+        case 0:
+            embed = discord.Embed(color=color, title=":exploding_head: **LEGIONDLE** :brain:", description="**Select a game!\nUsing the button below.**")
+            embed.set_thumbnail(url="https://overlay.drachbot.site/ltdle/guesstheunit.png")
+            embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
+            return embed
+        case 1:
+            if datetime.strptime(session["game1"]["last_played"], "%m/%d/%Y")+timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
+                session["game1"]["game_finished"] = False
+                session["game1"]["guesses"] = []
+                update_user_data(session, session["name"])
+                return ltdle_game1(session, input, ltdle_data)
+            elif not session["game1"]["game_finished"]:
+                return ltdle_game1(session, input, ltdle_data)
+            else:
+                mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
+                timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+                return "You already played todays **Guess The Unit**, next reset is "+timestamp+"."
+        case 2:
+            if "game2" not in session:
+                session["game1"]["score"] = session["score"]
+                session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+                update_user_data(session, session["name"])
+            if datetime.strptime(session["game2"]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                session["game2"]["last_played"] = date_now.strftime("%m/%d/%Y")
+                session["game2"]["game_finished"] = False
+                session["game2"]["guesses"] = []
+                session["game2"]["image"] = 0
+                update_user_data(session, session["name"])
+                return ltdle_game2(session, input, ltdle_data)
+            elif not session["game2"]["game_finished"]:
+                session["game2"]["last_played"] = date_now.strftime("%m/%d/%Y")
+                return ltdle_game2(session, input, ltdle_data)
+            else:
+                mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
+                timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+                return "You already played todays **Guess The Leak**, next reset is " + timestamp + "."
+            
 
 def ltdle_leaderboard(daily, avg):
     color = random.randrange(0, 2 ** 24)
@@ -90,6 +118,7 @@ def ltdle_leaderboard(daily, avg):
     embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
     return embed
 
+
 def ltdle_profile(player, avatar):
     color = random.randrange(0, 2 ** 24)
     try:
@@ -106,158 +135,176 @@ def ltdle_profile(player, avatar):
     embed.set_author(name=player.capitalize(), icon_url=avatar)
     return embed
 
+
 def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
-    color = random.randrange(0, 2 ** 24)
-    def update_user_data():
-        with open("ltdle_data/" + session["name"] + "/data.json", "w") as f:
-            json.dump(session, f)
-            f.close()
-    match session["game1"]["game_state"]:
-        case 0:
-            embed = discord.Embed(color=color, description=":exploding_head: **LEGIONDLE** :brain:\n**Enter any unit\nUsing the button below\n:bangbang: Including waves/mercs :bangbang:**")
-            embed.set_thumbnail(url="https://overlay.drachbot.site/ltdle/guesstheunit.png")
-            embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
-            date_now = datetime.now()
-            session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
-            update_user_data()
+    date_now = datetime.now()
+    session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
+    with open('Files/json/units.json', 'r') as f:
+        units_json = json.load(f)
+        f.close()
+    if text_input in util.slang:
+        text_input = util.slang.get(text_input)
+    for u_js in units_json:
+        string = u_js["unitId"]
+        string = string.replace('_', ' ')
+        string = string.replace(' unit id', '')
+        if string == "skyfish": string = "metaldragon"
+        if string.casefold() == text_input.casefold() or util.similar(string, text_input) > 0.9:
+            text_input = string
+            unit_data = u_js
+            break
+    else:
+        return "Unit " + text_input + " not found."
+    if " " in text_input:
+        text_input = text_input.split(" ")
+        new_name = ""
+        for icon_string in text_input:
+            new_name += icon_string.capitalize()
+    else:
+        new_name = text_input.capitalize()
+    output = []
+    output2 = ""
+    correct_count = 0
+    def correct_output(input):
+        return ":green_square:**" + input + "** "
+    def false_output(input):
+        return ":red_square:" + input + " "
+    #attack
+    if unit_data["attackType"] == ltdle_data["game_1_selected_unit"]["attackType"]:
+        output.append(correct_output(unit_data["attackType"]))
+        output2 += ":green_square:"
+        correct_count += 1
+    else:
+        output.append(false_output(unit_data["attackType"]))
+        output2 += ":red_square:"
+    #armor
+    if unit_data["armorType"] == ltdle_data["game_1_selected_unit"]["armorType"]:
+        output.append(correct_output(unit_data["armorType"]))
+        output2 += ":green_square:"
+        correct_count += 1
+    else:
+        output.append(false_output(unit_data["armorType"]))
+        output2 += ":red_square:"
+    #range
+    if unit_data["attackMode"] == ltdle_data["game_1_selected_unit"]["attackMode"]:
+        output.append(correct_output(unit_data["attackMode"]))
+        output2 += ":green_square:"
+        correct_count += 1
+    else:
+        output.append(false_output(unit_data["attackMode"]))
+        output2 += ":red_square:"
+    #legion
+    if unit_data["legionId"].split("_")[0] == "nether":
+        lstring = "Merc"
+    elif unit_data["legionId"].split("_")[0] == "creature":
+        lstring = "Wave"
+    else:
+        lstring = unit_data["legionId"].split("_")[0].capitalize()
+    if unit_data["legionId"] == ltdle_data["game_1_selected_unit"]["legionId"]:
+        output.append(correct_output(lstring))
+        output2 += ":green_square:"
+        correct_count += 1
+    else:
+        output.append(false_output(lstring))
+        output2 += ":red_square:"
+    #upgraded
+    unit_upgraded = unit_data["sortOrder"].split(".")[1].endswith("U")
+    ltdle_unit_upgraded = ltdle_data["game_1_selected_unit"]["sortOrder"].split(".")[1].endswith("U")
+    if lstring == "Merc":
+        ustring = "Merc unit"
+    elif lstring == "Wave":
+        ustring = "Wave unit"
+    elif unit_upgraded:
+        ustring = "Upgraded unit"
+    else:
+        ustring = "Base unit"
+    unit_type = ltdle_data["game_1_selected_unit"]["legionId"].split("_")[0]
+    match ustring:
+        case "Base unit" | "Upgraded unit":
+            if (unit_upgraded == ltdle_unit_upgraded) and (unit_type != "creature" and unit_type != "nether"):
+                output.append(correct_output(ustring))
+                output2 += ":green_square:"
+                correct_count += 1
+            else:
+                output.append(false_output(ustring))
+                output2 += ":red_square:"
+        case "Merc unit":
+            if unit_type == "nether":
+                output.append(correct_output(ustring))
+                output2 += ":green_square:"
+                correct_count += 1
+            else:
+                output.append(false_output(ustring))
+                output2 += ":red_square:"
+        case "Wave unit":
+            if unit_type == "creature":
+                output.append(correct_output(ustring))
+                output2 += ":green_square:"
+                correct_count += 1
+            else:
+                output.append(false_output(ustring))
+                output2 += ":red_square:"
+    if unit_data["unitId"] == ltdle_data["game_1_selected_unit"]["unitId"]:
+        correct_count += 1
+    def create_embed(end_string):
+        embed = discord.Embed(color=color, title="Guess " + str(len(session["game1"]["guesses"])) + ": " + new_name, description="\n".join(output)+"\n\n"+end_string)
+        embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/" + new_name + ".png")
+        return embed
+    session["game1"]["guesses"].append(output2+" "+new_name.replace("PriestessOfTheAbyss", "PotA"))
+    if len(session["game1"]["guesses"]) == 10:
+        session["game1"]["game_finished"] = True
+        session["games_played"] += 1
+        session["game1"]["games_played"] += 1
+        if correct_count < 6:
+            mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
+            timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+            embed = create_embed("You lost :frowning:. Try again next time "+timestamp+"\nYour guess history:\n" + "\n".join(session["game1"]["guesses"]))
+            update_user_data(session, session["name"])
             return embed
-        case 1:
-            with open('Files/json/units.json', 'r') as f:
-                units_json = json.load(f)
-                f.close()
-            if text_input in util.slang:
-                text_input = util.slang.get(text_input)
-            for u_js in units_json:
-                string = u_js["unitId"]
-                string = string.replace('_', ' ')
-                string = string.replace(' unit id', '')
-                if string == "skyfish": string = "metaldragon"
-                if string.casefold() == text_input.casefold() or similar(string, text_input) > 0.9:
-                    text_input = string
-                    unit_data = u_js
-                    break
-            else:
-                return "Unit " + text_input + " not found."
-            if " " in text_input:
-                text_input = text_input.split(" ")
-                new_name = ""
-                for icon_string in text_input:
-                    new_name += icon_string.capitalize()
-            else:
-                new_name = text_input.capitalize()
-            output = []
-            output2 = ""
-            correct_count = 0
-            def correct_output(input):
-                return ":green_square:**" + input + "** "
-            def false_output(input):
-                return ":red_square:" + input + " "
-            #attack
-            if unit_data["attackType"] == ltdle_data["game_1_selected_unit"]["attackType"]:
-                output.append(correct_output(unit_data["attackType"]))
-                output2 += ":green_square:"
-                correct_count += 1
-            else:
-                output.append(false_output(unit_data["attackType"]))
-                output2 += ":red_square:"
-            #armor
-            if unit_data["armorType"] == ltdle_data["game_1_selected_unit"]["armorType"]:
-                output.append(correct_output(unit_data["armorType"]))
-                output2 += ":green_square:"
-                correct_count += 1
-            else:
-                output.append(false_output(unit_data["armorType"]))
-                output2 += ":red_square:"
-            #range
-            if unit_data["attackMode"] == ltdle_data["game_1_selected_unit"]["attackMode"]:
-                output.append(correct_output(unit_data["attackMode"]))
-                output2 += ":green_square:"
-                correct_count += 1
-            else:
-                output.append(false_output(unit_data["attackMode"]))
-                output2 += ":red_square:"
-            #legion
-            if unit_data["legionId"].split("_")[0] == "nether":
-                lstring = "Merc"
-            elif unit_data["legionId"].split("_")[0] == "creature":
-                lstring = "Wave"
-            else:
-                lstring = unit_data["legionId"].split("_")[0].capitalize()
-            if unit_data["legionId"] == ltdle_data["game_1_selected_unit"]["legionId"]:
-                output.append(correct_output(lstring))
-                output2 += ":green_square:"
-                correct_count += 1
-            else:
-                output.append(false_output(lstring))
-                output2 += ":red_square:"
-            #upgraded
-            unit_upgraded = unit_data["sortOrder"].split(".")[1].endswith("U")
-            ltdle_unit_upgraded = ltdle_data["game_1_selected_unit"]["sortOrder"].split(".")[1].endswith("U")
-            if lstring == "Merc":
-                ustring = "Merc unit"
-            elif lstring == "Wave":
-                ustring = "Wave unit"
-            elif unit_upgraded:
-                ustring = "Upgraded unit"
-            else:
-                ustring = "Base unit"
-            unit_type = ltdle_data["game_1_selected_unit"]["legionId"].split("_")[0]
-            match ustring:
-                case "Base unit" | "Upgraded unit":
-                    if (unit_upgraded == ltdle_unit_upgraded) and (unit_type != "creature" and unit_type != "nether"):
-                        output.append(correct_output(ustring))
-                        output2 += ":green_square:"
-                        correct_count += 1
-                    else:
-                        output.append(false_output(ustring))
-                        output2 += ":red_square:"
-                case "Merc unit":
-                    if unit_type == "nether":
-                        output.append(correct_output(ustring))
-                        output2 += ":green_square:"
-                        correct_count += 1
-                    else:
-                        output.append(false_output(ustring))
-                        output2 += ":red_square:"
-                case "Wave unit":
-                    if unit_type == "creature":
-                        output.append(correct_output(ustring))
-                        output2 += ":green_square:"
-                        correct_count += 1
-                    else:
-                        output.append(false_output(ustring))
-                        output2 += ":red_square:"
-            if unit_data["unitId"] == ltdle_data["game_1_selected_unit"]["unitId"]:
-                correct_count += 1
-            def create_embed(end_string):
-                embed = discord.Embed(color=color, title="Guess " + str(len(session["game1"]["guesses"])) + ": " + new_name, description="\n".join(output)+"\n\n"+end_string)
-                embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/" + new_name + ".png")
-                return embed
-            session["game1"]["guesses"].append(output2+" "+new_name.replace("PriestessOfTheAbyss", "PotA"))
-            if len(session["game1"]["guesses"]) == 10:
-                session["game1"]["game_finished"] = True
-                session["games_played"] += 1
-                if correct_count < 6:
-                    mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
-                    timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-                    embed = create_embed("You lost :frowning:. Try again next time "+timestamp+"\nYour guess history:\n" + "\n".join(session["game1"]["guesses"]))
-                    session["game1"]["game_state"] = 0
-                    update_user_data()
-                    return embed
-            if correct_count == 6:
-                print(session["name"]+ " found the right unit!")
-                session["game1"]["game_finished"] = True
-                session["score"] += 11 - len(session["game1"]["guesses"])
-                embed = create_embed("**You guessed the correct unit! Yay!**(+"+str(11 - len(session["game1"]["guesses"]))+" points)\nYour guess history:\n"+"\n".join(session["game1"]["guesses"]))
-                session["games_played"] += 1
-                session["game1"]["game_state"] = 0
-                update_user_data()
-                return [embed]
-            else:
-                embed = create_embed("**Try another unit**")
-                session["game1"]["game_state"] = 0
-                update_user_data()
-                return embed
+    if correct_count == 6:
+        print(session["name"]+ " found the right unit!")
+        session["game1"]["game_finished"] = True
+        session["game1"]["score"] += 11 - len(session["game1"]["guesses"])
+        session["score"] += 11 - len(session["game1"]["guesses"])
+        embed = create_embed("**You guessed the correct unit! Yay!**(+"+str(11 - len(session["game1"]["guesses"]))+" points)\nYour guess history:\n"+"\n".join(session["game1"]["guesses"]))
+        session["games_played"] += 1
+        session["game1"]["games_played"] += 1
+        update_user_data(session, session["name"])
+        return [embed]
+    else:
+        embed = create_embed("**Try another unit**")
+        update_user_data(session, session["name"])
+        return embed
+
+
+def ltdle_game2(session: dict, input: str, ltdle_data: dict):
+    image_index = session["game2"]["image"]
+    def embed1(image):
+        embed = discord.Embed(color=color, title="Guess The Leak", description="Enter a leak amount. (Whole Number)")
+        file = discord.File(image, filename=image.split("/")[-1])
+        embed.set_image(url="attachment://"+image.split("/")[-1])
+        return [file, embed]
+    def embed2(image, points):
+        embed = discord.Embed(color=color, title="Your guess: "+str(input)+"%")
+        file = discord.File(image, filename=image.split("/")[-1])
+        embed.set_image(url="attachment://"+image.split("/")[-1])
+        embed.add_field(name="You got "+str(points)+" points!", value="")
+        return [file, embed, ""]
+    if image_index == 0:
+        return embed1(ltdle_data["game_2_selected_leak"][0][4])
+    else:
+        points = round(10-abs(ltdle_data["game_2_selected_leak"][0][3]-input)/10)
+        if points < 0: points = 0
+        session["game2"]["image"] += 1
+        session["score"] += points
+        session["game2"]["score"] += points
+        session["games_played"] += 1
+        session["game2"]["games_played"] += 1
+        session["game2"]["game_finished"] = True
+        session["game2"]["guesses"].append(input)
+        update_user_data(session, session["name"])
+        return embed2(ltdle_data["game_2_selected_leak"][0][4].replace(".png", "_covered.png"), points)
+        
 
 class UnitInput(ui.Modal, title='Enter a unit!'):
     answer = ui.TextInput(label='Unit', style=discord.TextStyle.short)
@@ -274,8 +321,7 @@ class UnitInput(ui.Modal, title='Enter a unit!'):
                 with open("ltdle_data/ltdle.json", "r") as f:
                     ltdle_data = json.load(f)
                     f.close()
-                data["game1"]["game_state"] = 1
-                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, input=self.answer.value))
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 1, input=self.answer.value))
                 pool.shutdown()
                 if type(response) == discord.Embed:
                     await interaction.channel.send(embed=response, view=ModalButton())
@@ -285,6 +331,38 @@ class UnitInput(ui.Modal, title='Enter a unit!'):
                     await interaction.channel.send(response)
         except Exception:
             traceback.print_exc()
+
+
+class LeakInput(ui.Modal, title='Enter a Leak!'):
+    answer = ui.TextInput(label='Leak (Whole Number without %)', style=discord.TextStyle.short, max_length=3)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            input = int(self.answer.value)
+        except Exception:
+            interaction.response.send("Invalid input, try again.")
+            return
+        await interaction.response.defer()
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                with open(path + "/data.json", "r") as f:
+                    data = json.load(f)
+                    f.close()
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                data["game2"]["image"] += 1
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 2, input=input))
+                pool.shutdown()
+                if type(response) == list:
+                    await interaction.channel.send(file=response[0], embed=response[1])
+                else:
+                    await interaction.channel.send(response)
+        except Exception:
+            traceback.print_exc()
+
 
 class ModalButton(discord.ui.View):
     def __init__(self):
@@ -296,6 +374,55 @@ class ModalButton(discord.ui.View):
             await interaction.response.send_modal(UnitInput())
         except Exception:
             traceback.print_exc()
+            
+class ModalLeakButton(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label='Enter Leak', style=discord.ButtonStyle.green, custom_id='persistent_view:modalLeak')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.send_modal(LeakInput())
+        except Exception:
+            traceback.print_exc()
+            
+
+class GameSelectionButtons(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label='Guess The Unit', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game1', emoji="❓")
+    async def callback1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.send_modal(UnitInput())
+        except Exception:
+            traceback.print_exc()
+    
+    @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="🤦‍♂️")
+    async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                with open(path + "/data.json", "r") as f:
+                    data = json.load(f)
+                    f.close()
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 2))
+                pool.shutdown()
+                if type(response) == list:
+                    if len(response) == 2:
+                        await interaction.channel.send(file=response[0], embed=response[1], view=ModalLeakButton())
+                    else:
+                        await interaction.channel.send(file=response[0], embed=response[1])
+                else:
+                    await interaction.channel.send(response)
+        except Exception:
+            traceback.print_exc()
+
 
 class Legiondle(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -365,7 +492,8 @@ class Legiondle(commands.Cog):
                     Path(str(path)).mkdir(parents=True, exist_ok=True)
                     with open(path + "/data.json", "w") as f:
                         date_now = datetime.now()
-                        data = {"name": interaction.user.name, "score": 0, "games_played": 0, "game1": {"last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "game_state": 0, "guesses": []}}
+                        data = {"name": interaction.user.name, "score": 0, "games_played": 0, "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
+                                "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
                         json.dump(data, f)
                         f.close()
                 else:
@@ -375,10 +503,10 @@ class Legiondle(commands.Cog):
                 with open("ltdle_data/ltdle.json", "r") as f:
                     ltdle_data = json.load(f)
                     f.close()
-                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data))
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 0))
                 pool.shutdown()
                 if type(response) == discord.Embed:
-                    await interaction.followup.send(embed=response, view=ModalButton())
+                    await interaction.followup.send(embed=response, view=GameSelectionButtons())
                 else:
                     await interaction.followup.send(response)
             except Exception:
@@ -386,5 +514,7 @@ class Legiondle(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
-async def setup(bot:commands.Bot):
+
+async def setup(bot: commands.Bot):
     await bot.add_cog(Legiondle(bot))
+    
