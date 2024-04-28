@@ -33,6 +33,11 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
             embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
             return embed
         case 1:
+            if "game2" not in session:
+                session["game1"]["score"] = session["score"]
+                session["game1"]["games_played"] = session["games_played"]
+                session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+                update_user_data(session, session["name"])
             if datetime.strptime(session["game1"]["last_played"], "%m/%d/%Y")+timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                 session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
                 session["game1"]["game_finished"] = False
@@ -48,6 +53,7 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
         case 2:
             if "game2" not in session:
                 session["game1"]["score"] = session["score"]
+                session["game1"]["games_played"] = session["games_played"]
                 session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
                 update_user_data(session, session["name"])
             if datetime.strptime(session["game2"]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
@@ -83,6 +89,10 @@ def ltdle_leaderboard(daily, avg):
                 if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y")-timedelta(days=1):
                     if p_data["game1"]["game_finished"] == True:
                         daily_score = 11-len(p_data["game1"]["guesses"])
+                        try:
+                            daily_score += p_data["game2"]["score"]
+                        except Exception:
+                            pass
                         scores.append((p_data["name"].capitalize().replace("_", ""), daily_score))
         else:
             try: avg_pts = p_data["score"]/p_data["games_played"]
@@ -245,9 +255,12 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
                 output.append(false_output(ustring))
                 output2 += ":red_square:"
     if unit_data["unitId"] == ltdle_data["game_1_selected_unit"]["unitId"]:
+        unit_name_string = " :green_square:"
         correct_count += 1
+    else:
+        unit_name_string = " :red_square:"
     def create_embed(end_string):
-        embed = discord.Embed(color=color, title="Guess " + str(len(session["game1"]["guesses"])) + ": " + new_name, description="\n".join(output)+"\n\n"+end_string)
+        embed = discord.Embed(color=color, title="Guess " + str(len(session["game1"]["guesses"])) + ": " + new_name+unit_name_string, description="\n".join(output)+"\n\n"+end_string)
         embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/" + new_name + ".png")
         return embed
     session["game1"]["guesses"].append(output2+" "+new_name.replace("PriestessOfTheAbyss", "PotA"))
@@ -303,6 +316,7 @@ def ltdle_game2(session: dict, input: str, ltdle_data: dict):
         session["game2"]["game_finished"] = True
         session["game2"]["guesses"].append(input)
         update_user_data(session, session["name"])
+        print(session["name"]+ " played guess the leak.")
         return embed2(ltdle_data["game_2_selected_leak"][0][4].replace(".png", "_covered.png"), points)
         
 
@@ -374,6 +388,7 @@ class ModalButton(discord.ui.View):
             await interaction.response.send_modal(UnitInput())
         except Exception:
             traceback.print_exc()
+            
             
 class ModalLeakButton(discord.ui.View):
     def __init__(self):
