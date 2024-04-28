@@ -88,18 +88,27 @@ def ltdle_leaderboard(daily, avg):
             if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                 if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y")-timedelta(days=1):
                     if p_data["game1"]["game_finished"] == True:
-                        daily_score = 11-len(p_data["game1"]["guesses"])
-                        try:
-                            daily_score += p_data["game2"]["score"]
-                        except Exception:
-                            pass
-                        scores.append((p_data["name"].capitalize().replace("_", ""), daily_score))
+                        daily_score1 = 11-len(p_data["game1"]["guesses"])
+                    else:
+                        daily_score1 = 0
+                    try:
+                        if p_data["game2"]["game_finished"] == True:
+                            daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][0][3]-p_data["game2"]["guesses"][0])/10)
+                        else:
+                            daily_score2 = 0
+                    except Exception:
+                        daily_score2 = 0
+                        pass
+                    scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2))
         else:
             try: avg_pts = p_data["score"]/p_data["games_played"]
             except ZeroDivisionError: avg_pts = 0
             scores.append((p_data["name"].capitalize().replace("_", ""), p_data["score"], p_data["games_played"], avg_pts))
+            
     if avg:
         scores = sorted(scores, key=lambda x: x[3], reverse=True)
+    if daily:
+        scores = sorted(scores, key=lambda x: x[1]+x[2], reverse=True)
     else:
         scores = sorted(scores, key=lambda x: x[1], reverse=True)
     output = ""
@@ -115,15 +124,15 @@ def ltdle_leaderboard(daily, avg):
         else:
             ranked_emote = util.get_ranked_emote(2200)
         if daily:
-            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts " + "\n"
+            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]) + "pts ("+str(pscore[1])+", "+str(pscore[2])+ ")\n"
         else:
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
     if daily:
-        title = "Legiondle Daily Leaderboard"
+        title = "Legiondle Daily Leaderboard:"
     elif avg:
-        title = "Legiondle Avg Leaderboard"
+        title = "Legiondle Avg Leaderboard:"
     else:
-        title = "Legiondle Leaderboard"
+        title = "Legiondle Leaderboard:"
     embed = discord.Embed(color=color, title=title, description="**"+output+"**")
     embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
     return embed
