@@ -13,14 +13,14 @@ import json_db
 import util
 import legion_api
 
-def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0):
+def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
         if u_js["totalValue"] != '':
-            if u_js["unitId"] and int(u_js["totalValue"]) > min_cost: #and (u_js["sortOrder"].split(".")[1].endswith("U") or u_js["sortOrder"].split(".")[1].endswith("U2") or "neko" in u_js["unitId"]):
+            if u_js["unitId"] and min_cost <= int(u_js["totalValue"]) <= max_cost: #and (u_js["sortOrder"].split(".")[1].endswith("U") or u_js["sortOrder"].split(".")[1].endswith("U2") or "neko" in u_js["unitId"]):
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
@@ -123,12 +123,12 @@ class Unitstats(commands.Cog):
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            sort="Sort by?", unit="Fighter name for specific stats, or 'all' for all Spells.",
-                           min_cost="Min Gold cost of a unit.")
+                           min_cost="Min Gold cost of a unit.", max_cost="Max Gold cost of a unit.")
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0):
+    async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0, max_cost: int = 2000):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -139,7 +139,7 @@ class Unitstats(commands.Cog):
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(unitstats, str(playername).lower(), games, min_elo, patch, sort=sort, unit=unit, min_cost=min_cost))
+                response = await loop.run_in_executor(pool, functools.partial(unitstats, str(playername).lower(), games, min_elo, patch, sort=sort, unit=unit, min_cost=min_cost, max_cost=max_cost))
                 pool.shutdown()
                 if response.endswith(".png"):
                     await interaction.followup.send(file=discord.File(response))
