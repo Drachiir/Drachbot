@@ -51,7 +51,7 @@ def reset(self):
                         if player["leakValue"] > 0:
                             for wave, leak in enumerate(player["leaksPerWave"]):
                                 if len(leak) > 0:
-                                    if wave == 9 or wave == 19:
+                                    if wave == 0 or wave == 9 or wave == 19:
                                         continue
                                     leaks_list.append([game_data["_id"], index, wave, util.calc_leak(leak, wave)])
                     if len(leaks_list) > 0:

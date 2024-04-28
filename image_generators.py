@@ -238,105 +238,103 @@ def gameid_visualizer_singleplayer(gameid, start_wave, player_index):
     player_dict[player["playerName"]] = {"avatar_url": legion_api.getprofile(player["playerId"])["avatarUrl"],
                                          "roll": player["rolls"].replace(" ", "").split(","), "legion": player["legion"], "elo": player["overallElo"],
                                          "elo_change": player["eloChange"]}
-    waves = [start_wave]
+    wave = start_wave
     first = True
-    for wave in waves:
-        mode = 'RGB'
-        colors = (30, 30, 30)
-        x = 10
-        y = 350
-        box_size = 64
-        line_width = 3
-        offset = box_size + line_width
-        im = PIL.Image.new(mode=mode, size=(20+offset*9, 1750), color=colors)
-        horz_line = PIL.Image.new(mode="RGB", size=(box_size*9+line_width*10, line_width), color=(155, 155, 155))
-        vert_line = PIL.Image.new(mode="RGB", size=(line_width, box_size*14+line_width*15), color=(155, 155, 155))
-        I1 = ImageDraw.Draw(im)
-        ttf = 'Files/RobotoCondensed-Regular.ttf'
-        myFont_small = ImageFont.truetype(ttf, 40)
-        myFont_title = ImageFont.truetype(ttf, 60)
-        y2 = 125
-        im.paste(Image.open(open("Files/Waves/Wave"+str(wave+1)+".png", "rb")), (10,10))
-        I1.text((80, 10), "Wave "+str(wave+1), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        #player
-        av_image = util.get_icons_image("avatar", player_dict[player["playerName"]]["avatar_url"])
-        if util.im_has_alpha(np.array(av_image)):
-            im.paste(av_image, (x, y2), mask=av_image)
-        else:
-            im.paste(av_image, (x, y2))
-        I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
-        if wave > 9:
-            im.paste(util.get_icons_image("icon_send", player["chosenSpell"].replace(" ", "")), (x+500, y2))
-        try:
-            im.paste(util.get_icons_image("legion", player_dict[player["playerName"]]["legion"]), (x, y2+80))
-        except FileNotFoundError:
-            im.paste(util.get_icons_image("icon", player_dict[player["playerName"]]["legion"]), (x, y2 + 80))
-        if len(player_dict[player["playerName"]]["roll"]) > 1:
-            for c, unit in enumerate(player_dict[player["playerName"]]["roll"]):
-                im.paste(util.get_icons_image("icon", unit.replace("_unit_id", "")), (x+offset+16+(offset*c), y2 + 80))
-        for i in range(15):
-            im.paste(horz_line, (x,y+offset*i))
-        for i in range(10):
-            im.paste(vert_line, (x+offset*i,y))
-        build_per_wave = player["buildPerWave"][wave]
-        value = 0
-        for unit2 in build_per_wave:
-            unit2_list = unit2.split(":")
-            unit2_name = unit2_list[0]
-            for unitjson in units_dict:
-                if unitjson["unitId"] == unit2_name:
-                    value += int(unitjson["totalValue"])
-            unit2 = unit2.split("_unit_id:")
-            unit_x = float(unit2[1].split("|")[0])-0.5
-            unit_y = 14-float(unit2[1].split("|")[1].split(":")[0])-0.5
-            unit_stacks = unit2[1].split("|")[1].split(":")[1]
-            im.paste(util.get_icons_image("icon", unit2[0]), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
-            if player["chosenSpellLocation"] != "-1|-1":
-                if unit2_list[1] == player["chosenSpellLocation"] and wave > 9:
-                    im.paste(util.get_icons_image("icon", player["chosenSpell"]).resize((28,28)),(int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
-        im.paste(util.get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=util.get_icons_image("icon", "Value32").resize((64,64)))
-        I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
-        im.paste(util.get_icons_image("icon", "Worker"), (x+230, y2 + 150))
-        I1.text((x + 300, y2 + 160), str(round(player["workersPerWave"][wave], 1)), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        im.paste(util.get_icons_image("icon", "Income").resize((64,64)), (x + 450, y2 + 150), mask=util.get_icons_image("icon", "Income").resize((64,64)))
-        I1.text((x + 520, y2 + 160), str(round(player["incomePerWave"][wave], 1)), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        im.paste(util.get_icons_image("icon", "Mythium32").resize((64, 64)), (x, y+20+offset*14),mask=util.get_icons_image("icon", "Mythium32").resize((64, 64)))
-        I1.text((x+70, y+20+offset*14), str(util.count_mythium(player["mercenariesReceivedPerWave"][wave])+len(player["opponentKingUpgradesPerWave"][wave])*20), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        send_count = 0
-        for send in player["mercenariesReceivedPerWave"][wave]:
-            if send_count < 9:
-                im.paste(util.get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
-            elif send_count >= 9:
-                im.paste(util.get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
-            elif send_count >18:
-                break
-            send_count += 1
-        for send in player["opponentKingUpgradesPerWave"][wave]:
-            if send_count < 9:
-                im.paste(util.get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
-            elif send_count >= 9:
-                im.paste(util.get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
-            elif send_count >18:
-                break
-            send_count += 1
-        im.paste(util.get_icons_image("icon", "Leaked"), (x, y+220+offset*14))
-        leak = util.calc_leak(player["leaksPerWave"][wave], wave)
-        if leak > 0:
-            I1.text((x+offset, y+220+offset*14), str(leak)+"%", font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        leak_count = 0
-        for leak in player["leaksPerWave"][wave]:
-            if leak_count < 9:
-                im.paste(util.get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * leak_count, y + 225 + offset * 15))
-            elif leak_count >= 9:
-                im.paste(util.get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * (leak_count - 9), y + 225 + offset * 16))
-            elif leak_count > 18:
-                break
-            leak_count += 1
-        image_id = util.id_generator()
-        im2 = im.crop((0, 0, 20 + offset * 9, 1508))
-        im2.save(shared_folder+image_id+'.png')
-        im3 = im.crop((0,1508,20+offset*9, 1750))
-        im3.save(shared_folder + image_id + '_covered.png')
-        image_link = shared_folder+image_id+'.png'
-        
+    mode = 'RGB'
+    colors = (30, 30, 30)
+    x = 10
+    y = 350
+    box_size = 64
+    line_width = 3
+    offset = box_size + line_width
+    im = PIL.Image.new(mode=mode, size=(20+offset*9, 1750), color=colors)
+    horz_line = PIL.Image.new(mode="RGB", size=(box_size*9+line_width*10, line_width), color=(155, 155, 155))
+    vert_line = PIL.Image.new(mode="RGB", size=(line_width, box_size*14+line_width*15), color=(155, 155, 155))
+    I1 = ImageDraw.Draw(im)
+    ttf = 'Files/RobotoCondensed-Regular.ttf'
+    myFont_small = ImageFont.truetype(ttf, 40)
+    myFont_title = ImageFont.truetype(ttf, 60)
+    y2 = 125
+    im.paste(Image.open(open("Files/Waves/Wave"+str(wave+1)+".png", "rb")), (10,10))
+    I1.text((80, 10), "Wave "+str(wave+1), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    #player
+    av_image = util.get_icons_image("avatar", player_dict[player["playerName"]]["avatar_url"])
+    if util.im_has_alpha(np.array(av_image)):
+        im.paste(av_image, (x, y2), mask=av_image)
+    else:
+        im.paste(av_image, (x, y2))
+    I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
+    if wave > 9:
+        im.paste(util.get_icons_image("icon_send", player["chosenSpell"].replace(" ", "")), (x+500, y2))
+    try:
+        im.paste(util.get_icons_image("legion", player_dict[player["playerName"]]["legion"]), (x, y2+80))
+    except FileNotFoundError:
+        im.paste(util.get_icons_image("icon", player_dict[player["playerName"]]["legion"]), (x, y2 + 80))
+    if len(player_dict[player["playerName"]]["roll"]) > 1:
+        for c, unit in enumerate(player_dict[player["playerName"]]["roll"]):
+            im.paste(util.get_icons_image("icon", unit.replace("_unit_id", "")), (x+offset+16+(offset*c), y2 + 80))
+    for i in range(15):
+        im.paste(horz_line, (x,y+offset*i))
+    for i in range(10):
+        im.paste(vert_line, (x+offset*i,y))
+    build_per_wave = player["buildPerWave"][wave]
+    value = 0
+    for unit2 in build_per_wave:
+        unit2_list = unit2.split(":")
+        unit2_name = unit2_list[0]
+        for unitjson in units_dict:
+            if unitjson["unitId"] == unit2_name:
+                value += int(unitjson["totalValue"])
+        unit2 = unit2.split("_unit_id:")
+        unit_x = float(unit2[1].split("|")[0])-0.5
+        unit_y = 14-float(unit2[1].split("|")[1].split(":")[0])-0.5
+        unit_stacks = unit2[1].split("|")[1].split(":")[1]
+        im.paste(util.get_icons_image("icon", unit2[0]), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+        if player["chosenSpellLocation"] != "-1|-1":
+            if unit2_list[1] == player["chosenSpellLocation"] and wave > 9:
+                im.paste(util.get_icons_image("icon", player["chosenSpell"]).resize((28,28)),(int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+    im.paste(util.get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=util.get_icons_image("icon", "Value32").resize((64,64)))
+    I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
+    im.paste(util.get_icons_image("icon", "Worker"), (x+230, y2 + 150))
+    I1.text((x + 300, y2 + 160), str(round(player["workersPerWave"][wave-1], 1)), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    im.paste(util.get_icons_image("icon", "Income").resize((64,64)), (x + 450, y2 + 150), mask=util.get_icons_image("icon", "Income").resize((64,64)))
+    I1.text((x + 520, y2 + 160), str(round(player["incomePerWave"][wave-1], 1)), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    im.paste(util.get_icons_image("icon", "Mythium32").resize((64, 64)), (x, y+20+offset*14),mask=util.get_icons_image("icon", "Mythium32").resize((64, 64)))
+    I1.text((x+70, y+20+offset*14), str(util.count_mythium(player["mercenariesReceivedPerWave"][wave])+len(player["opponentKingUpgradesPerWave"][wave])*20), font=myFont_small,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    send_count = 0
+    for send in player["mercenariesReceivedPerWave"][wave]:
+        if send_count < 9:
+            im.paste(util.get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
+        elif send_count >= 9:
+            im.paste(util.get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
+        elif send_count >18:
+            break
+        send_count += 1
+    for send in player["opponentKingUpgradesPerWave"][wave]:
+        if send_count < 9:
+            im.paste(util.get_icons_image("icon_send", send.replace(" ", "")), (x+offset*send_count, y+20+offset*15))
+        elif send_count >= 9:
+            im.paste(util.get_icons_image("icon_send", send.replace(" ", "")),(x + offset * (send_count-9), y + 20 + offset * 16))
+        elif send_count >18:
+            break
+        send_count += 1
+    im.paste(util.get_icons_image("icon", "Leaked"), (x, y+220+offset*14))
+    leak = util.calc_leak(player["leaksPerWave"][wave], wave)
+    if leak > 0:
+        I1.text((x+offset, y+220+offset*14), str(leak)+"%", font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    leak_count = 0
+    for leak in player["leaksPerWave"][wave]:
+        if leak_count < 9:
+            im.paste(util.get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * leak_count, y + 225 + offset * 15))
+        elif leak_count >= 9:
+            im.paste(util.get_icons_image("icon_send", leak.replace(" ", "")),(x + offset * (leak_count - 9), y + 225 + offset * 16))
+        elif leak_count > 18:
+            break
+        leak_count += 1
+    image_id = util.id_generator()
+    im2 = im.crop((0, 0, 20 + offset * 9, 1508))
+    im2.save(shared_folder+image_id+'.png')
+    im3 = im.crop((0,1508,20+offset*9, 1750))
+    im3.save(shared_folder + image_id + '_covered.png')
+    image_link = shared_folder+image_id+'.png'
     return image_link

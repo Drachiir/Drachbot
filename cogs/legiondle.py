@@ -148,10 +148,17 @@ def ltdle_profile(player, avatar):
         return "No Legiondle profile found for "+player
     if p_data["games_played"] == 0:
         return "No games played."
-    embed = discord.Embed(color=color, title="Legiondle Profile", description="**Games played: " +str(p_data["games_played"])+
-                                                                              "\nPoints: "+str(p_data["score"])+
-                                                                              "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points**")
-    embed.set_author(name=player.capitalize(), icon_url=avatar)
+    embed = discord.Embed(color=color, title="Legiondle Profile")
+    embed.add_field(name="Total stats:", value="Games played: " +str(p_data["games_played"])+
+                                            "\nPoints: "+str(p_data["score"])+
+                                            "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points", inline=False)
+    embed.add_field(name="Guess The Unit:question:", value="Games played: " +str(p_data["game1"]["games_played"])+
+                                                "\nPoints: "+str(p_data["game1"]["score"])+
+                                                "\nAvg: "+str(round(p_data["game1"]["score"]/p_data["game1"]["games_played"],1))+" points", inline=True)
+    embed.add_field(name="Guess The Leak:grimacing:", value="Games played: " + str(p_data["game2"]["games_played"]) +
+                                                  "\nPoints: " + str(p_data["game2"]["score"]) +
+                                                  "\nAvg: " + str(round(p_data["game2"]["score"] / p_data["game2"]["games_played"], 1)) + " points", inline=True)
+    embed.set_author(name=player.capitalize()+"'s", icon_url=avatar)
     return embed
 
 
@@ -302,12 +309,12 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
 def ltdle_game2(session: dict, input: str, ltdle_data: dict):
     image_index = session["game2"]["image"]
     def embed1(image):
-        embed = discord.Embed(color=color, title="Guess The Leak", description="Enter a leak amount. (Whole Number)")
+        embed = discord.Embed(color=color, title="Guess The Leak", description="Enter a leak amount. (Whole Number)", url="https://overlay.drachbot.site"+image.replace("shared", ""))
         file = discord.File(image, filename=image.split("/")[-1])
         embed.set_image(url="attachment://"+image.split("/")[-1])
         return [file, embed]
     def embed2(image, points):
-        embed = discord.Embed(color=color, title="Your guess: "+str(input)+"%")
+        embed = discord.Embed(color=color, title="Your guess: "+str(input)+"%", url="https://overlay.drachbot.site"+image.replace("shared", ""))
         file = discord.File(image, filename=image.split("/")[-1])
         embed.set_image(url="attachment://"+image.split("/")[-1])
         embed.add_field(name="You got "+str(points)+" points!", value="")
@@ -422,7 +429,7 @@ class GameSelectionButtons(discord.ui.View):
         except Exception:
             traceback.print_exc()
     
-    @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="🤦‍♂️")
+    @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="😬")
     async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         try:
