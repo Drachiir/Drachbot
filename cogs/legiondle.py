@@ -462,20 +462,54 @@ class Legiondle(commands.Cog):
         self.client = client
     
     @app_commands.command(name="legiondle", description="Legion themed Wordle-type game.")
-    @app_commands.describe(option="Select an option.")
+    async def legiondle(self, interaction: discord.Interaction):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            try:
+                if interaction.guild != None:
+                    await interaction.response.send_message("This command only works in DMs with Drachbot.", ephemeral=True)
+                    return
+                await interaction.response.defer(ephemeral=False, thinking=True)
+                path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                if not Path(Path(str(path))).is_dir():
+                    print(interaction.user.name + ' ltdle profile not found, creating new folder...')
+                    Path(str(path)).mkdir(parents=True, exist_ok=True)
+                    with open(path + "/data.json", "w") as f:
+                        date_now = datetime.now()
+                        data = {"name": interaction.user.name, "score": 0, "games_played": 0, "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
+                                "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
+                        json.dump(data, f)
+                        f.close()
+                else:
+                    with open(path + "/data.json", "r") as f:
+                        data = json.load(f)
+                        f.close()
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 0))
+                pool.shutdown()
+                if type(response) == discord.Embed:
+                    await interaction.followup.send(embed=response, view=GameSelectionButtons())
+                else:
+                    await interaction.followup.send(response)
+            except Exception:
+                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
+                traceback.print_exc()
+                await interaction.followup.send("Bot error :sob:")
+    
+    @app_commands.command(name="legiondle-stats", description="Stats for Legiondle.")
+    @app_commands.describe(option="Select an option.", name="Only for profile, has to be actual discord name, not display name.")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
         discord.app_commands.Choice(name='Avg Leaderboard', value='Avg Leaderboard'),
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
-    async def legiondle(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str] = ""):
+    async def legiondle(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: str=""):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
-                if interaction.guild != None and option == "":
-                    await interaction.response.send_message("This command only works in DMs with Drachbot.", ephemeral=True)
-                    return
                 await interaction.response.defer(ephemeral=False, thinking=True)
                 try:
                     option = option.value
@@ -507,41 +541,22 @@ class Legiondle(commands.Cog):
                             await interaction.followup.send(response)
                         return
                     case "Profile":
+                        if name != "":
+                            username = name
+                        else:
+                            username = interaction.user.name
                         avatar = interaction.user.avatar
                         if avatar != None:
                             avatar = avatar.url
                         else:
                             avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_profile, interaction.user.name, avatar))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_profile, username, avatar))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             await interaction.followup.send(embed=response)
                         else:
                             await interaction.followup.send(response)
                         return
-                path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
-                if not Path(Path(str(path))).is_dir():
-                    print(interaction.user.name + ' ltdle profile not found, creating new folder...')
-                    Path(str(path)).mkdir(parents=True, exist_ok=True)
-                    with open(path + "/data.json", "w") as f:
-                        date_now = datetime.now()
-                        data = {"name": interaction.user.name, "score": 0, "games_played": 0, "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
-                                "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
-                        json.dump(data, f)
-                        f.close()
-                else:
-                    with open(path + "/data.json", "r") as f:
-                        data = json.load(f)
-                        f.close()
-                with open("ltdle_data/ltdle.json", "r") as f:
-                    ltdle_data = json.load(f)
-                    f.close()
-                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 0))
-                pool.shutdown()
-                if type(response) == discord.Embed:
-                    await interaction.followup.send(embed=response, view=GameSelectionButtons())
-                else:
-                    await interaction.followup.send(response)
             except Exception:
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
