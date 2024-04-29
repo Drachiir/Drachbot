@@ -123,7 +123,15 @@ def ltdle_leaderboard(daily, avg):
                     except Exception:
                         daily_score2 = 0
                         pass
-                    scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2))
+                    try:
+                        if p_data["game3"]["game_finished"] == True:
+                            daily_score3 = round(10-abs(ltdle_data["game_3_selected_game"][2]-p_data["game3"]["guesses"][0])/75)
+                        else:
+                            daily_score3 = 0
+                    except Exception:
+                        daily_score3 = 0
+                        pass
+                    scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2, daily_score3))
         else:
             try: avg_pts = p_data["score"]/p_data["games_played"]
             except ZeroDivisionError: avg_pts = 0
@@ -132,7 +140,7 @@ def ltdle_leaderboard(daily, avg):
     if avg:
         scores = sorted(scores, key=lambda x: x[3], reverse=True)
     elif daily:
-        scores = sorted(scores, key=lambda x: x[1]+x[2], reverse=True)
+        scores = sorted(scores, key=lambda x: x[1]+x[2]+x[3], reverse=True)
     else:
         scores = sorted(scores, key=lambda x: x[1], reverse=True)
     output = ""
@@ -148,7 +156,7 @@ def ltdle_leaderboard(daily, avg):
         else:
             ranked_emote = util.get_ranked_emote(2200)
         if daily:
-            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]) + "pts ("+str(pscore[1])+", "+str(pscore[2])+ ")\n"
+            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]) + "pts ("+str(pscore[1])+", "+str(pscore[2]) +", "+str(pscore[3])+ ")\n"
         else:
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
     if daily:
@@ -176,12 +184,24 @@ def ltdle_profile(player, avatar):
     embed.add_field(name="Total stats:", value="Games played: " +str(p_data["games_played"])+
                                             "\nPoints: "+str(p_data["score"])+
                                             "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points", inline=True)
-    embed.add_field(name="Guess The Unit:question:", value="Games played: " +str(p_data["game1"]["games_played"])+
-                                                "\nPoints: "+str(p_data["game1"]["score"])+
-                                                "\nAvg: "+str(round(p_data["game1"]["score"]/p_data["game1"]["games_played"],1))+" points", inline=True)
-    embed.add_field(name="Guess The Leak:grimacing:", value="Games played: " + str(p_data["game2"]["games_played"]) +
-                                                  "\nPoints: " + str(p_data["game2"]["score"]) +
-                                                  "\nAvg: " + str(round(p_data["game2"]["score"] / p_data["game2"]["games_played"], 1)) + " points", inline=False)
+    try:
+        embed.add_field(name="Guess The Unit:question:", value="Games played: " +str(p_data["game1"]["games_played"])+
+                                                    "\nPoints: "+str(p_data["game1"]["score"])+
+                                                    "\nAvg: "+str(round(p_data["game1"]["score"]/p_data["game1"]["games_played"],1))+" points", inline=True)
+    except Exception:
+        pass
+    try:
+        embed.add_field(name="Guess The Leak:grimacing:", value="Games played: " + str(p_data["game2"]["games_played"]) +
+                                                      "\nPoints: " + str(p_data["game2"]["score"]) +
+                                                      "\nAvg: " + str(round(p_data["game2"]["score"] / p_data["game2"]["games_played"], 1)) + " points", inline=True)
+    except Exception:
+        pass
+    try:
+        embed.add_field(name="Guess The Elo:gem:", value="Games played: " + str(p_data["game3"]["games_played"]) +
+                                                                "\nPoints: " + str(p_data["game3"]["score"]) +
+                                                                "\nAvg: " + str(round(p_data["game3"]["score"] / p_data["game3"]["games_played"], 1)) + " points", inline=True)
+    except Exception:
+        pass
     embed.set_author(name=player.capitalize()+"'s", icon_url=avatar)
     return embed
 
