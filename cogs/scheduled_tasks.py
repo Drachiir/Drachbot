@@ -11,6 +11,8 @@ import asyncio
 import image_generators
 import util
 
+import cogs.elo as elo
+
 utc = timezone.utc
 task_time = time(hour=0, minute=0, second=5, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
@@ -69,6 +71,21 @@ def reset(self):
                     f3.close()
             except Exception:
                 traceback.print_exc()
+            #Guess The Elo
+            games = legion_api.get_random_games()
+            random_game2 = random.choice(games)
+            while random_game2[2] == "":
+                random_game2 = random.choice(games)
+            rand_wave = random.randint(4,random_game2[3]-1)
+            im1 = elo.gameid_visualizer(random_game2[2], rand_wave, hide_names=True)
+            im2 = elo.gameid_visualizer(random_game2[2], rand_wave)
+            with open("ltdle_data/ltdle.json", "r") as f:
+                json_data = json.load(f)
+                f.close()
+            json_data["game_3_selected_game"] = [im1,im2,random_game2[4]]
+            with open("ltdle_data/ltdle.json", "w") as f:
+                json.dump(json_data, f)
+                f.close()
             return True
         else:
             return False

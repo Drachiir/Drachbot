@@ -9,6 +9,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
+import platform
 
 import PIL
 import discord
@@ -30,7 +31,10 @@ with open('Files/json/Secrets.json', 'r') as f:
 
 header = {'x-api-key': secret_file.get('apikey')}
 site = "https://overlay.drachbot.site/Images/"
-shared_folder = "/shared/Images/"
+if platform.system() == "Linux":
+    shared_folder = "/shared/Images/"
+else:
+    shared_folder = "shared/Images/"
 
 def elo(playername, rank):
     win_count = 0
@@ -129,7 +133,7 @@ def gamestats(playername):
         'Winrate: ') + str(round(winrate * 100)) + ('%\n'
         'Behavior score: ') + str(stats['behaviorScore'] / 10)
 
-def gameid_visualizer(gameid, start_wave=0):
+def gameid_visualizer(gameid, start_wave=0, hide_names = False):
     if start_wave > 21:
         return "Invalid wave number."
     elif start_wave < 0:
@@ -174,6 +178,7 @@ def gameid_visualizer(gameid, start_wave=0):
             y2 = 125
             im.paste(Image.open(open("Files/Waves/Wave"+str(wave+1)+".png", "rb")), (10,10))
             I1.text((80, 10), "Wave "+str(wave+1), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+            I1.text((80, 75), "Patch: " + gamedata["version"], font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
             if wave == 0:
                 left_kinghp_change = 0
             elif gamedata["leftKingPercentHp"][wave-1] > gamedata["leftKingPercentHp"][wave]:
@@ -189,12 +194,13 @@ def gameid_visualizer(gameid, start_wave=0):
             I1.text((400, 10), "King HP: "+str(round(gamedata["leftKingPercentHp"][wave]*100, 1))+"% ("+str(left_kinghp_change)+"%)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
             I1.text((1650, 10), "King HP: " + str(round(gamedata["rightKingPercentHp"][wave] * 100, 1)) + "% (" + str(right_kinghp_change) + "%)", font=myFont_title,stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
             for player in gamedata["playersData"]:
-                av_image = util.get_icons_image("avatar", player_dict[player["playerName"]]["avatar_url"])
-                if util.im_has_alpha(np.array(av_image)):
-                    im.paste(av_image, (x, y2), mask=av_image)
-                else:
-                    im.paste(av_image, (x, y2))
-                I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
+                if not hide_names:
+                    av_image = util.get_icons_image("avatar", player_dict[player["playerName"]]["avatar_url"])
+                    if util.im_has_alpha(np.array(av_image)):
+                        im.paste(av_image, (x, y2), mask=av_image)
+                    else:
+                        im.paste(av_image, (x, y2))
+                    I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
                 if wave > 9:
                     im.paste(util.get_icons_image("icon_send", player["chosenSpell"].replace(" ", "")), (x+500, y2))
                 try:
@@ -263,13 +269,18 @@ def gameid_visualizer(gameid, start_wave=0):
                         break
                     leak_count += 1
                 x += offset * 10
-            if first:
+            if first and start_wave == 0:
                 first =  False
                 os.umask(0)
                 Path(shared_folder + gameid + "/").mkdir(parents=True, exist_ok=True)
-            im = im.resize((int(20 + offset * 39 / 2), int(1750 / 2)))
-            im.save(shared_folder + gameid + "/"+str(wave+1)+'.jpg')
-            image_link = site+gameid+"/"+str(wave+1)+'.jpg'
+            if start_wave != 0:
+                random_id = util.id_generator()
+                im.save(shared_folder+random_id+'.png')
+                image_link = site + random_id+'.png'
+            else:
+                im = im.resize((int(20 + offset * 39 / 2), int(1750 / 2)))
+                im.save(shared_folder + gameid + "/" + str(wave + 1) + '.jpg')
+                image_link = site+gameid+"/"+str(wave+1)+'.jpg'
     else:
         image_link = site + gameid + "/" + str(start_wave) + '.jpg'
     if start_wave != 0:

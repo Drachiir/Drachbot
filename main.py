@@ -7,7 +7,7 @@ from discord.ext import commands
 from discord.ext.commands import Context, errors
 from discord.ext.commands._types import BotT
 
-import cogs.legiondle
+import cogs.legiontdle
 import cogs.topgames
 
 with open('Files/json/Secrets.json') as f:
@@ -29,9 +29,10 @@ class Client(commands.Bot):
         for extension in self.exts:
             await self.load_extension(extension)
         self.add_view(cogs.topgames.RefreshButton())
-        self.add_view(cogs.legiondle.ModalButton())
-        self.add_view(cogs.legiondle.GameSelectionButtons())
-        self.add_view(cogs.legiondle.ModalLeakButton())
+        self.add_view(cogs.legiontdle.ModalButton())
+        self.add_view(cogs.legiontdle.GameSelectionButtons())
+        self.add_view(cogs.legiontdle.ModalLeakButton())
+        self.add_view(cogs.legiontdle.ModalEloButton())
     
     async def on_ready(self):
         print(f'"{self.user.display_name}" is now running!')

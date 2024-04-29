@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 import os
 
+import legion_api
+
+
 class ManageCommands(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
@@ -31,6 +34,12 @@ class ManageCommands(commands.Cog):
     async def sync(self, ctx):
         if ctx.author.name == "drachir_":
             print(await self.client.tree.sync(guild=None))
+        else:
+            ctx.channel.send("No permission to use this command.")
+    @commands.command()
+    async def test(self, ctx):
+        if ctx.author.name == "drachir_":
+            print(legion_api.get_random_games())
         else:
             ctx.channel.send("No permission to use this command.")
         

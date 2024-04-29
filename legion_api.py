@@ -32,6 +32,37 @@ def api_call_logger(request_type):
     except Exception:
         traceback.print_exc()
 
+def get_random_games():
+    games = []
+    for i in range(6):
+        games.append([1600+200*i, 1600+200*(i+1), ""])
+    print(games)
+    offset = 0
+    games_found = 0
+    tries = 0
+    while games_found < 6:
+        if tries == 50: break
+        try:
+            url = 'https://apiv2.legiontd2.com/games?limit=50&offset='+str(offset)+'&sortBy=date&sortDirection=-1&includeDetails=false&countResults=false&queueType=Normal'
+            response = json.loads(requests.get(url, headers=header).text)
+            for game in response:
+                if game["endingWave"] < 5: continue
+                for elo_bracket in games:
+                    if elo_bracket[0] <= game["gameElo"] <= elo_bracket[1] and elo_bracket[2] == "":
+                        print("game found with: "+str(game["gameElo"])+" elo")
+                        elo_bracket.append(game["endingWave"])
+                        elo_bracket.append(game["gameElo"])
+                        elo_bracket[2] = game["_id"]
+                        games_found += 1
+                        break
+            offset += 50
+        except Exception:
+            traceback.print_exc()
+        tries += 1
+    return games
+        
+        
+
 def getid(playername):
     request_type = 'players/byName/'
     url = 'https://apiv2.legiontd2.com/' + request_type + playername

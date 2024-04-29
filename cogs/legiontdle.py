@@ -15,8 +15,14 @@ from discord import app_commands, ui
 from discord.ext import commands
 from discord_timestamps import TimestampType
 import util
+import platform
 
 color = random.randrange(0, 2 ** 24)
+
+if platform.system() == "Linux":
+    shared_folder = "/shared/Images/"
+else:
+    shared_folder = "shared/Images/"
 
 def update_user_data(session, name):
     with open("ltdle_data/" + name + "/data.json", "w") as f:
@@ -28,7 +34,7 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
     date_now = datetime.now()
     match game:
         case 0:
-            embed = discord.Embed(color=color, title=":exploding_head: **LEGIONDLE** :brain:", description="**Select a game!\nUsing the buttons below.**\n*Guess The Unit includes:\nFighters, Mercs and Waves*")
+            embed = discord.Embed(color=color, title=":exploding_head: **LEGIONTDLE** :brain:", description="**Select a game!\nUsing the buttons below.**\n*Guess The Unit includes:\nFighters, Mercs and Waves*")
             embed.set_thumbnail(url="https://overlay.drachbot.site/ltdle/guesstheunit.png")
             embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
             return embed
@@ -49,7 +55,7 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
             else:
                 mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
                 timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-                return "You already played todays **Guess The Unit**, next reset is "+timestamp+"."
+                return "You already played todays **Guess The Unit**:question:, next reset is "+timestamp+"."
         case 2:
             if "game2" not in session:
                 session["game1"]["score"] = session["score"]
@@ -69,7 +75,25 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
             else:
                 mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
                 timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-                return "You already played todays **Guess The Leak**, next reset is " + timestamp + "."
+                return "You already played todays **Guess The Leak**:grimacing:, next reset is " + timestamp + "."
+        case 3:
+            if "game3" not in session:
+                session["game3"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+                update_user_data(session, session["name"])
+            if datetime.strptime(session["game3"]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                session["game3"]["last_played"] = date_now.strftime("%m/%d/%Y")
+                session["game3"]["game_finished"] = False
+                session["game3"]["guesses"] = []
+                session["game3"]["image"] = 0
+                update_user_data(session, session["name"])
+                return ltdle_game3(session, input, ltdle_data)
+            elif not session["game3"]["game_finished"]:
+                session["game3"]["last_played"] = date_now.strftime("%m/%d/%Y")
+                return ltdle_game3(session, input, ltdle_data)
+            else:
+                mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
+                timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+                return "You already played todays **Guess The Elo**:gem:, next reset is " + timestamp + "."
             
 
 def ltdle_leaderboard(daily, avg):
@@ -128,11 +152,11 @@ def ltdle_leaderboard(daily, avg):
         else:
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
     if daily:
-        title = "Legiondle Daily Leaderboard:"
+        title = "Legiontdle Daily Leaderboard:"
     elif avg:
-        title = "Legiondle Avg Leaderboard:"
+        title = "Legiontdle Avg Leaderboard:"
     else:
-        title = "Legiondle Leaderboard:"
+        title = "Legiontdle Leaderboard:"
     embed = discord.Embed(color=color, title=title, description="**"+output+"**")
     embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
     return embed
@@ -145,19 +169,19 @@ def ltdle_profile(player, avatar):
             p_data = json.load(f)
             f.close()
     except FileNotFoundError:
-        return "No Legiondle profile found for "+player
+        return "No Legiontdle profile found for "+player
     if p_data["games_played"] == 0:
         return "No games played."
-    embed = discord.Embed(color=color, title="Legiondle Profile")
+    embed = discord.Embed(color=color, title="Legiontdle Profile")
     embed.add_field(name="Total stats:", value="Games played: " +str(p_data["games_played"])+
                                             "\nPoints: "+str(p_data["score"])+
-                                            "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points", inline=False)
+                                            "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points", inline=True)
     embed.add_field(name="Guess The Unit:question:", value="Games played: " +str(p_data["game1"]["games_played"])+
                                                 "\nPoints: "+str(p_data["game1"]["score"])+
                                                 "\nAvg: "+str(round(p_data["game1"]["score"]/p_data["game1"]["games_played"],1))+" points", inline=True)
     embed.add_field(name="Guess The Leak:grimacing:", value="Games played: " + str(p_data["game2"]["games_played"]) +
                                                   "\nPoints: " + str(p_data["game2"]["score"]) +
-                                                  "\nAvg: " + str(round(p_data["game2"]["score"] / p_data["game2"]["games_played"], 1)) + " points", inline=True)
+                                                  "\nAvg: " + str(round(p_data["game2"]["score"] / p_data["game2"]["games_played"], 1)) + " points", inline=False)
     embed.set_author(name=player.capitalize()+"'s", icon_url=avatar)
     return embed
 
@@ -311,7 +335,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
 def ltdle_game2(session: dict, input: str, ltdle_data: dict):
     image_index = session["game2"]["image"]
     def embed1(image):
-        embed = discord.Embed(color=color, title="Guess The Leak", description="Enter a leak amount. (Whole Number)", url="https://overlay.drachbot.site"+image.replace("shared", ""))
+        embed = discord.Embed(color=color, title="Guess The Leak :grimacing:", description="Enter a leak amount. (Whole Number)", url="https://overlay.drachbot.site"+image.replace("shared", ""))
         file = discord.File(image, filename=image.split("/")[-1])
         embed.set_image(url="attachment://"+image.split("/")[-1])
         return [file, embed]
@@ -336,6 +360,36 @@ def ltdle_game2(session: dict, input: str, ltdle_data: dict):
         update_user_data(session, session["name"])
         print(session["name"]+ " played guess the leak.")
         return embed2(ltdle_data["game_2_selected_leak"][0][4].replace(".png", "_covered.png"), points)
+
+
+def ltdle_game3(session: dict, input: str, ltdle_data: dict):
+    image_index = session["game3"]["image"]
+    def embed1(image):
+        embed = discord.Embed(color=color, title="Guess The Elo :gem:", description="Guess the average elo of this game. (1600-2800 range:bangbang:)", url=ltdle_data["game_3_selected_game"][0])
+        file = discord.File(image, filename=image.split("/")[-1])
+        embed.set_image(url="attachment://"+image.split("/")[-1])
+        return [file, embed]
+    def embed2(image, points):
+        embed = discord.Embed(color=color, title="Guessed elo: "+str(input)+util.get_ranked_emote(input)+"\nActual elo: "+str(ltdle_data["game_3_selected_game"][2])+util.get_ranked_emote(ltdle_data["game_3_selected_game"][2]), url=ltdle_data["game_3_selected_game"][1])
+        file = discord.File(image, filename=image.split("/")[-1])
+        embed.set_image(url="attachment://"+image.split("/")[-1])
+        embed.add_field(name="You got "+str(points)+" points!", value="")
+        return [file, embed, ""]
+    if image_index == 0:
+        return embed1(shared_folder+ltdle_data["game_3_selected_game"][0].split("/")[-1])
+    else:
+        points = round(10-abs(ltdle_data["game_3_selected_game"][2]-input)/75)
+        if points < 0: points = 0
+        session["game3"]["image"] += 1
+        session["score"] += points
+        session["game3"]["score"] += points
+        session["games_played"] += 1
+        session["game3"]["games_played"] += 1
+        session["game3"]["game_finished"] = True
+        session["game3"]["guesses"].append(input)
+        update_user_data(session, session["name"])
+        print(session["name"]+ " played guess the leak.")
+        return embed2(shared_folder+ltdle_data["game_3_selected_game"][1].split("/")[-1], points)
         
 
 class UnitInput(ui.Modal, title='Enter a unit!'):
@@ -396,6 +450,37 @@ class LeakInput(ui.Modal, title='Enter a Leak!'):
             traceback.print_exc()
 
 
+class EloInput(ui.Modal, title='Enter a Elo!'):
+    answer = ui.TextInput(label='Elo as whole number', style=discord.TextStyle.short, max_length=4)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            input = int(self.answer.value)
+        except Exception:
+            interaction.response.send("Invalid input, try again.")
+            return
+        await interaction.response.defer()
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                with open(path + "/data.json", "r") as f:
+                    data = json.load(f)
+                    f.close()
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                data["game3"]["image"] += 1
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 3, input=input))
+                pool.shutdown()
+                if type(response) == list:
+                    await interaction.channel.send(file=response[0], embed=response[1])
+                else:
+                    await interaction.channel.send(response)
+        except Exception:
+            traceback.print_exc()
+
+
 class ModalButton(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -418,20 +503,32 @@ class ModalLeakButton(discord.ui.View):
             await interaction.response.send_modal(LeakInput())
         except Exception:
             traceback.print_exc()
+
+
+class ModalEloButton(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label='Enter Elo', style=discord.ButtonStyle.green, custom_id='persistent_view:modalelo')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.send_modal(EloInput())
+        except Exception:
+            traceback.print_exc()
             
 
 class GameSelectionButtons(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label='Guess The Unit', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game1', emoji="❓")
+    @discord.ui.button(label='Guess The Unit', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game1', emoji="❓", row=1)
     async def callback1(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             await interaction.response.send_modal(UnitInput())
         except Exception:
             traceback.print_exc()
     
-    @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="😬")
+    @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="😬",row=1)
     async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         try:
@@ -455,14 +552,43 @@ class GameSelectionButtons(discord.ui.View):
                     await interaction.channel.send(response)
         except Exception:
             traceback.print_exc()
+    
+    @discord.ui.button(label='Guess The Elo', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game3', emoji="💎",row=2)
+    async def callback3(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                with open(path + "/data.json", "r") as f:
+                    data = json.load(f)
+                    f.close()
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                if not ltdle_data["game_3_selected_game"]:
+                    await interaction.channel.send("This game is currently disabled.")
+                    return
+                else:
+                    response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 3))
+                    pool.shutdown()
+                    if type(response) == list:
+                        if len(response) == 2:
+                            await interaction.channel.send(file=response[0], embed=response[1], view=ModalEloButton())
+                        else:
+                            await interaction.channel.send(file=response[0], embed=response[1])
+                    else:
+                        await interaction.channel.send(response)
+        except Exception:
+            traceback.print_exc()
 
 
-class Legiondle(commands.Cog):
+class Legiontdle(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
     
-    @app_commands.command(name="legiondle", description="Legion themed Wordle-type game.")
-    async def legiondle(self, interaction: discord.Interaction):
+    @app_commands.command(name="legiontdle", description="Legion themed Wordle-type game.")
+    async def legiontdle(self, interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
@@ -477,7 +603,8 @@ class Legiondle(commands.Cog):
                     with open(path + "/data.json", "w") as f:
                         date_now = datetime.now()
                         data = {"name": interaction.user.name, "score": 0, "games_played": 0, "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
-                                "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
+                                "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
+                                "game3": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
                         json.dump(data, f)
                         f.close()
                 else:
@@ -498,7 +625,7 @@ class Legiondle(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @app_commands.command(name="ltdle-stats", description="Stats for Legiondle.")
+    @app_commands.command(name="ltdle-stats", description="Stats for Legiontdle.")
     @app_commands.describe(option="Select an option.", name="Only for profile, has to be actual discord name, not display name.")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
@@ -506,7 +633,7 @@ class Legiondle(commands.Cog):
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
-    async def legiondle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None):
+    async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
@@ -565,5 +692,5 @@ class Legiondle(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(Legiondle(bot))
+    await bot.add_cog(Legiontdle(bot))
     
