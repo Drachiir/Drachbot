@@ -25,9 +25,6 @@ class Client(commands.Bot):
             elif "cog_template" in e: continue
             self.exts.append("cogs." + e.split(".")[0])
     
-    async def on_command_error(self, context: Context[BotT], exception: errors.CommandError, /) -> None:
-        print(exception)
-    
     async def setup_hook(self) -> None:
         for extension in self.exts:
             await self.load_extension(extension)

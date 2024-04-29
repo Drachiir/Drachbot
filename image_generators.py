@@ -257,6 +257,7 @@ def gameid_visualizer_singleplayer(gameid, start_wave, player_index):
     y2 = 125
     im.paste(Image.open(open("Files/Waves/Wave"+str(wave+1)+".png", "rb")), (10,10))
     I1.text((80, 10), "Wave "+str(wave+1), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
+    I1.text((80, 75),"Patch: " + gamedata["version"], font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     #player
     av_image = util.get_icons_image("avatar", player_dict[player["playerName"]]["avatar_url"])
     if util.im_has_alpha(np.array(av_image)):

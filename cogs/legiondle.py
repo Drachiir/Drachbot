@@ -28,7 +28,7 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
     date_now = datetime.now()
     match game:
         case 0:
-            embed = discord.Embed(color=color, title=":exploding_head: **LEGIONDLE** :brain:", description="**Select a game!\nUsing the buttons below.**")
+            embed = discord.Embed(color=color, title=":exploding_head: **LEGIONDLE** :brain:", description="**Select a game!\nUsing the buttons below.**\n*Guess The Unit includes:\nFighters, Mercs and Waves*")
             embed.set_thumbnail(url="https://overlay.drachbot.site/ltdle/guesstheunit.png")
             embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
             return embed
@@ -176,6 +176,8 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         string = string.replace(' unit id', '')
         if string == "skyfish": string = "metaldragon"
         if string.casefold() == text_input.casefold() or util.similar(string, text_input) > 0.9:
+            if u_js["categoryClass"] == "Special" or u_js["categoryClass"] == "Passive":
+                return "Summons are not included."
             text_input = string
             unit_data = u_js
             break

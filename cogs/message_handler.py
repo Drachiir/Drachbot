@@ -65,13 +65,13 @@ class Message_handler(commands.Cog):
                     await message.channel.send(embed=response)
                 else:
                     await message.channel.send(response)
-            except discord.errors.DiscordException:
-                return
             except Exception:
-                traceback.print_exc()
+                pass
                 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.author.id == self.client.user.id:
+            return
         if '!' in message.content:
             username = str(message.author)
             user_message = str(message.content)
