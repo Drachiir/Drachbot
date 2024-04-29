@@ -498,7 +498,7 @@ class Legiondle(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @app_commands.command(name="legiondle-stats", description="Stats for Legiondle.")
+    @app_commands.command(name="ltdle-stats", description="Stats for Legiondle.")
     @app_commands.describe(option="Select an option.", name="Only for profile, has to be actual discord name, not display name.")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
