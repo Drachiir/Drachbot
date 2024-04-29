@@ -506,7 +506,7 @@ class Legiondle(commands.Cog):
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
-    async def legiondle(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: str=""):
+    async def legiondle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: str=""):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
