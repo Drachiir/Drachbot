@@ -107,7 +107,7 @@ def ltdle_leaderboard(daily, avg):
             
     if avg:
         scores = sorted(scores, key=lambda x: x[3], reverse=True)
-    if daily:
+    elif daily:
         scores = sorted(scores, key=lambda x: x[1]+x[2], reverse=True)
     else:
         scores = sorted(scores, key=lambda x: x[1], reverse=True)
