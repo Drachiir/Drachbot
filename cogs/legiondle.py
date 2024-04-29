@@ -506,7 +506,7 @@ class Legiondle(commands.Cog):
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
-    async def legiondle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: str=""):
+    async def legiondle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
@@ -541,11 +541,12 @@ class Legiondle(commands.Cog):
                             await interaction.followup.send(response)
                         return
                     case "Profile":
-                        if name != "":
-                            username = name
+                        if name != None and name.name != interaction.user.name:
+                            avatar = name.avatar
+                            username = name.name
                         else:
                             username = interaction.user.name
-                        avatar = interaction.user.avatar
+                            avatar = interaction.user.avatar
                         if avatar != None:
                             avatar = avatar.url
                         else:
