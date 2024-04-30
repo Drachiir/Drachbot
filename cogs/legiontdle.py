@@ -106,6 +106,9 @@ def ltdle_leaderboard(daily, avg):
             p_data = json.load(f)
             f.close()
         if daily:
+            daily_score1 = 0
+            daily_score2 = 0
+            daily_score3 = 0
             with open("ltdle_data/ltdle.json", "r") as f:
                 ltdle_data = json.load(f)
                 f.close()
@@ -115,23 +118,33 @@ def ltdle_leaderboard(daily, avg):
                         daily_score1 = 11-len(p_data["game1"]["guesses"])
                     else:
                         daily_score1 = 0
-                    try:
-                        if p_data["game2"]["game_finished"] == True:
-                            daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][0][3]-p_data["game2"]["guesses"][0])/10)
-                        else:
-                            daily_score2 = 0
-                    except Exception:
-                        daily_score2 = 0
-                        pass
-                    try:
-                        if p_data["game3"]["game_finished"] == True:
-                            daily_score3 = round(10-abs(ltdle_data["game_3_selected_game"][2]-p_data["game3"]["guesses"][0])/75)
-                        else:
-                            daily_score3 = 0
-                    except Exception:
-                        daily_score3 = 0
-                        pass
-                    scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2, daily_score3))
+            else:
+                daily_score1 = 0
+            try:
+                if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                    if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+                            if p_data["game2"]["game_finished"] == True:
+                                daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][0][3]-p_data["game2"]["guesses"][0])/10)
+                            else:
+                                daily_score2 = 0
+                else:
+                    daily_score2 = 0
+            except Exception:
+                daily_score2 = 0
+                pass
+            try:
+                if datetime.strptime(p_data["game3"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                    if datetime.strptime(p_data["game3"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+                            if p_data["game3"]["game_finished"] == True:
+                                daily_score3 = round(10-abs(ltdle_data["game_3_selected_game"][2]-p_data["game3"]["guesses"][0])/75)
+                            else:
+                                daily_score3 = 0
+                else:
+                    daily_score3 = 0
+            except Exception:
+                daily_score3 = 0
+                pass
+            scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2, daily_score3))
         else:
             try: avg_pts = p_data["score"]/p_data["games_played"]
             except ZeroDivisionError: avg_pts = 0
@@ -156,7 +169,7 @@ def ltdle_leaderboard(daily, avg):
         else:
             ranked_emote = util.get_ranked_emote(2200)
         if daily:
-            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]) + "pts ("+str(pscore[1])+", "+str(pscore[2]) +", "+str(pscore[3])+ ")\n"
+            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]+pscore[3]) + "pts ("+str(pscore[1])+", "+str(pscore[2]) +", "+str(pscore[3])+ ")\n"
         else:
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
     if daily:

@@ -114,7 +114,7 @@ class ScheduledTasks(commands.Cog):
                     try:
                         guild = self.client.get_guild(noti_channel[0])
                         channel = guild.get_channel(noti_channel[1])
-                        await channel.send("New Legiondle is up! :brain: <a:dinkdonk:1120126536343896106>")
+                        await channel.send("New Legiontdle is up! :brain: <a:dinkdonk:1120126536343896106>")
                     except Exception:
                         continue
                 try:
