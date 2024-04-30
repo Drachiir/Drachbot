@@ -17,12 +17,16 @@ from discord_timestamps import TimestampType
 import util
 import platform
 
-color = random.randrange(0, 2 ** 24)
+
+def random_color():
+    return random.randrange(0, 2 ** 24)
+
 
 if platform.system() == "Linux":
     shared_folder = "/shared/Images/"
 else:
     shared_folder = "shared/Images/"
+
 
 def update_user_data(session, name):
     with open("ltdle_data/" + name + "/data.json", "w") as f:
@@ -30,7 +34,39 @@ def update_user_data(session, name):
         f.close()
 
 
+def check_if_played_today(name: str, game: int):
+    with open("ltdle_data/" + name + "/data.json", "r") as f:
+        session = json.load(f)
+        f.close()
+    with open("ltdle_data/ltdle.json", "r") as f:
+        ltdle_data = json.load(f)
+        f.close()
+    match game:
+        case 1:
+            playedstring = "You already played todays **Guess The Unit**:question:, next reset is "
+        case 2:
+            playedstring = "You already played todays **Guess The Leak**:grimacing:, next reset is "
+        case 3:
+            playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
+        
+    if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+        session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
+        session["game"+str(game)]["game_finished"] = False
+        session["game"+str(game)]["guesses"] = []
+        if game == 2 or game == 3:
+            session["game"+str(game)]["image"] = 0
+        update_user_data(session, session["name"])
+        return None
+    elif not session["game"+str(game)]["game_finished"]:
+        return None
+    else:
+        mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
+        timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+        return playedstring + timestamp
+
+
 def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
+    color = random_color()
     date_now = datetime.now()
     match game:
         case 0:
@@ -44,60 +80,23 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
                 session["game1"]["games_played"] = session["games_played"]
                 session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
                 update_user_data(session, session["name"])
-            if datetime.strptime(session["game1"]["last_played"], "%m/%d/%Y")+timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-                session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
-                session["game1"]["game_finished"] = False
-                session["game1"]["guesses"] = []
-                update_user_data(session, session["name"])
-                return ltdle_game1(session, input, ltdle_data)
-            elif not session["game1"]["game_finished"]:
-                return ltdle_game1(session, input, ltdle_data)
-            else:
-                mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
-                timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-                return "You already played todays **Guess The Unit**:question:, next reset is "+timestamp+"."
+            return ltdle_game1(session, input, ltdle_data)
         case 2:
             if "game2" not in session:
                 session["game1"]["score"] = session["score"]
                 session["game1"]["games_played"] = session["games_played"]
                 session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
                 update_user_data(session, session["name"])
-            if datetime.strptime(session["game2"]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-                session["game2"]["last_played"] = date_now.strftime("%m/%d/%Y")
-                session["game2"]["game_finished"] = False
-                session["game2"]["guesses"] = []
-                session["game2"]["image"] = 0
-                update_user_data(session, session["name"])
-                return ltdle_game2(session, input, ltdle_data)
-            elif not session["game2"]["game_finished"]:
-                session["game2"]["last_played"] = date_now.strftime("%m/%d/%Y")
-                return ltdle_game2(session, input, ltdle_data)
-            else:
-                mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
-                timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-                return "You already played todays **Guess The Leak**:grimacing:, next reset is " + timestamp + "."
+            return ltdle_game2(session, input, ltdle_data)
         case 3:
             if "game3" not in session:
                 session["game3"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
                 update_user_data(session, session["name"])
-            if datetime.strptime(session["game3"]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-                session["game3"]["last_played"] = date_now.strftime("%m/%d/%Y")
-                session["game3"]["game_finished"] = False
-                session["game3"]["guesses"] = []
-                session["game3"]["image"] = 0
-                update_user_data(session, session["name"])
-                return ltdle_game3(session, input, ltdle_data)
-            elif not session["game3"]["game_finished"]:
-                session["game3"]["last_played"] = date_now.strftime("%m/%d/%Y")
-                return ltdle_game3(session, input, ltdle_data)
-            else:
-                mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
-                timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-                return "You already played todays **Guess The Elo**:gem:, next reset is " + timestamp + "."
+            return ltdle_game3(session, input, ltdle_data)
             
 
 def ltdle_leaderboard(daily, avg):
-    color = random.randrange(0, 2 ** 24)
+    color = random_color()
     player_data_list = os.listdir("ltdle_data")
     scores = []
     for player in player_data_list:
@@ -184,7 +183,7 @@ def ltdle_leaderboard(daily, avg):
 
 
 def ltdle_profile(player, avatar):
-    color = random.randrange(0, 2 ** 24)
+    color = random_color()
     try:
         with open("ltdle_data/" + player + "/data.json", "r") as f:
             p_data = json.load(f)
@@ -220,6 +219,7 @@ def ltdle_profile(player, avatar):
 
 
 def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
+    color = random_color()
     date_now = datetime.now()
     session["game1"]["last_played"] = date_now.strftime("%m/%d/%Y")
     with open('Files/json/units.json', 'r') as f:
@@ -366,6 +366,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
 
 
 def ltdle_game2(session: dict, input: str, ltdle_data: dict):
+    color = random_color()
     image_index = session["game2"]["image"]
     def embed1(image):
         embed = discord.Embed(color=color, title="Guess The Leak :grimacing:", description="Enter a leak amount. (Whole Number)", url="https://overlay.drachbot.site"+image.replace("shared", ""))
@@ -396,6 +397,7 @@ def ltdle_game2(session: dict, input: str, ltdle_data: dict):
 
 
 def ltdle_game3(session: dict, input: str, ltdle_data: dict):
+    color = random_color()
     image_index = session["game3"]["image"]
     def embed1(image):
         embed = discord.Embed(color=color, title="Guess The Elo :gem:", description="Guess the average elo of this game. (1600-2800 range:bangbang:)", url=ltdle_data["game_3_selected_game"][0])
@@ -421,7 +423,7 @@ def ltdle_game3(session: dict, input: str, ltdle_data: dict):
         session["game3"]["game_finished"] = True
         session["game3"]["guesses"].append(input)
         update_user_data(session, session["name"])
-        print(session["name"]+ " played guess the leak.")
+        print(session["name"]+ " played guess the elo.")
         return embed2(shared_folder+ltdle_data["game_3_selected_game"][1].split("/")[-1], points)
         
 
@@ -456,12 +458,12 @@ class LeakInput(ui.Modal, title='Enter a Leak!'):
     answer = ui.TextInput(label='Leak (Whole Number without %)', style=discord.TextStyle.short, max_length=3)
     
     async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         try:
             input = int(self.answer.value)
         except Exception:
-            interaction.response.send("Invalid input, try again.")
+            await interaction.followup.send("Invalid input, try again.")
             return
-        await interaction.response.defer()
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -484,15 +486,18 @@ class LeakInput(ui.Modal, title='Enter a Leak!'):
 
 
 class EloInput(ui.Modal, title='Enter a Elo!'):
-    answer = ui.TextInput(label='Elo as whole number', style=discord.TextStyle.short, max_length=4)
+    answer = ui.TextInput(label='Elo (1600-2800)', style=discord.TextStyle.short, max_length=4)
     
     async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         try:
             input = int(self.answer.value)
+            if input<1600 or input>2800:
+                await interaction.followup.send("Elo range is **1600-2800**, try again.")
+                return
         except Exception:
-            interaction.response.send("Invalid input, try again.")
+            await interaction.followup.send("Invalid input, try again.")
             return
-        await interaction.response.defer()
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -520,10 +525,16 @@ class ModalButton(discord.ui.View):
     
     @discord.ui.button(label='Enter unit', style=discord.ButtonStyle.green, custom_id='persistent_view:modal')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.send_modal(UnitInput())
-        except Exception:
-            traceback.print_exc()
+        played_check = check_if_played_today(interaction.user.name, 1)
+        if played_check == None:
+            try:
+                await interaction.response.send_modal(UnitInput())
+            except Exception:
+                traceback.print_exc()
+        else:
+            await interaction.response.defer()
+            await interaction.channel.send(played_check)
+            return
             
             
 class ModalLeakButton(discord.ui.View):
@@ -532,10 +543,16 @@ class ModalLeakButton(discord.ui.View):
     
     @discord.ui.button(label='Enter Leak', style=discord.ButtonStyle.green, custom_id='persistent_view:modalLeak')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.send_modal(LeakInput())
-        except Exception:
-            traceback.print_exc()
+        played_check = check_if_played_today(interaction.user.name, 2)
+        if played_check == None:
+            try:
+                await interaction.response.send_modal(LeakInput())
+            except Exception:
+                traceback.print_exc()
+        else:
+            await interaction.response.defer()
+            await interaction.channel.send(played_check)
+            return
 
 
 class ModalEloButton(discord.ui.View):
@@ -544,10 +561,16 @@ class ModalEloButton(discord.ui.View):
     
     @discord.ui.button(label='Enter Elo', style=discord.ButtonStyle.green, custom_id='persistent_view:modalelo')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.send_modal(EloInput())
-        except Exception:
-            traceback.print_exc()
+        played_check = check_if_played_today(interaction.user.name, 3)
+        if played_check == None:
+            try:
+                await interaction.response.send_modal(EloInput())
+            except Exception:
+                traceback.print_exc()
+        else:
+            await interaction.response.defer()
+            await interaction.channel.send(played_check)
+            return
             
 
 class GameSelectionButtons(discord.ui.View):
@@ -556,14 +579,26 @@ class GameSelectionButtons(discord.ui.View):
 
     @discord.ui.button(label='Guess The Unit', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game1', emoji="❓", row=1)
     async def callback1(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.send_modal(UnitInput())
-        except Exception:
-            traceback.print_exc()
+        played_check = check_if_played_today(interaction.user.name, 1)
+        if played_check == None:
+            try:
+                await interaction.response.send_modal(UnitInput())
+            except Exception:
+                traceback.print_exc()
+        else:
+            await interaction.response.defer()
+            await interaction.channel.send(played_check)
+            return
     
     @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="😬",row=1)
     async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
+        played_check = check_if_played_today(interaction.user.name, 2)
+        if played_check == None:
+            pass
+        else:
+            await interaction.channel.send(played_check)
+            return
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -589,6 +624,12 @@ class GameSelectionButtons(discord.ui.View):
     @discord.ui.button(label='Guess The Elo', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game3', emoji="💎",row=2)
     async def callback3(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
+        played_check = check_if_played_today(interaction.user.name, 3)
+        if played_check == None:
+            pass
+        else:
+            await interaction.channel.send(played_check)
+            return
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
