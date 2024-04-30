@@ -16,12 +16,24 @@ import io
 from io import BytesIO
 import requests
 import numpy as np
+import bokeh
+from bokeh.plotting import figure, show, output_notebook, output_file, save
+from bokeh.models import LinearAxis, Range1d, SingleIntervalTicker
+from bokeh.io import curdoc
+import platform
+import random
 
 import json_db
 import util
 import legion_api
 
 output_folder = "Files/output/"
+site = "https://overlay.drachbot.site/Images/"
+site2 = "https://overlay.drachbot.site/Html/"
+if platform.system() == "Linux":
+    shared_folder = "/shared/Html/"
+else:
+    shared_folder = "shared/Html/"
 
 def elograph(playername, games, patch, transparency=False):
     playerid = legion_api.getid(playername)
@@ -78,7 +90,25 @@ def elograph(playername, games, patch, transparency=False):
     myFont_title = ImageFont.truetype(ttf, 30)
     I1.text((10, 15), playername.capitalize() + "'s Elo Graph (From " + str(games) + " ranked games)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((10, 55), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-    # matplotlib graph
+    #bokeh graph
+    games_list = []
+    for y in range(1, games + 1):
+        games_list.append(y)
+    curdoc().theme = "dark_minimal"
+    p = figure(title=playername.capitalize()+"'s Elo Graph", x_axis_label="Games", y_axis_label="Elo", sizing_mode="stretch_both")
+    p.line(games_list,elo_per_game, line_width=2, line_color="white")
+    p.extra_x_ranges['foo'] = Range1d(1, games+1)
+    axis2 = LinearAxis(x_range_name="foo", axis_label="Dates")
+    axis2.axis_label_text_color = "white"
+    p.add_layout(axis2, 'above')
+    p.above[0].major_label_overrides = {key: item for key, item in zip(range(1, games+1), date_per_game)}
+    p.x_range.min_interval = 1
+    p.x_range.max_interval = games
+    b_rand_id = util.id_generator()
+    p.title.text = playername.capitalize()+"'s Elo Graph"
+    output_file(shared_folder+b_rand_id+".html")
+    save(p)
+    #matplotlib graph
     params = {"ytick.color": "w",
               "xtick.color": "w",
               "axes.labelcolor": "w",
@@ -115,10 +145,10 @@ def elograph(playername, games, patch, transparency=False):
     plt.close()
     elo_graph = Image.open(img_buf)
     im.paste(elo_graph, (-100, 40), elo_graph)
-    
+
     image_id = util.id_generator()
     im.save(output_folder + image_id + '.png')
-    return output_folder + image_id + '.png'
+    return [playername, site2+b_rand_id+".html", output_folder + image_id + '.png', image_id + '.png']
 
 def statsgraph(playernames: list, games, min_elo, patch, key, transparency=False, sort="date", waves=[1, 21]) -> str:
     playerids = set()
@@ -553,8 +583,11 @@ class Graphs(commands.Cog):
             try:
                 response = await loop.run_in_executor(pool, functools.partial(elograph, playername, games, patch))
                 pool.shutdown()
-                if response.endswith(".png"):
-                    await interaction.followup.send(file=discord.File(response))
+                if type(response) == list:
+                    embed = discord.Embed(color=0xb7d715, title=response[0].capitalize() + "'s Elo Graph", url=response[1])
+                    file = discord.File(response[2], filename=response[3])
+                    embed.set_image(url="attachment://" + response[3])
+                    await interaction.followup.send(file=file, embed=embed)
                 else:
                     await interaction.followup.send(response)
             except Exception:

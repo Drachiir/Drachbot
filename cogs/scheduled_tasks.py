@@ -122,8 +122,8 @@ class ScheduledTasks(commands.Cog):
                     with concurrent.futures.ThreadPoolExecutor() as pool:
                         ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.ladder_update, 100))
                         pool.shutdown()
-                    guild = self.client.get_guild(json_data["notify_channels"][2][0])
-                    channel = guild.get_channel(json_data["notify_channels"][2][1])
+                    guild = self.client.get_guild(json_data["notify_channels"][0][0])
+                    channel = guild.get_channel(json_data["notify_channels"][0][1])
                     await channel.send("Scheduled Update: "+ladder_update)
                 except Exception:
                     pass
