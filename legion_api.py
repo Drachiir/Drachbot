@@ -44,6 +44,7 @@ def get_random_games():
         if tries == 50: break
         try:
             url = 'https://apiv2.legiontd2.com/games?limit=50&offset='+str(offset)+'&sortBy=date&sortDirection=-1&includeDetails=false&countResults=false&queueType=Normal'
+            api_call_logger("/games")
             response = json.loads(requests.get(url, headers=header).text)
             for game in response:
                 if game["endingWave"] < 5: continue

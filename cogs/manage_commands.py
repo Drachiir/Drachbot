@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+from datetime import datetime, timedelta, timezone, time
 
 import legion_api
 
@@ -42,6 +43,10 @@ class ManageCommands(commands.Cog):
             print(legion_api.get_random_games())
         else:
             ctx.channel.send("No permission to use this command.")
+    
+    @commands.command()
+    async def time(self, ctx):
+        ctx.channel.send(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
         
 async def setup(bot:commands.Bot):
     await bot.add_cog(ManageCommands(bot))

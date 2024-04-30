@@ -35,34 +35,38 @@ def update_user_data(session, name):
 
 
 def check_if_played_today(name: str, game: int):
-    with open("ltdle_data/" + name + "/data.json", "r") as f:
-        session = json.load(f)
-        f.close()
-    with open("ltdle_data/ltdle.json", "r") as f:
-        ltdle_data = json.load(f)
-        f.close()
-    match game:
-        case 1:
-            playedstring = "You already played todays **Guess The Unit**:question:, next reset is "
-        case 2:
-            playedstring = "You already played todays **Guess The Leak**:grimacing:, next reset is "
-        case 3:
-            playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
-        
-    if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-        session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
-        session["game"+str(game)]["game_finished"] = False
-        session["game"+str(game)]["guesses"] = []
-        if game == 2 or game == 3:
-            session["game"+str(game)]["image"] = 0
-        update_user_data(session, session["name"])
-        return None
-    elif not session["game"+str(game)]["game_finished"]:
-        return None
-    else:
-        mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
-        timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-        return playedstring + timestamp
+    try:
+        date_now = datetime.now()
+        with open("ltdle_data/" + name + "/data.json", "r") as f:
+            session = json.load(f)
+            f.close()
+        with open("ltdle_data/ltdle.json", "r") as f:
+            ltdle_data = json.load(f)
+            f.close()
+        match game:
+            case 1:
+                playedstring = "You already played todays **Guess The Unit**:question:, next reset is "
+            case 2:
+                playedstring = "You already played todays **Guess The Leak**:grimacing:, next reset is "
+            case 3:
+                playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
+            
+        if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+            session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
+            session["game"+str(game)]["game_finished"] = False
+            session["game"+str(game)]["guesses"] = []
+            if game == 2 or game == 3:
+                session["game"+str(game)]["image"] = 0
+            update_user_data(session, session["name"])
+            return None
+        elif not session["game"+str(game)]["game_finished"]:
+            return None
+        else:
+            mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
+            timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+            return playedstring + timestamp
+    except Exception:
+        traceback.print_exc()
 
 
 def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
@@ -579,6 +583,13 @@ class GameSelectionButtons(discord.ui.View):
 
     @discord.ui.button(label='Guess The Unit', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game1', emoji="❓", row=1)
     async def callback1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        with open("ltdle_data/ltdle.json", "r") as f:
+            ltdle_data = json.load(f)
+            f.close()
+        if not ltdle_data["game_1_selected_unit"]:
+            await interaction.response.defer()
+            await interaction.channel.send("This game is currently disabled.")
+            return
         played_check = check_if_played_today(interaction.user.name, 1)
         if played_check == None:
             try:
@@ -593,12 +604,6 @@ class GameSelectionButtons(discord.ui.View):
     @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="😬",row=1)
     async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
-        played_check = check_if_played_today(interaction.user.name, 2)
-        if played_check == None:
-            pass
-        else:
-            await interaction.channel.send(played_check)
-            return
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -609,6 +614,15 @@ class GameSelectionButtons(discord.ui.View):
                 with open("ltdle_data/ltdle.json", "r") as f:
                     ltdle_data = json.load(f)
                     f.close()
+                if not ltdle_data["game_2_selected_leak"]:
+                    await interaction.channel.send("This game is currently disabled.")
+                    return
+                played_check = check_if_played_today(interaction.user.name, 2)
+                if played_check == None:
+                    pass
+                else:
+                    await interaction.channel.send(played_check)
+                    return
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 2))
                 pool.shutdown()
                 if type(response) == list:
@@ -624,12 +638,6 @@ class GameSelectionButtons(discord.ui.View):
     @discord.ui.button(label='Guess The Elo', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game3', emoji="💎",row=2)
     async def callback3(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
-        played_check = check_if_played_today(interaction.user.name, 3)
-        if played_check == None:
-            pass
-        else:
-            await interaction.channel.send(played_check)
-            return
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -644,6 +652,12 @@ class GameSelectionButtons(discord.ui.View):
                     await interaction.channel.send("This game is currently disabled.")
                     return
                 else:
+                    played_check = check_if_played_today(interaction.user.name, 3)
+                    if played_check == None:
+                        pass
+                    else:
+                        await interaction.channel.send(played_check)
+                        return
                     response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 3))
                     pool.shutdown()
                     if type(response) == list:

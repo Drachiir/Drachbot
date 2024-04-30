@@ -16,6 +16,7 @@ import cogs.elo as elo
 utc = timezone.utc
 task_time = time(hour=0, minute=0, second=5, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
+print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
 
 def reset(self):
@@ -120,7 +121,7 @@ class ScheduledTasks(commands.Cog):
                 try:
                     loop = asyncio.get_running_loop()
                     with concurrent.futures.ThreadPoolExecutor() as pool:
-                        ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.ladder_update, 100))
+                        ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.ladder_update, 1))
                         pool.shutdown()
                     guild = self.client.get_guild(json_data["notify_channels"][0][0])
                     channel = guild.get_channel(json_data["notify_channels"][0][1])
