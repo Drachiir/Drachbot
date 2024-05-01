@@ -29,24 +29,24 @@ class ManageCommands(commands.Cog):
                 await self.client.tree.sync(guild=None)
                 print("Reloaded: "+ content)
         else:
-            ctx.channel.send("No permission to use this command.")
+            await ctx.channel.send("No permission to use this command.")
     
     @commands.command()
     async def sync(self, ctx):
         if ctx.author.name == "drachir_":
             print(await self.client.tree.sync(guild=None))
         else:
-            ctx.channel.send("No permission to use this command.")
+            await ctx.channel.send("No permission to use this command.")
     @commands.command()
     async def test(self, ctx):
         if ctx.author.name == "drachir_":
             print(legion_api.get_random_games())
         else:
-            ctx.channel.send("No permission to use this command.")
+            await ctx.channel.send("No permission to use this command.")
     
     @commands.command()
     async def time(self, ctx):
-        ctx.channel.send(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
+        await ctx.channel.send(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
         
 async def setup(bot:commands.Bot):
     await bot.add_cog(ManageCommands(bot))

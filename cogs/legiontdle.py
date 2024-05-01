@@ -58,9 +58,9 @@ def check_if_played_today(name: str, game: int):
             if game == 2 or game == 3:
                 session["game"+str(game)]["image"] = 0
             update_user_data(session, session["name"])
-            return None
+            return session
         elif not session["game"+str(game)]["game_finished"]:
-            return None
+            return session
         else:
             mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
             timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
@@ -69,7 +69,7 @@ def check_if_played_today(name: str, game: int):
         traceback.print_exc()
 
 
-def ltdle(session: dict, ltdle_data: dict, game: int, input: str=""):
+def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
     color = random_color()
     date_now = datetime.now()
     match game:
@@ -369,7 +369,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         return embed
 
 
-def ltdle_game2(session: dict, input: str, ltdle_data: dict):
+def ltdle_game2(session: dict, input: int, ltdle_data: dict):
     color = random_color()
     image_index = session["game2"]["image"]
     def embed1(image):
@@ -400,7 +400,7 @@ def ltdle_game2(session: dict, input: str, ltdle_data: dict):
         return embed2(ltdle_data["game_2_selected_leak"][0][4].replace(".png", "_covered.png"), points)
 
 
-def ltdle_game3(session: dict, input: str, ltdle_data: dict):
+def ltdle_game3(session: dict, input: int, ltdle_data: dict):
     color = random_color()
     image_index = session["game3"]["image"]
     def embed1(image):
@@ -530,7 +530,7 @@ class ModalButton(discord.ui.View):
     @discord.ui.button(label='Enter unit', style=discord.ButtonStyle.green, custom_id='persistent_view:modal')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         played_check = check_if_played_today(interaction.user.name, 1)
-        if played_check == None:
+        if type(played_check) == type(dict()):
             try:
                 await interaction.response.send_modal(UnitInput())
             except Exception:
@@ -548,7 +548,7 @@ class ModalLeakButton(discord.ui.View):
     @discord.ui.button(label='Enter Leak', style=discord.ButtonStyle.green, custom_id='persistent_view:modalLeak')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         played_check = check_if_played_today(interaction.user.name, 2)
-        if played_check == None:
+        if type(played_check) == type(dict()):
             try:
                 await interaction.response.send_modal(LeakInput())
             except Exception:
@@ -566,7 +566,7 @@ class ModalEloButton(discord.ui.View):
     @discord.ui.button(label='Enter Elo', style=discord.ButtonStyle.green, custom_id='persistent_view:modalelo')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         played_check = check_if_played_today(interaction.user.name, 3)
-        if played_check == None:
+        if type(played_check) == type(dict()):
             try:
                 await interaction.response.send_modal(EloInput())
             except Exception:
@@ -591,7 +591,7 @@ class GameSelectionButtons(discord.ui.View):
             await interaction.channel.send("This game is currently disabled.")
             return
         played_check = check_if_played_today(interaction.user.name, 1)
-        if played_check == None:
+        if type(played_check) == type(dict()):
             try:
                 await interaction.response.send_modal(UnitInput())
             except Exception:
@@ -618,7 +618,8 @@ class GameSelectionButtons(discord.ui.View):
                     await interaction.channel.send("This game is currently disabled.")
                     return
                 played_check = check_if_played_today(interaction.user.name, 2)
-                if played_check == None:
+                if type(played_check) == type(dict()):
+                    data = played_check
                     pass
                 else:
                     await interaction.channel.send(played_check)
@@ -653,8 +654,8 @@ class GameSelectionButtons(discord.ui.View):
                     return
                 else:
                     played_check = check_if_played_today(interaction.user.name, 3)
-                    if played_check == None:
-                        pass
+                    if type(played_check) == type(dict()):
+                        data = played_check
                     else:
                         await interaction.channel.send(played_check)
                         return
