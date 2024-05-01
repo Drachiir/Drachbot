@@ -46,6 +46,8 @@ def reset(self):
                         continue
                     elif random_game.startswith("2022"):
                         continue
+                    elif random_game.split("_")[1].split("-")[1] == "00":
+                        continue
                     with open("Games/" + random_game, "r") as f:
                         game_data = json.load(f)
                         f.close()
