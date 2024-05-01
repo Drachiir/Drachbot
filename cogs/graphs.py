@@ -97,13 +97,13 @@ def elograph(playername, games, patch, transparency=False):
     curdoc().theme = "dark_minimal"
     p = figure(title=playername.capitalize()+"'s Elo Graph", x_axis_label="Games", y_axis_label="Elo", sizing_mode="stretch_both")
     p.line(games_list,elo_per_game, line_width=2, line_color="white")
-    p.extra_x_ranges['foo'] = Range1d(1, games+1)
-    axis2 = LinearAxis(x_range_name="foo", axis_label="Dates")
-    axis2.axis_label_text_color = "white"
-    p.add_layout(axis2, 'above')
+    p.extra_x_ranges.update({'x_above': p.x_range})
+    p.add_layout(LinearAxis(x_range_name='x_above'), 'above')
     p.above[0].major_label_overrides = {key: item for key, item in zip(range(1, games+1), date_per_game)}
     p.x_range.min_interval = 1
     p.x_range.max_interval = games
+    p.xaxis.minor_tick_line_color = None
+    p.yaxis.minor_tick_line_color = None
     b_rand_id = util.id_generator()
     p.title.text = playername.capitalize()+"'s Elo Graph"
     output_file(shared_folder+b_rand_id+".html")
@@ -131,7 +131,7 @@ def elograph(playername, games, patch, transparency=False):
     ax.plot(range(1, games + 1), elo_per_game, color='red', marker=marker_plot, linewidth=1.5, label='Elo')
     ax2.set_xlim(ax.get_xlim())
     new_tick_locs = []
-    for d in range(0, games):
+    for d in range(1, games+1):
         new_tick_locs.append(d)
     ax.set_xticks(new_tick_locs)
     ax.set_xticklabels(new_tick_locs)

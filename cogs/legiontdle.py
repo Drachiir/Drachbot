@@ -51,7 +51,13 @@ def check_if_played_today(name: str, game: int):
                 playedstring = "You already played todays **Guess The Leak**:grimacing:, next reset is "
             case 3:
                 playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
-            
+        if "game2" not in session:
+            session["game1"]["score"] = session["score"]
+            session["game1"]["games_played"] = session["games_played"]
+            session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+        if "game3" not in session:
+            session["game3"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+        update_user_data(session, session["name"])
         if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
             session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
             session["game"+str(game)]["game_finished"] = False
@@ -80,23 +86,10 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
             embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
             return embed
         case 1:
-            if "game2" not in session:
-                session["game1"]["score"] = session["score"]
-                session["game1"]["games_played"] = session["games_played"]
-                session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
-                update_user_data(session, session["name"])
             return ltdle_game1(session, input, ltdle_data)
         case 2:
-            if "game2" not in session:
-                session["game1"]["score"] = session["score"]
-                session["game1"]["games_played"] = session["games_played"]
-                session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
-                update_user_data(session, session["name"])
             return ltdle_game2(session, input, ltdle_data)
         case 3:
-            if "game3" not in session:
-                session["game3"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
-                update_user_data(session, session["name"])
             return ltdle_game3(session, input, ltdle_data)
             
 
@@ -243,7 +236,6 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         unit_dict[string] = u_js
     if text_input.lower() not in unit_dict:
         close_matches = difflib.get_close_matches(text_input.lower(), list(unit_dict.keys()), cutoff=0.8)
-        print(close_matches)
         if len(close_matches) > 0:
             text_input = close_matches[0]
             unit_data = unit_dict[close_matches[0]]

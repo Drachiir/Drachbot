@@ -14,7 +14,7 @@ with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
     f.close()
 
-class Client(commands.Bot):
+class Drachbot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         intents.message_content = True
@@ -37,7 +37,7 @@ class Client(commands.Bot):
     async def on_ready(self):
         print(f'"{self.user.display_name}" is now running!')
 
-class Client2(commands.Bot):
+class Livegame(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         intents.message_content = True
@@ -60,8 +60,8 @@ class Client2(commands.Bot):
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    client = Client()
-    client2 = Client2()
+    client = Drachbot()
+    client2 = Livegame()
     loop.create_task(client.start(secret_file["token"]))
     loop.create_task(client2.start(secret_file["livegametoken"]))
     loop.run_forever()
