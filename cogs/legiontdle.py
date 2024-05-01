@@ -16,6 +16,7 @@ from discord.ext import commands
 from discord_timestamps import TimestampType
 import util
 import platform
+import difflib
 
 
 def random_color():
@@ -231,19 +232,26 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         f.close()
     if text_input in util.slang:
         text_input = util.slang.get(text_input)
+    unit_dict = {}
     for u_js in units_json:
+        if u_js["categoryClass"] == "Special" or u_js["categoryClass"] == "Passive":
+            continue
         string = u_js["unitId"]
         string = string.replace('_', ' ')
         string = string.replace(' unit id', '')
         if string == "skyfish": string = "metaldragon"
-        if string.casefold() == text_input.casefold() or util.similar(string, text_input) > 0.9:
-            if u_js["categoryClass"] == "Special" or u_js["categoryClass"] == "Passive":
-                return "Summons are not included."
-            text_input = string
-            unit_data = u_js
-            break
+        unit_dict[string] = u_js
+    if text_input.lower() not in unit_dict:
+        close_matches = difflib.get_close_matches(text_input.lower(), list(unit_dict.keys()), cutoff=0.8)
+        print(close_matches)
+        if len(close_matches) > 0:
+            text_input = close_matches[0]
+            unit_data = unit_dict[close_matches[0]]
+        else:
+            return text_input + " unit not found."
     else:
-        return "Unit " + text_input + " not found."
+        unit_data = unit_dict[text_input]
+
     if " " in text_input:
         text_input = text_input.split(" ")
         new_name = ""
