@@ -136,10 +136,10 @@ class TwitchHandler(commands.Cog):
                 try:
                     print(u.id, u.display_name)
                     sub_id = await self.eventsub.listen_stream_online(u.id, self.on_online)
-                    print(sub_id)
+                    #print(sub_id)
                     sub_id2 = await self.eventsub.listen_stream_offline(u.id, self.on_offline)
-                    print(sub_id2)
-                    print(self.eventsub.secret)
+                    #print(sub_id2)
+                    #print(self.eventsub.secret)
                 except Exception:
                     traceback.print_exc()
                     print(u.display_name + " failed")
