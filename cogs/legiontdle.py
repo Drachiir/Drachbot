@@ -36,44 +36,41 @@ def update_user_data(session, name):
 
 
 def check_if_played_today(name: str, game: int):
-    try:
-        date_now = datetime.now()
-        with open("ltdle_data/" + name + "/data.json", "r") as f:
-            session = json.load(f)
-            f.close()
-        with open("ltdle_data/ltdle.json", "r") as f:
-            ltdle_data = json.load(f)
-            f.close()
-        match game:
-            case 1:
-                playedstring = "You already played todays **Guess The Unit**:question:, next reset is "
-            case 2:
-                playedstring = "You already played todays **Guess The Leak**:grimacing:, next reset is "
-            case 3:
-                playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
-        if "game2" not in session:
-            session["game1"]["score"] = session["score"]
-            session["game1"]["games_played"] = session["games_played"]
-            session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
-        if "game3" not in session:
-            session["game3"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+    date_now = datetime.now()
+    with open("ltdle_data/" + name + "/data.json", "r") as f:
+        session = json.load(f)
+        f.close()
+    with open("ltdle_data/ltdle.json", "r") as f:
+        ltdle_data = json.load(f)
+        f.close()
+    match game:
+        case 1:
+            playedstring = "You already played todays **Guess The Unit**:question:, next reset is "
+        case 2:
+            playedstring = "You already played todays **Guess The Leak**:grimacing:, next reset is "
+        case 3:
+            playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
+    if "game2" not in session:
+        session["game1"]["score"] = session["score"]
+        session["game1"]["games_played"] = session["games_played"]
+        session["game2"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+    if "game3" not in session:
+        session["game3"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+    update_user_data(session, session["name"])
+    if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+        session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
+        session["game"+str(game)]["game_finished"] = False
+        session["game"+str(game)]["guesses"] = []
+        if game == 2 or game == 3:
+            session["game"+str(game)]["image"] = 0
         update_user_data(session, session["name"])
-        if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-            session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
-            session["game"+str(game)]["game_finished"] = False
-            session["game"+str(game)]["guesses"] = []
-            if game == 2 or game == 3:
-                session["game"+str(game)]["image"] = 0
-            update_user_data(session, session["name"])
-            return session
-        elif not session["game"+str(game)]["game_finished"]:
-            return session
-        else:
-            mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
-            timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-            return playedstring + timestamp
-    except Exception:
-        traceback.print_exc()
+        return session
+    elif not session["game"+str(game)]["game_finished"]:
+        return session
+    else:
+        mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
+        timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
+        return playedstring + timestamp
 
 
 def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
@@ -233,6 +230,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         string = string.replace('_', ' ')
         string = string.replace(' unit id', '')
         if string == "skyfish": string = "metaldragon"
+        elif string == "imp mercenary": string = "imp"
         unit_dict[string] = u_js
     if text_input.lower() not in unit_dict:
         close_matches = difflib.get_close_matches(text_input.lower(), list(unit_dict.keys()), cutoff=0.8)
@@ -242,7 +240,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         else:
             return text_input + " unit not found."
     else:
-        unit_data = unit_dict[text_input]
+        unit_data = unit_dict[text_input.lower()]
 
     if " " in text_input:
         text_input = text_input.split(" ")

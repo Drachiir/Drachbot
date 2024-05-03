@@ -9,6 +9,7 @@ from discord.ext.commands._types import BotT
 
 import cogs.legiontdle
 import cogs.topgames
+import cogs.twitch
 
 with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)

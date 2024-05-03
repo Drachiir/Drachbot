@@ -113,21 +113,24 @@ class ScheduledTasks(commands.Cog):
                 with open("ltdle_data/ltdle.json", "r") as f:
                     json_data = json.load(f)
                     f.close()
-                for noti_channel in json_data["notify_channels"]:
-                    try:
-                        guild = self.client.get_guild(noti_channel[0])
-                        channel = guild.get_channel(noti_channel[1])
-                        await channel.send("New Legiontdle is up! :brain: <a:dinkdonk:1120126536343896106>")
-                    except Exception:
-                        continue
+                with open("Files/json/discord_channels.json", "r") as f:
+                    discord_channels = json.load(f)
+                    f.close()
+                try:
+                    guild = self.client.get_guild(discord_channels["drachbot_update"][0])
+                    channel = guild.get_channel(discord_channels["drachbot_update"][1])
+                    message = await channel.send("New Legiontdle is up! :brain: <a:dinkdonk:1120126536343896106>")
+                    await message.publish()
+                except Exception:
+                    pass
                 try:
                     loop = asyncio.get_running_loop()
                     with concurrent.futures.ThreadPoolExecutor() as pool:
                         ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.ladder_update, 150))
                         pool.shutdown()
-                    guild = self.client.get_guild(json_data["notify_channels"][0][0])
-                    channel = guild.get_channel(json_data["notify_channels"][0][1])
-                    await channel.send("Scheduled Update: "+ladder_update)
+                    guild = self.client.get_guild(discord_channels["toikan_drachbot"][0])
+                    channel = guild.get_channel(discord_channels["toikan_drachbot"][1])
+                    message = await channel.send("Scheduled Update: "+ladder_update)
                 except Exception:
                     pass
             else:
