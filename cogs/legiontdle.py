@@ -402,7 +402,7 @@ def ltdle_game3(session: dict, input: int, ltdle_data: dict):
     color = random_color()
     image_index = session["game3"]["image"]
     def embed1(image):
-        embed = discord.Embed(color=color, title="Guess The Elo :gem:", description="Guess the average elo of this game. (1600-2800 range:bangbang:)", url=ltdle_data["game_3_selected_game"][0])
+        embed = discord.Embed(color=color, title="Guess The Elo :gem:", description="Guess the average elo of this game. (1400-2800 range:bangbang:)", url=ltdle_data["game_3_selected_game"][0])
         file = discord.File(image, filename=image.split("/")[-1])
         embed.set_image(url="attachment://"+image.split("/")[-1])
         return [file, embed]
@@ -494,8 +494,8 @@ class EloInput(ui.Modal, title='Enter a Elo!'):
         await interaction.response.defer()
         try:
             input = int(self.answer.value)
-            if input<1600 or input>2800:
-                await interaction.followup.send("Elo range is **1600-2800**, try again.")
+            if input<1400 or input>2800:
+                await interaction.followup.send("Elo range is **1400-2800**, try again.")
                 return
         except Exception:
             await interaction.followup.send("Invalid input, try again.")

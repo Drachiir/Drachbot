@@ -1,6 +1,7 @@
 import datetime
 import json
 import pathlib
+import random
 import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -34,13 +35,12 @@ def api_call_logger(request_type):
 
 def get_random_games():
     games = []
-    for i in range(6):
-        games.append([1600+200*i, 1600+200*(i+1), ""])
-    print(games)
-    offset = 0
+    for i in range(7):
+        games.append([1400+200*i, 1400+200*(i+1), ""])
+    offset = 200
     games_found = 0
     tries = 0
-    while games_found < 6:
+    while games_found < 7:
         if tries == 50: break
         try:
             url = 'https://apiv2.legiontd2.com/games?limit=50&offset='+str(offset)+'&sortBy=date&sortDirection=-1&includeDetails=false&countResults=false&queueType=Normal'
@@ -56,7 +56,7 @@ def get_random_games():
                         elo_bracket[2] = game["_id"]
                         games_found += 1
                         break
-            offset += 50
+            offset += random.randint(50,1000)
         except Exception:
             traceback.print_exc()
         tries += 1
