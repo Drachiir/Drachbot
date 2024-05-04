@@ -100,7 +100,7 @@ class TwitchHandler(commands.Cog):
                         with open("sessions/session_"+self.messages[streamer]["ingame_name"]+".json", "r") as f:
                             session = json.load(f)
                             f.close()
-                        end_string = f'Start elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])}\n'
+                        end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])}\n'
                     else:
                         end_string = ""
                     embed = discord.Embed(color=util.random_color(), title=f"{streamer} is live! {self.messages[streamer]["noti_string"]}",description=end_string, url='https://www.twitch.tv/'+streamer)
@@ -121,8 +121,13 @@ class TwitchHandler(commands.Cog):
                         with open("sessions/session_"+self.messages[streamer]["ingame_name"]+".json", "r") as f:
                             session = json.load(f)
                             f.close()
+                        elo_change = session["current_elo"]-session["int_elo"]
+                        if elo_change >= 0:
+                            elo_prefix = "+"
+                        else:
+                            elo_prefix = ""
                         end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])}\n'
-                            f'End elo: {session["current_elo"]} {util.get_ranked_emote(session["current_elo"])}'
+                            f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change})'
                             f'{session["current_wins"]-session["int_wins"]}W-{session["current_losses"]-session["int_losses"]}L')
                         os.remove("sessions/session_" + self.messages[streamer]["ingame_name"] + ".json")
                     else:
