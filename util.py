@@ -6,6 +6,9 @@ from PIL import Image
 import discord
 from discord import app_commands
 
+def random_color():
+    return random.randrange(0, 2 ** 24)
+
 with open('Files/json/const.json', 'r') as f:
     const_file = json.load(f)
     f.close()
