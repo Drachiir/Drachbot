@@ -146,9 +146,12 @@ class TwitchHandler(commands.Cog):
                             elo_prefix = "+"
                         else:
                             elo_prefix = ""
+                        wins = session["current_wins"]-session["int_wins"]
+                        losses = session["current_losses"]-session["int_losses"]
+                        winrate = round(wins/(wins+losses)*100)
                         end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])}\n'
                             f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change})'
-                            f'\n{session["current_wins"]-session["int_wins"]}W-{session["current_losses"]-session["int_losses"]}L')
+                            f'\n{wins}W-{losses}L, WR: {winrate}%')
                         os.remove("sessions/session_" + self.messages[streamer]["ingame_name"] + ".json")
                     else:
                         end_string = ""

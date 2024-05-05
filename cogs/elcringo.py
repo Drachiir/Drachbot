@@ -11,7 +11,7 @@ import util
 import legion_api
 
 
-def elcringo(playername, games, patch, min_elo, option, sort="date"):
+def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Sent"):
     if playername.lower() == 'all':
         playerid = 'all'
         suffix = ''
@@ -64,7 +64,10 @@ def elcringo(playername, games, patch, min_elo, option, sort="date"):
             if player["playerId"] == playerid or playerid == 'all':
                 for n, s in enumerate(player["mercenariesSentPerWave"]):
                     small_send = 0
-                    send = util.count_mythium(player["mercenariesSentPerWave"][n]) + len(player["kingUpgradesPerWave"][n]) * 20
+                    if saves == "Sent":
+                        send = util.count_mythium(player["mercenariesSentPerWave"][n]) + len(player["kingUpgradesPerWave"][n]) * 20
+                    elif saves == "Received":
+                        send = util.count_mythium(player["mercenariesReceivedPerWave"][n]) + len(player["opponentKingUpgradesPerWave"][n]) * 20
                     mythium_list_pergame.append(send)
                     if n <= 9:
                         if player["workersPerWave"][n] > 5:
@@ -141,9 +144,9 @@ def elcringo(playername, games, patch, min_elo, option, sort="date"):
     king_hp_enemy_10 = sum(kinghp_enemy_list) / len(kinghp_enemy_list)
     if playername == "all" or "nova cup" in playername:
         king_hp_10 = (king_hp_10 + king_hp_enemy_10) / 2
-        string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%\n'
+        string2 = '**King hp on 10:** ' + str(round(king_hp_10 * 100, 2)) + '%\n'
     else:
-        string2 = 'King hp on 10: ' + str(round(king_hp_10 * 100, 2)) + '%, Enemy King: ' + str(round(king_hp_enemy_10 * 100, 2)) + '%\n'
+        string2 = '**King hp on 10:** ' + str(round(king_hp_10 * 100, 2)) + '%, Enemy King: ' + str(round(king_hp_enemy_10 * 100, 2)) + '%\n'
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     if playerid == "all":
         playername = playername.capitalize()
@@ -157,10 +160,11 @@ def elcringo(playername, games, patch, min_elo, option, sort="date"):
                                                       '**Saves after 10:** ' + str(saves_post10) + '/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n' +
                                                       '**Worker on 10:** ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n" +
                                                       '**Leaks:** ' + str(leaks_total) + "% (First 10: " + str(leaks_pre10_total) + "%)\n" +
+                                                      string2+
                                                       '**Income on 10:** ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n" +
                                                       '**Mythium sent:** ' + str(mythium) + ' (Pre 10: ' + str(mythium_pre10) + ', Post 10: ' + str(mythium - mythium_pre10) + ')\n' +
                                                       '**Game elo:** ' + str(round(avg_gameelo)))
-    embed.set_author(name=playername + suffix + " elcringo stats", icon_url=avatar)
+    embed.set_author(name=playername + suffix +" " + saves +" elcringo stats", icon_url=avatar)
     embed.set_footer(text='Patches: ' + ', '.join(patches))
     return embed
 
@@ -172,7 +176,7 @@ class Elcringo(commands.Cog):
     @app_commands.command(name="elcringo", description="Shows how cringe someone is.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.', min_elo='Enter minium average game elo to include in the data set',
-                           option='Count small sends as save?', sort='Sort by?')
+                           option='Count small sends as save?', sort='Sort by?', saves="Sent or received")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Yes', value="Yes"),
         discord.app_commands.Choice(name='No', value="No")
@@ -181,7 +185,11 @@ class Elcringo(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def elcringo(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, option: discord.app_commands.Choice[str] = "Yes", sort: discord.app_commands.Choice[str] = "date"):
+    @app_commands.choices(saves=[
+        discord.app_commands.Choice(name='Sent', value='Sent'),
+        discord.app_commands.Choice(name='Received', value='Received')
+    ])
+    async def elcringo(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, option: discord.app_commands.Choice[str] = "Yes", sort: discord.app_commands.Choice[str] = "date", saves: discord.app_commands.Choice[str] = 'Sent'):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -196,7 +204,11 @@ class Elcringo(commands.Cog):
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(elcringo, playername, games, patch, min_elo, option, sort=sort))
+                saves = saves.value
+            except AttributeError:
+                pass
+            try:
+                response = await loop.run_in_executor(pool, functools.partial(elcringo, playername, games, patch, min_elo, option, sort=sort, saves=saves))
                 pool.shutdown()
                 if type(response) == discord.Embed:
                     await interaction.followup.send(embed=response)
