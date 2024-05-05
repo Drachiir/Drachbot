@@ -9,7 +9,7 @@ from discord.ext import commands, tasks
 from twitchAPI.twitch import Twitch
 from twitchAPI.helper import first
 from twitchAPI.eventsub.webhook import EventSubWebhook
-from twitchAPI.object.eventsub import StreamOnlineEvent, StreamOfflineEvent
+from twitchAPI.object.eventsub import StreamOnlineEvent, StreamOfflineEvent, ChannelUpdateEvent
 import asyncio
 import json
 
@@ -21,10 +21,6 @@ with open('Files/json/Secrets.json') as f:
 
 with open("Files/streamers.txt", "r") as f:
     data = f.readlines()
-    f.close()
-
-with open("Files/json/discord_channels.json", "r") as f:
-    discord_channels = json.load(f)
     f.close()
 
 class TwitchHandler(commands.Cog):
@@ -61,19 +57,19 @@ class TwitchHandler(commands.Cog):
             if type(stream) == type(None):
                 game = "Legion TD 2"
                 started_at = ""
-                thumb = ""
+                title = ""
                 avatar = user.profile_image_url
             else:
                 game = stream.game_name
                 started_at = str(stream.started_at)
-                thumb = stream.thumbnail_url
+                title = stream.title
                 avatar = user.profile_image_url
             if game == "Legion TD 2":
                 self.messages[event_data.event.broadcaster_user_name]["live"] = True
                 self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
                 self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
-                self.messages[event_data.event.broadcaster_user_name]["thumbnail"] = thumb
                 self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
+                self.messages[event_data.event.broadcaster_user_name]["title"] = title
                 print(f'{event_data.event.broadcaster_user_name} is live playing ltd2!')
         except Exception:
             traceback.print_exc()
@@ -82,6 +78,31 @@ class TwitchHandler(commands.Cog):
         try:
             print(f'{event_data.event.broadcaster_user_name} is done streaming.')
             self.messages[event_data.event.broadcaster_user_name]["live"] = False
+        except Exception:
+            traceback.print_exc()
+    
+    async def on_change(self, event_data: ChannelUpdateEvent):
+        try:
+            stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
+            user = await first(self.twitchclient.get_users(user_ids=[event_data.event.broadcaster_user_id]))
+            if type(stream) == type(None):
+                started_at = ""
+                title = ""
+                avatar = user.profile_image_url
+            else:
+                started_at = str(stream.started_at)
+                title = stream.title
+                avatar = user.profile_image_url
+            if event_data.event.category_name == "Legion TD 2" and not self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
+                self.messages[event_data.event.broadcaster_user_name]["live"] = True
+                self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
+                self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
+                self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
+                self.messages[event_data.event.broadcaster_user_name]["title"] = title
+                print(f'{event_data.event.broadcaster_user_name} changed to playing ltd2!')
+            elif event_data.event.category_name != "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
+                self.messages[event_data.event.broadcaster_user_name]["live"] = False
+                print(f'{event_data.event.broadcaster_user_name} stopped playing ltd2!')
         except Exception:
             traceback.print_exc()
     
@@ -103,16 +124,16 @@ class TwitchHandler(commands.Cog):
                         end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])}\n'
                     else:
                         end_string = ""
-                    embed = discord.Embed(color=util.random_color(), title=f"{streamer} is live! {self.messages[streamer]["noti_string"]}",description=end_string, url='https://www.twitch.tv/'+streamer)
-                    try:
-                        embed.set_image(url=self.messages[streamer]["thumbnail"])
-                    except KeyError: pass
+                    embed = discord.Embed(color=util.random_color(), title=self.messages[streamer]["title"],description=end_string, url='https://www.twitch.tv/'+streamer)
                     try:
                         embed.set_thumbnail(url=self.messages[streamer]["avatar"])
                     except KeyError: pass
+                    with open("Files/json/discord_channels.json", "r") as f:
+                        discord_channels = json.load(f)
+                        f.close()
                     guild = self.client.get_guild(discord_channels["toikan_streams"][0])
                     channel = guild.get_channel(discord_channels["toikan_streams"][1])
-                    message = await channel.send(embed=embed)
+                    message = await channel.send(content=f"{streamer} is live playing LTD2! {self.messages[streamer]["noti_string"]}", embed=embed)
                     self.messages[streamer]["noti_sent"] = True
                     self.messages[streamer]["last_msg"] = message.id
                 elif self.messages[streamer]["noti_sent"] and self.messages[streamer]["live"] == False:
@@ -128,20 +149,23 @@ class TwitchHandler(commands.Cog):
                             elo_prefix = ""
                         end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])}\n'
                             f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change})'
-                            f'{session["current_wins"]-session["int_wins"]}W-{session["current_losses"]-session["int_losses"]}L')
+                            f'\n{session["current_wins"]-session["int_wins"]}W-{session["current_losses"]-session["int_losses"]}L')
                         os.remove("sessions/session_" + self.messages[streamer]["ingame_name"] + ".json")
                     else:
                         end_string = ""
-                    embed = discord.Embed(color=util.random_color(), title=f"{streamer} stopped streaming.", description=end_string, url='https://www.twitch.tv/' + streamer)
+                    embed = discord.Embed(color=util.random_color(), title=f"{streamer} stopped streaming LTD2.", description=end_string, url='https://www.twitch.tv/' + streamer)
                     try:
                         embed.set_thumbnail(url=self.messages[streamer]["avatar"])
                     except KeyError: pass
                     self.messages[streamer]["noti_sent"] = False
                     message_id = self.messages[streamer]["last_msg"]
+                    with open("Files/json/discord_channels.json", "r") as f:
+                        discord_channels = json.load(f)
+                        f.close()
                     guild = self.client.get_guild(discord_channels["toikan_streams"][0])
                     channel = guild.get_channel(discord_channels["toikan_streams"][1])
                     message = await channel.fetch_message(message_id)
-                    await message.edit(embed=embed)
+                    await message.edit(content="", embed=embed)
             except Exception:
                 traceback.print_exc()
     
@@ -151,9 +175,22 @@ class TwitchHandler(commands.Cog):
         self.message.start()
         try:
             self.twitchclient = await Twitch(secret_file.get("twitchappid"), secret_file.get("twitchsecret"))
+            users = self.twitchclient.get_users(logins=self.twitch_names)
             self.eventsub = EventSubWebhook(callback_url="https://twitch.drachbot.site/", port=8000, twitch=self.twitchclient)
-            self.eventsub.unsubscribe_on_stop = False
+            await self.eventsub.unsubscribe_all()
             self.eventsub.start()
+            async for u in users:
+                try:
+                    print(u.id, u.display_name)
+                    sub_id = await self.eventsub.listen_stream_online(u.id, self.on_online)
+                    # print(sub_id)
+                    sub_id2 = await self.eventsub.listen_stream_offline(u.id, self.on_offline)
+                    # print(sub_id2)
+                    sub_id3 = await self.eventsub.listen_channel_update(u.id, self.on_change)
+                    # print(self.eventsub.secret)
+                except Exception:
+                    traceback.print_exc()
+                    print(u.display_name + " failed")
             print("Eventsub started.")
             await ctx.message.add_reaction("✅")
         except Exception:
@@ -190,42 +227,6 @@ class TwitchHandler(commands.Cog):
             json.dump(self.messages, f2)
         print("stopped eventsub")
         await ctx.message.add_reaction("✅")
-    
-    @commands.command()
-    async def unsub_all(self, ctx: commands.Context):
-        try:
-            await self.eventsub.unsubscribe_all()
-            print("unsubbed all event subscriptions")
-            await ctx.message.add_reaction("✅")
-        except Exception:
-            await ctx.message.add_reaction("❌")
-    
-    @commands.command()
-    async def refresh_subs(self, ctx: commands.Context):
-        try:
-            users = self.twitchclient.get_users(logins=self.twitch_names)
-            async for u in users:
-                try:
-                    print(u.id, u.display_name)
-                    try:
-                        sub_id = await self.eventsub.listen_stream_online(u.id, self.on_online)
-                    except twitchAPI.type.EventSubSubscriptionConflict:
-                        print(f"{u.display_name} online event sub already exists")
-                    # print(sub_id)
-                    try:
-                        sub_id2 = await self.eventsub.listen_stream_offline(u.id, self.on_offline)
-                    except twitchAPI.type.EventSubSubscriptionConflict:
-                        print(f"{u.display_name} offline event sub already exists")
-                    # print(sub_id2)
-                    # print(self.eventsub.secret)
-                except Exception:
-                    traceback.print_exc()
-                    print(u.display_name + " failed")
-            await ctx.message.add_reaction("✅")
-            print("event subs refreshed")
-        except Exception:
-            traceback.print_exc()
-            await ctx.message.add_reaction("❌")
     
     @commands.command()
     async def pull_dict(self, ctx: commands.Context):
