@@ -2,7 +2,6 @@ import os
 import traceback
 import concurrent.futures
 import functools
-import twitchAPI.type
 import cogs.streamtracker
 import discord
 from discord.ext import commands, tasks
@@ -211,6 +210,7 @@ class TwitchHandler(commands.Cog):
                     users = await first(self.twitchclient.get_users(logins=[string[0]]))
                     await self.eventsub.listen_stream_online(users.id, self.on_online)
                     await self.eventsub.listen_stream_offline(users.id, self.on_offline)
+                    await self.eventsub.listen_channel_update(users.id, self.on_change)
                     print(f'added {string[0]} to the eventsub')
             await ctx.message.add_reaction("✅")
         except Exception:
