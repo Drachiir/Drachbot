@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import platform
 
 import discord
 from discord.ext import commands
@@ -9,7 +10,6 @@ from discord.ext.commands._types import BotT
 
 import cogs.legiontdle
 import cogs.topgames
-import cogs.twitch
 
 with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
@@ -22,8 +22,12 @@ class Drachbot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned_or("."), intents=intents)
         self.exts = []
         for e in os.listdir("cogs"):
-            if "__pycache__" in e: continue
-            elif "cog_template" in e: continue
+            if "__pycache__" in e:
+                continue
+            elif "cog_template" in e:
+                continue
+            elif platform.system() == "Windows" and "twitch" in e:
+                continue
             self.exts.append("cogs." + e.split(".")[0])
     
     async def setup_hook(self) -> None:

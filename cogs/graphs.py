@@ -150,7 +150,7 @@ def elograph(playername, games, patch, transparency=False):
     im.save(output_folder + image_id + '.png')
     return [playername, site2+b_rand_id+".html", output_folder + image_id + '.png', image_id + '.png']
 
-def statsgraph(playernames: list, games, min_elo, patch, key, transparency=False, sort="date", waves=[1, 21]) -> str:
+def statsgraph(playernames: list, games, min_elo, patch, key: discord.app_commands.Choice, transparency=False, sort="date", waves=[1, 21]) -> str:
     playerids = set()
     total_games = 0
     for name in playernames:
@@ -178,10 +178,20 @@ def statsgraph(playernames: list, games, min_elo, patch, key, transparency=False
             patches.append(game["version"])
             for player in game["playersData"]:
                 if player["playerId"] == id or id == "all":
+                    if key.value == "leaksPerWave":
+                        leaks_per_wave = []
+                        for wave_num, leak in enumerate(player[key.value]):
+                            leaks_per_wave.append(util.calc_leak(leak, wave_num))
                     if id in players_dict:
-                        players_dict[id]["Data"].append(player[key])
+                        if key.value == "leaksPerWave":
+                            players_dict[id]["Data"].append(leaks_per_wave)
+                        else:
+                            players_dict[id]["Data"].append(player[key.value])
                     else:
-                        players_dict[id] = {"Data": [player[key]]}
+                        if key.value == "leaksPerWave":
+                            players_dict[id] = {"Data": [leaks_per_wave]}
+                        else:
+                            players_dict[id] = {"Data": [player[key.value]]}
     for player in players_dict:
         players_dict[player]["Waves"] = []
         for w in range(21):
@@ -192,7 +202,7 @@ def statsgraph(playernames: list, games, min_elo, patch, key, transparency=False
                 players_dict[player]["Waves"][c][1] += wave_data
         players_dict[player]["FinalData"] = []
         for index, wave in enumerate(players_dict[player]["Waves"]):
-            if index + 1 >= waves[0] and index + 1 <= waves[1]:
+            if waves[0] <= index + 1 <= waves[1]:
                 try:
                     players_dict[player]["FinalData"].append(round(wave[1] / wave[0], 1))
                 except ZeroDivisionError:
@@ -222,7 +232,7 @@ def statsgraph(playernames: list, games, min_elo, patch, key, transparency=False
     myFont_small = ImageFont.truetype(ttf, 20)
     myFont = ImageFont.truetype(ttf, 25)
     myFont_title = ImageFont.truetype(ttf, 30)
-    I1.text((10, 15), key + " Graph (From " + str(total_games) + " ranked games)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    I1.text((10, 15), key.name + " Graph (From " + str(total_games) + " ranked games)", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((10, 55), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     # matplotlib graph
     params = {"ytick.color": "w",
@@ -237,7 +247,11 @@ def statsgraph(playernames: list, games, min_elo, patch, key, transparency=False
     ax.grid(linewidth=2)
     ax.margins(x=0)
     ax.set_xlabel('Wave', weight='bold')
-    ax.set_ylabel(key, weight='bold')
+    if key.value == "leaksPerWave":
+        key_string = "%"
+    else:
+        key_string = ""
+    ax.set_ylabel(key.value+key_string, weight='bold')
     colors = ["red", "deepskyblue", "green"]
     waves_list = []
     for v in range(waves[0], waves[1] + 1):
@@ -529,6 +543,7 @@ class Graphs(commands.Cog):
     @app_commands.choices(key=[
         discord.app_commands.Choice(name='Workers', value="workersPerWave"),
         discord.app_commands.Choice(name='Income', value="incomePerWave"),
+        discord.app_commands.Choice(name='Leaks', value="leaksPerWave"),
         discord.app_commands.Choice(name='Fighter Value', value="valuePerWave")
     ])
     @app_commands.choices(sort=[
@@ -561,7 +576,7 @@ class Graphs(commands.Cog):
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(statsgraph, playernames=playernames, min_elo=min_elo, waves=waves_list, games=games, patch=patch, key=key.value, sort=sort))
+                response = await loop.run_in_executor(pool, functools.partial(statsgraph, playernames=playernames, min_elo=min_elo, waves=waves_list, games=games, patch=patch, key=key, sort=sort))
                 pool.shutdown()
                 if response.endswith(".png"):
                     await interaction.followup.send(file=discord.File(response))
