@@ -172,6 +172,7 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
             vert_line = PIL.Image.new(mode="RGB", size=(line_width, box_size*14+line_width*15), color=(155, 155, 155))
             I1 = ImageDraw.Draw(im)
             ttf = 'Files/RobotoCondensed-Regular.ttf'
+            myFont_tiny = ImageFont.truetype(ttf, 30)
             myFont_small = ImageFont.truetype(ttf, 40)
             myFont = ImageFont.truetype(ttf, 50)
             myFont_title = ImageFont.truetype(ttf, 60)
@@ -216,20 +217,32 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
                     im.paste(vert_line, (x+offset*i,y))
                 build_per_wave = player["buildPerWave"][wave]
                 value = 0
-                for unit2 in build_per_wave:
+                for w_index, unit2 in enumerate(build_per_wave):
                     unit2_list = unit2.split(":")
                     unit2_name = unit2_list[0]
+                    unit_stacks = int(unit2_list[2])
                     for unitjson in units_dict:
+                        if unit2_name == "hell_raiser_buffed_unit_id":
+                            unit2_name = "hell_raiser_unit_id"
                         if unitjson["unitId"] == unit2_name:
+                            if unit_stacks > 0:
+                                value += util.get_unit_stacks_value(unit2_name, unit_stacks, w_index)
                             value += int(unitjson["totalValue"])
                     unit2 = unit2.split("_unit_id:")
-                    unit_x = float(unit2[1].split("|")[0])-0.5
-                    unit_y = 14-float(unit2[1].split("|")[1].split(":")[0])-0.5
-                    unit_stacks = unit2[1].split("|")[1].split(":")[1]
+                    unit_x = float(unit2[1].split("|")[0]) - 0.5
+                    unit_y = 14 - float(unit2[1].split("|")[1].split(":")[0]) - 0.5
                     im.paste(util.get_icons_image("icon", unit2[0]), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
                     if player["chosenSpellLocation"] != "-1|-1":
                         if unit2_list[1] == player["chosenSpellLocation"] and wave > 9:
-                            im.paste(util.get_icons_image("icon", player["chosenSpell"]).resize((28,28)),(int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+                            im.paste(util.get_icons_image("icon", player["chosenSpell"]).resize((28, 28)), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+                    try:
+                        if player["chosenChampionLocation"] != "-1|-1":
+                            if unit2_list[1] == player["chosenChampionLocation"]:
+                                im.paste(util.get_icons_image("legion", "Champion").resize((32, 32)), (int(x + 32 + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+                    except Exception:
+                        pass
+                    if unit_stacks > 0:
+                        I1.text((int(x + line_width + offset * unit_x), int(y + 32 + line_width + offset * unit_y)), str(unit_stacks), font=myFont_tiny, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
                 im.paste(util.get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=util.get_icons_image("icon", "Value32").resize((64,64)))
                 I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
                 im.paste(util.get_icons_image("icon", "Worker"), (x+230, y2 + 150))

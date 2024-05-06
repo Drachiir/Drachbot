@@ -162,8 +162,7 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                                                       '**Leaks:** ' + str(leaks_total) + "% (First 10: " + str(leaks_pre10_total) + "%)\n" +
                                                       string2+
                                                       '**Income on 10:** ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n" +
-                                                      '**Mythium sent:** ' + str(mythium) + ' (Pre 10: ' + str(mythium_pre10) + ', Post 10: ' + str(mythium - mythium_pre10) + ')\n' +
-                                                      '**Game elo:** ' + str(round(avg_gameelo)))
+                                                      '**Mythium:** ' + str(mythium) + ' (Pre 10: ' + str(mythium_pre10) + ', Post 10: ' + str(mythium - mythium_pre10) + ')\n')
     embed.set_author(name=playername + suffix +" " + saves +" elcringo stats", icon_url=avatar)
     embed.set_footer(text='Patches: ' + ', '.join(patches))
     return embed

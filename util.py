@@ -30,6 +30,14 @@ mm_choices = []
 for mm in mm_list:
     mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
 
+def get_unit_stacks_value(unit, stacks, wave10):
+    units_with_stacks = {"sakura_unit_id": 15, "kingpin_unit_id": 1.5, "hydra_unit_id": 72.5, "nekomata_unit_id": 30, "orchid_unit_id": 5, "infiltrator_unit_id": 1, "peewee_unit_id": 5, "veteran_unit_id": 20}
+    if wave10 > 9: units_with_stacks["sakura_unit_id"] = 30
+    try:
+        return round(units_with_stacks[unit] * stacks)
+    except Exception:
+        return 0
+
 def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
