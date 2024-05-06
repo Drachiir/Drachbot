@@ -223,6 +223,7 @@ class Jules(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
+    @app_commands.autocomplete(unit=util.unit_autocomplete)
     async def jules(self, interaction: discord.Interaction, playername: str, unit: str, mastermind: discord.app_commands.Choice[str] = "all", spell: str = "all", games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:

@@ -148,7 +148,10 @@ class TwitchHandler(commands.Cog):
                             elo_prefix = ""
                         wins = session["current_wins"]-session["int_wins"]
                         losses = session["current_losses"]-session["int_losses"]
-                        winrate = round(wins/(wins+losses)*100)
+                        try:
+                            winrate = round(wins/(wins+losses)*100)
+                        except ZeroDivisionError:
+                            winrate = 0
                         end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])}\n'
                             f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change})'
                             f'\n{wins}W-{losses}L, WR: {winrate}%')
@@ -215,6 +218,41 @@ class TwitchHandler(commands.Cog):
                     await self.eventsub.listen_stream_offline(users.id, self.on_offline)
                     await self.eventsub.listen_channel_update(users.id, self.on_change)
                     print(f'added {string[0]} to the eventsub')
+            await ctx.message.add_reaction("✅")
+        except Exception:
+            traceback.print_exc()
+            await ctx.message.add_reaction("❌")
+    
+    @commands.command()
+    async def check_online(self, ctx: commands.Context):
+        try:
+            username = ctx.message.content[14:]
+            for streamer in self.twitch_names:
+                if username == "all":
+                    pass
+                elif username == streamer:
+                    pass
+                else:
+                    continue
+                stream = await first(self.twitchclient.get_streams(user_login=[streamer]))
+                user = await first(self.twitchclient.get_users(logins=[streamer]))
+                if type(stream) == type(None):
+                    game = "Legion TD 2"
+                    started_at = ""
+                    title = ""
+                    avatar = user.profile_image_url
+                else:
+                    game = stream.game_name
+                    started_at = str(stream.started_at)
+                    title = stream.title
+                    avatar = user.profile_image_url
+                if game == "Legion TD 2":
+                    self.messages[streamer]["live"] = True
+                    self.messages[streamer]["noti_sent"] = False
+                    self.messages[streamer]["stream_started_at"] = started_at
+                    self.messages[streamer]["avatar"] = avatar
+                    self.messages[streamer]["title"] = title
+                    print(f'{streamer} is live playing ltd2!')
             await ctx.message.add_reaction("✅")
         except Exception:
             traceback.print_exc()

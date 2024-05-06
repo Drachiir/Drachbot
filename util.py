@@ -30,8 +30,28 @@ mm_choices = []
 for mm in mm_list:
     mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
 
+async def unit_autocomplete(interaction: discord.Interaction, interaction_input):
+    if interaction.command.name == "openstats":
+        max_cost = 270
+    else:
+        max_cost = 1337
+    unit_list = []
+    with open('Files/json/units.json', 'r') as f:
+        units_json = json.load(f)
+    for u_js in units_json:
+        if u_js["totalValue"] != '':
+            if u_js["unitId"] and int(u_js["totalValue"]) > 0 and int(u_js["totalValue"]) <= max_cost:
+                string = u_js["unitId"]
+                string = string.replace('_', ' ')
+                string = string.replace(' unit id', '')
+                unit_list.append(string)
+    return [
+        app_commands.Choice(name=u, value=u)
+        for u in unit_list if interaction_input.lower() in u.lower()
+    ][:25]
+
 def get_unit_stacks_value(unit, stacks, wave10):
-    units_with_stacks = {"sakura_unit_id": 15, "kingpin_unit_id": 1.5, "hydra_unit_id": 72.5, "nekomata_unit_id": 30, "orchid_unit_id": 5, "infiltrator_unit_id": 1, "peewee_unit_id": 5, "veteran_unit_id": 20}
+    units_with_stacks = {"sakura_unit_id": 15, "kingpin_unit_id": 1.5, "hydra_unit_id": -72.5, "nekomata_unit_id": 30, "orchid_unit_id": 5, "infiltrator_unit_id": 1, "peewee_unit_id": 5, "veteran_unit_id": 20}
     if wave10 > 9: units_with_stacks["sakura_unit_id"] = 30
     try:
         return round(units_with_stacks[unit] * stacks)

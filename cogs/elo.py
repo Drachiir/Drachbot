@@ -234,14 +234,14 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
                     im.paste(util.get_icons_image("icon", unit2[0]), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
                     if player["chosenSpellLocation"] != "-1|-1":
                         if unit2_list[1] == player["chosenSpellLocation"] and wave > 9:
-                            im.paste(util.get_icons_image("icon", player["chosenSpell"]).resize((28, 28)), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
+                            im.paste(util.get_icons_image("icon", player["chosenSpell"]).resize((32, 32)), (int(x + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
                     try:
                         if player["chosenChampionLocation"] != "-1|-1":
                             if unit2_list[1] == player["chosenChampionLocation"]:
                                 im.paste(util.get_icons_image("legion", "Champion").resize((32, 32)), (int(x + 32 + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
                     except Exception:
                         pass
-                    if unit_stacks > 0:
+                    if unit_stacks != 0:
                         I1.text((int(x + line_width + offset * unit_x), int(y + 32 + line_width + offset * unit_y)), str(unit_stacks), font=myFont_tiny, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
                 im.paste(util.get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=util.get_icons_image("icon", "Value32").resize((64,64)))
                 I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))

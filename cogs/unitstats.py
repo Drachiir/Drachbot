@@ -128,6 +128,7 @@ class Unitstats(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
+    @app_commands.autocomplete(unit=util.unit_autocomplete)
     async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0, max_cost: int = 2000):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
