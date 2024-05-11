@@ -252,6 +252,7 @@ def gameid_visualizer_singleplayer(gameid, start_wave, player_index):
     vert_line = PIL.Image.new(mode="RGB", size=(line_width, box_size*14+line_width*15), color=(155, 155, 155))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
+    myFont_tiny = ImageFont.truetype(ttf, 30)
     myFont_small = ImageFont.truetype(ttf, 40)
     myFont_title = ImageFont.truetype(ttf, 60)
     y2 = 125
@@ -304,7 +305,7 @@ def gameid_visualizer_singleplayer(gameid, start_wave, player_index):
                     im.paste(util.get_icons_image("legion", "Champion").resize((32,32)),(int(x + 32 + line_width + offset * unit_x), int(y + line_width + offset * unit_y)))
         except Exception: pass
         if unit_stacks != 0:
-            I1.text((int(x + line_width + offset * unit_x), int(y + 48 + line_width + offset * unit_y)), str(unit_stacks), font=myFont_small, stroke_width=1, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+            I1.text((int(x + line_width + offset * unit_x), int(y + 32 + line_width + offset * unit_y)), str(unit_stacks), font=myFont_tiny, stroke_width=1, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     im.paste(util.get_icons_image("icon", "Value32").resize((64,64)), (x, y2 + 150), mask=util.get_icons_image("icon", "Value32").resize((64,64)))
     I1.text((x + 70, y2 + 160), str(value), font=myFont_small, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
     im.paste(util.get_icons_image("icon", "Worker"), (x+230, y2 + 150))

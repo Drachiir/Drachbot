@@ -211,7 +211,6 @@ class Jules(commands.Cog):
     
     @app_commands.command(name="jules", description="Unit synergy stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
-                           unit="Enter unit name, or multiple unit names separated by commas.",
                            mastermind="Enter mastermind name.",
                            spell="Enter legion spell name.",
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
@@ -223,8 +222,13 @@ class Jules(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    @app_commands.autocomplete(unit=util.unit_autocomplete)
-    async def jules(self, interaction: discord.Interaction, playername: str, unit: str, mastermind: discord.app_commands.Choice[str] = "all", spell: str = "all", games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date"):
+    @app_commands.autocomplete(unit1=util.unit_autocomplete, unit2=util.unit_autocomplete,
+                               unit3=util.unit_autocomplete, unit4=util.unit_autocomplete,
+                               spell=util.spell_autocomplete)
+    async def jules(self, interaction: discord.Interaction, playername: str, unit1: str, unit2: str="", unit3: str="", unit4: str="",
+                    mastermind: discord.app_commands.Choice[str] = "all", spell: str = "all", games: int = 0, min_elo: int = 0,
+                    patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date"
+                    ):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -239,6 +243,11 @@ class Jules(commands.Cog):
             except AttributeError:
                 pass
             try:
+                unit = []
+                for i in [unit1,unit2,unit3,unit4]:
+                    if i != "":
+                        unit.append(i)
+                unit = ",".join(unit)
                 response = await loop.run_in_executor(pool, functools.partial(jules, str(playername).lower(), unit, games, min_elo, patch, sort=sort, mastermind=mastermind, spell=spell))
                 pool.shutdown()
                 if response.endswith(".png"):

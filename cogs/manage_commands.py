@@ -1,8 +1,9 @@
+import traceback
+
 import discord
 from discord.ext import commands
 import os
 from datetime import datetime, timedelta, timezone, time
-
 import legion_api
 
 
@@ -17,8 +18,12 @@ class ManageCommands(commands.Cog):
             if content.casefold() == "all":
                 new_exts = []
                 for e in os.listdir("cogs"):
-                    if "__pycache__" in e: continue
-                    elif "cog_template" in e: continue
+                    if "__pycache__" in e:
+                        continue
+                    elif "cog_template" in e:
+                        continue
+                    elif "twitch" in e:
+                        continue
                     new_exts.append("cogs." + e.split(".")[0])
                 for extension in new_exts:
                     await self.client.reload_extension(extension)

@@ -165,7 +165,11 @@ def ltdle_leaderboard(daily, avg):
         if daily:
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]+pscore[3]) + "pts ("+str(pscore[1])+", "+str(pscore[2]) +", "+str(pscore[3])+ ")\n"
         else:
-            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(round(pscore[1]/pscore[2],1))+"pts avg)\n"
+            try:
+                pts = round(pscore[1]/pscore[2],1)
+            except ZeroDivisionError:
+                pts = 0
+            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(pts)+"pts avg)\n"
     if daily:
         title = "Legiontdle Daily Leaderboard:"
     elif avg:
@@ -488,7 +492,7 @@ class LeakInput(ui.Modal, title='Enter a Leak!'):
 
 
 class EloInput(ui.Modal, title='Enter a Elo!'):
-    answer = ui.TextInput(label='Elo (1600-2800)', style=discord.TextStyle.short, max_length=4)
+    answer = ui.TextInput(label='Elo (1400-2800)', style=discord.TextStyle.short, max_length=4)
     
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -670,6 +674,72 @@ class GameSelectionButtons(discord.ui.View):
             traceback.print_exc()
 
 
+class RefreshButtonLtdleTotal(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+    
+    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh_total')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.defer()
+            bucket = self.cd_mapping.get_bucket(interaction.message)
+            retry_after = bucket.update_rate_limit()
+            if retry_after:
+                return print(interaction.user.name + " likes to press buttons.")
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False))
+                pool.shutdown()
+                await interaction.edit_original_response(embed=response)
+        except Exception:
+            traceback.print_exc()
+
+
+class RefreshButtonLtdleDaily(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+    
+    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh_daily')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.defer()
+            bucket = self.cd_mapping.get_bucket(interaction.message)
+            retry_after = bucket.update_rate_limit()
+            if retry_after:
+                return print(interaction.user.name + " likes to press buttons.")
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, True, False))
+                pool.shutdown()
+                await interaction.edit_original_response(embed=response)
+        except Exception:
+            traceback.print_exc()
+
+
+class RefreshButtonLtdleAvg(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+    
+    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh_avg')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.defer()
+            bucket = self.cd_mapping.get_bucket(interaction.message)
+            retry_after = bucket.update_rate_limit()
+            if retry_after:
+                return print(interaction.user.name + " likes to press buttons.")
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True))
+                pool.shutdown()
+                await interaction.edit_original_response(embed=response)
+        except Exception:
+            traceback.print_exc()
+
+
 class Legiontdle(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
@@ -734,7 +804,7 @@ class Legiontdle(commands.Cog):
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            await interaction.followup.send(embed=response)
+                            await interaction.followup.send(embed=response, view=RefreshButtonLtdleTotal())
                         else:
                             await interaction.followup.send(response)
                         return
@@ -742,7 +812,7 @@ class Legiontdle(commands.Cog):
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            await interaction.followup.send(embed=response)
+                            await interaction.followup.send(embed=response, view=RefreshButtonLtdleAvg())
                         else:
                             await interaction.followup.send(response)
                         return
@@ -750,7 +820,7 @@ class Legiontdle(commands.Cog):
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, True, False))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            await interaction.followup.send(embed=response)
+                            await interaction.followup.send(embed=response, view=RefreshButtonLtdleDaily())
                         else:
                             await interaction.followup.send(response)
                         return

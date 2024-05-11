@@ -32,10 +32,11 @@ def get_top_games():
             continue
         if len(topgames) < 4:
             topgames.append(game)
+        else:
+            break
     if len(topgames) == 0:
         return "No games found."
     embed = discord.Embed(color=0x8c00ff)
-    embed.set_author(name="Top Games", icon_url="https://overlay.drachbot.site/drachia.png")
     for idx, game2 in enumerate(topgames):
         with open(path + game2, "r", encoding="utf_8") as f2:
             txt = f2.readlines()
@@ -43,16 +44,29 @@ def get_top_games():
         path2 = path + game2
         mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc).timestamp()
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-        output = "West: "
-        for c, data in enumerate(txt):
-            if c == len(txt) - 1:
-                output += "\n"
-                break
+        if len(txt[0]) < len(txt[2]):
+            longest_str_left = len(txt[2])
+        else:
+            longest_str_left = len(txt[0])
+        if len(txt[1]) < len(txt[3]):
+            longest_str_right = len(txt[3])
+        else:
+            longest_str_right = len(txt[1])
+        output = "`West:`"
+        for c, data in enumerate(txt[:4]):
             data = data.replace("\n", "")
             if c == (len(txt) - 1) / 2:
-                output += "\nEast: "
-            output += data + util.get_ranked_emote(int(data.split(":")[1])) + " "
-        embed.add_field(name="**Game " + str(idx + 1) + "**, " + txt[-1] + util.get_ranked_emote(int(txt[-1])) + "  Started " + str(timestamp), value=output, inline=False)
+                output += "\n`East:`"
+            string_out = data
+            if len(data) < longest_str_left and (c == 0 or c == 2):
+                for i in range(longest_str_left-len(data)-1):
+                    string_out += " "
+            elif len(data) < longest_str_right and (c == 1 or c == 3):
+                for i in range(longest_str_right-len(data)-1):
+                    string_out += " "
+                    
+            output += util.get_ranked_emote(int(data.split(":")[1])) + "`" + string_out + "`"
+        embed.add_field(name="**Game " + str(idx + 1) + "**, " + txt[-1] + " " + util.get_ranked_emote(int(txt[-1])) + " Started " + str(timestamp), value=output, inline=False)
     return embed
 
 class RefreshButton(discord.ui.View):

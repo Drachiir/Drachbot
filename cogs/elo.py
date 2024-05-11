@@ -291,7 +291,7 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
                 im.save(shared_folder+random_id+'.png')
                 image_link = site + random_id+'.png'
             else:
-                im = im.resize((int(20 + offset * 39 / 2), int(1750 / 2)))
+                im = im.resize((int(20 + offset * 39), int(1750)))
                 im.save(shared_folder + gameid + "/" + str(wave + 1) + '.jpg')
                 image_link = site+gameid+"/"+str(wave+1)+'.jpg'
     else:

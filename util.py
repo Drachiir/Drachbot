@@ -50,6 +50,22 @@ async def unit_autocomplete(interaction: discord.Interaction, interaction_input)
         for u in unit_list if interaction_input.lower() in u.lower()
     ][:25]
 
+async def spell_autocomplete(interaction: discord.Interaction, interaction_input):
+    spell_list = []
+    with open('Files/json/spells.json', 'r') as f:
+        spells_json = json.load(f)
+    for s_js in spells_json:
+        string = s_js["_id"]
+        string = string.replace('_powerup_id', '')
+        string = string.replace('_spell_damage', '')
+        string = string.replace("_", " ")
+        spell_list.append(string)
+    spell_list.append("taxed allowance")
+    return [
+        app_commands.Choice(name=u, value=u)
+        for u in spell_list if interaction_input.lower() in u.lower()
+    ][:25]
+
 def get_unit_stacks_value(unit, stacks, wave10):
     units_with_stacks = {"sakura_unit_id": 15, "kingpin_unit_id": 1.5, "hydra_unit_id": -72.5, "nekomata_unit_id": 30, "orchid_unit_id": 5, "infiltrator_unit_id": 1, "peewee_unit_id": 5, "veteran_unit_id": 20}
     if wave10 > 9: units_with_stacks["sakura_unit_id"] = 30
@@ -78,6 +94,8 @@ def get_icons_image(type, name):
                 name = "Icons/DefaultAvatar.png"
             name = name.split("Icons/")
             image_path = 'Files/icons/' + name[1]
+            if image_path == "Files/icons/PriestessOfTheAbyss.png":
+                image_path = "Files/icons/PriestessoftheAbyss.png"
         case "icon":
             if "_" in name:
                 name = name.split("_")

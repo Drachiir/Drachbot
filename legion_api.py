@@ -61,8 +61,6 @@ def get_random_games():
             traceback.print_exc()
         tries += 1
     return games
-        
-        
 
 def getid(playername):
     request_type = 'players/byName/'

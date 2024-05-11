@@ -2,7 +2,9 @@ import asyncio
 import json
 import os
 import platform
+from contextlib import suppress
 
+import aiohttp.http_exceptions
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context, errors
@@ -38,6 +40,9 @@ class Drachbot(commands.Bot):
         self.add_view(cogs.legiontdle.GameSelectionButtons())
         self.add_view(cogs.legiontdle.ModalLeakButton())
         self.add_view(cogs.legiontdle.ModalEloButton())
+        self.add_view(cogs.legiontdle.RefreshButtonLtdleTotal())
+        self.add_view(cogs.legiontdle.RefreshButtonLtdleDaily())
+        self.add_view(cogs.legiontdle.RefreshButtonLtdleAvg())
     
     async def on_ready(self):
         print(f'"{self.user.display_name}" is now running!')
@@ -67,6 +72,7 @@ if __name__ == "__main__":
     asyncio.set_event_loop(loop)
     client = Drachbot()
     client2 = Livegame()
-    loop.create_task(client.start(secret_file["token"]))
-    loop.create_task(client2.start(secret_file["livegametoken"]))
-    loop.run_forever()
+    with suppress(aiohttp.http_exceptions.BadStatusLine):
+        loop.create_task(client.start(secret_file["token"]))
+        loop.create_task(client2.start(secret_file["livegametoken"]))
+        loop.run_forever()

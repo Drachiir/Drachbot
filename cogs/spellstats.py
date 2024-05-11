@@ -122,6 +122,7 @@ class Spellstats(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
+    @app_commands.autocomplete(spell=util.spell_autocomplete)
     async def spellstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", spell: str = "all"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
