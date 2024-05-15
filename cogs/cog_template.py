@@ -8,7 +8,7 @@ import functools
 import json
 import difflib
 
-import json_db
+import drachbot_db
 import util
 import legion_api
 

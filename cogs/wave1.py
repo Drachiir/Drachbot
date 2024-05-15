@@ -6,7 +6,7 @@ import concurrent.futures
 import traceback
 import functools
 
-import json_db
+import drachbot_db
 import util
 import legion_api
 
@@ -31,7 +31,7 @@ def wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     save_count = 0
     leaks_count = 0
     try:
-        history_raw = json_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'

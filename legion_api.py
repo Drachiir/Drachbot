@@ -5,8 +5,9 @@ import random
 import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
-import json_db
-
+import drachbot_db
+import peewee_pg
+from peewee_pg import PlayerProfile, GameData, PlayerData
 import requests
 
 with open('Files/json/Secrets.json', 'r') as f:
@@ -93,10 +94,9 @@ def getstats(playerid):
     api_call_logger(request_type)
     return stats
 
-def pullgamedata(playerid, offset, path, expected):
+def pullgamedata(playerid, offset, expected):
     ranked_count = 0
     games_count = 0
-    output = []
     url = 'https://apiv2.legiontd2.com/players/matchHistory/' + str(playerid) + '?limit=' + str(50) + '&offset=' + str(offset) + '&countResults=false'
     print('Pulling ' + str(50) + ' games from API...')
     api_response = requests.get(url, headers=header)
@@ -109,21 +109,11 @@ def pullgamedata(playerid, offset, path, expected):
         if (raw_data == {'message': 'Internal server error'}) or (raw_data == {'err': 'Entry not found.'}):
             break
         if (x['queueType'] == 'Normal'):
-            if Path(Path(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+ '_' + str(x['_id']) + ".json")).is_file():
-                print('File already there, breaking loop.')
-                break
-            ranked_count += 1
-            with open(str(path + 'gamedata/')+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_' + str(x['_id']) + ".json", "w") as f:
-                json.dump(x, f)
-                f.close()
-            if not Path(Path(str(pathlib.Path(__file__).parent.resolve()) + "/Games/"+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+ '_' + str(x['_id']) + ".json")).is_file():
-                with open(str(pathlib.Path(__file__).parent.resolve()) + "/Games/"+x['date'].split('.')[0].replace('T', '-').replace(':', '-')+'_'+x['version'].replace('.', '-')+'_'+str(x['gameElo'])+'_' + str(x['_id']) + ".json", "w") as f2:
-                    json.dump(x, f2)
-                    f2.close()
+            if GameData.get_or_none(GameData.game_id == x["_id"]) is None:
+                ranked_count += 1
+                peewee_pg.save_game(x)
         games_count += 1
-    output.append(ranked_count)
-    output.append(games_count)
-    return output
+    return [ranked_count, games_count]
 
 def ladder_update(amount=100):
     url = 'https://apiv2.legiontd2.com/players/stats?limit='+str(amount)+'&sortBy=overallElo&sortDirection=-1'
@@ -132,15 +122,7 @@ def ladder_update(amount=100):
     games_count = 0
     for i, player in enumerate(leaderboard):
         print(str(i+1) + '. ' + player["profile"][0]["playerName"])
-        ranked_games = player['rankedWinsThisSeason'] + player['rankedLossesThisSeason']
-        print(ranked_games)
-        if ranked_games >= 200:
-            games_count += json_db.get_matchistory(player["_id"], 200, 0, '0', 1)
-        elif ranked_games == 0:
-            print('No games this season.')
-            continue
-        else:
-            games_count += json_db.get_matchistory(player["_id"], ranked_games, 0, '0', 1)
+        games_count += drachbot_db.get_matchistory(player["_id"], 0, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
 
 def pull_games_by_id(file, name):

@@ -5,9 +5,9 @@ import asyncio
 import concurrent.futures
 import traceback
 import functools
-
+import time
 import image_generators
-import json_db
+import drachbot_db
 import util
 import legion_api
 
@@ -34,7 +34,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
     gameelo_list = []
-    history_raw = json_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:

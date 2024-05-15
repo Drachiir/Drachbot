@@ -9,7 +9,7 @@ import json
 import difflib
 
 import image_generators
-import json_db
+import drachbot_db
 import util
 import legion_api
 
@@ -49,7 +49,7 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
     try:
-        history_raw = json_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'

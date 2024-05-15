@@ -6,7 +6,7 @@ import concurrent.futures
 import traceback
 import functools
 
-import json_db
+import drachbot_db
 import util
 import legion_api
 
@@ -42,7 +42,7 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     leaks_pre10_list = []
     gameelo_list = []
     try:
-        history_raw = json_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'

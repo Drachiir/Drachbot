@@ -8,7 +8,7 @@ import functools
 import json
 import difflib
 
-import json_db
+import drachbot_db
 import util
 import legion_api
 
@@ -65,7 +65,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
     playerid2_list = []
     gameresults = []
     try:
-        history_raw = json_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'

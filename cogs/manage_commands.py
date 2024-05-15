@@ -1,5 +1,6 @@
 import traceback
-
+import concurrent.futures
+import functools
 import discord
 from discord.ext import commands
 import os
@@ -37,6 +38,19 @@ class ManageCommands(commands.Cog):
             await ctx.channel.send("No permission to use this command.")
             return
         await ctx.message.add_reaction("✅")
+    
+    @commands.command()
+    async def update(self, ctx: commands.Context):
+        if ctx.author.name == "drachir_":
+            try:
+                loop = asyncio.get_running_loop()
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.ladder_update, 150))
+                    pool.shutdown()
+            except Exception:
+                traceback.print_exc()
+        else:
+            await ctx.channel.send("No permission to use this command.")
     
     @commands.command()
     async def sync(self, ctx:commands.Context):

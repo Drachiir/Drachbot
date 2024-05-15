@@ -54,22 +54,19 @@ class TwitchHandler(commands.Cog):
             stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
             user = await first(self.twitchclient.get_users(user_ids=[event_data.event.broadcaster_user_id]))
             if type(stream) == type(None):
-                game = "Legion TD 2"
-                started_at = ""
-                title = ""
-                avatar = user.profile_image_url
+                pass
             else:
                 game = stream.game_name
                 started_at = str(stream.started_at)
                 title = stream.title
                 avatar = user.profile_image_url
-            if game == "Legion TD 2":
-                self.messages[event_data.event.broadcaster_user_name]["live"] = True
-                self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
-                self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
-                self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
-                self.messages[event_data.event.broadcaster_user_name]["title"] = title
-                print(f'{event_data.event.broadcaster_user_name} is live playing ltd2!')
+                if game == "Legion TD 2":
+                    self.messages[event_data.event.broadcaster_user_name]["live"] = True
+                    self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
+                    self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
+                    self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
+                    self.messages[event_data.event.broadcaster_user_name]["title"] = title
+                    print(f'{event_data.event.broadcaster_user_name} is live playing ltd2!')
         except Exception:
             traceback.print_exc()
     
@@ -85,23 +82,21 @@ class TwitchHandler(commands.Cog):
             stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
             user = await first(self.twitchclient.get_users(user_ids=[event_data.event.broadcaster_user_id]))
             if type(stream) == type(None):
-                started_at = ""
-                title = ""
-                avatar = user.profile_image_url
+                pass
             else:
                 started_at = str(stream.started_at)
                 title = stream.title
                 avatar = user.profile_image_url
-            if event_data.event.category_name == "Legion TD 2" and not self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
-                self.messages[event_data.event.broadcaster_user_name]["live"] = True
-                self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
-                self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
-                self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
-                self.messages[event_data.event.broadcaster_user_name]["title"] = title
-                print(f'{event_data.event.broadcaster_user_name} changed to playing ltd2!')
-            elif event_data.event.category_name != "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
-                self.messages[event_data.event.broadcaster_user_name]["live"] = False
-                print(f'{event_data.event.broadcaster_user_name} stopped playing ltd2!')
+                if event_data.event.category_name == "Legion TD 2" and not self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
+                    self.messages[event_data.event.broadcaster_user_name]["live"] = True
+                    self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
+                    self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
+                    self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
+                    self.messages[event_data.event.broadcaster_user_name]["title"] = title
+                    print(f'{event_data.event.broadcaster_user_name} changed to playing ltd2!')
+                elif event_data.event.category_name != "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
+                    self.messages[event_data.event.broadcaster_user_name]["live"] = False
+                    print(f'{event_data.event.broadcaster_user_name} stopped playing ltd2!')
         except Exception:
             traceback.print_exc()
     

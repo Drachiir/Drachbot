@@ -28,6 +28,8 @@ class Drachbot(commands.Bot):
                 continue
             elif "cog_template" in e:
                 continue
+            elif "stats_explorer" in e:
+                continue
             elif platform.system() == "Windows" and "twitch" in e:
                 continue
             self.exts.append("cogs." + e.split(".")[0])
@@ -72,7 +74,6 @@ if __name__ == "__main__":
     asyncio.set_event_loop(loop)
     client = Drachbot()
     client2 = Livegame()
-    with suppress(aiohttp.http_exceptions.BadStatusLine):
-        loop.create_task(client.start(secret_file["token"]))
-        loop.create_task(client2.start(secret_file["livegametoken"]))
-        loop.run_forever()
+    loop.create_task(client.start(secret_file["token"]))
+    loop.create_task(client2.start(secret_file["livegametoken"]))
+    loop.run_forever()

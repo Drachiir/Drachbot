@@ -21,7 +21,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord_timestamps import TimestampType
 
-import json_db
+import drachbot_db
 import legion_api
 import util
 
@@ -46,7 +46,7 @@ def elo(playername, rank):
             return 'Player ' + str(playername) + ' not found.'
         if playerid == 1:
             return 'API limit reached.'
-        history_raw = json_db.get_matchistory(playerid, 10, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True)
         for game in history_raw:
             for player2 in game["playersData"]:
                 if player2["playerId"] == playerid:

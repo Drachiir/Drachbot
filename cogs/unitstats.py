@@ -9,7 +9,7 @@ import json
 import difflib
 
 import image_generators
-import json_db
+import drachbot_db
 import util
 import legion_api
 
@@ -55,7 +55,7 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-    history_raw = json_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:

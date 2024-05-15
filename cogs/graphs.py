@@ -23,7 +23,7 @@ from bokeh.io import curdoc
 import platform
 import random
 
-import json_db
+import drachbot_db
 import util
 import legion_api
 
@@ -42,7 +42,7 @@ def elograph(playername, games, patch, transparency=False):
     if playerid == 1:
         return 'API limit reached.'
     try:
-        history_raw = json_db.get_matchistory(playerid, games, 0, patch, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, games, 0, patch, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
@@ -167,7 +167,7 @@ def statsgraph(playernames: list, games, min_elo, patch, key: discord.app_comman
     print("Starting stats graph command...")
     patches = []
     for j, id in enumerate(playerids):
-        history_raw = json_db.get_matchistory(id, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(id, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
         if type(history_raw) == str:
             return history_raw
         games2 = len(history_raw)
@@ -303,7 +303,7 @@ def leaderboard(ranks=10, transparency=False):
         else:
             im.paste(av_image, (x, y))
         im.paste(gold_border, (x, y), mask=gold_border)
-        last_game = json_db.get_matchistory(player["_id"], 1, earlier_than_wave10=True)
+        last_game = drachbot_db.get_matchistory(player["_id"], 1, earlier_than_wave10=True)
         game_date = datetime.strptime(last_game[0]["date"].split(".000Z")[0].replace("T", "-"), '%Y-%m-%d-%H:%M:%S')
         if game_date < datetime.now() - timedelta(days=2):
             tent = Image.open('Files/tent.png')
@@ -375,7 +375,7 @@ def sendstats(playername, starting_wave, games, min_elo, patch, sort="date", tra
         playername = profile['playerName']
         avatar = profile['avatarUrl']
     try:
-        history_raw = json_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
     except TypeError as e:
         print(e)
         return playername + ' has not played enough games.'
