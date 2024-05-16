@@ -46,6 +46,10 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
 
 def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date"):
     patch_list = []
+    if earlier_than_wave10:
+        earliest_wave = 4
+    else:
+        earliest_wave = 11
     if patch != '0' and "," in patch:
         patch_list = patch.replace(" ", "").split(',')
     elif patch != '0' and "-" not in patch and "+" not in patch:
@@ -155,10 +159,17 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
             else:
                 expr = True
             game_data = PlayerData.select(GameData, PlayerData).join(
-                GameData).where(GameData.player_ids.contains(playerid) & (GameData.game_elo >= min_elo) & expr).order_by(sort_arg.desc()).limit(games2*4)
+                GameData).where(GameData.player_ids.contains(playerid) & (GameData.game_elo >= min_elo) & expr & (GameData.ending_wave >= earliest_wave)).order_by(sort_arg.desc()).limit(games2*4)
+            keys = ["mercenariesSentPerWave", "mercenariesReceivedPerWave", "leaksPerWave", "buildPerWave", "kingUpgradesPerWave", "opponentKingUpgradesPerWave"]
+            def convert_data(player):
+                for key in keys:
+                    for i, wave in enumerate(player[key]):
+                        if len(wave) == 0:
+                            player[key][i] = []
+                        else:
+                            player[key][i] = wave.split(":")
+                return player
             for i, game in enumerate(game_data):
-                if game.game_id.ending_wave < 11 and earlier_than_wave10 == False:
-                    continue
                 if game.game_result != "won" and game.game_result != "lost":
                     continue
                 p_data = {
@@ -193,19 +204,32 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                     "megamind": game.megamind,
                     "chosenChampionLocation": game.champ_location
                 }
+                p_data = convert_data(p_data)
                 if i % 4 == 0:
                     temp_data = {
                         "_id": game.game_id.game_id,
+                        "date": game.game_id.date,
                         "version": game.game_id.version,
                         "endingWave": game.game_id.ending_wave,
                         "gameElo": game.game_id.game_elo,
+                        "leftKingPercentHp": game.game_id.left_king_hp,
+                        "rightKingPercentHp": game.game_id.right_king_hp,
                         "playersData": [p_data]
                     }
                 else:
-                    temp_data["playersData"].append(p_data)
-                if len(temp_data["playersData"]) == 4:
-                    raw_data.append(temp_data)
-                    temp_data = {}
+                    try:
+                        temp_data["playersData"].append(p_data)
+                    except Exception:
+                        pass
+                if i % 4 == 3:
+                    try:
+                        if len(temp_data["playersData"]) == 4:
+                            raw_data.append(temp_data)
+                            temp_data = {}
+                        else:
+                            temp_data = {}
+                    except KeyError:
+                        temp_data = {}
                         
     elif 'nova cup' in playerid:
         patch = "0"
@@ -242,23 +266,34 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                     raw_data.append(raw_data_partial)
     else:
         raw_data = []
-        if games == 0:
-            games = GameData.select().where((fn.Substr(GameData.version, 2, 5).in_(patch_list)) & (GameData.game_elo >= min_elo)).count()
         if sort_by == "date":
             sort_arg = GameData.date
         else:
             sort_arg = GameData.game_elo
         if patch == "11" or patch == "10":
             expr = GameData.version.startswith("v" + patch)
+            if games == 0:
+                games = GameData.select().where((GameData.version.startswith("v" + patch)) & (GameData.game_elo >= min_elo)).count()
         elif patch != "0":
             expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
+            if games == 0:
+                games = GameData.select().where(expr & (GameData.game_elo >= min_elo)).count()
         else:
+            if games == 0:
+                games = GameData.select().where(GameData.game_elo >= min_elo).count()
             expr = True
         game_data = PlayerData.select(GameData, PlayerData).join(
-            GameData).where(expr & (GameData.game_elo >= min_elo)).order_by(sort_arg.desc()).limit(games * 4)
+            GameData).where(expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).order_by(sort_arg.desc()).limit(games * 4)
+        keys = ["mercenariesSentPerWave", "mercenariesReceivedPerWave", "leaksPerWave", "buildPerWave", "kingUpgradesPerWave", "opponentKingUpgradesPerWave"]
+        def convert_data(player):
+            for key in keys:
+                for i, wave in enumerate(player[key]):
+                    if len(wave) == 0:
+                        player[key][i] = []
+                    else:
+                        player[key][i] = wave.split(":")
+            return player
         for i, game in enumerate(game_data):
-            if game.game_id.ending_wave < 11 and earlier_than_wave10 == False:
-                continue
             if game.game_result != "won" and game.game_result != "lost":
                 continue
             p_data = {
@@ -293,19 +328,32 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 "megamind": game.megamind,
                 "chosenChampionLocation": game.champ_location
             }
+            p_data = convert_data(p_data)
             if i % 4 == 0:
                 temp_data = {
                     "_id": game.game_id.game_id,
+                    "date": game.game_id.date,
                     "version": game.game_id.version,
                     "endingWave": game.game_id.ending_wave,
                     "gameElo": game.game_id.game_elo,
+                    "leftKingPercentHp": game.game_id.left_king_hp,
+                    "rightKingPercentHp": game.game_id.right_king_hp,
                     "playersData": [p_data]
                 }
             else:
-                temp_data["playersData"].append(p_data)
-            if len(temp_data["playersData"]) == 4:
-                raw_data.append(temp_data)
-                temp_data = {}
+                try:
+                    temp_data["playersData"].append(p_data)
+                except Exception:
+                    pass
+            if i % 4 == 3:
+                try:
+                    if len(temp_data["playersData"]) == 4:
+                        raw_data.append(temp_data)
+                        temp_data = {}
+                    else:
+                        temp_data = {}
+                except KeyError:
+                    temp_data = {}
     if update == 0:
         print(len(raw_data))
         return raw_data

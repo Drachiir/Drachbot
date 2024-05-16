@@ -59,8 +59,7 @@ def elograph(playername, games, patch, transparency=False):
             if player["playerId"] == playerid:
                 patches.append(game["version"])
                 elo_per_game.insert(0, player["overallElo"] + player["eloChange"])
-                date_this = game["date"].replace("T", "-").replace(":", "-").split(".")[0]
-                date_per_game.insert(0, datetime.strptime(date_this, "%Y-%m-%d-%H-%M-%S").strftime("%d/%m/%y"))
+                date_per_game.insert(0, game["date"].strftime("%d/%m/%y"))
                 break
         else:
             games -= 1
@@ -304,8 +303,7 @@ def leaderboard(ranks=10, transparency=False):
             im.paste(av_image, (x, y))
         im.paste(gold_border, (x, y), mask=gold_border)
         last_game = drachbot_db.get_matchistory(player["_id"], 1, earlier_than_wave10=True)
-        game_date = datetime.strptime(last_game[0]["date"].split(".000Z")[0].replace("T", "-"), '%Y-%m-%d-%H:%M:%S')
-        if game_date < datetime.now() - timedelta(days=2):
+        if last_game[0]["date"] < datetime.now() - timedelta(days=2):
             tent = Image.open('Files/tent.png')
             im.paste(tent, (x, y), mask=tent)
         I1.text((x + offset, y), str(i+1)+". "+player["profile"][0]["playerName"], font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))

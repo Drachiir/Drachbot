@@ -95,7 +95,7 @@ def elo(playername, rank):
         playername = legion_api.getprofile(playerid)["playerName"]
         rank_emote = util.get_ranked_emote(player['overallElo'])
         peak_emote = util.get_ranked_emote(player['overallPeakEloThisSeason'])
-        history_raw = json_db.get_matchistory(playerid, 10, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True)
         for game in history_raw:
             for player2 in game["playersData"]:
                 if player2["playerId"] == playerid:
@@ -167,7 +167,10 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
             box_size = 64
             line_width = 3
             offset = box_size + line_width
-            im = PIL.Image.new(mode=mode, size=(20+offset*39, 1750), color=colors)
+            if gamedata["humanCount"] == 8:
+                im = PIL.Image.new(mode=mode, size=((20 + offset * 39)*2, 1750), color=colors)
+            else:
+                im = PIL.Image.new(mode=mode, size=(20+offset*39, 1750), color=colors)
             horz_line = PIL.Image.new(mode="RGB", size=(box_size*9+line_width*10, line_width), color=(155, 155, 155))
             vert_line = PIL.Image.new(mode="RGB", size=(line_width, box_size*14+line_width*15), color=(155, 155, 155))
             I1 = ImageDraw.Draw(im)
@@ -291,7 +294,6 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
                 im.save(shared_folder+random_id+'.png')
                 image_link = site + random_id+'.png'
             else:
-                im = im.resize((int(20 + offset * 39), int(1750)))
                 im.save(shared_folder + gameid + "/" + str(wave + 1) + '.jpg')
                 image_link = site+gameid+"/"+str(wave+1)+'.jpg'
     else:
@@ -312,10 +314,10 @@ def matchhistory_viewer(playername:str):
     profile = legion_api.getprofile(playerid)
     avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
     playername = profile["playerName"]
-    history_raw = json_db.get_matchistory(playerid, 5, earlier_than_wave10=True)
+    history_raw = drachbot_db.get_matchistory(playerid, 5, earlier_than_wave10=True)
     if len(history_raw) == 0:
         return "No games found."
-    mod_date = datetime.fromtimestamp(time.mktime(time.strptime(history_raw[0]["date"].split(".")[0].replace("T", "-").replace(":", "-"), "%Y-%m-%d-%H-%M-%S")), tz=timezone.utc).timestamp()
+    mod_date = history_raw[0]["date"].timestamp()
     embed = discord.Embed(color=0x1cce3a, title="Match History\nLast game: "+discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE))
     embed.set_author(name=playername, icon_url=avatar)
     for game in history_raw:

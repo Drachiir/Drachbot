@@ -90,7 +90,7 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
             return ltdle_game3(session, input, ltdle_data)
             
 
-def ltdle_leaderboard(daily, avg):
+def ltdle_leaderboard(daily, avg, game_mode = ["all","all"]):
     color = random_color()
     player_data_list = os.listdir("ltdle_data")
     scores = []
@@ -139,10 +139,18 @@ def ltdle_leaderboard(daily, avg):
                 daily_score3 = 0
                 pass
             scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2, daily_score3))
+        elif game_mode[0] != "all":
+            try:
+                avg_pts = p_data[game_mode[1]]["score"]/p_data[game_mode[1]]["games_played"]
+                scores.append((p_data["name"].capitalize().replace("_", ""), p_data[game_mode[1]]["score"], p_data[game_mode[1]]["games_played"], avg_pts))
+            except Exception:
+                continue
         else:
-            try: avg_pts = p_data["score"]/p_data["games_played"]
-            except ZeroDivisionError: avg_pts = 0
-            scores.append((p_data["name"].capitalize().replace("_", ""), p_data["score"], p_data["games_played"], avg_pts))
+            try:
+                avg_pts = p_data["score"]/p_data["games_played"]
+                scores.append((p_data["name"].capitalize().replace("_", ""), p_data["score"], p_data["games_played"], avg_pts))
+            except Exception:
+                continue
             
     if avg:
         scores = sorted(scores, key=lambda x: x[3], reverse=True)
@@ -172,8 +180,12 @@ def ltdle_leaderboard(daily, avg):
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]) + "pts, Games: "+str(pscore[2])+" ("+str(pts)+"pts avg)\n"
     if daily:
         title = "Legiontdle Daily Leaderboard:"
+    elif avg and game_mode[0] != "all":
+        title = f"Legiontdle Avg Leaderboard({game_mode[0]}):"
     elif avg:
         title = "Legiontdle Avg Leaderboard:"
+    elif game_mode[0] != "all":
+        title = f"Legiontdle Leaderboard({game_mode[0]}):"
     else:
         title = "Legiontdle Leaderboard:"
     embed = discord.Embed(color=color, title=title, description="**"+output+"**")
@@ -783,14 +795,20 @@ class Legiontdle(commands.Cog):
                 await interaction.followup.send("Bot error :sob:")
     
     @app_commands.command(name="ltdle-stats", description="Stats for Legiontdle.")
-    @app_commands.describe(option="Select an option.", name="Only for profile, has to be actual discord name, not display name.")
+    @app_commands.describe(option="Select an option.", name="Only for profile, has to be actual discord name, not display name.",
+                           game="Select a specific game for the leaderboards.")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
         discord.app_commands.Choice(name='Avg Leaderboard', value='Avg Leaderboard'),
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
         discord.app_commands.Choice(name='Profile', value='Profile')
     ])
-    async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None):
+    @app_commands.choices(game=[
+        discord.app_commands.Choice(name='Guess The Unit', value='game1'),
+        discord.app_commands.Choice(name='Guess The Leak', value='game2'),
+        discord.app_commands.Choice(name='Guess The Elo', value='game3')
+    ])
+    async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None, game: discord.app_commands.Choice[str] = "all"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
@@ -799,20 +817,31 @@ class Legiontdle(commands.Cog):
                     option = option.value
                 except AttributeError:
                     pass
+                try:
+                    game_options = [game.name, game.value]
+                except AttributeError:
+                    game_options = [game, game]
+                    pass
                 match option:
                     case "Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, game_mode=game_options))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            await interaction.followup.send(embed=response, view=RefreshButtonLtdleTotal())
+                            if game != "all":
+                                await interaction.followup.send(embed=response)
+                            else:
+                                await interaction.followup.send(embed=response, view=RefreshButtonLtdleTotal())
                         else:
                             await interaction.followup.send(response)
                         return
                     case "Avg Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True, game_mode=game_options))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            await interaction.followup.send(embed=response, view=RefreshButtonLtdleAvg())
+                            if game != "all":
+                                await interaction.followup.send(embed=response)
+                            else:
+                                await interaction.followup.send(embed=response, view=RefreshButtonLtdleAvg())
                         else:
                             await interaction.followup.send(response)
                         return
