@@ -31,15 +31,15 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
     games_count = data[1]
     timeout = 0
     while count < expected:
+        if data[0] == 0:
+            timeout += 1
+        count += data[0]
+        games_count += data[1]
         if timeout == timeout_limit:
             print('Timeout while pulling games.')
             break
         offset += 50
         data = legion_api.pullgamedata(playerid, offset, expected)
-        if data[0] == 0:
-            timeout += 1
-        count += data[0]
-        games_count += data[1]
     else:
         print('All '+str(expected)+' required games pulled.')
     return games_count
