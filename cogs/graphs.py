@@ -26,6 +26,7 @@ import random
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
 
 output_folder = "Files/output/"
 site = "https://overlay.drachbot.site/Images/"
@@ -41,11 +42,11 @@ def elograph(playername, games, patch, transparency=False):
         return 'Player ' + playername + ' not found.'
     if playerid == 1:
         return 'API limit reached.'
-    try:
-        history_raw = drachbot_db.get_matchistory(playerid, games, 0, patch, earlier_than_wave10=True)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.player_elo, PlayerData.elo_change],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot" , "player_elo", "elo_change"]]
+    history_raw = drachbot_db.get_matchistory(playerid, games, 0, patch, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     games = len(history_raw)
@@ -55,10 +56,10 @@ def elograph(playername, games, patch, transparency=False):
     elo_per_game = []
     date_per_game = []
     for game in history_raw:
-        for player in game["playersData"]:
-            if player["playerId"] == playerid:
+        for player in game["players_data"]:
+            if player["player_id"] == playerid:
                 patches.append(game["version"])
-                elo_per_game.insert(0, player["overallElo"] + player["eloChange"])
+                elo_per_game.insert(0, player["player_elo"] + player["elo_change"])
                 date_per_game.insert(0, game["date"].strftime("%d/%m/%y"))
                 break
         else:
@@ -165,8 +166,13 @@ def statsgraph(playernames: list, games, min_elo, patch, key: discord.app_comman
     players_dict = dict()
     print("Starting stats graph command...")
     patches = []
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.player_elo, PlayerData.elo_change, PlayerData.workers_per_wave,
+                    PlayerData.income_per_wave, PlayerData.leaks_per_wave, PlayerData.fighter_value_per_wave],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot", "player_elo", "elo_change", "workers_per_wave", "income_per_wave", "leaks_per_wave", "fighter_value_per_wave"]]
     for j, id in enumerate(playerids):
-        history_raw = drachbot_db.get_matchistory(id, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(id, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
         if type(history_raw) == str:
             return history_raw
         games2 = len(history_raw)
@@ -175,19 +181,19 @@ def statsgraph(playernames: list, games, min_elo, patch, key: discord.app_comman
             return 'No games found for ' + playernames[j] + "."
         for game in history_raw:
             patches.append(game["version"])
-            for player in game["playersData"]:
-                if player["playerId"] == id or id == "all":
-                    if key.value == "leaksPerWave":
+            for player in game["players_data"]:
+                if player["player_id"] == id or id == "all":
+                    if key.value == "leaks_per_wave":
                         leaks_per_wave = []
                         for wave_num, leak in enumerate(player[key.value]):
                             leaks_per_wave.append(util.calc_leak(leak, wave_num))
                     if id in players_dict:
-                        if key.value == "leaksPerWave":
+                        if key.value == "leaks_per_wave":
                             players_dict[id]["Data"].append(leaks_per_wave)
                         else:
                             players_dict[id]["Data"].append(player[key.value])
                     else:
-                        if key.value == "leaksPerWave":
+                        if key.value == "leaks_per_wave":
                             players_dict[id] = {"Data": [leaks_per_wave]}
                         else:
                             players_dict[id] = {"Data": [player[key.value]]}
@@ -302,10 +308,6 @@ def leaderboard(ranks=10, transparency=False):
         else:
             im.paste(av_image, (x, y))
         im.paste(gold_border, (x, y), mask=gold_border)
-        last_game = drachbot_db.get_matchistory(player["_id"], 1, earlier_than_wave10=True)
-        if last_game[0]["date"] < datetime.now() - timedelta(days=2):
-            tent = Image.open('Files/tent.png')
-            im.paste(tent, (x, y), mask=tent)
         I1.text((x + offset, y), str(i+1)+". "+player["profile"][0]["playerName"], font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
         width = I1.textlength(str(i+1)+". "+player["profile"][0]["playerName"], font=myFont)
         try:
@@ -353,179 +355,6 @@ def leaderboard(ranks=10, transparency=False):
     im.save(output_folder + image_id + '.png')
     return output_folder + image_id + '.png'
 
-def sendstats(playername, starting_wave, games, min_elo, patch, sort="date", transparency = False):
-    if starting_wave > 20:
-        return "Enter a wave before 21."
-    elif starting_wave < 0:
-        return "Invalid Wave number."
-    starting_wave -= 1
-    if playername.lower() == 'all':
-        playerid = 'all'
-    elif 'nova cup' in playername:
-        playerid = playername
-    else:
-        playerid = legion_api.getid(playername)
-        if playerid == 0:
-            return 'Player ' + playername + ' not found.'
-        if playerid == 1:
-            return 'API limit reached.'
-        profile = legion_api.getprofile(playerid)
-        playername = profile['playerName']
-        avatar = profile['avatarUrl']
-    try:
-        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
-    if type(history_raw) == str:
-        return history_raw
-    games = len(history_raw)
-    if games == 0:
-        return 'No games found.'
-    if 'nova cup' in playerid:
-        playerid = 'all'
-    gameelo_list = []
-    patches = []
-    print('starting sendstats command...')
-    send_count = 0
-    game_count = 0
-    sends_dict = {}
-    for game in history_raw:
-        for player in game["playersData"]:
-            if player["playerId"] == playerid or playerid == 'all':
-                patches.append(game["version"])
-                save_on_1 = False
-                if game["endingWave"] < starting_wave+1:
-                    continue
-                else:
-                    game_count += 1
-                    gameelo_list.append(game["gameElo"])
-                if starting_wave != -1:
-                    if len(player["mercenariesSentPerWave"][starting_wave]) == 0 and len(player["kingUpgradesPerWave"][starting_wave]) == 0:
-                        continue
-                elif starting_wave == -1:
-                    if len(player["mercenariesSentPerWave"][0]) == 0 and len(player["kingUpgradesPerWave"][0]) == 0:
-                        save_on_1 = True
-                    else:
-                        continue
-                send = util.count_mythium(player["mercenariesSentPerWave"][starting_wave]) + len(player["kingUpgradesPerWave"][starting_wave]) * 20
-                small_send = (player["workersPerWave"][starting_wave] - 5) / 4 * 20
-                if (save_on_1 == False) and (send > small_send):
-                    send_count += 1
-                    if "Wave " + str(starting_wave + 1) in sends_dict:
-                        sends_dict["Wave " + str(starting_wave+1)]["Count"] += 1
-                        sends_dict["Wave " + str(starting_wave+1)]["Sends"].extend(player["mercenariesSentPerWave"][starting_wave])
-                        if len(player["kingUpgradesPerWave"][starting_wave]) > 0:
-                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave])
-                    else:
-                        sends_dict["Wave " + str(starting_wave+1)] = {"Count": 1, "Sends": player["mercenariesSentPerWave"][starting_wave]}
-                        if len(player["kingUpgradesPerWave"][starting_wave]) > 0:
-                            sends_dict["Wave " + str(starting_wave + 1)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave])
-                    for n in range(game["endingWave"]-starting_wave-1):
-                        try:
-                            send2 = util.count_mythium(player["mercenariesSentPerWave"][starting_wave+n+1]) + len(player["kingUpgradesPerWave"][starting_wave+n+1]) * 20
-                        except IndexError:
-                            break
-                        small_send2 = (player["workersPerWave"][starting_wave+n+1] - 5) / 4 * 20
-                        if send2 > small_send2:
-                            if "Wave " + str(starting_wave+n+2) in sends_dict:
-                                sends_dict["Wave " + str(starting_wave+n+2)]["Count"] += 1
-                                sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(player["mercenariesSentPerWave"][starting_wave+n+1])
-                                if len(player["kingUpgradesPerWave"][starting_wave+n+1]) > 0:
-                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave+n+1])
-                                break
-                            else:
-                                sends_dict["Wave " + str(starting_wave+n+2)] = {"Count": 1, "Sends": player["mercenariesSentPerWave"][starting_wave+n+1]}
-                                if len(player["kingUpgradesPerWave"][starting_wave+n+1]) > 0:
-                                    sends_dict["Wave " + str(starting_wave+n+2)]["Sends"].extend(player["kingUpgradesPerWave"][starting_wave+n+1])
-                                break
-                elif save_on_1 == True:
-                    send_count += 1
-                    for n in range(game["endingWave"]-1):
-                        if len(player["mercenariesSentPerWave"][n+1]) > 0 or len(player["kingUpgradesPerWave"][n+1]) > 0:
-                            if "Wave " + str(n+2) in sends_dict:
-                                sends_dict["Wave " + str(n+2)]["Count"] += 1
-                                sends_dict["Wave " + str(n+2)]["Sends"].extend(player["mercenariesSentPerWave"][n+1])
-                                if len(player["kingUpgradesPerWave"][n+1]) > 0:
-                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(player["kingUpgradesPerWave"][n+1])
-                                break
-                            else:
-                                sends_dict["Wave " + str(n+2)] = {"Count": 1,"Sends": player["mercenariesSentPerWave"][n+1]}
-                                if len(player["kingUpgradesPerWave"][n+1]) > 0:
-                                    sends_dict["Wave " + str(n+2)]["Sends"].extend(player["kingUpgradesPerWave"][n+1])
-                                break
-    new_patches = []
-    for x in patches:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches = list(dict.fromkeys(new_patches))
-    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    if not sends_dict:
-        return "No Wave" + str(starting_wave+1) + " sends found."
-    else:
-        avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
-        newIndex = sorted(sends_dict, key=lambda x: sends_dict[x]["Count"], reverse=True)
-        sends_dict = {k: sends_dict[k] for k in newIndex}
-        if transparency:
-            mode = 'RGBA'
-            colors = (0, 0, 0, 0)
-        else:
-            mode = 'RGB'
-            colors = (49, 51, 56)
-        im = PIL.Image.new(mode=mode, size=(1300, 1120), color=colors)
-        im2 = PIL.Image.new(mode="RGB", size=(1300, 76), color=(25, 25, 25))
-        I1 = ImageDraw.Draw(im)
-        ttf = 'Files/RobotoCondensed-Regular.ttf'
-        myFont_small = ImageFont.truetype(ttf, 20)
-        myFont = ImageFont.truetype(ttf, 25)
-        myFont_title = ImageFont.truetype(ttf, 30)
-        if playername == 'all' or 'nova cup' in playername:
-            string = ''
-        else:
-            string = "'s"
-            avatar_url = 'https://cdn.legiontd2.com/' + avatar
-            avatar_response = requests.get(avatar_url)
-            av_image = Image.open(BytesIO(avatar_response.content))
-            gold_border = Image.open('Files/gold_64.png')
-            if util.im_has_alpha(np.array(av_image)):
-                im.paste(av_image, (10, 10), mask=av_image)
-            else:
-                im.paste(av_image, (10, 10))
-            im.paste(gold_border, (10, 10), mask=gold_border)
-        starting_wave += 1
-        if starting_wave > 0:
-            string_2 = "Wave " + str(starting_wave) + " send"
-        else:
-            string_2 = "Wave 1 save"
-        I1.text((80, 10), str(playername.capitalize()) + string + " " + string_2 + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avg_gameelo) + ")", font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-        I1.text((80, 50), 'Patches: ' + ', '.join(patches), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-        x = 400
-        y = 100
-        for wave in sends_dict:
-            im.paste(im2, (4,y-6))
-            im.paste(Image.open('Files/Waves/'+wave.replace(" ", "")+".png"), (10, y))
-            I1.text((80, y), wave, font=myFont, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-            most_common_sends = Counter(sends_dict[wave]["Sends"]).most_common(6)
-            I1.text((270, y), 'Fav. Sends:', font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-            for send in most_common_sends:
-                im.paste(Image.open(BytesIO(requests.get('https://cdn.legiontd2.com/icons/'+send[0].replace(" ", "")+".png").content)), (x, y))
-                x += 70
-                I1.text((x, y+20), ": "+str(send[1]), font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
-                width = int(I1.textlength(": "+str(send[1]), font=myFont_title))
-                x += width+5
-            if wave == "Wave "+str(starting_wave):
-                I1.text((80, y+32), "Sends: " + str(sends_dict[wave]["Count"]) + " (" + str(round(sends_dict[wave]["Count"] / game_count * 100, 1))+"%)",font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-                I1.text((10, y+83), 'Next Send(s):', font=myFont_title, stroke_width=2,stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-                y += 140
-            else:
-                I1.text((80, y+32), "Sends: " + str(sends_dict[wave]["Count"]) + " (" + str(round(sends_dict[wave]["Count"] / send_count * 100, 1))+"%)",font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
-                y += 100
-            x = 400
-        image_id = util.id_generator()
-        im.save(output_folder + image_id + '.png')
-        return output_folder + image_id + '.png'
-
 class Graphs(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
@@ -539,10 +368,10 @@ class Graphs(commands.Cog):
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            sort="Sort by?")
     @app_commands.choices(key=[
-        discord.app_commands.Choice(name='Workers', value="workersPerWave"),
-        discord.app_commands.Choice(name='Income', value="incomePerWave"),
-        discord.app_commands.Choice(name='Leaks', value="leaksPerWave"),
-        discord.app_commands.Choice(name='Fighter Value', value="valuePerWave")
+        discord.app_commands.Choice(name='Workers', value="workers_per_wave"),
+        discord.app_commands.Choice(name='Income', value="income_per_wave"),
+        discord.app_commands.Choice(name='Leaks', value="leaks_per_wave"),
+        discord.app_commands.Choice(name='Fighter Value', value="fighter_value_per_wave")
     ])
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
@@ -621,39 +450,6 @@ class Graphs(commands.Cog):
                 else:
                     await interaction.followup.send(response)
             except Exception:
-                traceback.print_exc()
-                await interaction.followup.send("Bot error :sob:")
-    
-    @app_commands.command(name="sendstats", description="Send stats.")
-    @app_commands.describe(playername='Enter playername or "all" for all available data.',
-                           starting_wave='Enter wave to show next sends when there was a send on that wave, or 0 for first sends after saving on Wave 1',
-                           games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
-                           min_elo='Enter minium average game elo to include in the data set',
-                           patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           sort="Sort by?")
-    @app_commands.choices(sort=[
-        discord.app_commands.Choice(name='date', value="date"),
-        discord.app_commands.Choice(name='elo', value="elo")
-    ])
-    async def sendstats(self, interaction: discord.Interaction, playername: str, starting_wave: int, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date"):
-        loop = asyncio.get_running_loop()
-        with concurrent.futures.ProcessPoolExecutor() as pool:
-            await interaction.response.defer(ephemeral=False, thinking=True)
-            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                min_elo = util.current_minelo
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
-            try:
-                response = await loop.run_in_executor(pool, functools.partial(sendstats, str(playername).lower(), starting_wave, games, min_elo, patch, sort=sort))
-                pool.shutdown()
-                if response.endswith(".png"):
-                    await interaction.followup.send(file=discord.File(response))
-                else:
-                    await interaction.followup.send(response)
-            except Exception:
-                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 

@@ -10,6 +10,7 @@ import image_generators
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
 
 def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
     novacup = False
@@ -34,7 +35,12 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
     gameelo_list = []
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.player_elo, PlayerData.legion,
+                    PlayerData.opener, PlayerData.spell, PlayerData.workers_per_wave, PlayerData.megamind],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave", "megamind"]]
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -50,11 +56,11 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
         if (game["version"].startswith('v10') or game["version"].startswith('v9')) and (mastermind == 'Megamind' or mastermind == 'Champion'):
             continue
         patches.add(game["version"])
-        gameelo_list.append(game["gameElo"])
+        gameelo_list.append(game["game_elo"])
         match mastermind:
             case 'All' | 'Megamind':
-                for player in game["playersData"]:
-                    if player["playerId"] == playerid or playerid == "all":
+                for player in game["players_data"]:
+                    if player["player_id"] == playerid or playerid == "all":
                         if (game["version"].startswith('v10') or game["version"].startswith('v9')):
                             player["megamind"] = False
                         if player["megamind"] == True:
@@ -71,68 +77,68 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
                                 continue
                             mastermind_current = player["legion"]
                         masterminds_dict[mastermind_current]["Count"] += 1
-                        if player["gameResult"] == 'won':
+                        if player["game_result"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["Worker"] += player["workersPerWave"][9]
+                            masterminds_dict[mastermind_current]["Worker"] += player["workers_per_wave"][9]
                         except IndexError:
                             pass
-                        masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
-                        if ',' in player["firstWaveFighters"]:
-                            string = player["firstWaveFighters"]
+                        masterminds_dict[mastermind_current]['Elo'] += player["player_elo"]
+                        if ',' in player["opener"]:
+                            string = player["opener"]
                             commas = string.count(',')
                             opener = string.split(',', commas)[commas]
                         else:
-                            opener = player["firstWaveFighters"]
-                        if player["chosenSpell"] not in masterminds_dict[mastermind_current]['Spell']:
-                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]] = {"Count": 1, "Wins": 0}
-                            if player["gameResult"] == 'won':
-                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                            opener = player["opener"]
+                        if player["spell"] not in masterminds_dict[mastermind_current]['Spell']:
+                            masterminds_dict[mastermind_current]['Spell'][player["spell"]] = {"Count": 1, "Wins": 0}
+                            if player["game_result"] == 'won':
+                                masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Wins"] += 1
                         else:
-                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Count"] += 1
-                            if player["gameResult"] == 'won':
-                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                            masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Count"] += 1
+                            if player["game_result"] == 'won':
+                                masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Wins"] += 1
                         if opener not in masterminds_dict[mastermind_current]['Opener']:
                             masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
-                            if player["gameResult"] == 'won':
+                            if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
                         else:
                             masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
-                            if player["gameResult"] == 'won':
+                            if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
             case mastermind if mastermind in case_list:
-                for player in game["playersData"]:
-                    if (playerid == 'all' or player["playerId"] == playerid) and (mastermind == player["legion"]):
+                for player in game["players_data"]:
+                    if (playerid == 'all' or player["player_id"] == playerid) and (mastermind == player["legion"]):
                         mastermind_current = player["legion"]
                         masterminds_dict[mastermind_current]["Count"] += 1
-                        if player["gameResult"] == 'won':
+                        if player["game_result"] == 'won':
                             masterminds_dict[mastermind_current]["Wins"] += 1
                         try:
-                            masterminds_dict[mastermind_current]["Worker"] += player["workersPerWave"][9]
+                            masterminds_dict[mastermind_current]["Worker"] += player["workers_per_wave"][9]
                         except IndexError:
                             pass
-                        masterminds_dict[mastermind_current]['Elo'] += player["overallElo"]
-                        if ',' in player["firstWaveFighters"]:
-                            string = player["firstWaveFighters"]
+                        masterminds_dict[mastermind_current]['Elo'] += player["player_elo"]
+                        if ',' in player["opener"]:
+                            string = player["opener"]
                             commas = string.count(',')
                             opener = string.split(',', commas)[commas]
                         else:
-                            opener = player["firstWaveFighters"]
-                        if player["chosenSpell"] not in masterminds_dict[mastermind_current]['Spell']:
-                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]] = {"Count": 1, "Wins": 0}
-                            if player["gameResult"] == 'won':
-                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                            opener = player["opener"]
+                        if player["spell"] not in masterminds_dict[mastermind_current]['Spell']:
+                            masterminds_dict[mastermind_current]['Spell'][player["spell"]] = {"Count": 1, "Wins": 0}
+                            if player["game_result"] == 'won':
+                                masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Wins"] += 1
                         else:
-                            masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Count"] += 1
-                            if player["gameResult"] == 'won':
-                                masterminds_dict[mastermind_current]['Spell'][player["chosenSpell"]]["Wins"] += 1
+                            masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Count"] += 1
+                            if player["game_result"] == 'won':
+                                masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Wins"] += 1
                         if opener not in masterminds_dict[mastermind_current]['Opener']:
                             masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
-                            if player["gameResult"] == 'won':
+                            if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
                         else:
                             masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
-                            if player["gameResult"] == 'won':
+                            if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
     new_patches = []
     for x in patches:

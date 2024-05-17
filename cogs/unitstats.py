@@ -12,6 +12,8 @@ import image_generators
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
+
 
 def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000):
     unit_dict = {}
@@ -55,7 +57,11 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.spell, PlayerData.fighters],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot", "game_result", "legion", "spell", "fighters"]]
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -65,36 +71,35 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
         playerid = 'all'
     patches = []
     gameelo_list = []
-    count = 0
     print("starting unitstats...")
     for game in history_raw:
         patches.append(game["version"])
-        gameelo_list.append(game["gameElo"])
-        for player in game["playersData"]:
-            if player["playerId"] != playerid and playerid != "all": continue
+        gameelo_list.append(game["game_elo"])
+        for player in game["players_data"]:
+            if player["player_id"] != playerid and playerid != "all": continue
             fighter_set = set(player["fighters"].lower().split(","))
             for fighter in fighter_set:
                 if fighter == "" or fighter not in unit_dict: continue
                 unit_dict[fighter]["Count"] += 1
-                if player["chosenSpell"] in unit_dict[fighter]["Spells"]:
-                    unit_dict[fighter]["Spells"][player["chosenSpell"]]["Count"] += 1
+                if player["spell"] in unit_dict[fighter]["Spells"]:
+                    unit_dict[fighter]["Spells"][player["spell"]]["Count"] += 1
                 else:
-                    unit_dict[fighter]["Spells"][player["chosenSpell"]] = {"Count": 1, "Wins": 0}
+                    unit_dict[fighter]["Spells"][player["spell"]] = {"Count": 1, "Wins": 0}
                 if player["legion"] in unit_dict[fighter]["MMs"]:
                     unit_dict[fighter]["MMs"][player["legion"]]["Count"] += 1
                 else:
                     unit_dict[fighter]["MMs"][player["legion"]] = {"Count": 1, "Wins": 0}
-                if player["gameResult"] == "won":
+                if player["game_result"] == "won":
                     unit_dict[fighter]["Wins"] += 1
                     unit_dict[fighter]["MMs"][player["legion"]]["Wins"] += 1
-                    unit_dict[fighter]["Spells"][player["chosenSpell"]]["Wins"] += 1
+                    unit_dict[fighter]["Spells"][player["spell"]]["Wins"] += 1
                 for combo_unit in fighter_set:
                     if combo_unit == fighter or combo_unit == unit_dict[fighter]["upgradesFrom"]: continue
                     if combo_unit in unit_dict[fighter]["ComboUnit"]:
                         unit_dict[fighter]["ComboUnit"][combo_unit]["Count"] += 1
                     else:
                         unit_dict[fighter]["ComboUnit"][combo_unit] = {"Count": 1, "Wins": 0}
-                    if player["gameResult"] == "won":
+                    if player["game_result"] == "won":
                         unit_dict[fighter]["ComboUnit"][combo_unit]["Wins"] += 1
     new_patches = []
     for x in patches:

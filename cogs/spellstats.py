@@ -12,6 +12,8 @@ import image_generators
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
+
 
 def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"):
     spell_dict = {}
@@ -46,11 +48,12 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-    try:
-        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.player_elo, PlayerData.legion,
+                    PlayerData.opener, PlayerData.spell, PlayerData.workers_per_wave],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave"]]
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -63,33 +66,33 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
     print('Starting spellstats command...')
     for game in history_raw:
         patches.append(game["version"])
-        gameelo_list.append(game["gameElo"])
-        for player in game["playersData"]:
-            if (player["playerId"] == playerid) or (playerid.lower() == 'all' or 'nova cup' in playerid):
-                spell_name = player["chosenSpell"].lower()
+        gameelo_list.append(game["game_elo"])
+        for player in game["players_data"]:
+            if (player["player_id"] == playerid) or (playerid.lower() == 'all' or 'nova cup' in playerid):
+                spell_name = player["spell"].lower()
                 spell_dict[spell_name]["Count"] += 1
-                if player["gameResult"] == "won":
+                if player["game_result"] == "won":
                     spell_dict[spell_name]["Wins"] += 1
-                spell_dict[spell_name]["Worker"] += player["workersPerWave"][9]
-                if "," in player["firstWaveFighters"]:
-                    opener_current = player["firstWaveFighters"].split(",")[-1]
+                spell_dict[spell_name]["Worker"] += player["workers_per_wave"][9]
+                if "," in player["opener"]:
+                    opener_current = player["opener"].split(",")[-1]
                 else:
-                    opener_current = player["firstWaveFighters"]
+                    opener_current = player["opener"]
                 if opener_current in spell_dict[spell_name]["Opener"]:
                     spell_dict[spell_name]["Opener"][opener_current]["Count"] += 1
-                    if player["gameResult"] == "won":
+                    if player["game_result"] == "won":
                         spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
                 else:
                     spell_dict[spell_name]["Opener"][opener_current] = {"Count": 1, "Wins": 0}
-                    if player["gameResult"] == "won":
+                    if player["game_result"] == "won":
                         spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
                 if player["legion"] in spell_dict[spell_name]["MMs"]:
                     spell_dict[spell_name]["MMs"][player["legion"]]["Count"] += 1
-                    if player["gameResult"] == "won":
+                    if player["game_result"] == "won":
                         spell_dict[spell_name]["MMs"][player["legion"]]["Wins"] += 1
                 else:
                     spell_dict[spell_name]["MMs"][player["legion"]] = {"Count": 1, "Wins": 0}
-                    if player["gameResult"] == "won":
+                    if player["game_result"] == "won":
                         spell_dict[spell_name]["MMs"][player["legion"]]["Wins"] += 1
     new_patches = []
     for x in patches:

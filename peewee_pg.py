@@ -21,8 +21,11 @@ with open("Files/json/Secrets.json", "r") as f:
     f.close()
 
 
-db = PostgresqlExtDatabase(
+db = PooledPostgresqlExtDatabase(
     "postgres",
+    max_connections=10,
+    stale_timeout=300,
+    server_side_cursors=True,
     user="postgres",
     password=secret_file["pg_password"],
     host=secret_file["pg_host"],
@@ -50,8 +53,9 @@ class PlayerProfile(BaseModel):
 class GameData(BaseModel):
     id = AutoField()
     game_id = TextField(unique=True)  # "_id"
-    version = TextField()
-    date = DateTimeField()
+    queue = TextField(index=True)
+    version = TextField(index=True)
+    date = DateTimeField(index=True)
     ending_wave = IntegerField()  # "endingWave"
     game_length = IntegerField()  # "gameLength"
     game_elo = IntegerField(index=True)  # "gameElo"
@@ -107,6 +111,7 @@ def save_game(data):
     if GameData.get_or_none(GameData.game_id == data["_id"]) is None:
         game_data = GameData(
             game_id=data["_id"],
+            queue=data["queueType"],
             version=data["version"],
             date=datetime.strptime(data["date"].split(".")[0], date_format),
             ending_wave=data["endingWave"],
@@ -134,7 +139,7 @@ def save_game(data):
                         if len(wave) == 0:
                             new_list.append("")
                         else:
-                            new_list.append(":".join(wave))
+                            new_list.append("!".join(wave))
                     player[key] = new_list
             
             convert_data(["mercenariesSentPerWave", "mercenariesReceivedPerWave", "leaksPerWave", "buildPerWave", "kingUpgradesPerWave", "opponentKingUpgradesPerWave"])

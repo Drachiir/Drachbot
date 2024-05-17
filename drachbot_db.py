@@ -44,12 +44,16 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
         print('All '+str(expected)+' required games pulled.')
     return games_count
 
-def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date"):
+def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", req_columns = []):
     patch_list = []
     if earlier_than_wave10:
         earliest_wave = 4
     else:
         earliest_wave = 11
+    if sort_by == "date":
+        sort_arg = GameData.date
+    else:
+        sort_arg = GameData.game_elo
     if patch != '0' and "," in patch:
         patch_list = patch.replace(" ", "").split(',')
     elif patch != '0' and "-" not in patch and "+" not in patch:
@@ -114,11 +118,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 offset=offset,
                 last_updated=datetime.now(tz=timezone.utc)
             ).save()
-            games_count_db = GameData.select().where(GameData.player_ids.contains(playerid) & GameData.version.startswith("v11")).count()
-            if games_count_db < wins+losses:
-                data = get_games_loop(playerid, 0, wins+losses-games_count_db)
-            else:
-                data = 0
+            data = get_games_loop(playerid, 0, 300)
         else:
             new_profile = False
             playerstats = legion_api.getstats(playerid)
@@ -148,89 +148,40 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 PlayerProfile.update(offset=games_count+data.offset).where(PlayerProfile.player_id == playerid).execute()
         if update == 0:
             raw_data = []
-            if sort_by == "date":
-                sort_arg = GameData.date
-            else:
-                sort_arg = GameData.game_elo
             if patch == "11" or patch == "10":
                 expr = GameData.version.startswith("v"+patch)
             elif patch != "0":
                 expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
             else:
                 expr = True
-            game_data = PlayerData.select(GameData, PlayerData).join(
-                GameData).where(GameData.player_ids.contains(playerid) & (GameData.game_elo >= min_elo) & expr & (GameData.ending_wave >= earliest_wave)).order_by(sort_arg.desc()).limit(games2*4)
-            keys = ["mercenariesSentPerWave", "mercenariesReceivedPerWave", "leaksPerWave", "buildPerWave", "kingUpgradesPerWave", "opponentKingUpgradesPerWave"]
-            def convert_data(player):
-                for key in keys:
-                    for i, wave in enumerate(player[key]):
-                        if len(wave) == 0:
-                            player[key][i] = []
-                        else:
-                            player[key][i] = wave.split(":")
-                return player
-            for i, game in enumerate(game_data):
-                if game.game_result != "won" and game.game_result != "lost":
-                    continue
-                p_data = {
-                    "playerId": game.player_id,
-                    "playerName": game.player_name,
-                    "legion": game.legion,
-                    "gameResult": game.game_result,
-                    "eloChange": game.elo_change,
-                    "workers": game.workers,
-                    "overallElo": game.player_elo,
-                    "fighters": game.fighters,
-                    "chosenSpell": game.spell,
-                    "chosenSpellLocation": game.spell_location,
-                    "partySize": game.party_size,
-                    "firstWaveFighters": game.opener,
-                    "rolls": game.roll,
-                    "partyMembers": game.party_members,
-                    "partyMembersIds": game.party_members_ids,
-                    "mvpScore": game.mvp_score,
-                    "netWorthPerWave": game.net_worth_per_wave,
-                    "valuePerWave": game.fighter_value_per_wave,
-                    "workersPerWave": game.workers_per_wave,
-                    "incomePerWave": game.income_per_wave,
-                    "mercenariesSentPerWave": game.mercs_sent_per_wave,
-                    "mercenariesReceivedPerWave": game.mercs_received_per_wave,
-                    "leaksPerWave": game.leaks_per_wave,
-                    "buildPerWave": game.build_per_wave,
-                    "leakValue": game.leak_value,
-                    "leaksCaughtValue": game.leaks_caught_value,
-                    "kingUpgradesPerWave": game.kingups_sent_per_wave,
-                    "opponentKingUpgradesPerWave": game.kingups_received_per_wave,
-                    "megamind": game.megamind,
-                    "chosenChampionLocation": game.champ_location
-                }
-                p_data = convert_data(p_data)
+            game_data_query = (PlayerData
+                         .select(*req_columns[0])
+                         .join(GameData)
+                         .where((GameData.queue == "Normal") & GameData.player_ids.contains(playerid) & (GameData.game_elo >= min_elo) & expr & (GameData.ending_wave >= earliest_wave))
+                         .order_by(sort_arg.desc())
+                         .limit(games2*4)).dicts()
+            for i, row in enumerate(game_data_query.iterator()):
+                p_data = {}
+                for field in req_columns[2]:
+                    p_data[field] = row[field]
                 if i % 4 == 0:
-                    temp_data = {
-                        "_id": game.game_id.game_id,
-                        "date": game.game_id.date,
-                        "version": game.game_id.version,
-                        "endingWave": game.game_id.ending_wave,
-                        "gameElo": game.game_id.game_elo,
-                        "leftKingPercentHp": game.game_id.left_king_hp,
-                        "rightKingPercentHp": game.game_id.right_king_hp,
-                        "playersData": [p_data]
-                    }
+                    temp_data = {}
+                    for field in req_columns[1]:
+                        temp_data[field] = row[field]
+                        temp_data["players_data"] = [p_data]
                 else:
                     try:
-                        temp_data["playersData"].append(p_data)
+                        temp_data["players_data"].append(p_data)
                     except Exception:
                         pass
                 if i % 4 == 3:
                     try:
-                        if len(temp_data["playersData"]) == 4:
+                        if len(temp_data["players_data"]) == 4:
+                            temp_data["players_data"] = sorted(temp_data["players_data"], key=lambda x: x['player_slot'])
                             raw_data.append(temp_data)
-                            temp_data = {}
-                        else:
                             temp_data = {}
                     except KeyError:
                         temp_data = {}
-                        
     elif 'nova cup' in playerid:
         patch = "0"
         if min_elo == util.current_minelo:
@@ -266,10 +217,6 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                     raw_data.append(raw_data_partial)
     else:
         raw_data = []
-        if sort_by == "date":
-            sort_arg = GameData.date
-        else:
-            sort_arg = GameData.game_elo
         if patch == "11" or patch == "10":
             expr = GameData.version.startswith("v" + patch)
             if games == 0:
@@ -282,75 +229,31 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
             if games == 0:
                 games = GameData.select().where(GameData.game_elo >= min_elo).count()
             expr = True
-        game_data = PlayerData.select(GameData, PlayerData).join(
-            GameData).where(expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).order_by(sort_arg.desc()).limit(games * 4)
-        keys = ["mercenariesSentPerWave", "mercenariesReceivedPerWave", "leaksPerWave", "buildPerWave", "kingUpgradesPerWave", "opponentKingUpgradesPerWave"]
-        def convert_data(player):
-            for key in keys:
-                for i, wave in enumerate(player[key]):
-                    if len(wave) == 0:
-                        player[key][i] = []
-                    else:
-                        player[key][i] = wave.split(":")
-            return player
-        for i, game in enumerate(game_data):
-            if game.game_result != "won" and game.game_result != "lost":
-                continue
-            p_data = {
-                "playerId": game.player_id,
-                "playerName": game.player_name,
-                "legion": game.legion,
-                "gameResult": game.game_result,
-                "eloChange": game.elo_change,
-                "workers": game.workers,
-                "overallElo": game.player_elo,
-                "fighters": game.fighters,
-                "chosenSpell": game.spell,
-                "chosenSpellLocation": game.spell_location,
-                "partySize": game.party_size,
-                "firstWaveFighters": game.opener,
-                "rolls": game.roll,
-                "partyMembers": game.party_members,
-                "partyMembersIds": game.party_members_ids,
-                "mvpScore": game.mvp_score,
-                "netWorthPerWave": game.net_worth_per_wave,
-                "valuePerWave": game.fighter_value_per_wave,
-                "workersPerWave": game.workers_per_wave,
-                "incomePerWave": game.income_per_wave,
-                "mercenariesSentPerWave": game.mercs_sent_per_wave,
-                "mercenariesReceivedPerWave": game.mercs_received_per_wave,
-                "leaksPerWave": game.leaks_per_wave,
-                "buildPerWave": game.build_per_wave,
-                "leakValue": game.leak_value,
-                "leaksCaughtValue": game.leaks_caught_value,
-                "kingUpgradesPerWave": game.kingups_sent_per_wave,
-                "opponentKingUpgradesPerWave": game.kingups_received_per_wave,
-                "megamind": game.megamind,
-                "chosenChampionLocation": game.champ_location
-            }
-            p_data = convert_data(p_data)
+        game_data_query = (PlayerData
+                           .select(*req_columns[0])
+                           .join(GameData)
+                           .where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave))
+                           .order_by(sort_arg.desc())
+                           .limit(games * 4)).dicts()
+        for i, row in enumerate(game_data_query.iterator()):
+            p_data = {}
+            for field in req_columns[2]:
+                p_data[field] = row[field]
             if i % 4 == 0:
-                temp_data = {
-                    "_id": game.game_id.game_id,
-                    "date": game.game_id.date,
-                    "version": game.game_id.version,
-                    "endingWave": game.game_id.ending_wave,
-                    "gameElo": game.game_id.game_elo,
-                    "leftKingPercentHp": game.game_id.left_king_hp,
-                    "rightKingPercentHp": game.game_id.right_king_hp,
-                    "playersData": [p_data]
-                }
+                temp_data = {}
+                for field in req_columns[1]:
+                    temp_data[field] = row[field]
+                    temp_data["players_data"] = [p_data]
             else:
                 try:
-                    temp_data["playersData"].append(p_data)
+                    temp_data["players_data"].append(p_data)
                 except Exception:
                     pass
             if i % 4 == 3:
                 try:
-                    if len(temp_data["playersData"]) == 4:
+                    if len(temp_data["players_data"]) == 4:
+                        temp_data["players_data"] = sorted(temp_data["players_data"], key=lambda x: x['player_slot'])
                         raw_data.append(temp_data)
-                        temp_data = {}
-                    else:
                         temp_data = {}
                 except KeyError:
                     temp_data = {}

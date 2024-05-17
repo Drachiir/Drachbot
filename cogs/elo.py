@@ -24,6 +24,7 @@ from discord_timestamps import TimestampType
 import drachbot_db
 import legion_api
 import util
+from peewee_pg import GameData, PlayerData
 
 with open('Files/json/Secrets.json', 'r') as f:
     secret_file = json.load(f)
@@ -40,23 +41,27 @@ def elo(playername, rank):
     win_count = 0
     elo_change = 0
     history_list = []
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.elo_change],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_name", "player_slot", "game_result", "elo_change"]]
     if playername != None:
         playerid = legion_api.getid(playername)
         if playerid == 0:
             return 'Player ' + str(playername) + ' not found.'
         if playerid == 1:
             return 'API limit reached.'
-        history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True, req_columns=req_columns)
         for game in history_raw:
-            for player2 in game["playersData"]:
-                if player2["playerId"] == playerid:
-                    playername = player2["playerName"]
-                    if player2["gameResult"] == "won":
+            for player2 in game["players_data"]:
+                if player2["player_id"] == playerid:
+                    playername = player2["player_name"]
+                    if player2["game_result"] == "won":
                         history_list.append("W")
                         win_count += 1
                     else:
                         history_list.append("L")
-                    elo_change += player2["eloChange"]
+                    elo_change += player2["elo_change"]
     def elochange(elochange):
         if elo_change >=0:
             return "+" + str(elo_change)
@@ -97,14 +102,15 @@ def elo(playername, rank):
         peak_emote = util.get_ranked_emote(player['overallPeakEloThisSeason'])
         history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True)
         for game in history_raw:
-            for player2 in game["playersData"]:
-                if player2["playerId"] == playerid:
-                    if player2["gameResult"] == "won":
+            for player2 in game["players_data"]:
+                if player2["player_id"] == playerid:
+                    playername = player2["player_name"]
+                    if player2["game_result"] == "won":
                         history_list.append("W")
                         win_count += 1
                     else:
                         history_list.append("L")
-                    elo_change += player2["eloChange"]
+                    elo_change += player2["elo_change"]
         embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(rank) + ' with ' + str(
             player['overallElo']) + " " + rank_emote + ' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote + ' and ' + str(
             round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
@@ -314,7 +320,11 @@ def matchhistory_viewer(playername:str):
     profile = legion_api.getprofile(playerid)
     avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
     playername = profile["playerName"]
-    history_raw = drachbot_db.get_matchistory(playerid, 5, earlier_than_wave10=True)
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.elo_change],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_name", "player_slot", "game_result", "elo_change"]]
+    history_raw = drachbot_db.get_matchistory(playerid, 5, earlier_than_wave10=True, req_columns=req_columns)
     if len(history_raw) == 0:
         return "No games found."
     mod_date = history_raw[0]["date"].timestamp()
@@ -323,19 +333,19 @@ def matchhistory_viewer(playername:str):
     for game in history_raw:
         per_game_list = []
         elo_prefix = ""
-        emoji = util.wave_emotes.get("wave"+str(game["endingWave"]))
-        for indx, player in enumerate(game["playersData"]):
-            per_game_list.append(player["playerName"] + " " + util.get_ranked_emote(player["overallElo"]))
-            if player["playerId"] != playerid: continue
+        emoji = util.wave_emotes.get("wave"+str(game["ending_wave"]))
+        for indx, player in enumerate(game["players_data"]):
+            per_game_list.append(player["player_name"] + " " + util.get_ranked_emote(player["player_elo"]))
+            if player["player_id"] != playerid: continue
             else:
-                result = player["gameResult"].capitalize()
-                if player["eloChange"] > 0:
-                    elo_change = player["eloChange"]
+                result = player["game_result"].capitalize()
+                if player["elo_change"] > 0:
+                    elo_change = player["elo_change"]
                     elo_prefix = "+"
                 else:
-                    elo_change = player["eloChange"]
+                    elo_change = player["elo_change"]
                     elo_prefix = ""
-        embed.add_field(name="", value=emoji + " [" + result + " on Wave " + str(game["endingWave"]) +
+        embed.add_field(name="", value=emoji + " [" + result + " on Wave " + str(game["ending_wave"]) +
                              "("+elo_prefix+str(elo_change)+" Elo)]("+gameid_visualizer(game["_id"], 0)+")\nWest: "+
                                 per_game_list[0]+" "+per_game_list[1]+"\nEast: "+per_game_list[2]+" "+per_game_list[3], inline=False)
     return embed

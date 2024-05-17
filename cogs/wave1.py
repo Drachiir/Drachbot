@@ -9,6 +9,8 @@ import functools
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
+
 
 def wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     if playername.lower() == 'all':
@@ -30,11 +32,21 @@ def wave1tendency(playername, option, games, min_elo, patch, sort="date"):
     kingup_spell_count = 0
     save_count = 0
     leaks_count = 0
-    try:
-        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
+    if option == "send":
+        col1 = PlayerData.mercs_sent_per_wave
+        col2 = PlayerData.kingups_sent_per_wave
+        option_key = "mercs_sent_per_wave"
+        option_key2 = "kingups_sent_per_wave"
+    else:
+        col1 = PlayerData.mercs_received_per_wave
+        col2 = PlayerData.kingups_received_per_wave
+        option_key = "mercs_received_per_wave"
+        option_key2 = "kingups_received_per_wave"
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, col1, col2, PlayerData.leaks_per_wave],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot", "game_result", option_key, option_key2, "leaks_per_wave"]]
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     games = len(history_raw)
@@ -44,45 +56,39 @@ def wave1tendency(playername, option, games, min_elo, patch, sort="date"):
         playerid = 'all'
     patches = []
     gameelo_list = []
-    if option == "send":
-        option_key = "mercenariesSentPerWave"
-        option_key2 = "kingUpgradesPerWave"
-    else:
-        option_key = "mercenariesReceivedPerWave"
-        option_key2 = "opponentKingUpgradesPerWave"
     for game in history_raw:
         patches.append(game["version"])
-        gameelo_list.append(game["gameElo"])
-        for i, player in enumerate(game["playersData"]):
-            if player["playerId"] == playerid or playerid == 'all':
+        gameelo_list.append(game["game_elo"])
+        for i, player in enumerate(game["players_data"]):
+            if player["player_id"] == playerid or playerid == 'all':
                 if len(player[option_key][0]) > 0:
-                    if player[option_key][0][0] == 'Snail':
+                    if player[option_key][0].split("!")[0] == 'Snail':
                         snail_count = snail_count + 1
                         if option == 'send' and playerid != 'all':
                             if i == 0:
-                                if len(game["playersData"][2]["leaksPerWave"][0]) != 0:
+                                if len(game["players_data"][2]["leaks_per_wave"][0]) != 0:
                                     leaks_count += 1
                             if i == 1:
-                                if len(game["playersData"][3]["leaksPerWave"][0]) != 0:
+                                if len(game["players_data"][3]["leaks_per_wave"][0]) != 0:
                                     leaks_count += 1
                             if i == 2:
-                                if len(game["playersData"][1]["leaksPerWave"][0]) != 0:
+                                if len(game["players_data"][1]["leaks_per_wave"][0]) != 0:
                                     leaks_count += 1
                             if i == 3:
-                                if len(game["playersData"][0]["leaksPerWave"][0]) != 0:
+                                if len(game["players_data"][0]["leaks_per_wave"][0]) != 0:
                                     leaks_count += 1
                         if option == 'received' or playerid == 'all':
-                            if len(player["leaksPerWave"][0]) != 0:
+                            if len(player["leaks_per_wave"][0]) != 0:
                                 leaks_count += 1
                         continue
                 elif len(player[option_key2][0]) > 0:
-                    if str(player[option_key2][0][0]) == 'Upgrade King Attack':
+                    if str(player[option_key2][0].split("!")[0]) == 'Upgrade King Attack':
                         kingup_atk_count = kingup_atk_count + 1
                         continue
-                    if str(player[option_key2][0][0]) == 'Upgrade King Regen':
+                    if str(player[option_key2][0].split("!")[0]) == 'Upgrade King Regen':
                         kingup_regen_count = kingup_regen_count + 1
                         continue
-                    if str(player[option_key2][0][0]) == 'Upgrade King Spell':
+                    if str(player[option_key2][0].split("!")[0]) == 'Upgrade King Spell':
                         kingup_spell_count = kingup_spell_count + 1
                         continue
                 else:

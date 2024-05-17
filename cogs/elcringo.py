@@ -9,6 +9,7 @@ import functools
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
 
 
 def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Sent"):
@@ -41,11 +42,21 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     leaks_list = []
     leaks_pre10_list = []
     gameelo_list = []
-    try:
-        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids, GameData.left_king_hp, GameData.right_king_hp,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.workers_per_wave, PlayerData.leaks_per_wave, PlayerData.income_per_wave],
+                   ["game_id", "date", "version", "ending_wave", "game_elo", "left_king_hp", "right_king_hp"],
+                   ["player_id", "player_slot", "workers_per_wave", "leaks_per_wave", "income_per_wave"]]
+    if saves == "Sent":
+        req_columns[0].append(PlayerData.mercs_sent_per_wave)
+        req_columns[0].append(PlayerData.kingups_sent_per_wave)
+        req_columns[2].append("mercs_sent_per_wave")
+        req_columns[2].append("kingups_sent_per_wave")
+    else:
+        req_columns[0].append(PlayerData.mercs_received_per_wave)
+        req_columns[0].append(PlayerData.kingups_received_per_wave)
+        req_columns[2].append("mercs_received_per_wave")
+        req_columns[2].append("kingups_received_per_wave")
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     games = len(history_raw)
@@ -57,30 +68,30 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     print('starting elcringo command...')
     for game in history_raw:
         patches.append(game["version"])
-        ending_wave_list.append(game["endingWave"])
-        gameelo_list.append(game["gameElo"])
+        ending_wave_list.append(game["ending_wave"])
+        gameelo_list.append(game["game_elo"])
         mythium_list_pergame.clear()
-        for i, player in enumerate(game["playersData"]):
-            if player["playerId"] == playerid or playerid == 'all':
-                for n, s in enumerate(player["mercenariesSentPerWave"]):
+        for i, player in enumerate(game["players_data"]):
+            if player["player_id"] == playerid or playerid == 'all':
+                for n in range(game["ending_wave"]):
                     small_send = 0
                     if saves == "Sent":
-                        send = util.count_mythium(player["mercenariesSentPerWave"][n]) + len(player["kingUpgradesPerWave"][n]) * 20
+                        send = util.count_mythium(player["mercs_sent_per_wave"][n]) + len(player["kingups_sent_per_wave"][n].split("!")) * 20
                     elif saves == "Received":
-                        send = util.count_mythium(player["mercenariesReceivedPerWave"][n]) + len(player["opponentKingUpgradesPerWave"][n]) * 20
+                        send = util.count_mythium(player["mercs_received_per_wave"][n]) + len(player["kingups_received_per_wave"][n].split("!")) * 20
                     mythium_list_pergame.append(send)
                     if n <= 9:
-                        if player["workersPerWave"][n] > 5:
-                            small_send = (player["workersPerWave"][n] - 5) / 4 * 20
+                        if player["workers_per_wave"][n] > 5:
+                            small_send = (player["workers_per_wave"][n] - 5) / 4 * 20
                         if send <= small_send and option == "Yes":
                             save_count_pre10 += 1
                         elif send == 0 and option == "No":
                             save_count_pre10 += 1
                     elif n > 9:
                         if game["version"].startswith('v11') or game["version"].startswith('v9'):
-                            worker_adjusted = player["workersPerWave"][n]
+                            worker_adjusted = player["workers_per_wave"][n]
                         elif game["version"].startswith('v10'):
-                            worker_adjusted = player["workersPerWave"][n] * (pow((1 + 6 / 100), n + 1))
+                            worker_adjusted = player["workers_per_wave"][n] * (pow((1 + 6 / 100), n + 1))
                         small_send = worker_adjusted / 4 * 20
                         if send <= small_send and option == "Yes":
                             save_count += 1
@@ -94,27 +105,27 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                         break
                 mythium_pre10_list.append(mythium_pre10)
                 try:
-                    worker_10_list.append(player["workersPerWave"][9])
-                    income_10_list.append(player["incomePerWave"][9])
+                    worker_10_list.append(player["workers_per_wave"][9])
+                    income_10_list.append(player["income_per_wave"][9])
                 except Exception:
                     pass
                 leak_amount = 0
                 leak_pre10_amount = 0
-                for y in range(game["endingWave"]):
-                    if len(player["leaksPerWave"][y]) > 0:
-                        p = util.calc_leak(player["leaksPerWave"][y], y)
+                for y in range(game["ending_wave"]):
+                    if len(player["leaks_per_wave"][y]) > 0:
+                        p = util.calc_leak(player["leaks_per_wave"][y], y)
                         leak_amount += p
                         if y < 10:
                             leak_pre10_amount += p
-                leaks_list.append(leak_amount / game["endingWave"])
+                leaks_list.append(leak_amount / game["ending_wave"])
                 leaks_pre10_list.append(leak_pre10_amount / 10)
                 try:
                     if i == 0 or 1:
-                        kinghp_list.append(game["leftKingPercentHp"][9])
-                        kinghp_enemy_list.append(game["rightKingPercentHp"][9])
+                        kinghp_list.append(game["left_king_hp"][9])
+                        kinghp_enemy_list.append(game["right_king_hp"][9])
                     else:
-                        kinghp_list.append(game["rightKingPercentHp"][9])
-                        kinghp_enemy_list.append(game["leftKingPercentHp"][9])
+                        kinghp_list.append(game["right_king_hp"][9])
+                        kinghp_enemy_list.append(game["left_king_hp"][9])
                 except Exception:
                     pass
             mythium_list_pergame.clear()

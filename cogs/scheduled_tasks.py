@@ -14,7 +14,7 @@ import util
 import cogs.elo as elo
 
 utc = timezone.utc
-task_time = time(hour=0, minute=0, second=5, tzinfo=utc)
+task_time = time(hour=0, minute=0, second=1, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
 print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 

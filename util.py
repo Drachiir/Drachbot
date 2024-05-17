@@ -133,6 +133,10 @@ def get_icons_image(type, name):
     return Image.open(open(image_path, "rb"))
 
 def count_mythium(send):
+    if send == "":
+        send = []
+    else:
+        send = send.split("!")
     send_amount = 0
     for x in send:
         if "Upgrade" in x:
@@ -141,6 +145,10 @@ def count_mythium(send):
     return send_amount
 
 def calc_leak(leak, wave):
+    if leak == "":
+        leak = []
+    else:
+        leak = leak.split("!")
     leak_amount = 0
     send_amount = 0
     wave_total = wave_values[wave]

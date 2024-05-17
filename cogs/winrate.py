@@ -11,6 +11,8 @@ import difflib
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
+
 
 def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "Count"):
     mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', "All"]
@@ -61,14 +63,11 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
         return 'API limit reached.'
     win_count = 0
     game_count = 0
-    queue_count = 0
-    playerid2_list = []
-    gameresults = []
-    try:
-        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.elo_change],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot", "game_result", "legion", "elo_change"]]
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     games = len(history_raw)
@@ -79,15 +78,15 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
     all_dict = {}
     elo_change_list = []
     for game in history_raw:
-        gameresult_ranked_west = game["playersData"][0]["gameResult"]
-        gameresult_ranked_east = game["playersData"][2]["gameResult"]
-        playerids_ranked_west = [game["playersData"][0]["playerId"], game["playersData"][1]["playerId"]]
-        playerids_ranked_east = [game["playersData"][2]["playerId"], game["playersData"][3]["playerId"]]
-        masterminds_ranked_west = [game["playersData"][0]["legion"], game["playersData"][1]["legion"]]
-        masterminds_ranked_east = [game["playersData"][2]["legion"], game["playersData"][3]["legion"]]
-        elo_change_ranked_west = game["playersData"][0]["eloChange"]
-        elo_change_ranked_east = game["playersData"][2]["eloChange"]
-        gameelo_list.append(game["gameElo"])
+        gameresult_ranked_west = game["players_data"][0]["game_result"]
+        gameresult_ranked_east = game["players_data"][2]["game_result"]
+        playerids_ranked_west = [game["players_data"][0]["player_id"], game["players_data"][1]["player_id"]]
+        playerids_ranked_east = [game["players_data"][2]["player_id"], game["players_data"][3]["player_id"]]
+        masterminds_ranked_west = [game["players_data"][0]["legion"], game["players_data"][1]["legion"]]
+        masterminds_ranked_east = [game["players_data"][2]["legion"], game["players_data"][3]["legion"]]
+        elo_change_ranked_west = game["players_data"][0]["elo_change"]
+        elo_change_ranked_east = game["players_data"][2]["elo_change"]
+        gameelo_list.append(game["game_elo"])
         if (playerid2 != 'all') or (playerid2 == "all" and mm2 != "" and mm2 != "All") or (playerid2 == "all" and mm1 != "" and mm2 == ""):
             for i, x in enumerate(playerids_ranked_west):
                 if (x == playerid and (mm1 == masterminds_ranked_west[i] or mm1 == "")) or (playerid == "all" and x != playerid2 and (mm1 == masterminds_ranked_west[i] or mm1 == "")):

@@ -12,6 +12,7 @@ import image_generators
 import drachbot_db
 import util
 import legion_api
+from peewee_pg import GameData, PlayerData
 
 
 def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
@@ -48,11 +49,12 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-    try:
-        history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True)
-    except TypeError as e:
-        print(e)
-        return playername + ' has not played enough games.'
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.player_elo, PlayerData.legion,
+                    PlayerData.spell, PlayerData.workers_per_wave, PlayerData.build_per_wave],
+                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                   ["player_id", "player_slot", "game_result", "player_elo", "legion", "spell", "workers_per_wave", "build_per_wave"]]
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -60,31 +62,32 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
     games = len(history_raw)
     if 'nova cup' in playerid:
         playerid = 'all'
-    patches = []
+    patches = set()
     gameelo_list = []
     print("starting openstats...")
     for game in history_raw:
-        if game["endingWave"] < 4: continue
-        patches.append(game["version"])
-        gameelo_list.append(game["gameElo"])
+        if game["ending_wave"] < 4: continue
+        patches.add(game["version"])
+        gameelo_list.append(game["game_elo"])
         if playerid.lower() != 'all' and 'nova cup' not in playerid:
-            for player in game["playersData"]:
-                if player["playerId"] == playerid:
-                    opener_ranked_raw = player["buildPerWave"][:4]
+            for player in game["players_data"]:
+                if player["player_id"] == playerid:
+                    opener_ranked_raw = player["build_per_wave"][:4]
                     break
         else:
             opener_ranked_raw = []
             for i in range(4):
-                opener_ranked_raw.extend(game["playersData"][i]["buildPerWave"][:4])
+                opener_ranked_raw.extend(game["players_data"][i]["build_per_wave"][:4])
         opener_ranked = []
         for i, x in enumerate(opener_ranked_raw):
             opener_ranked.extend([[]])
-            for v, y in enumerate(x):
+            x = x.split("!")
+            for y in x:
                 string = y.split('_unit_id:')
                 opener_ranked[i].append(string[0].replace('_', ' '))
         if playerid.lower() != 'all' and 'nova cup' not in playerid:
-            for player in game["playersData"]:
-                if player["playerId"] == playerid:
+            for player in game["players_data"]:
+                if player["player_id"] == playerid:
                     s = set()
                     for x in range(4):
                         for y in opener_ranked[x]:
@@ -94,11 +97,11 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                             if y != opener_ranked[0][0]:
                                 if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
                                     unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
-                                    if player["gameResult"] == 'won':
+                                    if player["game_result"] == 'won':
                                         unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
                                 else:
                                     unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                    if player["gameResult"] == 'won':
+                                    if player["game_result"] == 'won':
                                         unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
                             else:
                                 unit_dict[opener_ranked[0][0]]['Count'] += 1
@@ -106,20 +109,20 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                                     unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]] = {'Count': 1, 'Wins': 0}
                                 else:
                                     unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Count'] += 1
-                                if player["chosenSpell"] not in unit_dict[opener_ranked[0][0]]['Spells']:
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
+                                if player["spell"] not in unit_dict[opener_ranked[0][0]]['Spells']:
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]] = {'Count': 1, 'Wins': 0}
                                 else:
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
-                                unit_dict[opener_ranked[0][0]]['Worker'] += player["workersPerWave"][3]
-                                if player["gameResult"] == 'won':
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]]['Count'] += 1
+                                unit_dict[opener_ranked[0][0]]['Worker'] += player["workers_per_wave"][3]
+                                if player["game_result"] == 'won':
                                     unit_dict[opener_ranked[0][0]]['Wins'] += 1
                                     unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Wins'] += 1
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
+                                    unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]]['Wins'] += 1
                         except IndexError:
                             continue
         else:
             counter = 0
-            for player in game["playersData"]:
+            for player in game["players_data"]:
                 s = set()
                 for x in range(counter, counter+4):
                     for y in opener_ranked[x]:
@@ -130,11 +133,11 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                         if y != opener_ranked[counter][0]:
                             if y in unit_dict[opener_ranked[counter][0]]['OpenWith']:
                                 unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Count'] += 1
-                                if player["gameResult"] == 'won':
+                                if player["game_result"] == 'won':
                                     unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
                             else:
                                 unit_dict[opener_ranked[counter][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                if player["gameResult"] == 'won':
+                                if player["game_result"] == 'won':
                                     unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
                         else:
                             unit_dict[opener_ranked[counter][0]]['Count'] += 1
@@ -142,15 +145,15 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                                 unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
                             else:
                                 unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Count'] += 1
-                            if player["chosenSpell"] not in unit_dict[opener_ranked[counter][0]]['Spells']:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]] = {'Count': 1, 'Wins': 0}
+                            if player["spell"] not in unit_dict[opener_ranked[counter][0]]['Spells']:
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]] = {'Count': 1, 'Wins': 0}
                             else:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Count'] += 1
-                            unit_dict[opener_ranked[counter][0]]['Worker'] += player["workersPerWave"][3]
-                            if player["gameResult"] == 'won':
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]]['Count'] += 1
+                            unit_dict[opener_ranked[counter][0]]['Worker'] += player["workers_per_wave"][3]
+                            if player["game_result"] == 'won':
                                 unit_dict[opener_ranked[counter][0]]['Wins'] += 1
                                 unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Wins'] += 1
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["chosenSpell"]]['Wins'] += 1
+                                unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]]['Wins'] += 1
                     except IndexError:
                         continue
                 counter += 4
