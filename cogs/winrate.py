@@ -64,9 +64,9 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
     win_count = 0
     game_count = 0
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
-                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.elo_change],
+                    PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.elo_change],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
-                   ["player_id", "player_slot", "game_result", "legion", "elo_change"]]
+                   ["player_id", "player_name", "player_slot", "game_result", "legion", "elo_change"]]
     history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
@@ -179,7 +179,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[0]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["playersData"][2]["playerName"]}
+                            all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["players_data"][2]["player_name"]}
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[0]]["Wins"] += 1
                         if playerids_ranked_east[1] in all_dict:
@@ -188,7 +188,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[1]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["playersData"][3]["playerName"]}
+                            all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["players_data"][3]["player_name"]}
                             if gameresult_ranked_west == "won":
                                 all_dict[playerids_ranked_east[1]]["Wins"] += 1
                     elif option == 'with':
@@ -199,7 +199,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[0]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["playersData"][0]["playerName"]}
+                                all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["players_data"][0]["player_name"]}
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[0]]["Wins"] += 1
                         elif playerids_ranked_west[1] != playerid:
@@ -209,7 +209,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[1]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["playersData"][1]["playerName"]}
+                                all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["players_data"][1]["player_name"]}
                                 if gameresult_ranked_west == "won":
                                     all_dict[playerids_ranked_west[1]]["Wins"] += 1
             for i, x in enumerate(playerids_ranked_east):
@@ -221,7 +221,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[0]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["playersData"][0]["playerName"]}
+                            all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["players_data"][0]["player_name"]}
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[0]]["Wins"] += 1
                         if playerids_ranked_west[1] in all_dict:
@@ -230,7 +230,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[1]]["Wins"] += 1
                         else:
-                            all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["playersData"][1]["playerName"]}
+                            all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["players_data"][1]["player_name"]}
                             if gameresult_ranked_east == "won":
                                 all_dict[playerids_ranked_west[1]]["Wins"] += 1
                     elif option == 'with':
@@ -241,7 +241,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[0]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["playersData"][2]["playerName"]}
+                                all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["players_data"][2]["player_name"]}
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[0]]["Wins"] += 1
                         elif playerids_ranked_east[1] != playerid:
@@ -251,7 +251,7 @@ def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[1]]["Wins"] += 1
                             else:
-                                all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["playersData"][3]["playerName"]}
+                                all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["players_data"][3]["player_name"]}
                                 if gameresult_ranked_east == "won":
                                     all_dict[playerids_ranked_east[1]]["Wins"] += 1
         else:

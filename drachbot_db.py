@@ -47,7 +47,7 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
 def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", req_columns = []):
     patch_list = []
     if earlier_than_wave10:
-        earliest_wave = 4
+        earliest_wave = 2
     else:
         earliest_wave = 11
     if sort_by == "date":
@@ -104,17 +104,24 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
             playerprofile = legion_api.getprofile(playerid)
             if Path(Path("Profiles/"+ playerid + "/")).is_dir():
                 with open("Profiles/"+ playerid + "/gamecount_"+playerid+".txt") as f:
-                    txt = f.readlines()
-                    offset = int(txt[1].replace("\n", ""))
+                    try:
+                        txt = f.readlines()
+                        offset = int(txt[1].replace("\n", ""))
+                    except Exception:
+                        offset = 0
             else:
                 offset = 0
+            try:
+                ladder_points = playerstats["ladderPoints"]
+            except KeyError:
+                ladder_points = 0
             PlayerProfile(
                 player_id=playerid,
                 player_name=playerprofile["playerName"],
                 total_games_played=playerstats["gamesPlayed"],
                 ranked_wins_current_season=wins,
                 ranked_losses_current_season=losses,
-                ladder_points=playerstats["ladderPoints"],
+                ladder_points=ladder_points,
                 offset=offset,
                 last_updated=datetime.now(tz=timezone.utc)
             ).save()
@@ -132,7 +139,12 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 losses = playerstats['rankedLossesThisSeason']
             except KeyError:
                 losses = 0
+            try:
+                ladder_points = playerstats["ladderPoints"]
+            except KeyError:
+                ladder_points = 0
             PlayerProfile.update(
+                ladder_points = ladder_points,
                 ranked_wins_current_season=wins,
                 ranked_losses_current_season=losses,
                 last_updated=datetime.now()

@@ -2,11 +2,16 @@ import datetime
 import json
 import pathlib
 import random
+import time
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+import discord
+
 import drachbot_db
 import peewee_pg
+import util
 from peewee_pg import PlayerProfile, GameData, PlayerData
 import requests
 
@@ -124,6 +129,75 @@ def ladder_update(amount=100):
         print(str(i+1) + '. ' + player["profile"][0]["playerName"])
         games_count += drachbot_db.get_matchistory(player["_id"], 0, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
+
+def get_recent_games(calls=100):
+    date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    date_after = (datetime.now(tz=timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    date_now = date_now.replace(" ", "%20")
+    date_now = date_now.replace(":", "%3A")
+    date_after = date_after.replace(" ", "%20")
+    date_after = date_after.replace(":", "%3A")
+    offset = 50
+    ranked_count = 0
+    timeout_count = 0
+    ranks_dict = {
+        'Legend': [2800, '<:Legend:1217999693234176050>', 0],
+        'GrandMaster': [2600, '<:Grandmaster:1217999691883741224>', 0],
+        'SeniorMaster': [2400, '<:SeniorMaster:1217999704349081701>', 0],
+        'Master': [2200, '<:Master:1217999699114590248>', 0],
+        'Expert': [2000, '<:Expert:1217999688494747718>', 0],
+        'Diamond': [1800, '<:Diamond:1217999686888325150>', 0],
+        'Platinum': [1600, '<:Platinum:1217999701337571379>', 0],
+        'Gold': [1400, '<:Gold:1217999690369335407>', 0],
+        'Silver': [1200, '<:Silver:1217999706555158631>', 0],
+        'Bronze': [1000, '<:Bronze:1217999684484862057>', 0],
+        'Unranked': [0, "<:Unranked:1241064654717980723>", 0]
+    }
+    def add_game_count(elo):
+        for elo_bracket in ranks_dict:
+            if elo >= ranks_dict[elo_bracket][0]:
+                ranks_dict[elo_bracket][2] += 1
+                break
+    print("Starting Games Update...")
+    t1 = time.time()
+    for i in range(calls):
+        if timeout_count == 10:
+            print("Breaking Game Update loops because no new games in last 50 calls..")
+            break
+        temp = 0
+        url = (f'https://apiv2.legiontd2.com/games'
+                f'?limit=50&offset={offset*i}&sortBy=gameElo&sortDirection=-1'
+                f'&dateBefore={date_now}'
+                f'&dateAfter={date_after}'
+                f'&includeDetails=true&countResults=false&queueType=Normal')
+        api_call_logger("/games")
+        history_raw = json.loads(requests.get(url, headers= header).text)
+        if (history_raw == {'message': 'Internal server error'}) or (history_raw == {'err': 'Entry not found.'}):
+            timeout_count += 1
+            print("api fail", history_raw)
+            continue
+        for game in history_raw:
+            if (game['queueType'] == 'Normal'):
+                if GameData.get_or_none(GameData.game_id == game["_id"]) is None:
+                    timeout_count = 0
+                    add_game_count(game["gameElo"])
+                    ranked_count += 1
+                    peewee_pg.save_game(game)
+                else:
+                    temp += 1
+        if temp == 50:
+            timeout_count += 1
+        print(f"{i+1} out of {calls}")
+    t2 = time.time()
+    print(f"Finished Game update in {(t2-t1)/60} Minutes.")
+    output = ""
+    for i in ranks_dict:
+        if ranks_dict[i][2] != 0:
+            output += f"{util.get_ranked_emote(ranks_dict[i][0])} {i}: {util.human_format(ranks_dict[i][2])} Games\n"
+
+    return discord.Embed(color=util.random_color(),
+                         title=f"Pulled {util.human_format(ranked_count)} new ranked games.",
+                         description=output).set_author(name="[Scheduled Update]", icon_url="https://overlay.drachbot.site/favicon.ico")
 
 def pull_games_by_id(file, name):
     path = '/home/container/Profiles/' + name

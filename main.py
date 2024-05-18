@@ -12,6 +12,7 @@ from discord.ext.commands._types import BotT
 
 import cogs.legiontdle
 import cogs.topgames
+import cogs.novacup
 
 with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
@@ -45,6 +46,8 @@ class Drachbot(commands.Bot):
         self.add_view(cogs.legiontdle.RefreshButtonLtdleTotal())
         self.add_view(cogs.legiontdle.RefreshButtonLtdleDaily())
         self.add_view(cogs.legiontdle.RefreshButtonLtdleAvg())
+        self.add_view(cogs.novacup.RefreshButtonDiv1())
+        self.add_view(cogs.novacup.RefreshButtonDiv2())
     
     async def on_ready(self):
         print(f'"{self.user.display_name}" is now running!')

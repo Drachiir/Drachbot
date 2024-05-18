@@ -14,7 +14,7 @@ import util
 
 
 def novacup(division):
-    html = requests.get('https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pubhtml#').text
+    html = requests.get('https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pubhtml#', headers={'Cache-Control': 'no-cache'}).text
     soup = BeautifulSoup(html, "lxml")
     tables = soup.find_all("table")
     with open("novacup.csv", "w", encoding="utf-8") as f:
@@ -58,6 +58,51 @@ def novacup(division):
             break
     return embed
 
+
+class RefreshButtonDiv1(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+    
+    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refreshdiv1')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.defer()
+            bucket = self.cd_mapping.get_bucket(interaction.message)
+            retry_after = bucket.update_rate_limit()
+            if retry_after:
+                return print(interaction.user.name + " likes to press buttons.")
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                response = await loop.run_in_executor(pool, functools.partial(novacup, "1"))
+                pool.shutdown()
+                await interaction.edit_original_response(embed=response)
+        except Exception:
+            traceback.print_exc()
+
+
+class RefreshButtonDiv2(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+    
+    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refreshdiv2')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.defer()
+            bucket = self.cd_mapping.get_bucket(interaction.message)
+            retry_after = bucket.update_rate_limit()
+            if retry_after:
+                return print(interaction.user.name + " likes to press buttons.")
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                response = await loop.run_in_executor(pool, functools.partial(novacup, "1"))
+                pool.shutdown()
+                await interaction.edit_original_response(embed=response)
+        except Exception:
+            traceback.print_exc()
+
+
 class Novacup(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
@@ -76,7 +121,10 @@ class Novacup(commands.Cog):
                 response = await loop.run_in_executor(pool, functools.partial(novacup, division.value))
                 pool.shutdown()
                 if type(response) == discord.Embed:
-                    await interaction.followup.send(embed=response)
+                    if division == "1":
+                        await interaction.followup.send(embed=response, view=RefreshButtonDiv1())
+                    else:
+                        await interaction.followup.send(embed=response, view=RefreshButtonDiv2())
                 else:
                     await interaction.followup.send(response)
             except Exception:

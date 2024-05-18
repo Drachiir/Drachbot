@@ -321,9 +321,9 @@ def matchhistory_viewer(playername:str):
     avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
     playername = profile["playerName"]
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
-                    PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.elo_change],
+                    PlayerData.player_id, PlayerData.player_name, PlayerData.player_elo, PlayerData.player_slot, PlayerData.game_result, PlayerData.elo_change],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
-                   ["player_id", "player_name", "player_slot", "game_result", "elo_change"]]
+                   ["player_id", "player_name", "player_elo", "player_slot", "game_result", "elo_change"]]
     history_raw = drachbot_db.get_matchistory(playerid, 5, earlier_than_wave10=True, req_columns=req_columns)
     if len(history_raw) == 0:
         return "No games found."
@@ -346,7 +346,7 @@ def matchhistory_viewer(playername:str):
                     elo_change = player["elo_change"]
                     elo_prefix = ""
         embed.add_field(name="", value=emoji + " [" + result + " on Wave " + str(game["ending_wave"]) +
-                             "("+elo_prefix+str(elo_change)+" Elo)]("+gameid_visualizer(game["_id"], 0)+")\nWest: "+
+                             "("+elo_prefix+str(elo_change)+" Elo)]("+gameid_visualizer(game["game_id"], 0)+")\nWest: "+
                                 per_game_list[0]+" "+per_game_list[1]+"\nEast: "+per_game_list[2]+" "+per_game_list[3], inline=False)
     return embed
 

@@ -42,13 +42,28 @@ class ManageCommands(commands.Cog):
         await ctx.message.add_reaction("✅")
     
     @commands.command()
-    async def update(self, ctx: commands.Context):
+    async def ladder_update(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
             try:
                 loop = asyncio.get_running_loop()
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.ladder_update, 100))
                     pool.shutdown()
+            except Exception:
+                traceback.print_exc()
+        else:
+            await ctx.channel.send("No permission to use this command.")
+    
+    @commands.command()
+    async def update(self, ctx: commands.Context):
+        if ctx.author.name == "drachir_":
+            content = ctx.message.content[8:]
+            try:
+                loop = asyncio.get_running_loop()
+                with concurrent.futures.ProcessPoolExecutor() as pool:
+                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, int(content)))
+                    pool.shutdown()
+                await ctx.send(embed=ladder_update)
             except Exception:
                 traceback.print_exc()
         else:

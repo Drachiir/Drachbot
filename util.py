@@ -30,6 +30,14 @@ mm_choices = []
 for mm in mm_list:
     mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
 
+def human_format(num):
+    num = float('{:.3g}'.format(num))
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
+
 async def unit_autocomplete(interaction: discord.Interaction, interaction_input):
     if interaction.command.name == "openstats":
         max_cost = 270
@@ -133,10 +141,11 @@ def get_icons_image(type, name):
     return Image.open(open(image_path, "rb"))
 
 def count_mythium(send):
-    if send == "":
-        send = []
-    else:
-        send = send.split("!")
+    if type(send) != type(list()):
+        if send == "":
+            send = []
+        else:
+            send = send.split("!")
     send_amount = 0
     for x in send:
         if "Upgrade" in x:
@@ -145,10 +154,11 @@ def count_mythium(send):
     return send_amount
 
 def calc_leak(leak, wave):
-    if leak == "":
-        leak = []
-    else:
-        leak = leak.split("!")
+    if type(leak) != type(list()):
+        if leak == "":
+            leak = []
+        else:
+            leak = leak.split("!")
     leak_amount = 0
     send_amount = 0
     wave_total = wave_values[wave]

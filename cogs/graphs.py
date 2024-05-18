@@ -308,6 +308,15 @@ def leaderboard(ranks=10, transparency=False):
         else:
             im.paste(av_image, (x, y))
         im.paste(gold_border, (x, y), mask=gold_border)
+        req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                        PlayerData.player_id, PlayerData.player_slot],
+                       ["game_id", "date", "version", "ending_wave", "game_elo"],
+                       ["player_id", "player_slot"]]
+        last_game = drachbot_db.get_matchistory(player["_id"], 1, earlier_than_wave10=True, req_columns=req_columns)
+        game_date = last_game[0]["date"]
+        if game_date < datetime.now() - timedelta(days=2):
+            tent = Image.open('Files/tent.png')
+            im.paste(tent, (x, y), mask=tent)
         I1.text((x + offset, y), str(i+1)+". "+player["profile"][0]["playerName"], font=myFont, stroke_width=2, stroke_fill=(0, 0, 0),fill=(255, 255, 255))
         width = I1.textlength(str(i+1)+". "+player["profile"][0]["playerName"], font=myFont)
         try:

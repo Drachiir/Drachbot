@@ -54,6 +54,7 @@ class TwitchHandler(commands.Cog):
             stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
             user = await first(self.twitchclient.get_users(user_ids=[event_data.event.broadcaster_user_id]))
             if type(stream) == type(None):
+                print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data")
                 pass
             else:
                 game = stream.game_name
