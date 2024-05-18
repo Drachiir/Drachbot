@@ -53,10 +53,11 @@ class TwitchHandler(commands.Cog):
         try:
             stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
             user = await first(self.twitchclient.get_users(user_ids=[event_data.event.broadcaster_user_id]))
-            if type(stream) == type(None):
-                print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data")
-                pass
-            else:
+            if stream is None:
+                print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data, trying again in 10 seconds")
+                await asyncio.sleep(10)
+                stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
+            if stream is not None:
                 game = stream.game_name
                 started_at = str(stream.started_at)
                 title = stream.title

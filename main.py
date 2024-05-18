@@ -29,8 +29,6 @@ class Drachbot(commands.Bot):
                 continue
             elif "cog_template" in e:
                 continue
-            elif "stats_explorer" in e:
-                continue
             elif platform.system() == "Windows" and "twitch" in e:
                 continue
             self.exts.append("cogs." + e.split(".")[0])

@@ -96,7 +96,7 @@ class RefreshButtonDiv2(discord.ui.View):
                 return print(interaction.user.name + " likes to press buttons.")
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                response = await loop.run_in_executor(pool, functools.partial(novacup, "1"))
+                response = await loop.run_in_executor(pool, functools.partial(novacup, "2"))
                 pool.shutdown()
                 await interaction.edit_original_response(embed=response)
         except Exception:
@@ -121,7 +121,7 @@ class Novacup(commands.Cog):
                 response = await loop.run_in_executor(pool, functools.partial(novacup, division.value))
                 pool.shutdown()
                 if type(response) == discord.Embed:
-                    if division == "1":
+                    if division.value == "1":
                         await interaction.followup.send(embed=response, view=RefreshButtonDiv1())
                     else:
                         await interaction.followup.send(embed=response, view=RefreshButtonDiv2())

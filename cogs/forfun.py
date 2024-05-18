@@ -48,6 +48,9 @@ def get_emote(emote_name):
         emote_list = os.listdir("/shared/emotes")
         close_matches = difflib.get_close_matches(emote_name, emote_list, cutoff=0.3)
         if close_matches:
+            if not close_matches[0].endswith(".gif"):
+                im = Image.open("/shared/emotes/"+close_matches[0])
+                im.resize((150, 150)).save("/shared/emotes/"+close_matches[0])
             return discord.File('/shared/emotes/'+close_matches[0])
         else:
             return "Emote not found."

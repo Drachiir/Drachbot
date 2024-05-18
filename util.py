@@ -5,6 +5,7 @@ from difflib import SequenceMatcher
 from PIL import Image
 import discord
 from discord import app_commands
+import difflib
 
 def random_color():
     return random.randrange(0, 2 ** 24)
@@ -139,6 +140,59 @@ def get_icons_image(type, name):
         case _:
             image_path = "Files/icons/Granddaddy.png"
     return Image.open(open(image_path, "rb"))
+
+def validate_spell_input(spell):
+    spell_list = []
+    with open('Files/json/spells.json', 'r') as f:
+        spells_json = json.load(f)
+    for s_js in spells_json:
+        string = s_js["_id"]
+        string = string.replace('_powerup_id', '')
+        string = string.replace('_spell_damage', '')
+        string = string.replace("_", " ")
+        spell_list.append(string)
+    spell_list.append("taxed allowance")
+    spell = spell.lower()
+    if spell in slang:
+        spell = slang.get(spell)
+    if spell not in spell_list:
+        close_matches = difflib.get_close_matches(spell, spell_list)
+        if len(close_matches) > 0:
+            return close_matches[0]
+        else:
+            return None
+    else:
+        return spell
+
+def validate_unit_list_input(unit:list):
+    unit_list = []
+    with open('Files/json/units.json', 'r') as f:
+        units_json = json.load(f)
+    for u_js in units_json:
+        if u_js["totalValue"] != '':
+            if u_js["unitId"] and int(u_js["totalValue"]) > 0:
+                string = u_js["unitId"]
+                string = string.replace('_', ' ')
+                string = string.replace(' unit id', '')
+                unit_list.append(string)
+    unit_list.append('pack rat nest')
+    for i, unit_name in enumerate(unit):
+        unit_name = unit_name.lower()
+        unit[i] = unit_name
+        if unit_name.startswith(" "):
+            unit_name = unit_name[1:]
+            unit[i] = unit_name
+        if unit_name in slang:
+            unit_name = slang.get(unit_name)
+            unit[i] = unit_name
+        if unit_name not in unit_list:
+            close_matches = difflib.get_close_matches(unit_name, unit_list)
+            if len(close_matches) > 0:
+                unit[i] = close_matches[0]
+            else:
+                return unit_name + " unit not found."
+    else:
+        return unit
 
 def count_mythium(send):
     if type(send) != type(list()):
