@@ -330,12 +330,17 @@ def matchhistory_viewer(playername:str):
     mod_date = history_raw[0]["date"].timestamp()
     embed = discord.Embed(color=0x1cce3a, title="Match History\nLast game: "+discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE))
     embed.set_author(name=playername, icon_url=avatar)
+    def normalize_string(string1, string2):
+        if len(string1) < len(string2):
+            return [string1 + " " * (len(string2) - len(string1)), string2]
+        else:
+            return [string1, string2 + " " * (len(string1) - len(string2))]
     for game in history_raw:
         per_game_list = []
         elo_prefix = ""
         emoji = util.wave_emotes.get("wave"+str(game["ending_wave"]))
         for indx, player in enumerate(game["players_data"]):
-            per_game_list.append(player["player_name"] + " " + util.get_ranked_emote(player["player_elo"]))
+            per_game_list.append([player["player_name"], util.get_ranked_emote(player["player_elo"])])
             if player["player_id"] != playerid: continue
             else:
                 result = player["game_result"].capitalize()
@@ -345,9 +350,12 @@ def matchhistory_viewer(playername:str):
                 else:
                     elo_change = player["elo_change"]
                     elo_prefix = ""
-        embed.add_field(name="", value=emoji + " [" + result + " on Wave " + str(game["ending_wave"]) +
-                             "("+elo_prefix+str(elo_change)+" Elo)]("+gameid_visualizer(game["game_id"], 0)+")\nWest: "+
-                                per_game_list[0]+" "+per_game_list[1]+"\nEast: "+per_game_list[2]+" "+per_game_list[3], inline=False)
+        west_players = normalize_string(per_game_list[0][0].replace("\n", ""), per_game_list[1][0].replace("\n", ""))
+        east_players = normalize_string(per_game_list[2][0].replace("\n", ""), per_game_list[3][0].replace("\n", ""))
+        embed.add_field(name="", value=(f"{emoji} [{result} on Wave {game["ending_wave"]} "
+                                     f"({elo_prefix}{elo_change} Elo)](https://ltd2.pro/game/{game["game_id"]})\n"
+                                     f"{per_game_list[0][1]}`{west_players[0]}` {per_game_list[2][1]}`{east_players[0]}`\n"
+                                     f"{per_game_list[1][1]}`{west_players[1]}` {per_game_list[3][1]}`{east_players[1]}`"),inline=False)
     return embed
 
 class Elo(commands.Cog):

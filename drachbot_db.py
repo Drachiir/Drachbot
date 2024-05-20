@@ -13,17 +13,6 @@ from playhouse.postgres_ext import *
 import datetime
 from datetime import datetime, timezone
 
-def get_games_saved_count(playerid):
-    path = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + "/gamedata/"
-    if Path(Path(str(path))).is_dir():
-        json_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.json')]
-        if len(json_files) == 0:
-            return 200
-        else:
-            return len(json_files)
-    else:
-        return 200
-
 def get_games_loop(playerid, offset, expected, timeout_limit = 1):
     print("Starting get_games_loop, expecting " + str(expected) + " games.")
     data = legion_api.pullgamedata(playerid, offset, expected)
@@ -180,7 +169,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                     temp_data = {}
                     for field in req_columns[1]:
                         temp_data[field] = row[field]
-                        temp_data["players_data"] = [p_data]
+                    temp_data["players_data"] = [p_data]
                 else:
                     try:
                         temp_data["players_data"].append(p_data)
@@ -216,15 +205,48 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 break
             with open(x) as f:
                 try:
-                    raw_data_partial = json.load(f)
+                    raw_data_partial:dict = json.load(f)
                 except json.decoder.JSONDecodeError:
                     os.remove(x)
                     print("file error")
                 f.close()
+                raw_data_partial["game_id"] = raw_data_partial.pop("_id")
+                raw_data_partial["ending_wave"] = raw_data_partial.pop("endingWave")
+                raw_data_partial["game_elo"] = raw_data_partial.pop("gameElo")
+                raw_data_partial["left_king_hp"] = raw_data_partial.pop("leftKingPercentHp")
+                raw_data_partial["right_king_hp"] = raw_data_partial.pop("rightKingPercentHp")
+                raw_data_partial["players_data"] = raw_data_partial.pop("playersData")
+                for index, player in enumerate(raw_data_partial["players_data"]):
+                    def convert_data(keys):
+                        for key in keys:
+                            new_list = []
+                            for i, wave in enumerate(player[key]):
+                                if len(wave) == 0:
+                                    new_list.append("")
+                                else:
+                                    new_list.append("!".join(wave))
+                            player[key] = new_list
+                    convert_data(["mercenariesSentPerWave", "mercenariesReceivedPerWave", "leaksPerWave", "buildPerWave", "kingUpgradesPerWave", "opponentKingUpgradesPerWave"])
+                    raw_data_partial["players_data"][index]["player_id"] = raw_data_partial["players_data"][index].pop("playerId")
+                    raw_data_partial["players_data"][index]["player_name"] = raw_data_partial["players_data"][index].pop("playerName")
+                    raw_data_partial["players_data"][index]["game_result"] = raw_data_partial["players_data"][index].pop("gameResult")
+                    raw_data_partial["players_data"][index]["player_elo"] = raw_data_partial["players_data"][index].pop("overallElo")
+                    raw_data_partial["players_data"][index]["elo_change"] = raw_data_partial["players_data"][index].pop("eloChange")
+                    raw_data_partial["players_data"][index]["spell"] = raw_data_partial["players_data"][index].pop("chosenSpell")
+                    raw_data_partial["players_data"][index]["spell_location"] = raw_data_partial["players_data"][index].pop("chosenSpellLocation")
+                    raw_data_partial["players_data"][index]["opener"] = raw_data_partial["players_data"][index].pop("firstWaveFighters")
+                    raw_data_partial["players_data"][index]["workers_per_wave"] = raw_data_partial["players_data"][index].pop("workersPerWave")
+                    raw_data_partial["players_data"][index]["income_per_wave"] = raw_data_partial["players_data"][index].pop("incomePerWave")
+                    raw_data_partial["players_data"][index]["mercs_sent_per_wave"] = raw_data_partial["players_data"][index].pop("mercenariesSentPerWave")
+                    raw_data_partial["players_data"][index]["mercs_received_per_wave"] = raw_data_partial["players_data"][index].pop("mercenariesReceivedPerWave")
+                    raw_data_partial["players_data"][index]["leaks_per_wave"] = raw_data_partial["players_data"][index].pop("leaksPerWave")
+                    raw_data_partial["players_data"][index]["build_per_wave"] = raw_data_partial["players_data"][index].pop("buildPerWave")
+                    raw_data_partial["players_data"][index]["kingups_sent_per_wave"] = raw_data_partial["players_data"][index].pop("kingUpgradesPerWave")
+                    raw_data_partial["players_data"][index]["kingups_received_per_wave"] = raw_data_partial["players_data"][index].pop("opponentKingUpgradesPerWave")
                 if earlier_than_wave10 == True:
                     count += 1
                     raw_data.append(raw_data_partial)
-                elif raw_data_partial['endingWave'] > 10 and earlier_than_wave10 == False:
+                elif raw_data_partial['ending_wave'] > 10 and earlier_than_wave10 == False:
                     count += 1
                     raw_data.append(raw_data_partial)
     else:
@@ -241,6 +263,8 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
             if games == 0:
                 games = GameData.select().where(GameData.game_elo >= min_elo).count()
             expr = True
+        if games > 100000:
+            games = 100000
         game_data_query = (PlayerData
                            .select(*req_columns[0])
                            .join(GameData)
@@ -255,7 +279,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 temp_data = {}
                 for field in req_columns[1]:
                     temp_data[field] = row[field]
-                    temp_data["players_data"] = [p_data]
+                temp_data["players_data"] = [p_data]
             else:
                 try:
                     temp_data["players_data"].append(p_data)

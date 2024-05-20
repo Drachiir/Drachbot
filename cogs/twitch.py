@@ -54,8 +54,8 @@ class TwitchHandler(commands.Cog):
             stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
             user = await first(self.twitchclient.get_users(user_ids=[event_data.event.broadcaster_user_id]))
             if stream is None:
-                print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data, trying again in 10 seconds")
-                await asyncio.sleep(10)
+                print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data, trying again in 30 seconds")
+                await asyncio.sleep(30)
                 stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
             if stream is not None:
                 game = stream.game_name
@@ -69,6 +69,8 @@ class TwitchHandler(commands.Cog):
                     self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
                     self.messages[event_data.event.broadcaster_user_name]["title"] = title
                     print(f'{event_data.event.broadcaster_user_name} is live playing ltd2!')
+            else:
+                print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data")
         except Exception:
             traceback.print_exc()
     
