@@ -327,8 +327,7 @@ def matchhistory_viewer(playername:str):
     history_raw = drachbot_db.get_matchistory(playerid, 5, earlier_than_wave10=True, req_columns=req_columns)
     if len(history_raw) == 0:
         return "No games found."
-    mod_date = history_raw[0]["date"].timestamp()
-    embed = discord.Embed(color=0x1cce3a, title="Match History\nLast game: "+discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE))
+    embed = discord.Embed(color=0x1cce3a, title="Match History")
     embed.set_author(name=playername, icon_url=avatar)
     def normalize_string(string1, string2):
         if len(string1) < len(string2):
@@ -350,10 +349,13 @@ def matchhistory_viewer(playername:str):
                 else:
                     elo_change = player["elo_change"]
                     elo_prefix = ""
+        mod_date = game["date"].timestamp()
+        game_timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
         west_players = normalize_string(per_game_list[0][0].replace("\n", ""), per_game_list[1][0].replace("\n", ""))
         east_players = normalize_string(per_game_list[2][0].replace("\n", ""), per_game_list[3][0].replace("\n", ""))
         embed.add_field(name="", value=(f"{emoji} [{result} on Wave {game["ending_wave"]} "
-                                     f"({elo_prefix}{elo_change} Elo)](https://ltd2.pro/game/{game["game_id"]})\n"
+                                     f"({elo_prefix}{elo_change} Elo)](https://ltd2.pro/game/{game["game_id"]})"
+                                     f" {game_timestamp}\n"
                                      f"{per_game_list[0][1]}`{west_players[0]}` {per_game_list[2][1]}`{east_players[0]}`\n"
                                      f"{per_game_list[1][1]}`{west_players[1]}` {per_game_list[3][1]}`{east_players[1]}`"),inline=False)
     return embed
