@@ -311,7 +311,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         output.append(false_output(lstring))
         output2 += ":red_square:"
     #upgraded
-    unit_upgraded = unit_data["sortOrder"].split(".")[1].endswith("U")
+    unit_upgraded = unit_data["sortOrder"].split(".")[1].endswith("U") or unit_data["sortOrder"].split(".")[1].endswith("U2")
     ltdle_unit_upgraded = ltdle_data["game_1_selected_unit"]["sortOrder"].split(".")[1].endswith("U")
     if lstring == "Merc":
         ustring = "Merc unit"
@@ -875,7 +875,19 @@ class Legiontdle(commands.Cog):
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
-
+    
+    @app_commands.command(name="notify", description="Notification for Legiontdle")
+    async def notify(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name +"/notify.txt"
+        if not os.path.isfile(path):
+            with open(path, "w") as f:
+                f.writelines([str(interaction.user.id)])
+            f.close()
+            await interaction.followup.send(f"Legiontdle notification **enabled**!", ephemeral=True)
+        else:
+            os.remove(str(path))
+            await interaction.followup.send(f"Legiontdle notification **disabled**!", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Legiontdle(bot))

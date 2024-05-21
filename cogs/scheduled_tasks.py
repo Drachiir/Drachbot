@@ -12,6 +12,7 @@ import image_generators
 import util
 
 import cogs.elo as elo
+import cogs.legiontdle as ltdle
 
 utc = timezone.utc
 task_time = time(hour=0, minute=0, second=1, tzinfo=utc)
@@ -116,6 +117,7 @@ class ScheduledTasks(commands.Cog):
                 with open("Files/json/discord_channels.json", "r") as f:
                     discord_channels = json.load(f)
                     f.close()
+                # notifications
                 try:
                     guild = self.client.get_guild(discord_channels["drachbot_update"][0])
                     channel = guild.get_channel(discord_channels["drachbot_update"][1])
@@ -123,6 +125,18 @@ class ScheduledTasks(commands.Cog):
                     await message.publish()
                 except Exception:
                     pass
+                for player in os.listdir("ltdle_data"):
+                    if player.endswith(".json"): continue
+                    if os.path.isfile(f"ltdle_data/{player}/notify.txt"):
+                        with open(f"ltdle_data/{player}/notify.txt", "r") as f:
+                            lines = f.readlines()
+                        try:
+                            user = await self.client.fetch_user(int(lines[0]))
+                            await user.send(embed=ltdle.ltdle({},{}, 0), view=ltdle.GameSelectionButtons())
+                            await asyncio.sleep(1)
+                        except Exception:
+                            traceback.print_exc()
+                # games update
                 try:
                     loop = asyncio.get_running_loop()
                     with concurrent.futures.ProcessPoolExecutor() as pool:
