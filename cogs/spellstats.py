@@ -25,8 +25,8 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
         string = string.replace('_', ' ')
         string = string.replace(' powerup id', '')
         string = string.replace(' spell damage', '')
-        spell_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Opener': {}, 'MMs': {}}
-    spell_dict["taxed allowance"] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Opener': {}, 'MMs': {}}
+        spell_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'Opener': {}, 'MMs': {}}
+    spell_dict["taxed allowance"] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'Opener': {}, 'MMs': {}}
     if spellname != "all":
         if spellname in util.slang:
             spellname = util.slang.get(spellname)
@@ -71,9 +71,10 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
             if (player["player_id"] == playerid) or (playerid.lower() == 'all' or 'nova cup' in playerid):
                 spell_name = player["spell"].lower()
                 spell_dict[spell_name]["Count"] += 1
+                spell_dict[spell_name]["Elo"] += player["player_elo"]
+                spell_dict[spell_name]["Worker"] += player["workers_per_wave"][9]
                 if player["game_result"] == "won":
                     spell_dict[spell_name]["Wins"] += 1
-                spell_dict[spell_name]["Worker"] += player["workers_per_wave"][9]
                 if "," in player["opener"]:
                     opener_current = player["opener"].split(",")[-1]
                 else:

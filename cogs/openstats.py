@@ -26,8 +26,8 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
-                unit_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
-    unit_dict['pack rat nest'] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+                unit_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+    unit_dict['pack rat nest'] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
     if unit != "all":
         if unit in util.slang:
             unit = util.slang.get(unit)
@@ -89,9 +89,12 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
             for player in game["players_data"]:
                 if player["player_id"] == playerid:
                     s = set()
-                    for x in range(4):
-                        for y in opener_ranked[x]:
-                            s.add(y)
+                    try:
+                        for x in range(4):
+                            for y in opener_ranked[x]:
+                                s.add(y)
+                    except IndexError:
+                        continue
                     for y in s:
                         try:
                             if y != opener_ranked[0][0]:
@@ -114,19 +117,25 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                                 else:
                                     unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]]['Count'] += 1
                                 unit_dict[opener_ranked[0][0]]['Worker'] += player["workers_per_wave"][3]
+                                unit_dict[opener_ranked[0][0]]['Elo'] += player["player_elo"]
                                 if player["game_result"] == 'won':
                                     unit_dict[opener_ranked[0][0]]['Wins'] += 1
                                     unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Wins'] += 1
                                     unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]]['Wins'] += 1
                         except IndexError:
                             continue
+                        except KeyError:
+                            continue
         else:
             counter = 0
             for player in game["players_data"]:
                 s = set()
-                for x in range(counter, counter+4):
-                    for y in opener_ranked[x]:
-                        s.add(y)
+                try:
+                    for x in range(counter, counter+4):
+                        for y in opener_ranked[x]:
+                            s.add(y)
+                except IndexError:
+                    continue
                 for y in s:
                     try:
                         i = 0
@@ -150,11 +159,14 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                             else:
                                 unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]]['Count'] += 1
                             unit_dict[opener_ranked[counter][0]]['Worker'] += player["workers_per_wave"][3]
+                            unit_dict[opener_ranked[0][0]]['Elo'] += player["player_elo"]
                             if player["game_result"] == 'won':
                                 unit_dict[opener_ranked[counter][0]]['Wins'] += 1
                                 unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Wins'] += 1
                                 unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]]['Wins'] += 1
                     except IndexError:
+                        continue
+                    except KeyError:
                         continue
                 counter += 4
     new_patches = []

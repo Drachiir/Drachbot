@@ -99,6 +99,8 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"]):
         with open("ltdle_data/"+player+"/data.json", "r") as f:
             p_data = json.load(f)
             f.close()
+        if p_data["games_played"] < 6:
+            continue
         if daily:
             daily_score1 = 0
             daily_score2 = 0
@@ -469,7 +471,7 @@ class UnitInput(ui.Modal, title='Enter a unit!'):
                 if type(response) == discord.Embed:
                     await interaction.channel.send(embed=response, view=ModalButton())
                 elif type(response) == list:
-                    await interaction.channel.send(embed=response[0])
+                    await interaction.channel.send(embed=response[0], view=GameSelectionButtons())
                 else:
                     await interaction.channel.send(response)
         except Exception:
@@ -500,7 +502,7 @@ class LeakInput(ui.Modal, title='Enter a Leak!'):
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 2, input=input))
                 pool.shutdown()
                 if type(response) == list:
-                    await interaction.channel.send(file=response[0], embed=response[1])
+                    await interaction.channel.send(file=response[0], embed=response[1], view=GameSelectionButtons())
                 else:
                     await interaction.channel.send(response)
         except Exception:
@@ -534,7 +536,7 @@ class EloInput(ui.Modal, title='Enter a Elo!'):
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 3, input=input))
                 pool.shutdown()
                 if type(response) == list:
-                    await interaction.channel.send(file=response[0], embed=response[1])
+                    await interaction.channel.send(file=response[0], embed=response[1], view=GameSelectionButtons())
                 else:
                     await interaction.channel.send(response)
         except Exception:

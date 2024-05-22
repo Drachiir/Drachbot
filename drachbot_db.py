@@ -43,14 +43,13 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
         sort_arg = GameData.date
     else:
         sort_arg = GameData.game_elo
-    if patch != '0' and "," in patch:
-        patch_list = patch.replace(" ", "").split(',')
-    elif patch != '0' and "-" not in patch and "+" not in patch:
+    if patch != '0' and "-" not in patch and "+" not in patch:
         patch_list = patch.replace(" ", "").split(',')
     elif patch != "0" and "+" in patch and "-" not in patch:
-        patch_new = patch.replace(" ", "").split("+")
-        if len(patch_new) == 2:
-            patch_new = patch_new[1].split('.')
+        patch_new = patch.replace(" ", "").replace("+", "")
+        print(patch_new)
+        if len(patch_new) == 5:
+            patch_new = patch_new.split('.')
             for x in range(13 - int(patch_new[1])):
                 if int(patch_new[1]) + x < 10:
                     prefix = "0"

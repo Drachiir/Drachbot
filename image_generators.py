@@ -42,27 +42,27 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
     else: config = ['RGB', (49,51,56)]
     match mode:
         case "Mastermind":
-            if megamind: im = PIL.Image.new(mode=config[0], size=(1380, 770), color=config[1])
-            else: im = PIL.Image.new(mode=config[0], size=(1485, 770), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Pickrate', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            if megamind: im = PIL.Image.new(mode=config[0], size=(1380, 810), color=config[1])
+            else: im = PIL.Image.new(mode=config[0], size=(1485, 810), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Pickrate', 'Player Elo', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "Spell"]
             icon_type = "legion"
         case "Open":
-            im = PIL.Image.new(mode=config[0], size=(1700, 975), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 4:', 'Best Add:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            im = PIL.Image.new(mode=config[0], size=(1700, 1015), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo', 'W on 4:', 'Best Add:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["OpenWith", "MMs", "Spells"]
             icon_type = "icon"
         case "Spell":
-            im = PIL.Image.new(mode=config[0], size=(1700, 770), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Playrate:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
+            im = PIL.Image.new(mode=config[0], size=(1700, 810), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "MMs"]
             icon_type = "icon"
         case "Unit":
-            im = PIL.Image.new(mode=config[0], size=(1700, 930), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Playrate:', 'Best\nCombo:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MM:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            im = PIL.Image.new(mode=config[0], size=(1700, 970), color=config[1])
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo', 'Best\nCombo:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MM:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["ComboUnit", "MMs", "Spells"]
             icon_type = "icon"
-    im2 = PIL.Image.new(mode="RGB", size=(88, 900), color=(25,25,25))
+    im2 = PIL.Image.new(mode="RGB", size=(88, 1200), color=(25,25,25))
     I1 = ImageDraw.Draw(im)
     ttf = 'Files/RobotoCondensed-Regular.ttf'
     myFont_small = ImageFont.truetype(ttf, 20)
@@ -87,7 +87,7 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
     offset = 45
     offset2 = 25
     offset3 = 0
-    offset_counter = 4
+    offset_counter = 5
     for i, dict_key in enumerate(dict):
         if dict[dict_key]["Count"] == 0 or i == 15:
             break
@@ -96,9 +96,10 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
         I1.text((x, y), str(dict[dict_key]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset), str(round(dict[dict_key]['Wins']/dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset * 2), str(calc_pr(dict, dict_key)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset * 3), str(round(dict[dict_key]['Elo']/dict[dict_key]['Count'])), font=myFont, fill=(255, 255, 255))
         try:
-            I1.text((x, y + offset * 3), str(round(dict[dict_key]['Worker'] / dict[dict_key]['Count'], 1)), font=myFont, fill=(255, 255, 255))
-        except KeyError: offset_counter = 3
+            I1.text((x, y + offset * 4), str(round(dict[dict_key]['Worker'] / dict[dict_key]['Count'], 1)), font=myFont, fill=(255, 255, 255))
+        except KeyError: offset_counter = 4
         for val in dict_values:
             newIndex = get_perf_score(dict[dict_key], val)
             if newIndex:
@@ -120,7 +121,7 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
             offset_counter += 4
         offset2 = 25
         offset3 = 0
-        offset_counter = 4
+        offset_counter = 5
         x += 106
     im3 = PIL.Image.new(mode="RGB", size=(x-38, 4), color=(169, 169, 169))
     for k in keys:
@@ -181,9 +182,14 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
     I1.text((82, 10), str(playername) + suffix + " " + specific_value.capitalize() + " stats (From " + str(games) + " ranked games, Avg elo: " + str(avgelo) + ")", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     I1.text((82, 55), 'Patches: ' + ', '.join(patch), font=myFont_small, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     try:
-        I1.text((10, 80), "Games: " + str(dict[specific_value]["Count"]) + ", Wins: " + str(dict[specific_value]["Wins"]) + ", Losses: " + str(dict[specific_value]["Count"] - dict[specific_value]["Wins"]) + ", Winrate: " + str(round(dict[specific_value]["Wins"] / dict[specific_value]["Count"] * 100, 1)) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        winrate = str(round(dict[specific_value]["Wins"] / dict[specific_value]["Count"] * 100, 1))
     except ZeroDivisionError:
-        I1.text((10, 80), "Games: " + str(dict[specific_value]["Count"]) + ", Wins: " + str(dict[specific_value]["Wins"]) + ", Losses: " + str(dict[specific_value]["Count"] - dict[specific_value]["Wins"]) + ", Winrate: " + str(0) + "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+        winrate = "0"
+    I1.text((10, 80), "Games: " + str(dict[specific_value]["Count"]) +
+            ", Wins: " + str(dict[specific_value]["Wins"]) +
+            ", Losses: " + str(dict[specific_value]["Count"] - dict[specific_value]["Wins"]) +
+            ", Winrate: " + winrate +
+            "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 130
     offset = 45
