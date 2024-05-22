@@ -118,7 +118,7 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"]):
                 if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                     if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
                             if p_data["game2"]["game_finished"] == True:
-                                daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][0][3]-p_data["game2"]["guesses"][0])/10)
+                                daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][3]-p_data["game2"]["guesses"][0])/10)
                             else:
                                 daily_score2 = 0
                 else:
@@ -245,8 +245,12 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         string = u_js["unitId"]
         string = string.replace('_', ' ')
         string = string.replace(' unit id', '')
-        if string == "skyfish": string = "metaldragon"
-        elif string == "imp mercenary": string = "imp"
+        if string == "skyfish":
+            string = "metaldragon"
+        elif string == "imp mercenary":
+            string = "imp"
+        elif string == "octopus":
+            string = "quadrapus"
         unit_dict[string] = u_js
     if text_input.lower() not in unit_dict:
         close_matches = difflib.get_close_matches(text_input.lower(), list(unit_dict.keys()), cutoff=0.8)
@@ -398,9 +402,9 @@ def ltdle_game2(session: dict, input: int, ltdle_data: dict):
         embed.add_field(name="You got "+str(points)+" points!", value="")
         return [file, embed, ""]
     if image_index == 0:
-        return embed1(ltdle_data["game_2_selected_leak"][0][4])
+        return embed1(ltdle_data["game_2_selected_leak"][4])
     else:
-        points = round(10-abs(ltdle_data["game_2_selected_leak"][0][3]-input)/10)
+        points = round(10-abs(ltdle_data["game_2_selected_leak"][3]-input)/10)
         if points < 0: points = 0
         session["game2"]["image"] += 1
         session["score"] += points
@@ -411,7 +415,7 @@ def ltdle_game2(session: dict, input: int, ltdle_data: dict):
         session["game2"]["guesses"].append(input)
         update_user_data(session, session["name"])
         print(session["name"]+ " played guess the leak.")
-        return embed2(ltdle_data["game_2_selected_leak"][0][4].replace(".png", "_covered.png"), points)
+        return embed2(ltdle_data["game_2_selected_leak"][4].replace(".png", "_covered.png"), points)
 
 
 def ltdle_game3(session: dict, input: int, ltdle_data: dict):
@@ -885,9 +889,11 @@ class Legiontdle(commands.Cog):
                 f.writelines([str(interaction.user.id)])
             f.close()
             await interaction.followup.send(f"Legiontdle notification **enabled**!", ephemeral=True)
+            print(f"{interaction.user.name} enabled notifications")
         else:
             os.remove(str(path))
             await interaction.followup.send(f"Legiontdle notification **disabled**!", ephemeral=True)
+            print(f"{interaction.user.name} disabled notifications")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Legiontdle(bot))

@@ -10,12 +10,13 @@ import functools
 import asyncio
 import image_generators
 import util
-
+from peewee import fn
+from peewee_pg import PlayerData, GameData
 import cogs.elo as elo
 import cogs.legiontdle as ltdle
 
 utc = timezone.utc
-task_time = time(hour=0, minute=0, second=1, tzinfo=utc)
+task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
 print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
@@ -31,7 +32,7 @@ def reset(self):
                 unit_json_dict = json.load(f2)
                 f2.close()
             random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
-            while random_unit["categoryClass"] == "Special" or random_unit["categoryClass"] == "Passive":
+            while random_unit["categoryClass"] == "Special" or random_unit["categoryClass"] == "Passive" or random_unit["unitId"] == "giant_quadrapus_unit_id" or random_unit["unitId"] == "scorpion_king_unit_id":
                 random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
             json_data["game_1_selected_unit"] = random_unit
             with open("ltdle_data/ltdle.json", "w") as f3:
@@ -39,33 +40,34 @@ def reset(self):
                 f3.close()
             # GuessTheLeak
             try:
-                games_list = os.listdir("Games/")
-                leak_found = False
-                while leak_found == False:
-                    random_game = random.choice(games_list)
-                    if random_game.startswith("2023"):
-                        continue
-                    elif random_game.startswith("2022"):
-                        continue
-                    elif random_game.split("_")[1].split("-")[1] == "00":
-                        continue
-                    with open("Games/" + random_game, "r") as f:
-                        game_data = json.load(f)
-                        f.close()
-                    leaks_list = []
-                    for index, player in enumerate(game_data["playersData"]):
-                        if player["leakValue"] > 0:
-                            for wave, leak in enumerate(player["leaksPerWave"]):
-                                if len(leak) > 0:
-                                    if wave == 0 or wave == 9 or wave == 19:
-                                        continue
-                                    leaks_list.append([game_data["_id"], index, wave, util.calc_leak(leak, wave)])
-                    if len(leaks_list) > 0:
-                        leak_found = True
-                random.shuffle(leaks_list)
-                random_leak = [leaks_list[0]]
-                for i, r in enumerate(random_leak):
-                    random_leak[i].append(image_generators.gameid_visualizer_singleplayer(r[0], r[2], r[1]))
+                query = (PlayerData
+                         .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, PlayerData.player_slot, PlayerData.leaks_per_wave)
+                         .join(GameData)
+                         .where((GameData.queue == "Normal") & (GameData.game_elo > 2400) & GameData.version.startswith("v11.04"))
+                         .order_by(fn.Random())
+                         ).dicts()
+                leaks_list = []
+                for row in query.iterator():
+                    if row["leaks_per_wave"] != [""]:
+                        for wave, leak in enumerate(row["leaks_per_wave"]):
+                            if len(leak) > 0:
+                                if wave in [0, 1, 9, 19]:
+                                    continue
+                                match row["player_slot"]:
+                                    case 1:
+                                        index = 0
+                                    case 2:
+                                        index = 1
+                                    case 5:
+                                        index = 2
+                                    case 6:
+                                        index = 3
+                                leaks_list.append([row["game_id"], index, wave, util.calc_leak(leak, wave)])
+                    if len(leaks_list) > 10:
+                        print("Found leaks for guess the leak")
+                        break
+                random_leak = random.choice(leaks_list)
+                random_leak.append(image_generators.gameid_visualizer_singleplayer(random_leak[0], random_leak[2], random_leak[1]))
                 with open("ltdle_data/ltdle.json", "r") as f2:
                     json_data = json.load(f2)
                     f2.close()
@@ -125,6 +127,7 @@ class ScheduledTasks(commands.Cog):
                     await message.publish()
                 except Exception:
                     pass
+                count = 0
                 for player in os.listdir("ltdle_data"):
                     if player.endswith(".json"): continue
                     if os.path.isfile(f"ltdle_data/{player}/notify.txt"):
@@ -132,10 +135,12 @@ class ScheduledTasks(commands.Cog):
                             lines = f.readlines()
                         try:
                             user = await self.client.fetch_user(int(lines[0]))
-                            await user.send(embed=ltdle.ltdle({},{}, 0), view=ltdle.GameSelectionButtons())
+                            await user.send(content=f"New Legiontdle is up {user.mention}!", embed=ltdle.ltdle({},{}, 0), view=ltdle.GameSelectionButtons())
+                            count += 1
                             await asyncio.sleep(1)
                         except Exception:
                             traceback.print_exc()
+                print(f"Successfully sent {count} DM notis")
                 # games update
                 try:
                     loop = asyncio.get_running_loop()
