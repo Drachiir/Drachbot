@@ -44,15 +44,25 @@ def get_top_games():
         path2 = path + game2
         mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc).timestamp()
         timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
-        def normalize_string(string1, string2):
-            if len(string1) < len(string2):
-                return [string1+" "*(len(string2)-len(string1)), string2]
+        def normalize_string(string1: str, string2: str):
+            string1 = string1.split(":")
+            string2 = string2.split(":")
+            max_char = 14
+            if len(string1[0]) > max_char:
+                string1[0] = string1[0][:max_char-2]+".."
             else:
-                return [string1, string2 + " " * (len(string1) - len(string2))]
+                string1[0] = string1[0] + " " * (max_char-len(string1[0]))
+            if len(string2[0]) > max_char:
+                string2[0] = string2[0][:max_char-2]+".."
+            else:
+                string2[0] = string2[0] + " " * (max_char-len(string2[0]))
+            string1 = f"{string1[1]}:{string1[0]}"
+            string2 = f"{string2[1]}:{string2[0]}"
+            return [string1, string2]
         west_players = normalize_string(txt[0].replace("\n", ""), txt[1].replace("\n", ""))
         east_players = normalize_string(txt[2].replace("\n", ""), txt[3].replace("\n", ""))
-        output = (f"{util.get_ranked_emote(int(west_players[0].split(":")[1]))}`{west_players[0]}`{util.get_ranked_emote(int(east_players[0].split(":")[1]))}`{east_players[0]}`\n"
-                  f"{util.get_ranked_emote(int(west_players[1].split(":")[1]))}`{west_players[1]}`{util.get_ranked_emote(int(east_players[1].split(":")[1]))}`{east_players[1]}`")
+        output = (f"{util.get_ranked_emote(int(west_players[0].split(":")[0]))}`{west_players[0].split(":")[1]}`{util.get_ranked_emote(int(east_players[0].split(":")[0]))}`{east_players[0].split(":")[1]}`\n"
+                  f"{util.get_ranked_emote(int(west_players[1].split(":")[0]))}`{west_players[1].split(":")[1]}`{util.get_ranked_emote(int(east_players[1].split(":")[0]))}`{east_players[1].split(":")[1]}`")
         embed.add_field(name="**Game " + str(idx + 1) + "**, " + txt[-1] + " " + util.get_ranked_emote(int(txt[-1])) + " Started " + str(timestamp), value=output, inline=False)
     return embed
 

@@ -20,81 +20,123 @@ task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
 print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
+def reset_game1(json_data):
+    with open("Files/json/units.json", "r") as f2:
+        unit_json_dict = json.load(f2)
+        f2.close()
+    random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
+    while random_unit["categoryClass"] == "Special" or random_unit["categoryClass"] == "Passive" or random_unit["unitId"] == "giant_quadrapus_unit_id" or random_unit["unitId"] == "scorpion_king_unit_id":
+        random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
+    json_data["game_1_selected_unit"] = random_unit
+    return json_data
+
+def reset_game2(json_data):
+    query = (PlayerData
+             .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, PlayerData.player_slot, PlayerData.leaks_per_wave)
+             .join(GameData)
+             .where((GameData.queue == "Normal") & (GameData.game_elo > 2400) & GameData.version.startswith("v11.04"))
+             .order_by(fn.Random())
+             ).dicts()
+    leaks_list = []
+    for row in query.iterator():
+        if row["leaks_per_wave"] != [""]:
+            for wave, leak in enumerate(row["leaks_per_wave"]):
+                if len(leak) > 0:
+                    if wave in [0, 1, 9, 19]:
+                        continue
+                    match row["player_slot"]:
+                        case 1:
+                            index = 0
+                        case 2:
+                            index = 1
+                        case 5:
+                            index = 2
+                        case 6:
+                            index = 3
+                    leaks_list.append([row["game_id"], index, wave, util.calc_leak(leak, wave)])
+        if len(leaks_list) > 10:
+            print("Found leaks for guess the leak")
+            break
+    random_leak = random.choice(leaks_list)
+    random_leak.append(image_generators.gameid_visualizer_singleplayer(random_leak[0], random_leak[2], random_leak[1]))
+    json_data["game_2_selected_leak"] = random_leak
+    return json_data
+
+def reset_game3(json_data):
+    games = legion_api.get_random_games()
+    random_game2 = random.choice(games)
+    while random_game2[2] == "":
+        random_game2 = random.choice(games)
+    rand_wave = random.randint(4, random_game2[3] - 1)
+    im1 = elo.gameid_visualizer(random_game2[2], rand_wave, hide_names=True)
+    im2 = elo.gameid_visualizer(random_game2[2], rand_wave)
+    json_data["game_3_selected_game"] = [im1, im2, random_game2[4]]
+    return json_data
+
+def season_reset(json_data):
+    print("Starting Season Reset...")
+    for player in os.listdir("ltdle_data/"):
+        if os.path.isfile(f"ltdle_data/{player}/data.json"):
+            os.rename(f"ltdle_data/{player}/data.json", f"ltdle_data/{player}/data_season{json_data["season"][0]}.json")
+            with open(f"ltdle_data/{player}/data.json", "w") as f:
+                date_now = datetime.now()
+                data = {"name": player, "score": 0, "scores_dict": {}, "games_played": 0,
+                        "game1": {"games_played": 0, "score": 0, "scores_dict": {}, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
+                        "game2": {"games_played": 0, "score": 0, "scores_dict": {}, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
+                        "game3": {"games_played": 0, "score": 0, "scores_dict": {}, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
+                json.dump(data, f)
+                f.close()
+    json_data["season"][0] += 1
+    print("Success!")
+    return json_data
+
+async def ltdle_notify(self):
+    with open("ltdle_data/ltdle.json", "r") as f:
+        json_data = json.load(f)
+        f.close()
+    with open("Files/json/discord_channels.json", "r") as f:
+        discord_channels = json.load(f)
+        f.close()
+    # notifications
+    try:
+        guild = self.client.get_guild(discord_channels["drachbot_update"][0])
+        channel = guild.get_channel(discord_channels["drachbot_update"][1])
+        message = await channel.send("New Legiontdle is up! :brain: <a:dinkdonk:1120126536343896106>")
+        await message.publish()
+    except Exception:
+        pass
+    count = 0
+    for player in os.listdir("ltdle_data"):
+        if player.endswith(".json"): continue
+        if os.path.isfile(f"ltdle_data/{player}/notify.txt"):
+            with open(f"ltdle_data/{player}/notify.txt", "r") as f:
+                lines = f.readlines()
+            try:
+                user = await self.client.fetch_user(int(lines[0]))
+                await user.send(content=f"New Legiontdle is up {user.mention}!", embed=ltdle.ltdle({}, {}, 0), view=ltdle.GameSelectionButtons())
+                count += 1
+                await asyncio.sleep(0.5)
+            except Exception:
+                traceback.print_exc()
+    print(f"Successfully sent {count} DM notis")
 
 def reset(self):
     with open("ltdle_data/ltdle.json", "r") as f:
         json_data = json.load(f)
         f.close()
-        if datetime.strptime(json_data["next_reset"], "%m/%d/%Y") < datetime.now():
-            json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
-            # legiondle
-            with open("Files/json/units.json", "r") as f2:
-                unit_json_dict = json.load(f2)
-                f2.close()
-            random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
-            while random_unit["categoryClass"] == "Special" or random_unit["categoryClass"] == "Passive" or random_unit["unitId"] == "giant_quadrapus_unit_id" or random_unit["unitId"] == "scorpion_king_unit_id":
-                random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
-            json_data["game_1_selected_unit"] = random_unit
-            with open("ltdle_data/ltdle.json", "w") as f3:
-                json.dump(json_data, f3)
-                f3.close()
-            # GuessTheLeak
-            try:
-                query = (PlayerData
-                         .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, PlayerData.player_slot, PlayerData.leaks_per_wave)
-                         .join(GameData)
-                         .where((GameData.queue == "Normal") & (GameData.game_elo > 2400) & GameData.version.startswith("v11.04"))
-                         .order_by(fn.Random())
-                         ).dicts()
-                leaks_list = []
-                for row in query.iterator():
-                    if row["leaks_per_wave"] != [""]:
-                        for wave, leak in enumerate(row["leaks_per_wave"]):
-                            if len(leak) > 0:
-                                if wave in [0, 1, 9, 19]:
-                                    continue
-                                match row["player_slot"]:
-                                    case 1:
-                                        index = 0
-                                    case 2:
-                                        index = 1
-                                    case 5:
-                                        index = 2
-                                    case 6:
-                                        index = 3
-                                leaks_list.append([row["game_id"], index, wave, util.calc_leak(leak, wave)])
-                    if len(leaks_list) > 10:
-                        print("Found leaks for guess the leak")
-                        break
-                random_leak = random.choice(leaks_list)
-                random_leak.append(image_generators.gameid_visualizer_singleplayer(random_leak[0], random_leak[2], random_leak[1]))
-                with open("ltdle_data/ltdle.json", "r") as f2:
-                    json_data = json.load(f2)
-                    f2.close()
-                json_data["game_2_selected_leak"] = random_leak
-                with open("ltdle_data/ltdle.json", "w") as f3:
-                    json.dump(json_data, f3)
-                    f3.close()
-            except Exception:
-                traceback.print_exc()
-            #Guess The Elo
-            games = legion_api.get_random_games()
-            random_game2 = random.choice(games)
-            while random_game2[2] == "":
-                random_game2 = random.choice(games)
-            rand_wave = random.randint(4,random_game2[3]-1)
-            im1 = elo.gameid_visualizer(random_game2[2], rand_wave, hide_names=True)
-            im2 = elo.gameid_visualizer(random_game2[2], rand_wave)
-            with open("ltdle_data/ltdle.json", "r") as f:
-                json_data = json.load(f)
-                f.close()
-            json_data["game_3_selected_game"] = [im1,im2,random_game2[4]]
-            with open("ltdle_data/ltdle.json", "w") as f:
-                json.dump(json_data, f)
-                f.close()
-            return True
-        else:
-            return False
+    if datetime.strptime(json_data["next_reset"], "%m/%d/%Y") < datetime.now():
+        if json_data["next_reset"].split("/")[1] == "23":
+            json_data = season_reset(json_data)
+        json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
+        json_data = reset_game1(json_data)
+        json_data = reset_game2(json_data)
+        json_data = reset_game3(json_data)
+        with open("ltdle_data/ltdle.json", "w") as f:
+            json_data = json.dump(json_data, f)
+            f.close()
+        return True
+    else:
+        return False
 
 class ScheduledTasks(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -112,48 +154,18 @@ class ScheduledTasks(commands.Cog):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 update = await loop.run_in_executor(pool, functools.partial(reset, self))
                 pool.shutdown()
-            if update:
-                with open("ltdle_data/ltdle.json", "r") as f:
-                    json_data = json.load(f)
-                    f.close()
-                with open("Files/json/discord_channels.json", "r") as f:
-                    discord_channels = json.load(f)
-                    f.close()
-                # notifications
-                try:
-                    guild = self.client.get_guild(discord_channels["drachbot_update"][0])
-                    channel = guild.get_channel(discord_channels["drachbot_update"][1])
-                    message = await channel.send("New Legiontdle is up! :brain: <a:dinkdonk:1120126536343896106>")
-                    await message.publish()
-                except Exception:
-                    pass
-                count = 0
-                for player in os.listdir("ltdle_data"):
-                    if player.endswith(".json"): continue
-                    if os.path.isfile(f"ltdle_data/{player}/notify.txt"):
-                        with open(f"ltdle_data/{player}/notify.txt", "r") as f:
-                            lines = f.readlines()
-                        try:
-                            user = await self.client.fetch_user(int(lines[0]))
-                            await user.send(content=f"New Legiontdle is up {user.mention}!", embed=ltdle.ltdle({},{}, 0), view=ltdle.GameSelectionButtons())
-                            count += 1
-                            await asyncio.sleep(1)
-                        except Exception:
-                            traceback.print_exc()
-                print(f"Successfully sent {count} DM notis")
-                # games update
-                try:
-                    loop = asyncio.get_running_loop()
-                    with concurrent.futures.ProcessPoolExecutor() as pool:
-                        ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 100))
-                        pool.shutdown()
-                    guild = self.client.get_guild(discord_channels["toikan_drachbot"][0])
-                    channel = guild.get_channel(discord_channels["toikan_drachbot"][1])
-                    message = await channel.send(embed=ladder_update)
-                except Exception:
-                    pass
-            else:
+            if not update:
                 print("No reset required now.")
+                return
+            await ltdle_notify(self)
+            # games update
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 100))
+                pool.shutdown()
+            guild = self.client.get_guild(discord_channels["toikan_drachbot"][0])
+            channel = guild.get_channel(discord_channels["toikan_drachbot"][1])
+            message = await channel.send(embed=ladder_update)
         except Exception:
             traceback.print_exc()
             

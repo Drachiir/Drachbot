@@ -78,7 +78,7 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
     date_now = datetime.now()
     match game:
         case 0:
-            embed = discord.Embed(color=color, title=":exploding_head: **LEGIONTDLE** :brain:", description="**Select a game!\nUsing the buttons below.**\n*Guess The Unit includes:\nFighters, Mercs and Waves*")
+            embed = discord.Embed(color=color, title=f":exploding_head: **LEGIONTDLE Season {ltdle_data["season"][0]}** :brain:", description="**Select a game!\nUsing the buttons below.**\n*Guess The Unit includes:\nFighters, Mercs and Waves*")
             embed.set_thumbnail(url="https://overlay.drachbot.site/ltdle/guesstheunit.png")
             embed.set_author(name="Drachbot presents", icon_url="https://overlay.drachbot.site/favicon.ico")
             return embed

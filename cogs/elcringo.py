@@ -51,11 +51,15 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
         req_columns[0].append(PlayerData.kingups_sent_per_wave)
         req_columns[2].append("mercs_sent_per_wave")
         req_columns[2].append("kingups_sent_per_wave")
+        merc_field = "mercs_sent_per_wave"
+        king_field = "kingups_sent_per_wave"
     else:
         req_columns[0].append(PlayerData.mercs_received_per_wave)
         req_columns[0].append(PlayerData.kingups_received_per_wave)
         req_columns[2].append("mercs_received_per_wave")
         req_columns[2].append("kingups_received_per_wave")
+        merc_field = "mercs_received_per_wave"
+        king_field = "kingups_received_per_wave"
     history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
@@ -75,10 +79,10 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
             if player["player_id"] == playerid or playerid == 'all':
                 for n in range(game["ending_wave"]):
                     small_send = 0
-                    if saves == "Sent":
-                        send = util.count_mythium(player["mercs_sent_per_wave"][n]) + len(player["kingups_sent_per_wave"][n].split("!")) * 20
-                    elif saves == "Received":
-                        send = util.count_mythium(player["mercs_received_per_wave"][n]) + len(player["kingups_received_per_wave"][n].split("!")) * 20
+                    try:
+                        send = util.count_mythium(player[merc_field][n]) + len(player[king_field][n].split("!")) * 20
+                    except IndexError:
+                        break
                     mythium_list_pergame.append(send)
                     if n <= 9:
                         if player["workers_per_wave"][n] > 5:
@@ -112,11 +116,14 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                 leak_amount = 0
                 leak_pre10_amount = 0
                 for y in range(game["ending_wave"]):
-                    if len(player["leaks_per_wave"][y]) > 0:
-                        p = util.calc_leak(player["leaks_per_wave"][y], y)
-                        leak_amount += p
-                        if y < 10:
-                            leak_pre10_amount += p
+                    try:
+                        if len(player["leaks_per_wave"][y]) > 0:
+                            p = util.calc_leak(player["leaks_per_wave"][y], y)
+                            leak_amount += p
+                            if y < 10:
+                                leak_pre10_amount += p
+                    except IndexError:
+                        break
                 leaks_list.append(leak_amount / game["ending_wave"])
                 leaks_pre10_list.append(leak_pre10_amount / 10)
                 try:

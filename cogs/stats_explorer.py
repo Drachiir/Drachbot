@@ -75,7 +75,7 @@ def stats_explorer(playername, unit: list, games, min_elo, patch, sort="date", m
                     current += 1
             if spell != "all" and player["spell_location"] != "-1|-1" and spell.lower() == player["spell"].lower() and spell.lower() not in excluded_buffs:
                 expected += 1
-                for pos in player["build_per_wave"].split("!")[-1]:
+                for pos in player["build_per_wave"][-1].split("!"):
                     if pos.split(":")[1] == player["spell_location"] and pos.split(":")[0].replace("_unit_id", "").replace("_", " ") in unit:
                         spell = player["spell"]
                         current += 1

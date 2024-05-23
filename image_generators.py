@@ -44,22 +44,22 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
         case "Mastermind":
             if megamind: im = PIL.Image.new(mode=config[0], size=(1380, 810), color=config[1])
             else: im = PIL.Image.new(mode=config[0], size=(1485, 810), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Pickrate', 'Player Elo', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            keys = ['Games:', 'Winrate:', 'Pickrate:', 'Player Elo:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "Spell"]
             icon_type = "legion"
         case "Open":
             im = PIL.Image.new(mode=config[0], size=(1700, 1015), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo', 'W on 4:', 'Best Add:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo:', 'W on 4:', 'Best Add:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["OpenWith", "MMs", "Spells"]
             icon_type = "icon"
         case "Spell":
             im = PIL.Image.new(mode=config[0], size=(1700, 810), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "MMs"]
             icon_type = "icon"
         case "Unit":
             im = PIL.Image.new(mode=config[0], size=(1700, 970), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo', 'Best\nCombo:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MM:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo:', 'Best\nCombo:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MM:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["ComboUnit", "MMs", "Spells"]
             icon_type = "icon"
     im2 = PIL.Image.new(mode="RGB", size=(88, 1200), color=(25,25,25))
