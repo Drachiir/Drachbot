@@ -18,7 +18,6 @@ import cogs.legiontdle as ltdle
 utc = timezone.utc
 task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
-print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
 def reset_game1(json_data):
     with open("Files/json/units.json", "r") as f2:
@@ -81,10 +80,10 @@ def season_reset(json_data):
             with open(f"ltdle_data/{player}/data.json", "w") as f:
                 date_now = datetime.now()
                 data = {"name": player, "score": 0, "scores_dict": {}, "games_played": 0,
-                        "game1": {"games_played": 0, "score": 0, "scores_dict": {}, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
-                        "game2": {"games_played": 0, "score": 0, "scores_dict": {}, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
-                        "game3": {"games_played": 0, "score": 0, "scores_dict": {}, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
-                json.dump(data, f)
+                        "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
+                        "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
+                        "game3": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
+                json.dump(data, f, indent=2)
                 f.close()
     json_data["season"][0] += 1
     print("Success!")
@@ -113,7 +112,7 @@ async def ltdle_notify(self):
                 lines = f.readlines()
             try:
                 user = await self.client.fetch_user(int(lines[0]))
-                await user.send(content=f"New Legiontdle is up {user.mention}!", embed=ltdle.ltdle({}, {}, 0), view=ltdle.GameSelectionButtons())
+                await user.send(content=f"New Legiontdle is up {user.mention}!", embed=ltdle.ltdle({}, json_data, 0), view=ltdle.GameSelectionButtons())
                 count += 1
                 await asyncio.sleep(0.5)
             except Exception:
@@ -125,14 +124,14 @@ def reset(self):
         json_data = json.load(f)
         f.close()
     if datetime.strptime(json_data["next_reset"], "%m/%d/%Y") < datetime.now():
-        if json_data["next_reset"].split("/")[1] == "23":
+        if json_data["next_reset"].split("/")[1] == "01":
             json_data = season_reset(json_data)
         json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
         json_data = reset_game1(json_data)
         json_data = reset_game2(json_data)
         json_data = reset_game3(json_data)
         with open("ltdle_data/ltdle.json", "w") as f:
-            json_data = json.dump(json_data, f)
+            json_data = json.dump(json_data, f, indent=2)
             f.close()
         return True
     else:
@@ -159,6 +158,9 @@ class ScheduledTasks(commands.Cog):
                 return
             await ltdle_notify(self)
             # games update
+            with open("Files/json/discord_channels.json", "r") as f:
+                discord_channels = json.load(f)
+                f.close()
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
                 ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 100))

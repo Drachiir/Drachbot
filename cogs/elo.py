@@ -329,11 +329,17 @@ def matchhistory_viewer(playername:str):
         return "No games found."
     embed = discord.Embed(color=0x1cce3a, title="Match History")
     embed.set_author(name=playername, icon_url=avatar)
-    def normalize_string(string1, string2):
-        if len(string1) < len(string2):
-            return [string1 + " " * (len(string2) - len(string1)), string2]
+    def normalize_string(string1: str, string2: str):
+        max_char = 14
+        if len(string1) > max_char:
+            string1 = string1[:max_char - 2] + ".."
         else:
-            return [string1, string2 + " " * (len(string1) - len(string2))]
+            string1 = string1 + " " * (max_char - len(string1))
+        if len(string2) > max_char:
+            string2 = string2[:max_char - 2] + ".."
+        else:
+            string2 = string2 + " " * (max_char - len(string2))
+        return [string1, string2]
     for game in history_raw:
         per_game_list = []
         elo_prefix = ""

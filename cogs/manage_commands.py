@@ -7,7 +7,7 @@ from discord.ext import commands
 import os
 from datetime import datetime, timedelta, timezone, time
 import legion_api
-
+import cogs.scheduled_tasks as s_tasks
 
 class ManageCommands(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -64,6 +64,16 @@ class ManageCommands(commands.Cog):
                     ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, int(content)))
                     pool.shutdown()
                 await ctx.send(embed=ladder_update)
+            except Exception:
+                traceback.print_exc()
+        else:
+            await ctx.channel.send("No permission to use this command.")
+    
+    @commands.command()
+    async def notify(self, ctx: commands.Context):
+        if ctx.author.name == "drachir_":
+            try:
+                await s_tasks.ltdle_notify(self)
             except Exception:
                 traceback.print_exc()
         else:

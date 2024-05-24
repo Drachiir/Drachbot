@@ -31,7 +31,7 @@ else:
 
 def update_user_data(session, name):
     with open("ltdle_data/" + name + "/data.json", "w") as f:
-        json.dump(session, f)
+        json.dump(session, f, indent=2)
         f.close()
 
 
@@ -50,6 +50,8 @@ def check_if_played_today(name: str, game: int):
             playedstring = "You already played todays **Guess The Leak**:grimacing:, next reset is "
         case 3:
             playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
+    if "scores_dict" not in session:
+        session["scores_dict"] = {}
     if "game2" not in session:
         session["game1"]["score"] = session["score"]
         session["game1"]["games_played"] = session["games_played"]
@@ -206,7 +208,7 @@ def ltdle_profile(player, avatar):
     if p_data["games_played"] == 0:
         return "No games played."
     embed = discord.Embed(color=color, title="Legiontdle Profile")
-    embed.add_field(name="Total stats:", value="Games played: " +str(p_data["games_played"])+
+    embed.add_field(name="Current Season Stats:", value="Games played: " +str(p_data["games_played"])+
                                             "\nPoints: "+str(p_data["score"])+
                                             "\nAvg: "+str(round(p_data["score"]/p_data["games_played"],1))+" points", inline=True)
     try:
@@ -371,16 +373,25 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
             timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
             embed = create_embed("You lost :frowning:. Try again next time "+timestamp+"\nYour guess history:\n" + "\n".join(session["game1"]["guesses"]))
+            if session["game1"]["last_played"] in session["game1"]["scores_dict"]:
+                session["game1"]["scores_dict"][session["game1"]["last_played"]][0] = 0
+            else:
+                session["game1"]["scores_dict"][session["game1"]["last_played"]] = [0,0,0]
             update_user_data(session, session["name"])
             return embed
     if correct_count == 6:
+        game1_score = 11 - len(session["game1"]["guesses"])
         print(session["name"]+ " found the right unit!")
         session["game1"]["game_finished"] = True
-        session["game1"]["score"] += 11 - len(session["game1"]["guesses"])
-        session["score"] += 11 - len(session["game1"]["guesses"])
+        session["game1"]["score"] += game1_score
+        session["score"] += game1_score
         embed = create_embed("**You guessed the correct unit! Yay!**(+"+str(11 - len(session["game1"]["guesses"]))+" points)\nYour guess history:\n"+"\n".join(session["game1"]["guesses"]))
         session["games_played"] += 1
         session["game1"]["games_played"] += 1
+        if session["game1"]["last_played"] in session["scores_dict"]:
+            session["scores_dict"][session["game1"]["last_played"]][0] = game1_score
+        else:
+            session["scores_dict"][session["game1"]["last_played"]] = [game1_score, 0, 0]
         update_user_data(session, session["name"])
         return [embed]
     else:
@@ -406,18 +417,22 @@ def ltdle_game2(session: dict, input: int, ltdle_data: dict):
     if image_index == 0:
         return embed1(ltdle_data["game_2_selected_leak"][4])
     else:
-        points = round(10-abs(ltdle_data["game_2_selected_leak"][3]-input)/10)
-        if points < 0: points = 0
+        game2_score = round(10-abs(ltdle_data["game_2_selected_leak"][3]-input)/10)
+        if game2_score < 0: game2_score = 0
         session["game2"]["image"] += 1
-        session["score"] += points
-        session["game2"]["score"] += points
+        session["score"] += game2_score
+        session["game2"]["score"] += game2_score
+        if session["game2"]["last_played"] in session["scores_dict"]:
+            session["scores_dict"][session["game2"]["last_played"]][1] = game2_score
+        else:
+            session["scores_dict"][session["game2"]["last_played"]] = [0, game2_score, 0]
         session["games_played"] += 1
         session["game2"]["games_played"] += 1
         session["game2"]["game_finished"] = True
         session["game2"]["guesses"].append(input)
         update_user_data(session, session["name"])
         print(session["name"]+ " played guess the leak.")
-        return embed2(ltdle_data["game_2_selected_leak"][4].replace(".png", "_covered.png"), points)
+        return embed2(ltdle_data["game_2_selected_leak"][4].replace(".png", "_covered.png"), game2_score)
 
 
 def ltdle_game3(session: dict, input: int, ltdle_data: dict):
@@ -437,18 +452,22 @@ def ltdle_game3(session: dict, input: int, ltdle_data: dict):
     if image_index == 0:
         return embed1(shared_folder+ltdle_data["game_3_selected_game"][0].split("/")[-1])
     else:
-        points = round(10-abs(ltdle_data["game_3_selected_game"][2]-input)/75)
-        if points < 0: points = 0
+        game3_score = round(10-abs(ltdle_data["game_3_selected_game"][2]-input)/75)
+        if game3_score < 0: game3_score = 0
         session["game3"]["image"] += 1
-        session["score"] += points
-        session["game3"]["score"] += points
+        session["score"] += game3_score
+        session["game3"]["score"] += game3_score
+        if session["game3"]["last_played"] in session["scores_dict"]:
+            session["scores_dict"][session["game3"]["last_played"]][2] = game3_score
+        else:
+            session["scores_dict"][session["game3"]["last_played"]] = [0, 0, game3_score]
         session["games_played"] += 1
         session["game3"]["games_played"] += 1
         session["game3"]["game_finished"] = True
         session["game3"]["guesses"].append(input)
         update_user_data(session, session["name"])
         print(session["name"]+ " played guess the elo.")
-        return embed2(shared_folder+ltdle_data["game_3_selected_game"][1].split("/")[-1], points)
+        return embed2(shared_folder+ltdle_data["game_3_selected_game"][1].split("/")[-1], game3_score)
         
 
 class UnitInput(ui.Modal, title='Enter a unit!'):
@@ -777,10 +796,11 @@ class Legiontdle(commands.Cog):
                     Path(str(path)).mkdir(parents=True, exist_ok=True)
                     with open(path + "/data.json", "w") as f:
                         date_now = datetime.now()
-                        data = {"name": interaction.user.name, "score": 0, "games_played": 0, "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
+                        data = {"name": interaction.user.name, "score": 0, "scores_dict": {}, "games_played": 0,
+                                "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
                                 "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
                                 "game3": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
-                        json.dump(data, f)
+                        json.dump(data, f, indent=2)
                         f.close()
                 else:
                     with open(path + "/data.json", "r") as f:
