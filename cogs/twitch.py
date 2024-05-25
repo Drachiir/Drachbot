@@ -101,6 +101,8 @@ class TwitchHandler(commands.Cog):
                 elif event_data.event.category_name != "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
                     self.messages[event_data.event.broadcaster_user_name]["live"] = False
                     print(f'{event_data.event.broadcaster_user_name} stopped playing ltd2!')
+                # elif event_data.event.category_name == "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"]:
+                #     pass
         except Exception:
             traceback.print_exc()
     

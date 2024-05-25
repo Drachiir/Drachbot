@@ -54,7 +54,7 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
             icon_type = "icon"
         case "Spell":
             im = PIL.Image.new(mode=config[0], size=(1700, 810), color=config[1])
-            keys = ['Games:', 'Winrate:', 'Playrate:', 'Player Elo:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
+            keys = ['Games:', 'Winrate:', 'Pickrate:', 'Player Elo:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Best MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "MMs"]
             icon_type = "icon"
         case "Unit":
@@ -95,8 +95,11 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
         im.paste(util.get_icons_image(icon_type, dict_key), (x, 100))
         I1.text((x, y), str(dict[dict_key]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset), str(round(dict[dict_key]['Wins']/dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + offset * 2), str(calc_pr(dict, dict_key)) + '%', font=myFont, fill=(255, 255, 255))
-        I1.text((x, y + offset * 3), str(round(dict[dict_key]['Elo']/dict[dict_key]['Count'])), font=myFont, fill=(255, 255, 255))
+        if mode == "Spell":
+            I1.text((x, y + offset * 2), str(round(dict[dict_key]['Count']/dict[dict_key]['Offered'] * 100, 1))+"%", font=myFont, fill=(255, 255, 255))
+        else:
+            I1.text((x, y + offset * 2), str(calc_pr(dict, dict_key)) + '%', font=myFont, fill=(255, 255, 255))
+        I1.text((x, y + offset * 3), str(round(dict[dict_key]['Elo'] / dict[dict_key]['Count'])), font=myFont, fill=(255, 255, 255))
         try:
             I1.text((x, y + offset * 4), str(round(dict[dict_key]['Worker'] / dict[dict_key]['Count'], 1)), font=myFont, fill=(255, 255, 255))
         except KeyError: offset_counter = 4
@@ -156,10 +159,16 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
             dict_values = ["OpenWith", "MMs", "Spells"]
             icon_type = "icon"
         case "Spell":
-            im = PIL.Image.new(mode=config[0], size=(1700, 545), color=config[1])
-            keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:']
-            dict_values = ["Opener", "MMs"]
-            icon_type = "icon"
+            if specific_value in util.buff_spells:
+                im = PIL.Image.new(mode=config[0], size=(1700, 745), color=config[1])
+                keys = ['Targets:', '', 'Games:', 'Winrate:', 'Playrate:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:', '', 'Games:', 'Winrate:', 'Playrate:']
+                dict_values = ["Targets", "Opener", "MMs"]
+                icon_type = "icon"
+            else:
+                im = PIL.Image.new(mode=config[0], size=(1700, 545), color=config[1])
+                keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:']
+                dict_values = ["Opener", "MMs"]
+                icon_type = "icon"
         case "Unit":
             im = PIL.Image.new(mode=config[0], size=(1700, 745), color=config[1])
             keys = ['Combo:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
@@ -185,11 +194,21 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
         winrate = str(round(dict[specific_value]["Wins"] / dict[specific_value]["Count"] * 100, 1))
     except ZeroDivisionError:
         winrate = "0"
-    I1.text((10, 80), "Games: " + str(dict[specific_value]["Count"]) +
-            ", Wins: " + str(dict[specific_value]["Wins"]) +
-            ", Losses: " + str(dict[specific_value]["Count"] - dict[specific_value]["Wins"]) +
-            ", Winrate: " + winrate +
-            "%", font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
+    overall_string = ("Games: " + str(dict[specific_value]["Count"]) +
+            " | Wins: " + str(dict[specific_value]["Wins"]) +
+            " | Losses: " + str(dict[specific_value]["Count"] - dict[specific_value]["Wins"]) +
+            " | Winrate: " + winrate + "%")
+    try:
+        if mode == "Open":
+            temp_string = "W on 4:"
+        else:
+            temp_string = "W on 10:"
+        overall_string += f" | {temp_string} " + str(round(dict[specific_value]['Worker'] / dict[specific_value]['Count'], 1))
+    except KeyError:
+        pass
+    if mode == "Spell":
+        overall_string += " | Pickrate: " + str(round(dict[specific_value]['Count']/dict[specific_value]['Offered'] * 100, 1))+"%"
+    I1.text((10, 80), overall_string , font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 130
     offset = 45
@@ -214,7 +233,7 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
         offset3 += 25
         offset_counter += 4
         x = 126
-    exclude = ["Open:", "Adds:", "MMs:", "Spell:", "Combo:"]
+    exclude = ["Open:", "Adds:", "MMs:", "Spell:", "Combo:", "Targets:"]
     dict_values_counter = 0
     for i, k in enumerate(keys):
         I1.text((8, y), k, font=myFont, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))

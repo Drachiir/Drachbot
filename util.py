@@ -26,6 +26,8 @@ wave_emotes = const_file.get("wave_emotes")
 current_season = const_file.get("current_patches")
 current_minelo = const_file.get("current_minelo")
 
+aura_spells = ["hero", "magician", "vampire"]
+buff_spells = ["hero", "magician", "vampire", "divine blessing", "glacial touch", "guardian angel", "protector", "pulverizer", "sorcerer", "titan", "villain"]
 mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
 mm_choices = []
 for mm in mm_list:

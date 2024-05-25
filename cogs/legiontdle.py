@@ -786,7 +786,7 @@ class Legiontdle(commands.Cog):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
-                if interaction.guild != None:
+                if interaction.guild is not None:
                     await interaction.response.send_message("This command only works in DMs with Drachbot.", ephemeral=True)
                     return
                 await interaction.response.defer(ephemeral=False, thinking=True)

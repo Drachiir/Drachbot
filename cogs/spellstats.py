@@ -14,6 +14,12 @@ import util
 import legion_api
 from peewee_pg import GameData, PlayerData
 
+shifts = [
+    (-1.0, -0.5), (0.0, -1.0), (1.0, -0.5),
+    (1.0, 0.5), (0.0, 1.0), (-1.0, 0.5)
+]
+
+calculate_positions = lambda x, z: [(x, z)] + [(x + dx, z + dz) for dx, dz in shifts]
 
 def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"):
     spell_dict = {}
@@ -25,8 +31,8 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
         string = string.replace('_', ' ')
         string = string.replace(' powerup id', '')
         string = string.replace(' spell damage', '')
-        spell_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'Opener': {}, 'MMs': {}}
-    spell_dict["taxed allowance"] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'Opener': {}, 'MMs': {}}
+        spell_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'Offered': 0, 'Opener': {}, 'MMs': {}, 'Targets': {}}
+    spell_dict["taxed allowance"] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'Offered': 0, 'Opener': {}, 'MMs': {}, 'Targets': {}}
     if spellname != "all":
         if spellname in util.slang:
             spellname = util.slang.get(spellname)
@@ -48,11 +54,11 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
             return 'Player ' + playername + ' not found.'
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
-    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids, GameData.spell_choices,
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.player_elo, PlayerData.legion,
-                    PlayerData.opener, PlayerData.spell, PlayerData.workers_per_wave],
-                   ["game_id", "date", "version", "ending_wave", "game_elo"],
-                   ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave"]]
+                    PlayerData.opener, PlayerData.spell, PlayerData.workers_per_wave, PlayerData.spell_location, PlayerData.build_per_wave],
+                   ["game_id", "date", "version", "ending_wave", "game_elo", "spell_choices"],
+                   ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave", "spell_location", "build_per_wave"]]
     history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
@@ -69,10 +75,32 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
         gameelo_list.append(game["game_elo"])
         for player in game["players_data"]:
             if (player["player_id"] == playerid) or (playerid.lower() == 'all' or 'nova cup' in playerid):
+                for offered_spell in game["spell_choices"]:
+                    spell_dict[offered_spell.replace('_', ' ').replace(' powerup id', '').replace(' spell damage', '')]["Offered"] += 1
+                if spellname != "all" and player["spell"].lower() != spellname:
+                    continue
                 spell_name = player["spell"].lower()
                 spell_dict[spell_name]["Count"] += 1
                 spell_dict[spell_name]["Elo"] += player["player_elo"]
                 spell_dict[spell_name]["Worker"] += player["workers_per_wave"][9]
+                if player["spell_location"] != "-1|-1":
+                    spell_loc = player["spell_location"].split("|")
+                    spell_loc = (float(spell_loc[0]), float(spell_loc[1]))
+                    if spellname in util.aura_spells:
+                        target_locations = calculate_positions(spell_loc[0], spell_loc[1])
+                    else:
+                        target_locations = [spell_loc]
+                    for unit in player["build_per_wave"][-1].split("!"):
+                        unit_loc = unit.split(":")[1].split("|")
+                        unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
+                        if unit_loc in target_locations:
+                            unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
+                            if unit_name in spell_dict[spell_name]["Targets"]:
+                                spell_dict[spell_name]["Targets"][unit_name]["Count"] += 1
+                            else:
+                                spell_dict[spell_name]["Targets"][unit_name] = {"Count": 1, "Wins": 0}
+                            if player["game_result"] == "won":
+                                spell_dict[spell_name]["Targets"][unit_name]["Wins"] += 1
                 if player["game_result"] == "won":
                     spell_dict[spell_name]["Wins"] += 1
                 if "," in player["opener"]:
@@ -95,6 +123,7 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
                     spell_dict[spell_name]["MMs"][player["legion"]] = {"Count": 1, "Wins": 0}
                     if player["game_result"] == "won":
                         spell_dict[spell_name]["MMs"][player["legion"]]["Wins"] += 1
+                
     new_patches = []
     for x in patches:
         string = x
