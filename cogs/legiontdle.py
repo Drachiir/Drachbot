@@ -391,10 +391,10 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         return embed
     session["game1"]["guesses"].append(output2+" "+new_name.replace("PriestessOfTheAbyss", "PotA"))
     if len(session["game1"]["guesses"]) == 10:
-        session["game1"]["game_finished"] = True
-        session["games_played"] += 1
-        session["game1"]["games_played"] += 1
         if correct_count < 6:
+            session["game1"]["game_finished"] = True
+            session["games_played"] += 1
+            session["game1"]["games_played"] += 1
             mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
             timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
             embed = create_embed("You lost :frowning:. Try again next time "+timestamp+"\nYour guess history:\n" + "\n".join(session["game1"]["guesses"]))
@@ -500,7 +500,7 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
     color = random_color()
     image_index = session["game4"]["image"]
     def embed1(image):
-        embed = discord.Embed(color=color, title="Guess The Icon :mag:", description="Which unit is this? (Each wrong guess reveals more)", url=f"{site}{image}")
+        embed = discord.Embed(color=color, title="Guess The Icon :mag:", description="Which unit is this? (Each wrong guess reveals more)\nCan be a Fighter, Wave Unit or Merc", url=f"{site}{image}")
         file = discord.File(f"{shared_folder}{image}")
         embed.set_image(url="attachment://"+image)
         return [file, embed]
@@ -572,6 +572,10 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
             try:
                 return embed1(ltdle_data["game_4_selected_unit"][1][image_index-1])
             except IndexError:
+                session["games_played"] += 1
+                session["game4"]["games_played"] += 1
+                session["game4"]["game_finished"] = True
+                update_user_data(session, session["name"])
                 return embed3(ltdle_data["game_4_selected_unit"][1][-1])
     else:
         image_index += 1
@@ -1024,7 +1028,8 @@ class Legiontdle(commands.Cog):
     @app_commands.choices(game=[
         discord.app_commands.Choice(name='Guess The Unit', value='game1'),
         discord.app_commands.Choice(name='Guess The Leak', value='game2'),
-        discord.app_commands.Choice(name='Guess The Elo', value='game3')
+        discord.app_commands.Choice(name='Guess The Elo', value='game3'),
+        discord.app_commands.Choice(name='Guess The Icon', value='game4')
     ])
     async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None, game: discord.app_commands.Choice[str] = "all"):
         loop = asyncio.get_running_loop()

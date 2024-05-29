@@ -98,6 +98,9 @@ def id_generator(size=10, chars=string.ascii_uppercase + string.ascii_lowercase 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
+def division_by_zero(n, d):
+    return n / d if d else 0
+
 def get_ranked_emote(rank):
     rank_emote = ""
     for emote in rank_emotes:

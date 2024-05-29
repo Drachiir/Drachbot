@@ -115,9 +115,9 @@ def wave1tendency(playername, option, games, min_elo, patch, sort="date"):
         avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
         playername = profile["playerName"]
     embed = discord.Embed(color=0xE73333, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")\n\n"+
-                          '**Kingup:** '+str(kingup_total) + ' | ' + str(round(kingup_total/send_total*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + ' Spell: ' + str(kingup_spell_count) + ')\n'+
-                          '**Snail:** ' + str(snail_count) + ' | ' + str(round(snail_count/send_total*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(leaks_count/snail_count*100, 2)) + '%))\n'+
-                          '**Save:** ' + str(save_count) + ' | '  + str(round(save_count/send_total*100,1)) + '%')
+                          '**Kingup:** '+str(kingup_total) + ' | ' + str(round(util.division_by_zero(kingup_total, send_total)*100,1)) + '% (Attack: ' + str(kingup_atk_count) + ' Regen: ' + str(kingup_regen_count) + ' Spell: ' + str(kingup_spell_count) + ')\n'+
+                          '**Snail:** ' + str(snail_count) + ' | ' + str(round(util.division_by_zero(snail_count, send_total)*100,1)) + '% (Leak count: ' + str(leaks_count) + ' (' + str(round(util.division_by_zero(leaks_count, snail_count)*100, 2)) + '%))\n'+
+                          '**Save:** ' + str(save_count) + ' | '  + str(round(util.division_by_zero(save_count, send_total)*100,1)) + '%')
     embed.set_author(name=playername + suffix+" Wave 1 " + option + " stats", icon_url=avatar)
     embed.set_footer(text='Patches: ' + ', '.join(patches))
     return embed

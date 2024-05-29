@@ -95,14 +95,15 @@ def reset_game4(json_data):
     json_data["game_4_selected_unit"] = [new_name, []]
     rand_x = random.randint(50,450)
     rand_y = random.randint(50, 450)
-    random_id = util.id_generator()
     for i in range(5):
+        random_id = util.id_generator()
         im = util.get_icons_image("splashes", name)
         im = util.zoom_at(im, rand_x, rand_y, zoom=i+1)
         if i == 4:
             im = ImageOps.grayscale(im)
         im.save(f"{shared_folder}{random_id}_{i+1}.png")
         json_data["game_4_selected_unit"][1].insert(0, f"{random_id}_{i+1}.png")
+    random_id = util.id_generator()
     im = util.get_icons_image("splashes", name)
     im.save(f"{shared_folder}{random_id}.png")
     json_data["game_4_selected_unit"][1].append(f"{random_id}.png")
