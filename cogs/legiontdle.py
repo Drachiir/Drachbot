@@ -551,7 +551,10 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
             session["score"] += game4_score
             session["game4"]["score"] += game4_score
             if session["game4"]["last_played"] in session["scores_dict"]:
-                session["scores_dict"][session["game4"]["last_played"]][3] = game4_score
+                try:
+                    session["scores_dict"][session["game4"]["last_played"]][3] = game4_score
+                except IndexError:
+                    session["scores_dict"][session["game4"]["last_played"]].append(game4_score)
             else:
                 session["scores_dict"][session["game4"]["last_played"]] = [0, 0, 0, game4_score]
             session["games_played"] += 1
