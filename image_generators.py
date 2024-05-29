@@ -96,7 +96,10 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
         I1.text((x, y), str(dict[dict_key]['Count']), font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset), str(round(dict[dict_key]['Wins']/dict[dict_key]['Count'] * 100, 1)) + '%', font=myFont, fill=(255, 255, 255))
         if mode == "Spell":
-            I1.text((x, y + offset * 2), str(round(dict[dict_key]['Count']/dict[dict_key]['Offered'] * 100, 1))+"%", font=myFont, fill=(255, 255, 255))
+            try:
+                I1.text((x, y + offset * 2), str(round(dict[dict_key]['Count']/dict[dict_key]['Offered'] * 100, 1))+"%", font=myFont, fill=(255, 255, 255))
+            except ZeroDivisionError:
+                I1.text((x, y + offset * 2), str(round(dict[dict_key]['Count']/games * 100, 1))+"%", font=myFont, fill=(255, 255, 255))
         else:
             I1.text((x, y + offset * 2), str(calc_pr(dict, dict_key)) + '%', font=myFont, fill=(255, 255, 255))
         I1.text((x, y + offset * 3), str(round(dict[dict_key]['Elo'] / dict[dict_key]['Count'])), font=myFont, fill=(255, 255, 255))
@@ -207,7 +210,10 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
     except KeyError:
         pass
     if mode == "Spell":
-        overall_string += " | Pickrate: " + str(round(dict[specific_value]['Count']/dict[specific_value]['Offered'] * 100, 1))+"%"
+        try:
+            overall_string += " | Pickrate: " + str(round(dict[specific_value]['Count']/dict[specific_value]['Offered'] * 100, 1))+"%"
+        except ZeroDivisionError:
+            overall_string += " | Pickrate: " + str(round(dict[specific_value]['Count']/games * 100, 1))+"%"
     I1.text((10, 80), overall_string , font=myFont_title, stroke_width=2, stroke_fill=(0, 0, 0), fill=(255, 255, 255))
     x = 126
     y = 130

@@ -33,6 +33,13 @@ mm_choices = []
 for mm in mm_list:
     mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
 
+def zoom_at(img, x, y, zoom):
+    w, h = img.size
+    zoom2 = zoom * 2
+    img = img.crop((x - w / zoom2, y - h / zoom2,
+                    x + w / zoom2, y + h / zoom2))
+    return img.resize((w, h), Image.LANCZOS)
+
 def human_format(num):
     num = float('{:.3g}'.format(num))
     magnitude = 0
@@ -133,6 +140,32 @@ def get_icons_image(type, name):
                 image_path = "Files/icons/PriestessoftheAbyss.png"
             if image_path == "Files/icons/PackRat(footprints).png":
                 image_path = "Files/icons/PackRatNest.png"
+        case "splashes":
+            if "_" in name:
+                name = name.split("_")
+                new_name = ""
+                for icon_string in name:
+                    new_name += icon_string.capitalize()
+            elif " " in name:
+                name = name.split(" ")
+                new_name = ""
+                for icon_string in name:
+                    new_name += icon_string.capitalize()
+            else:
+                new_name = name.capitalize()
+            image_path = 'Files/splashes/' + new_name + ".png"
+            if image_path == "Files/splashes/None.png":
+                image_path = "Files/splashes/Granddaddy.png"
+            if image_path == "Files/splashes/Aps.png":
+                image_path = "Files/splashes/APS.png"
+            if image_path == "Files/splashes/HellRaiserBuffed.png":
+                image_path = "Files/splashes/HellRaiser.png"
+            if image_path == "Files/splashes/Mps.png":
+                image_path = "Files/splashes/MPS.png"
+            if image_path == "Files/splashes/PriestessOfTheAbyss.png":
+                image_path = "Files/splashes/PriestessoftheAbyss.png"
+            if image_path == "Files/splashes/PackRat(footprints).png":
+                image_path = "Files/splashes/PackRatNest.png"
         case "icon_send":
             image_path = 'Files/icons/' + name + ".png"
             if image_path == "Files/icons/PresstheAttack.png":

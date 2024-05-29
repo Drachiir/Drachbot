@@ -143,7 +143,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 games_count += get_games_loop(playerid, 0, games_diff)
             games_count_db = PlayerData.select().where(PlayerData.player_id == playerid).count()
             if games_count_db < games2:
-                games_count += get_games_loop(playerid, data.offset, games2-games_count_db)
+                games_count += get_games_loop(playerid, data.offset, games2-games_count_db, timeout_limit=5)
             if games_count > 0:
                 PlayerProfile.update(offset=games_count+data.offset).where(PlayerProfile.player_id == playerid).execute()
         if update == 0:

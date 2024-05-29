@@ -12,6 +12,7 @@ import discord
 import drachbot_db
 import peewee_pg
 import util
+import peewee
 from peewee_pg import PlayerProfile, GameData, PlayerData
 import requests
 
@@ -116,7 +117,10 @@ def pullgamedata(playerid, offset, expected):
         if (x['queueType'] == 'Normal'):
             if GameData.get_or_none(GameData.game_id == x["_id"]) is None:
                 ranked_count += 1
-                peewee_pg.save_game(x)
+                try:
+                    peewee_pg.save_game(x)
+                except peewee.IntegrityError:
+                    break
         games_count += 1
     return [ranked_count, games_count]
 

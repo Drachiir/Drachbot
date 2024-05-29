@@ -45,6 +45,7 @@ class Drachbot(commands.Bot):
         self.add_view(cogs.legiontdle.GameSelectionButtons())
         self.add_view(cogs.legiontdle.ModalLeakButton())
         self.add_view(cogs.legiontdle.ModalEloButton())
+        self.add_view(cogs.legiontdle.ModalButton2())
         self.add_view(cogs.legiontdle.RefreshButtonLtdleTotal())
         self.add_view(cogs.legiontdle.RefreshButtonLtdleDaily())
         self.add_view(cogs.legiontdle.RefreshButtonLtdleAvg())

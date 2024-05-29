@@ -14,6 +14,15 @@ from peewee import fn
 from peewee_pg import PlayerData, GameData
 import cogs.elo as elo
 import cogs.legiontdle as ltdle
+from PIL import Image, ImageOps
+import PIL
+import platform
+
+if platform.system() == "Linux":
+    shared_folder = "/shared/Images/"
+else:
+    shared_folder = "shared/Images/"
+site = "https://overlay.drachbot.site/Images/"
 
 utc = timezone.utc
 task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
@@ -72,6 +81,33 @@ def reset_game3(json_data):
     json_data["game_3_selected_game"] = [im1, im2, random_game2[4]]
     return json_data
 
+def reset_game4(json_data):
+    with open("Files/json/units.json", "r") as f2:
+        unit_json_dict = json.load(f2)
+        f2.close()
+    random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
+    while random_unit["categoryClass"] == "Special" or random_unit["categoryClass"] == "Passive" or random_unit["unitId"] == "giant_quadrapus_unit_id" or random_unit["unitId"] == "scorpion_king_unit_id":
+        random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
+    name = random_unit["unitId"].replace("_unit_id", "")
+    new_name = ""
+    for icon_string in name.split("_"):
+        new_name += icon_string.capitalize()
+    json_data["game_4_selected_unit"] = [new_name, []]
+    rand_x = random.randint(50,450)
+    rand_y = random.randint(50, 450)
+    random_id = util.id_generator()
+    for i in range(5):
+        im = util.get_icons_image("splashes", name)
+        im = util.zoom_at(im, rand_x, rand_y, zoom=i+1)
+        if i == 4:
+            im = ImageOps.grayscale(im)
+        im.save(f"{shared_folder}{random_id}_{i+1}.png")
+        json_data["game_4_selected_unit"][1].insert(0, f"{random_id}_{i+1}.png")
+    im = util.get_icons_image("splashes", name)
+    im.save(f"{shared_folder}{random_id}.png")
+    json_data["game_4_selected_unit"][1].append(f"{random_id}.png")
+    return json_data
+
 def season_reset(json_data):
     print("Starting Season Reset...")
     for player in os.listdir("ltdle_data/"):
@@ -82,7 +118,8 @@ def season_reset(json_data):
                 data = {"name": player, "score": 0, "scores_dict": {}, "games_played": 0,
                         "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
                         "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
-                        "game3": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
+                        "game3": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
+                        "game4": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
                 json.dump(data, f, indent=2)
                 f.close()
     json_data["season"][0] += 1
@@ -130,6 +167,7 @@ def reset(self):
         json_data = reset_game1(json_data)
         json_data = reset_game2(json_data)
         json_data = reset_game3(json_data)
+        json_data = reset_game4(json_data)
         with open("ltdle_data/ltdle.json", "w") as f:
             json_data = json.dump(json_data, f, indent=2)
             f.close()
@@ -157,17 +195,18 @@ class ScheduledTasks(commands.Cog):
                 print("No reset required now.")
                 return
             await ltdle_notify(self)
-            # games update
-            with open("Files/json/discord_channels.json", "r") as f:
-                discord_channels = json.load(f)
-                f.close()
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ProcessPoolExecutor() as pool:
-                ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 100))
-                pool.shutdown()
-            guild = self.client.get_guild(discord_channels["toikan_drachbot"][0])
-            channel = guild.get_channel(discord_channels["toikan_drachbot"][1])
-            message = await channel.send(embed=ladder_update)
+            #games update
+            if platform.system() != "Windows":
+                with open("Files/json/discord_channels.json", "r") as f:
+                    discord_channels = json.load(f)
+                    f.close()
+                loop = asyncio.get_running_loop()
+                with concurrent.futures.ProcessPoolExecutor() as pool:
+                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 100))
+                    pool.shutdown()
+                guild = self.client.get_guild(discord_channels["toikan_drachbot"][0])
+                channel = guild.get_channel(discord_channels["toikan_drachbot"][1])
+                message = await channel.send(embed=ladder_update)
         except Exception:
             traceback.print_exc()
             

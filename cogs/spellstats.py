@@ -16,7 +16,9 @@ from peewee_pg import GameData, PlayerData
 
 shifts = [
     (-1.0, -0.5), (0.0, -1.0), (1.0, -0.5),
-    (1.0, 0.5), (0.0, 1.0), (-1.0, 0.5)
+    (1.0, 0.5), (0.0, 1.0), (-1.0, 0.5),
+    (0.5, -1.0), (1.0, 0.0), (0.5, 1.0),
+    (-0.5, 1.0), (-1.0, 0.0), (-0.5, -1.0)
 ]
 
 calculate_positions = lambda x, z: [(x, z)] + [(x + dx, z + dz) for dx, dz in shifts]
@@ -90,11 +92,15 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
                         target_locations = calculate_positions(spell_loc[0], spell_loc[1])
                     else:
                         target_locations = [spell_loc]
+                    excluded_units = []
                     for unit in player["build_per_wave"][-1].split("!"):
                         unit_loc = unit.split(":")[1].split("|")
                         unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
                         if unit_loc in target_locations:
                             unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
+                            if unit_name in excluded_units:
+                                continue
+                            excluded_units.append(unit_name)
                             if unit_name in spell_dict[spell_name]["Targets"]:
                                 spell_dict[spell_name]["Targets"][unit_name]["Count"] += 1
                             else:

@@ -26,7 +26,6 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
         suffix = "'s"
-    count = 0
     save_count_list = []
     save_count_pre10_list = []
     save_count = 0
@@ -46,7 +45,7 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.workers_per_wave, PlayerData.leaks_per_wave, PlayerData.income_per_wave],
                    ["game_id", "date", "version", "ending_wave", "game_elo", "left_king_hp", "right_king_hp"],
                    ["player_id", "player_slot", "workers_per_wave", "leaks_per_wave", "income_per_wave"]]
-    if saves == "Sent":
+    if saves == "Sent" or playerid == 'all':
         req_columns[0].append(PlayerData.mercs_sent_per_wave)
         req_columns[0].append(PlayerData.kingups_sent_per_wave)
         req_columns[2].append("mercs_sent_per_wave")
@@ -173,6 +172,8 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
         profile = legion_api.getprofile(playerid)
         avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
         playername = profile["playerName"]
+    if playerid == 'all':
+        saves = ''
     embed = discord.Embed(color=0x4565d9, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")\n\n" +
                                                       '**Saves first 10:** ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +
                                                       '**Saves after 10:** ' + str(saves_post10) + '/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n' +
