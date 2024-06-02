@@ -1,3 +1,4 @@
+import platform
 import random
 import string
 import json
@@ -6,6 +7,7 @@ from PIL import Image
 import discord
 from discord import app_commands
 import difflib
+from datetime import datetime, time, timezone
 
 def random_color():
     return random.randrange(0, 2 ** 24)
@@ -18,6 +20,7 @@ with open("Files/json/slang.json", "r") as slang_file:
     slang = json.load(slang_file)
     slang_file.close()
 
+task_time2 = time(hour=2, minute=0, second=0, tzinfo=timezone.utc)
 mercs = const_file.get("mercs")
 creep_values = const_file.get("creep_values")
 wave_values = const_file.get("wave_values")
@@ -33,8 +36,17 @@ mm_choices = []
 for mm in mm_list:
     mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
 
+if platform.system() == "Linux":
+    shared_folder = "/shared/Images/"
+    shared2_folder = "/shared2/"
+else:
+    shared_folder = "shared/Images/"
+    shared2_folder = "shared2/"
+
 def zoom_at(img, x, y, zoom):
     w, h = img.size
+    if zoom < 1:
+        zoom = 1
     zoom2 = zoom * 2
     img = img.crop((x - w / zoom2, y - h / zoom2,
                     x + w / zoom2, y + h / zoom2))

@@ -1,13 +1,15 @@
+import os
+
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 import asyncio
 import concurrent.futures
 import traceback
 import functools
 import json
 import difflib
-
+import platform
 import image_generators
 import drachbot_db
 import util
@@ -15,7 +17,7 @@ import legion_api
 from peewee_pg import GameData, PlayerData
 
 
-def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000):
+def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000, data_only = False):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
@@ -114,6 +116,8 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
     if novacup:
         playerid = playername
+    if data_only:
+        return [unit_dict, games, avgelo]
     if unit == "all":
         return image_generators.create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Unit")
     else:
@@ -122,6 +126,10 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
 class Unitstats(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
+        self.website_data.start()
+    
+    def cog_unload(self) -> None:
+        self.website_data.cancel()
     
     @app_commands.command(name="unitstats", description="Fighter stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
@@ -157,5 +165,25 @@ class Unitstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
 
+    @tasks.loop(time=util.task_time2)
+    async def website_data(self):
+        patches = ["11.04"]  # "11.03", "11.02", "11.01","11.00"
+        elos = [1800, 2000, 2200, 2400, 2600, 2800]
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                for patch in patches:
+                    for file in os.listdir(f"{util.shared2_folder}data/unitstats/"):
+                        if file.startswith(patch):
+                            os.remove(f"{util.shared2_folder}data/unitstats/{file}")
+                    for elo in elos:
+                        data = await loop.run_in_executor(pool, functools.partial(unitstats, "all", 0, elo, patch, data_only=True))
+                        with open(f"{util.shared2_folder}data/unitstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
+                            json.dump(data[0], f)
+                            f.close()
+            print("Website data update success!")
+        except Exception:
+            traceback.print_exc()
+    
 async def setup(bot:commands.Bot):
     await bot.add_cog(Unitstats(bot))

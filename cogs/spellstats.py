@@ -1,6 +1,9 @@
+import os
+import platform
+
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 import asyncio
 import concurrent.futures
 import traceback
@@ -23,7 +26,14 @@ shifts = [
 
 calculate_positions = lambda x, z: [(x, z)] + [(x + dx, z + dz) for dx, dz in shifts]
 
-def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"):
+if platform.system() == "Linux":
+    shared_folder = "/shared/Images/"
+    shared2_folder = "/shared2/"
+else:
+    shared_folder = "shared/Images/"
+    shared2_folder = "shared2/"
+
+def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all", data_only = False):
     spell_dict = {}
     spellname = spellname.lower()
     with open('Files/json/spells.json', 'r') as f:
@@ -142,6 +152,8 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
     if novacup:
         playerid = playername
+    if data_only:
+        return [spell_dict, games, avgelo]
     if spellname == "all":
         return image_generators.create_image_stats(spell_dict, games, playerid, avgelo, patches, mode="Spell")
     else:
@@ -150,6 +162,10 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
 class Spellstats(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
+        self.website_data.start()
+    
+    def cog_unload(self) -> None:
+        self.website_data.cancel()
     
     @app_commands.command(name="spellstats", description="Spell stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
@@ -183,6 +199,26 @@ class Spellstats(commands.Cog):
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
+    
+    @tasks.loop(time=util.task_time2)
+    async def website_data(self):
+        patches = ["11.04"]  # "11.03", "11.02", "11.01","11.00"
+        elos = [1800, 2000, 2200, 2400, 2600, 2800]
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                for patch in patches:
+                    for file in os.listdir(f"{shared2_folder}data/spellstats/"):
+                        if file.startswith(patch):
+                            os.remove(f"{shared2_folder}data/spellstats/{file}")
+                    for elo in elos:
+                        data = await loop.run_in_executor(pool, functools.partial(spellstats, "all", 0, elo, patch, data_only=True))
+                        with open(f"{shared2_folder}data/spellstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
+                            json.dump(data[0], f)
+                            f.close()
+            print("Website data update success!")
+        except Exception:
+            traceback.print_exc()
     
 async def setup(bot:commands.Bot):
     await bot.add_cog(Spellstats(bot))

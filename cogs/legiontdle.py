@@ -107,7 +107,7 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"]):
         with open("ltdle_data/"+player+"/data.json", "r") as f:
             p_data = json.load(f)
             f.close()
-        if p_data["games_played"] < 6:
+        if avg and p_data["games_played"] < 6:
             continue
         if daily:
             daily_score1 = 0

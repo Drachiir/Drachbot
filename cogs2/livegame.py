@@ -21,7 +21,10 @@ async def twitch_get_streams(names: list, playernames: list = []) -> dict:
     streams_dict = {}
     for i, name in enumerate(names):
         user = await first(twitch.get_users(logins=name))
-        stream = await first(twitch.get_streams(user_id=user.id))
+        try:
+            stream = await first(twitch.get_streams(user_id=user.id))
+        except AttributeError:
+            print(f"User {name} twitch profile not found.")
         if type(stream) == type(None):
             try:
                 streams_dict[user.display_name] = {"live": False, "started_at": "", "playername": playernames[i]}

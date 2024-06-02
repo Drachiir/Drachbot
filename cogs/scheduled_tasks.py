@@ -20,8 +20,10 @@ import platform
 
 if platform.system() == "Linux":
     shared_folder = "/shared/Images/"
+    shared2_folder = "/shared2/"
 else:
     shared_folder = "shared/Images/"
+    shared2_folder = "shared2/"
 site = "https://overlay.drachbot.site/Images/"
 
 utc = timezone.utc
@@ -98,7 +100,7 @@ def reset_game4(json_data):
     for i in range(5):
         random_id = util.id_generator()
         im = util.get_icons_image("splashes", name)
-        im = util.zoom_at(im, rand_x, rand_y, zoom=i+1)
+        im = util.zoom_at(im, rand_x, rand_y, zoom=i+0.4)
         if i == 4:
             im = ImageOps.grayscale(im)
         im.save(f"{shared_folder}{random_id}_{i+1}.png")
@@ -210,6 +212,6 @@ class ScheduledTasks(commands.Cog):
                 message = await channel.send(embed=ladder_update)
         except Exception:
             traceback.print_exc()
-            
+        
 async def setup(bot: commands.Bot):
     await bot.add_cog(ScheduledTasks(bot))

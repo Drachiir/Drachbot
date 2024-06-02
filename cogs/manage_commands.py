@@ -1,3 +1,4 @@
+import random
 import traceback
 import concurrent.futures
 import functools
@@ -8,6 +9,9 @@ import os
 from datetime import datetime, timedelta, timezone, time
 import legion_api
 import cogs.scheduled_tasks as s_tasks
+import util
+import platform
+from PIL import Image, ImageOps
 
 class ManageCommands(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -88,7 +92,30 @@ class ManageCommands(commands.Cog):
     @commands.command()
     async def test(self, ctx:commands.Context):
         if ctx.author.name == "drachir_":
-            print(legion_api.get_random_games())
+            try:
+                if platform.system() == "Linux":
+                    shared_folder = "/shared/Images/"
+                    shared2_folder = "/shared2/"
+                else:
+                    shared_folder = "shared/Images/"
+                    shared2_folder = "shared2/"
+                name = "elite_archer"
+                rand_x = 300
+                rand_y = 69
+                content = ctx.message.content[6:]
+                for i in range(5):
+                    random_id = util.id_generator()
+                    im = util.get_icons_image("splashes", name)
+                    im = util.zoom_at(im, rand_x, rand_y, zoom=i + float(content))
+                    if i == 4:
+                        im = ImageOps.grayscale(im)
+                    im.save(f"{shared_folder}{random_id}_{i + 1}.png")
+                random_id = util.id_generator()
+                im = util.get_icons_image("splashes", name)
+                im.save(f"{shared_folder}{random_id}.png")
+                await ctx.send("done")
+            except Exception:
+                traceback.print_exc()
         else:
             await ctx.channel.send("No permission to use this command.")
     

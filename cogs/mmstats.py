@@ -1,6 +1,10 @@
+import json
+import os
+
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
+import platform
 import asyncio
 import concurrent.futures
 import traceback
@@ -12,7 +16,7 @@ import util
 import legion_api
 from peewee_pg import GameData, PlayerData
 
-def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
+def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", data_only = False):
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -33,7 +37,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
         mmnames_list = [mastermind]
     masterminds_dict = {}
     for x in mmnames_list:
-        masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Leaks": [], "PlayerIds": [], "ChampionUnit": {}}
+        masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0}
     gameelo_list = []
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.player_elo, PlayerData.legion,
@@ -152,6 +156,8 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
     avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
     if novacup:
         playerid = playername
+    if data_only:
+        return [masterminds_dict, games, avg_gameelo]
     match mastermind:
         case 'All':
             return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind")
@@ -163,6 +169,10 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date"):
 class MMstats(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
+        self.website_data.start()
+    
+    def cog_unload(self) -> None:
+        self.website_data.cancel()
     
     @app_commands.command(name="mmstats", description="Mastermind stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
@@ -199,6 +209,33 @@ class MMstats(commands.Cog):
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
+    
+    @tasks.loop(time=util.task_time2)
+    async def website_data(self):
+        patches = ["11.04"]  # "11.03", "11.02", "11.01","11.00"
+        elos = [1800, 2000, 2200, 2400, 2600, 2800]
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                for patch in patches:
+                    for file in os.listdir(f"{util.shared2_folder}data/mmstats/"):
+                        if file.startswith(patch):
+                            os.remove(f"{util.shared2_folder}data/mmstats/{file}")
+                    for file in os.listdir(f"{util.shared2_folder}data/megamindstats/"):
+                        if file.startswith(patch):
+                            os.remove(f"{util.shared2_folder}data/megamindstats/{file}")
+                    for elo in elos:
+                        data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, data_only=True))
+                        with open(f"{util.shared2_folder}data/mmstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
+                            json.dump(data[0], f)
+                            f.close()
+                        data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, mastermind="Megamind", data_only=True))
+                        with open(f"{util.shared2_folder}data/megamindstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
+                            json.dump(data[0], f)
+                            f.close()
+            print("Website data update success!")
+        except Exception:
+            traceback.print_exc()
 
 async def setup(bot:commands.Bot):
     await bot.add_cog(MMstats(bot))

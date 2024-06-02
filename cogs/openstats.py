@@ -1,6 +1,9 @@
+import os
+import platform
+
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 import asyncio
 import concurrent.futures
 import traceback
@@ -14,8 +17,14 @@ import util
 import legion_api
 from peewee_pg import GameData, PlayerData
 
+if platform.system() == "Linux":
+    shared_folder = "/shared/Images/"
+    shared2_folder = "/shared2/"
+else:
+    shared_folder = "shared/Images/"
+    shared2_folder = "shared2/"
 
-def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
+def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data_only = False):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
@@ -159,7 +168,7 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
                             else:
                                 unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]]['Count'] += 1
                             unit_dict[opener_ranked[counter][0]]['Worker'] += player["workers_per_wave"][3]
-                            unit_dict[opener_ranked[0][0]]['Elo'] += player["player_elo"]
+                            unit_dict[opener_ranked[counter][0]]['Elo'] += player["player_elo"]
                             if player["game_result"] == 'won':
                                 unit_dict[opener_ranked[counter][0]]['Wins'] += 1
                                 unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Wins'] += 1
@@ -181,6 +190,8 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
     avgelo = round(sum(gameelo_list)/len(gameelo_list))
     if novacup:
         playerid = playername
+    if data_only:
+        return [unit_dict, games, avgelo]
     if unit == "all":
         return image_generators.create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Open")
     else:
@@ -189,6 +200,10 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all"):
 class Openstats(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
+        self.website_data.start()
+    
+    def cog_unload(self) -> None:
+        self.website_data.cancel()
     
     @app_commands.command(name="openstats", description="Opener stats.")
     @app_commands.describe(playername='Enter playername or "all" for all available data.',
@@ -222,6 +237,26 @@ class Openstats(commands.Cog):
                 print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
+    
+    @tasks.loop(time=util.task_time2)
+    async def website_data(self):
+        patches = ["11.04"]  # "11.03", "11.02", "11.01","11.00"
+        elos = [1800, 2000, 2200, 2400, 2600, 2800]
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                for patch in patches:
+                    for file in os.listdir(f"{shared2_folder}data/openstats/"):
+                        if file.startswith(patch):
+                            os.remove(f"{shared2_folder}data/openstats/{file}")
+                    for elo in elos:
+                        data = await loop.run_in_executor(pool, functools.partial(openstats, "all", 0, elo, patch, data_only=True))
+                        with open(f"{shared2_folder}data/openstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
+                            json.dump(data[0], f)
+                            f.close()
+            print("Website data update success!")
+        except Exception:
+            traceback.print_exc()
 
 async def setup(bot:commands.Bot):
     await bot.add_cog(Openstats(bot))
