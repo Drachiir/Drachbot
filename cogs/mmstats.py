@@ -157,7 +157,10 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     if novacup:
         playerid = playername
     if data_only:
-        return [masterminds_dict, games, avg_gameelo]
+        if mastermind == "Megamind":
+            return [masterminds_dict, megamind_count, avg_gameelo]
+        else:
+            return [masterminds_dict, games, avg_gameelo]
     match mastermind:
         case 'All':
             return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind")
@@ -210,9 +213,9 @@ class MMstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(time=util.task_time2)
+    @tasks.loop(time=util.task_times2)
     async def website_data(self):
-        patches = ["11.04"]  # "11.03", "11.02", "11.01","11.00"
+        patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]
         try:
             loop = asyncio.get_running_loop()

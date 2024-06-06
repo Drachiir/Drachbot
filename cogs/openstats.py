@@ -31,7 +31,7 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
         units_json = json.load(f)
     for u_js in units_json:
         if u_js["totalValue"] != '':
-            if u_js["unitId"] and int(u_js["totalValue"]) > 0:
+            if u_js["unitId"] and 270 > int(u_js["totalValue"]) > 0:
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
@@ -238,9 +238,9 @@ class Openstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(time=util.task_time2)
+    @tasks.loop(time=util.task_times2)
     async def website_data(self):
-        patches = ["11.04"]  # "11.03", "11.02", "11.01","11.00"
+        patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]
         try:
             loop = asyncio.get_running_loop()

@@ -182,9 +182,11 @@ class ScheduledTasks(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
         self.scheduled_reset.start()
+        self.game_update.start()
 
     def cog_unload(self):
         self.scheduled_reset.cancel()
+        self.game_update.cancel()
 
     @tasks.loop(time=task_time)
     async def scheduled_reset(self):
@@ -198,7 +200,13 @@ class ScheduledTasks(commands.Cog):
                 print("No reset required now.")
                 return
             await ltdle_notify(self)
-            #games update
+        except Exception:
+            traceback.print_exc()
+    
+    @tasks.loop(time=util.task_times1)
+    async def game_update(self):
+        try:
+            # games update
             if platform.system() != "Windows":
                 with open("Files/json/discord_channels.json", "r") as f:
                     discord_channels = json.load(f)
@@ -207,8 +215,8 @@ class ScheduledTasks(commands.Cog):
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 100))
                     pool.shutdown()
-                guild = self.client.get_guild(discord_channels["toikan_drachbot"][0])
-                channel = guild.get_channel(discord_channels["toikan_drachbot"][1])
+                guild = self.client.get_guild(discord_channels["drachbot_game"][0])
+                channel = guild.get_channel(discord_channels["drachbot_game"][1])
                 message = await channel.send(embed=ladder_update)
         except Exception:
             traceback.print_exc()

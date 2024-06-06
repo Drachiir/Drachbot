@@ -20,7 +20,22 @@ with open("Files/json/slang.json", "r") as slang_file:
     slang = json.load(slang_file)
     slang_file.close()
 
-task_time2 = time(hour=2, minute=0, second=0, tzinfo=timezone.utc)
+task_times1=[
+    time(hour=3, minute=54, second=0, tzinfo=timezone.utc),
+    time(hour=9, minute=54, second=0, tzinfo=timezone.utc),
+    time(hour=15, minute=54, second=0, tzinfo=timezone.utc),
+    time(hour=21, minute=54, second=0, tzinfo=timezone.utc)
+]
+
+task_times2=[
+    time(hour=4, minute=10, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=10, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=10, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=10, second=0, tzinfo=timezone.utc)
+]
+
+website_patches = ["11.05"] # "11.03", "11.02", "11.01","11.00"
+
 mercs = const_file.get("mercs")
 creep_values = const_file.get("creep_values")
 wave_values = const_file.get("wave_values")
