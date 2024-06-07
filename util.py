@@ -7,7 +7,8 @@ from PIL import Image
 import discord
 from discord import app_commands
 import difflib
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timezone, timedelta
+
 
 def random_color():
     return random.randrange(0, 2 ** 24)
@@ -27,6 +28,8 @@ task_times1=[
     time(hour=21, minute=54, second=0, tzinfo=timezone.utc)
 ]
 
+#task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
+
 task_times2=[
     time(hour=4, minute=10, second=0, tzinfo=timezone.utc),
     time(hour=10, minute=10, second=0, tzinfo=timezone.utc),
@@ -36,7 +39,8 @@ task_times2=[
 
 website_patches = ["11.05"] # "11.03", "11.02", "11.01","11.00"
 
-mercs = const_file.get("mercs")
+incmercs = const_file.get("incmercs")
+powermercs = const_file.get("powermercs")
 creep_values = const_file.get("creep_values")
 wave_values = const_file.get("wave_values")
 rank_emotes = const_file.get("rank_emotes")
@@ -269,7 +273,10 @@ def count_mythium(send):
     for x in send:
         if "Upgrade" in x:
             continue
-        send_amount += mercs.get(x)[0]
+        if x in incmercs:
+            send_amount += incmercs.get(x)
+        else:
+            send_amount += powermercs.get(x)
     return send_amount
 
 def calc_leak(leak, wave):
@@ -284,8 +291,10 @@ def calc_leak(leak, wave):
     for x in leak:
         if x in creep_values:
             leak_amount += creep_values.get(x)[1]
-        else:
-            leak_amount += mercs.get(x)[1]
+        elif x in incmercs:
+            leak_amount += incmercs.get(x) / 20 * 4
+        elif x in powermercs:
+            leak_amount += powermercs.get(x) / 20 * 6
     return round(leak_amount / wave_total * 100, 1)
 
 def im_has_alpha(img_arr):

@@ -69,6 +69,11 @@ def get_random_games():
         tries += 1
     return games
 
+def get_leaderboard(num):
+    url = f'https://apiv2.legiontd2.com/players/stats?limit={num}&sortBy=overallElo&sortDirection=-1'
+    api_response = requests.get(url, headers=header)
+    return json.loads(api_response.text)
+
 def getid(playername):
     request_type = 'players/byName/'
     url = 'https://apiv2.legiontd2.com/' + request_type + playername

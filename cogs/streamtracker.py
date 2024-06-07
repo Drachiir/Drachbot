@@ -11,20 +11,46 @@ import legion_api
 
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
     if not os.path.isfile("sessions/session_" + playername + ".json"):
-        playerid = legion_api.getid(playername)
-        stats = legion_api.getstats(playerid)
-        initial_elo = stats["overallElo"]
-        current_elo = stats["overallElo"]
-        initial_wins = stats["rankedWinsThisSeason"]
-        current_wins = stats["rankedWinsThisSeason"]
-        initial_losses = stats["rankedLossesThisSeason"]
-        current_losses = stats["rankedLossesThisSeason"]
+        leaderboard = legion_api.get_leaderboard(200)
+        for i, player in enumerate(leaderboard):
+            if player["profile"][0]["playerName"].casefold() == playername.casefold():
+                initial_rank = str(i+1)
+                current_rank = str(i + 1)
+                initial_elo = player["overallElo"]
+                current_elo = player["overallElo"]
+                initial_wins = player["rankedWinsThisSeason"]
+                current_wins = player["rankedWinsThisSeason"]
+                initial_losses = player["rankedLossesThisSeason"]
+                current_losses = player["rankedLossesThisSeason"]
+                break
+        else:
+            initial_rank = ""
+            current_rank = ""
+            playerid = legion_api.getid(playername)
+            stats = legion_api.getstats(playerid)
+            initial_elo = stats["overallElo"]
+            current_elo = stats["overallElo"]
+            initial_wins = stats["rankedWinsThisSeason"]
+            current_wins = stats["rankedWinsThisSeason"]
+            initial_losses = stats["rankedLossesThisSeason"]
+            current_losses = stats["rankedLossesThisSeason"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            session_dict = {"started_at": stream_started_at, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
             json.dump(session_dict, f, default=str)
     else:
         with open("sessions/session_" + playername + ".json", "r") as f:
             session_dict = json.load(f)
+            try:
+                initial_rank = session_dict["int_rank"]
+                leaderboard = legion_api.get_leaderboard(200)
+                for i, player in enumerate(leaderboard):
+                    if player["profile"][0]["playerName"].casefold() == playername.casefold():
+                        current_rank = str(i + 1)
+                        break
+                else:
+                    current_rank = ""
+            except Exception:
+                initial_rank = ""
             initial_elo = session_dict["int_elo"]
             initial_wins = session_dict["int_wins"]
             initial_losses = session_dict["int_losses"]
@@ -45,7 +71,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 else:
                     current_losses = session_dict["current_losses"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            session_dict = {"started_at": session_dict["started_at"], "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
             json.dump(session_dict, f, default=str)
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
@@ -137,11 +163,11 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
     <body>
     <div class="container">
           <img src="""+get_rank_url(initial_elo)+""">
-          <r><b>"""+str(initial_elo)+"""</b></r>
+          <r><b>"""+str(initial_elo)+" "+f"#{initial_rank}"+"""</b></r>
         </div>
     <div class="container">
 		  <img src="""+get_rank_url(current_elo)+""">
-          <r><b>"""+str(current_elo)+"""</b></r><r """+rgb2+"""><b>("""+elo_str+str(elo_diff)+""")</b></r>
+          <r><b>"""+str(current_elo)+" "+f"#{current_rank}"+"""</b></r><r """+rgb2+"""><b>("""+elo_str+str(elo_diff)+""")</b></r>
         </div>
     <div class="container">
           <r><b>"""+str(wins)+"""W-"""+str(losses)+"""L,&thinsp;WR:</b></r><r """+rgb+"""><b>"""+str(winrate)+"""%</b></r>

@@ -44,7 +44,7 @@ def reset_game2(json_data):
     query = (PlayerData
              .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, PlayerData.player_slot, PlayerData.leaks_per_wave)
              .join(GameData)
-             .where((GameData.queue == "Normal") & (GameData.game_elo > 2400) & GameData.version.startswith("v11.04"))
+             .where((GameData.queue == "Normal") & (GameData.game_elo > 2400) & GameData.version.startswith("v11.05"))
              .order_by(fn.Random())
              ).dicts()
     leaks_list = []
