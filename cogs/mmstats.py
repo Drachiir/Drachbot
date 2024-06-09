@@ -16,7 +16,7 @@ import util
 import legion_api
 from peewee_pg import GameData, PlayerData
 
-def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", data_only = False):
+def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", data_only = False, transparent = False):
     novacup = False
     if playername == 'all':
         playerid = 'all'
@@ -163,11 +163,11 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
             return [masterminds_dict, games, avg_gameelo]
     match mastermind:
         case 'All':
-            return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind")
+            return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind", transparency=transparent)
         case mastermind if mastermind in case_list:
-            return image_generators.create_image_stats_specific(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind", specific_value=mastermind)
+            return image_generators.create_image_stats_specific(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind", specific_value=mastermind, transparency=transparent)
         case 'Megamind':
-            return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, "Mastermind", True, megamind_count)
+            return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, "Mastermind", True, megamind_count, transparency=transparent)
 
 class MMstats(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -181,13 +181,15 @@ class MMstats(commands.Cog):
     @app_commands.describe(playername='Enter playername or "all" for all available data.', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           mastermind='Select a Mastermind for specific stats, or All for a general overview.', sort="Sort by?")
+                           mastermind='Select a Mastermind for specific stats, or All for a general overview.', sort="Sort by?",
+                           transparency="Transparent Background?")
     @app_commands.choices(mastermind=util.mm_choices)
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def mmstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, mastermind: discord.app_commands.Choice[str] = "All", sort: discord.app_commands.Choice[str] = "date"):
+    async def mmstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season,
+                      mastermind: discord.app_commands.Choice[str] = "All", sort: discord.app_commands.Choice[str] = "date", transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -202,7 +204,7 @@ class MMstats(commands.Cog):
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort=sort))
+                response = await loop.run_in_executor(pool, functools.partial(mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort=sort, transparent=transparency))
                 pool.shutdown()
                 if response.endswith(".png"):
                     await interaction.followup.send(file=discord.File(response))

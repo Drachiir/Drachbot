@@ -17,7 +17,7 @@ import legion_api
 from peewee_pg import GameData, PlayerData
 
 
-def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000, data_only = False):
+def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000, data_only = False, transparent = False):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
@@ -119,9 +119,9 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
     if data_only:
         return [unit_dict, games, avgelo]
     if unit == "all":
-        return image_generators.create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Unit")
+        return image_generators.create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Unit", transparency=transparent)
     else:
-        return image_generators.create_image_stats_specific(unit_dict, games, playerid, avgelo, patches, mode="Unit", specific_value=unit)
+        return image_generators.create_image_stats_specific(unit_dict, games, playerid, avgelo, patches, mode="Unit", specific_value=unit, transparency=transparent)
 
 class Unitstats(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -137,13 +137,16 @@ class Unitstats(commands.Cog):
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            sort="Sort by?", unit="Fighter name for specific stats, or 'all' for all Spells.",
-                           min_cost="Min Gold cost of a unit.", max_cost="Max Gold cost of a unit.")
+                           min_cost="Min Gold cost of a unit.", max_cost="Max Gold cost of a unit.",
+                           transparency="Transparent Background?")
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
     @app_commands.autocomplete(unit=util.unit_autocomplete)
-    async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0, max_cost: int = 2000):
+    async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season,
+                        sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0,
+                        max_cost: int = 2000, transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -154,7 +157,8 @@ class Unitstats(commands.Cog):
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(unitstats, str(playername).lower(), games, min_elo, patch, sort=sort, unit=unit, min_cost=min_cost, max_cost=max_cost))
+                response = await loop.run_in_executor(pool, functools.partial(unitstats, str(playername).lower(), games, min_elo, patch,
+                                                                              sort=sort, unit=unit, min_cost=min_cost, max_cost=max_cost, transparent=transparency))
                 pool.shutdown()
                 if response.endswith(".png"):
                     await interaction.followup.send(file=discord.File(response))

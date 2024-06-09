@@ -24,7 +24,7 @@ else:
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
 
-def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data_only = False):
+def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data_only = False, transparent = False):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
@@ -193,9 +193,9 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
     if data_only:
         return [unit_dict, games, avgelo]
     if unit == "all":
-        return image_generators.create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Open")
+        return image_generators.create_image_stats(unit_dict, games, playerid, avgelo, patches, mode="Open", transparency=transparent)
     else:
-        return image_generators.create_image_stats_specific(unit_dict, games, playerid, avgelo, patches, mode="Open", specific_value=unit)
+        return image_generators.create_image_stats_specific(unit_dict, games, playerid, avgelo, patches, mode="Open", specific_value=unit, transparency=transparent)
 
 class Openstats(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -210,13 +210,15 @@ class Openstats(commands.Cog):
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           sort="Sort by?", unit="Unit name for specific stats, or 'all' for all openers.")
+                           sort="Sort by?", unit="Unit name for specific stats, or 'all' for all openers.",
+                           transparency="Transparent Background?")
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
     @app_commands.autocomplete(unit=util.unit_autocomplete)
-    async def openstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all"):
+    async def openstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0,
+                        patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all", transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -227,7 +229,8 @@ class Openstats(commands.Cog):
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(openstats, str(playername).lower(), games, min_elo, patch, sort=sort, unit=unit))
+                response = await loop.run_in_executor(pool, functools.partial(openstats, str(playername).lower(), games, min_elo, patch,
+                                                                              sort=sort, unit=unit, transparent=transparency))
                 pool.shutdown()
                 if response.endswith(".png"):
                     await interaction.followup.send(file=discord.File(response))

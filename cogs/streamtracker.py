@@ -14,8 +14,8 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
         leaderboard = legion_api.get_leaderboard(200)
         for i, player in enumerate(leaderboard):
             if player["profile"][0]["playerName"].casefold() == playername.casefold():
-                initial_rank = str(i+1)
-                current_rank = str(i + 1)
+                initial_rank = "#"+str(i+1)
+                current_rank = "#"+str(i + 1)
                 initial_elo = player["overallElo"]
                 current_elo = player["overallElo"]
                 initial_wins = player["rankedWinsThisSeason"]
@@ -45,7 +45,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 leaderboard = legion_api.get_leaderboard(200)
                 for i, player in enumerate(leaderboard):
                     if player["profile"][0]["playerName"].casefold() == playername.casefold():
-                        current_rank = str(i + 1)
+                        current_rank = "#"+str(i + 1)
                         break
                 else:
                     current_rank = ""
@@ -134,9 +134,10 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
         font-family: "Roboto", sans-serif;
         font-weight: 700;
         font-style: normal;
-        font-size: 220%;
+        font-size: 190%;
         padding-left: 10px;
         color: white;
+        white-space: nowrap;
         letter-spacing: 1px;
 		text-shadow:
             /* Outline */
@@ -163,11 +164,11 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
     <body>
     <div class="container">
           <img src="""+get_rank_url(initial_elo)+""">
-          <r><b>"""+str(initial_elo)+" "+f"#{initial_rank}"+"""</b></r>
+          <r><b>"""+str(initial_elo)+" "+f"{initial_rank}"+"""</b></r>
         </div>
     <div class="container">
 		  <img src="""+get_rank_url(current_elo)+""">
-          <r><b>"""+str(current_elo)+" "+f"#{current_rank}"+"""</b></r><r """+rgb2+"""><b>("""+elo_str+str(elo_diff)+""")</b></r>
+          <r><b>"""+str(current_elo)+" "+f"{current_rank}"+"""</b></r><r """+rgb2+"""><b>("""+elo_str+str(elo_diff)+""")</b></r>
         </div>
     <div class="container">
           <r><b>"""+str(wins)+"""W-"""+str(losses)+"""L,&thinsp;WR:</b></r><r """+rgb+"""><b>"""+str(winrate)+"""%</b></r>

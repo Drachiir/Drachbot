@@ -121,7 +121,7 @@ class TwitchHandler(commands.Cog):
                         with open("sessions/session_"+self.messages[streamer]["ingame_name"]+".json", "r") as f:
                             session = json.load(f)
                             f.close()
-                        end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])}\n'
+                        end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
                     else:
                         end_string = ""
                     embed = discord.Embed(color=util.random_color(), title=self.messages[streamer]["title"],description=end_string, url='https://www.twitch.tv/'+streamer)
@@ -153,8 +153,8 @@ class TwitchHandler(commands.Cog):
                             winrate = round(wins/(wins+losses)*100)
                         except ZeroDivisionError:
                             winrate = 0
-                        end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])}\n'
-                            f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change})'
+                        end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
+                            f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change}) {session["current_rank"]}'
                             f'\n{wins}W-{losses}L, WR: {winrate}%')
                         os.remove("sessions/session_" + self.messages[streamer]["ingame_name"] + ".json")
                     else:

@@ -33,7 +33,7 @@ else:
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
 
-def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all", data_only = False):
+def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all", data_only = False, transparent = False):
     spell_dict = {}
     spellname = spellname.lower()
     with open('Files/json/spells.json', 'r') as f:
@@ -155,9 +155,9 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
     if data_only:
         return [spell_dict, games, avgelo]
     if spellname == "all":
-        return image_generators.create_image_stats(spell_dict, games, playerid, avgelo, patches, mode="Spell")
+        return image_generators.create_image_stats(spell_dict, games, playerid, avgelo, patches, mode="Spell", transparency=transparent)
     else:
-        return image_generators.create_image_stats_specific(spell_dict, games, playerid, avgelo, patches, mode="Spell", specific_value=spellname)
+        return image_generators.create_image_stats_specific(spell_dict, games, playerid, avgelo, patches, mode="Spell", specific_value=spellname, transparency=transparent)
 
 class Spellstats(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -172,13 +172,15 @@ class Spellstats(commands.Cog):
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           sort="Sort by?", spell="Spell name for specific stats, or 'all' for all Spells.")
+                           sort="Sort by?", spell="Spell name for specific stats, or 'all' for all Spells.",
+                           transparency="Transparent Background?")
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
     @app_commands.autocomplete(spell=util.spell_autocomplete)
-    async def spellstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", spell: str = "all"):
+    async def spellstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season,
+                         sort: discord.app_commands.Choice[str] = "date", spell: str = "all", transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -189,7 +191,7 @@ class Spellstats(commands.Cog):
             except AttributeError:
                 pass
             try:
-                response = await loop.run_in_executor(pool, functools.partial(spellstats, str(playername).lower(), games, min_elo, patch, sort=sort, spellname=spell))
+                response = await loop.run_in_executor(pool, functools.partial(spellstats, str(playername).lower(), games, min_elo, patch, sort=sort, spellname=spell, transparent=transparency))
                 pool.shutdown()
                 if response.endswith(".png"):
                     await interaction.followup.send(file=discord.File(response))
