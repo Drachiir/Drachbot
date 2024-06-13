@@ -1067,7 +1067,7 @@ class Legiontdle(commands.Cog):
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, game_mode=game_options, sort=sort))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            if game != "all":
+                            if game != "all" or sort == "asc":
                                 await interaction.followup.send(embed=response)
                             else:
                                 await interaction.followup.send(embed=response, view=RefreshButtonLtdleTotal())
@@ -1078,7 +1078,7 @@ class Legiontdle(commands.Cog):
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True, game_mode=game_options, sort=sort))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            if game != "all":
+                            if game != "all" or sort == "asc":
                                 await interaction.followup.send(embed=response)
                             else:
                                 await interaction.followup.send(embed=response, view=RefreshButtonLtdleAvg())
@@ -1088,8 +1088,10 @@ class Legiontdle(commands.Cog):
                     case "Daily Leaderboard":
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, True, False, sort=sort))
                         pool.shutdown()
-                        if type(response) == discord.Embed:
+                        if type(response) == discord.Embed and sort == "dsc":
                             await interaction.followup.send(embed=response, view=RefreshButtonLtdleDaily())
+                        elif type(response) == discord.Embed:
+                            await interaction.followup.send(embed=response)
                         else:
                             await interaction.followup.send(response)
                         return
