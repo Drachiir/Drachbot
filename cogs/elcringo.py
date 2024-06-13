@@ -41,6 +41,8 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     leaks_list = []
     leaks_pre10_list = []
     gameelo_list = []
+    mercs_pre10 = [0,0]
+    mercs = [0,0]
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids, GameData.left_king_hp, GameData.right_king_hp,
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.workers_per_wave, PlayerData.leaks_per_wave, PlayerData.income_per_wave],
                    ["game_id", "date", "version", "ending_wave", "game_elo", "left_king_hp", "right_king_hp"],
@@ -80,6 +82,11 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                     small_send = 0
                     try:
                         send = util.count_mythium(player[merc_field][n]) + len(player[king_field][n].split("!")) * 20
+                        if n <= 9:
+                            ip_myth = util.get_inc_power_myth(player[merc_field][n].split("!"))
+                            mercs_pre10[0] += len(player[king_field][n].split("!")) * 20
+                            mercs_pre10[0] += ip_myth[0]
+                            mercs_pre10[1] += ip_myth[1]
                     except IndexError:
                         break
                     mythium_list_pergame.append(send)
@@ -159,6 +166,7 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     leaks_pre10_total = round(sum(leaks_pre10_list) / len(leaks_pre10_list), 1)
     king_hp_10 = sum(kinghp_list) / len(kinghp_list)
     king_hp_enemy_10 = sum(kinghp_enemy_list) / len(kinghp_enemy_list)
+    mercs_pre10_percent = round(mercs_pre10[0] / (mercs_pre10[0] + mercs_pre10[1]) * 100)
     if playername == "all" or "nova cup" in playername:
         king_hp_10 = (king_hp_10 + king_hp_enemy_10) / 2
         string2 = '**King hp on 10:** ' + str(round(king_hp_10 * 100, 2)) + '%\n'
@@ -177,6 +185,7 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     embed = discord.Embed(color=0x4565d9, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")\n\n" +
                                                       '**Saves first 10:** ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +
                                                       '**Saves after 10:** ' + str(saves_post10) + '/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n' +
+                                                      f'**Pre 10 Mercs:** Income: {mercs_pre10_percent}%, Power: {100-mercs_pre10_percent}%\n'+
                                                       '**Worker on 10:** ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n" +
                                                       '**Leaks:** ' + str(leaks_total) + "% (First 10: " + str(leaks_pre10_total) + "%)\n" +
                                                       string2+

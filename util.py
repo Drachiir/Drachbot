@@ -263,6 +263,20 @@ def validate_unit_list_input(unit:list):
     else:
         return unit
 
+def get_inc_power_myth(send):
+    income = 0
+    power = 0
+    for x in send:
+        if not x:
+            continue
+        if "Upgrade" in x:
+            continue
+        if x in incmercs:
+            income += incmercs.get(x)
+        else:
+            power += powermercs.get(x)
+    return [income, power]
+
 def count_mythium(send):
     if type(send) != type(list()):
         if send == "":
