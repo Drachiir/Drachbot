@@ -81,7 +81,11 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                 for n in range(game["ending_wave"]):
                     small_send = 0
                     try:
-                        send = util.count_mythium(player[merc_field][n]) + len(player[king_field][n].split("!")) * 20
+                        if player[king_field][n].split("!")[0] == "":
+                            kingups = 0
+                        else:
+                            kingups = len(player[king_field][n].split("!")) * 20
+                        send = util.count_mythium(player[merc_field][n]) + kingups
                         if n <= 9:
                             ip_myth = util.get_inc_power_myth(player[merc_field][n].split("!"))
                             mercs_pre10[0] += len(player[king_field][n].split("!")) * 20
