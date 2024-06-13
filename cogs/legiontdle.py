@@ -98,7 +98,7 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
             return ltdle_game4(session, input, ltdle_data)
             
 
-def ltdle_leaderboard(daily, avg, game_mode = ["all","all"]):
+def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
     color = random_color()
     player_data_list = os.listdir("ltdle_data")
     scores = []
@@ -161,6 +161,8 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"]):
             except Exception:
                 daily_score4 = 0
                 pass
+            if daily_score1 + daily_score2 + daily_score3 + daily_score4 == 0:
+                continue
             scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2, daily_score3, daily_score4))
         elif game_mode[0] != "all":
             try:
@@ -174,25 +176,31 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"]):
                 scores.append((p_data["name"].capitalize().replace("_", ""), p_data["score"], p_data["games_played"], avg_pts))
             except Exception:
                 continue
-            
-    if avg:
-        scores = sorted(scores, key=lambda x: x[3], reverse=True)
-    elif daily:
-        scores = sorted(scores, key=lambda x: x[1]+x[2]+x[3]+x[4], reverse=True)
+    
+    if sort == "dsc":
+        rev = True
+        ranks = [2800, 2600, 2400, 2200]
     else:
-        scores = sorted(scores, key=lambda x: x[1], reverse=True)
+        rev = False
+        ranks = [1000, 1200, 1400, 1600]
+    if avg:
+        scores = sorted(scores, key=lambda x: x[3], reverse=rev)
+    elif daily:
+        scores = sorted(scores, key=lambda x: x[1]+x[2]+x[3]+x[4], reverse=rev)
+    else:
+        scores = sorted(scores, key=lambda x: x[1], reverse=rev)
     output = ""
     for index, pscore in enumerate(scores):
         ranked_emote = ""
         if index == 10: break
         if index == 0:
-            ranked_emote = util.get_ranked_emote(2800)
+            ranked_emote = util.get_ranked_emote(ranks[0])
         elif 1 <= index <= 3:
-            ranked_emote = util.get_ranked_emote(2600)
+            ranked_emote = util.get_ranked_emote(ranks[1])
         elif 4 <= index <= 6:
-            ranked_emote = util.get_ranked_emote(2400)
+            ranked_emote = util.get_ranked_emote(ranks[2])
         else:
-            ranked_emote = util.get_ranked_emote(2200)
+            ranked_emote = util.get_ranked_emote(ranks[3])
         if daily:
             output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]+pscore[3]+pscore[4]) + "pts ("+str(pscore[1])+", "+str(pscore[2]) +", "+str(pscore[3])+", "+str(pscore[4])+ ")\n"
         else:
@@ -1018,7 +1026,7 @@ class Legiontdle(commands.Cog):
     
     @app_commands.command(name="ltdle-stats", description="Stats for Legiontdle.")
     @app_commands.describe(option="Select an option.", name="Only for profile, has to be actual discord name, not display name.",
-                           game="Select a specific game for the leaderboards.")
+                           game="Select a specific game for the leaderboards.", sort="Sort leaderboards")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
         discord.app_commands.Choice(name='Avg Leaderboard', value='Avg Leaderboard'),
@@ -1031,7 +1039,12 @@ class Legiontdle(commands.Cog):
         discord.app_commands.Choice(name='Guess The Elo', value='game3'),
         discord.app_commands.Choice(name='Guess The Icon', value='game4')
     ])
-    async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None, game: discord.app_commands.Choice[str] = "all"):
+    @app_commands.choices(sort=[
+        discord.app_commands.Choice(name='Descending', value='dsc'),
+        discord.app_commands.Choice(name='Ascending', value='asc')
+    ])
+    async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None,
+                               game: discord.app_commands.Choice[str] = "all", sort: discord.app_commands.Choice[str] = "dsc"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
@@ -1041,13 +1054,17 @@ class Legiontdle(commands.Cog):
                 except AttributeError:
                     pass
                 try:
+                    sort = sort.value
+                except AttributeError:
+                    pass
+                try:
                     game_options = [game.name, game.value]
                 except AttributeError:
                     game_options = [game, game]
                     pass
                 match option:
                     case "Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, game_mode=game_options))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, game_mode=game_options, sort=sort))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             if game != "all":
@@ -1058,7 +1075,7 @@ class Legiontdle(commands.Cog):
                             await interaction.followup.send(response)
                         return
                     case "Avg Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True, game_mode=game_options))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True, game_mode=game_options, sort=sort))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             if game != "all":
@@ -1069,7 +1086,7 @@ class Legiontdle(commands.Cog):
                             await interaction.followup.send(response)
                         return
                     case "Daily Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, True, False))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, True, False, sort=sort))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             await interaction.followup.send(embed=response, view=RefreshButtonLtdleDaily())
