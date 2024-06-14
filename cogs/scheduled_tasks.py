@@ -37,8 +37,6 @@ def reset_game1(json_data):
     random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
     while (random_unit["categoryClass"] == "Special" or
            random_unit["categoryClass"] == "Passive" or
-           random_unit["unitId"] == "giant_quadrapus_unit_id" or
-           random_unit["unitId"] == "scorpion_king_unit_id" or
            "hybrid" in random_unit["unitId"]):
         random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
     json_data["game_1_selected_unit"] = random_unit
@@ -94,8 +92,6 @@ def reset_game4(json_data):
     random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
     while (random_unit["categoryClass"] == "Special" or
            random_unit["categoryClass"] == "Passive" or
-           random_unit["unitId"] == "giant_quadrapus_unit_id" or
-           random_unit["unitId"] == "scorpion_king_unit_id" or
            "hybrid" in random_unit["unitId"]):
         random_unit = unit_json_dict[random.randint(0, len(unit_json_dict) - 1)]
     name = random_unit["unitId"].replace("_unit_id", "")
