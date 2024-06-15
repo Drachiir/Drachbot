@@ -1,62 +1,84 @@
 <!doctype html>
-    <html>
-    <head>
-      <meta http-equiv="refresh" content="5">
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+<html>
+<head>
+    <meta http-equiv="refresh" content="5">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+          rel="stylesheet">
     <style>
-      .container {
-        min-height: 0px;
-        max-height: 120px;
-        display: flex;
-        flex-direction: right;
-        align-items: center;
-		padding-left: 10px;
-        overflow: hidden;
-      }
-      r {
-        font-family: "Roboto", sans-serif;
-        font-weight: 700;
-        font-style: normal;
-        font-size: 190%;
-        padding-left: 10px;
-        color: white;
-        white-space: nowrap;
-        letter-spacing: 1px;
-		text-shadow:
-            /* Outline */
-            -1px -1px 0 #000000,
-            1px -1px 0 #000000,
-            -1px 0 #000000,
-            1px 0 #000000,
-            -2px 0 0 #000000,
-            2px 0 0 #000000,
-            0 2px 0 #000000,
-            0 -2px 0 #000000;
-      }
-      .redText
-      {
-        color:rgb(219, 0, 0);
-      }
-      .greenText
-      {
-        color:rgb(0, 153, 0);
-      }
+        .container {
+          display: inline-flex;
+          padding-left: 10px;
+          padding-right: 10px;
+          background: rgba(0, 0, 0, 0.9);
+          border-radius: 25px;
+        }
+        .container2 {
+          display: block;
+        }
+        r {
+          font-family: "Roboto", sans-serif;
+          font-weight: 300;
+          font-style: normal;
+          font-size: 170%;
+          padding-left: 5px;
+          color: white;
+          white-space: nowrap;
+          letter-spacing: 1px;
+        }
+        r2 {
+          font-family: "Roboto", sans-serif;
+          font-weight: 300;
+          font-style: normal;
+          font-size: 110%;
+          padding-left: 5px;
+          color: #cccccc;
+          white-space: nowrap;
+          letter-spacing: 1px;
+        }
+        .redText
+        {
+          color:rgb(219, 0, 0);
+        }
+        .greenText
+        {
+          color: rgb(0, 218, 0);
+        }
+        .br
+        {
+            display: block;
+            margin-bottom: 0em;
+        }
     </style>
     <title>Streamtracker by Drachbot</title>
-    </head>
-    <body>
-    <div class="container">
-          <img src="{{ rank_url_int }}">
-          <r>{{ initial_elo }} {{ initial_rank }}</r>
+</head>
+<body>
+<div class="container">
+    <div style="padding-top: 5px; padding-bottom: 5px;" class="container2">
+        <div>
+            <r2>Start</r2><br>
+            <img style="padding-left: 5px;" width="26" height="auto" src="{{ rank_url_int }}">
+            <r>{{ initial_elo }} {{ initial_rank }}</r>
         </div>
-    <div class="container">
-		  <img src="{{ rank_url_current }}">
-          <r>{{ current_elo }} {{ current_rank }}</r><r {{ rgb2 }}>({{ elo_str }}{{ elo_diff }})</r>
+        <span class="br"></span>
+        <div>
+            <r2>Current</r2><r2 {{ rgb2 }}>({{ elo_str }}{{ elo_diff }})</r2><br>
+            <img style="padding-left: 5px;" width="26" height="auto"  src="{{ rank_url_current }}">
+            <r>{{ current_elo }} {{ current_rank }}</r>
         </div>
-    <div class="container">
-          <r>{{ wins }}W-{{ losses }}L,&thinsp;WR:</r><r {{ rgb }}>{{ winrate }}%</r>
+    </div>
+    <div style="padding-top: 5px; padding-bottom: 5px;" class="container2">
+        <div style="padding-left: 10px;">
+            <r2>Win/Lose</r2><br>
+            <r class="greenText">{{ wins }}</r><r> - </r><r class="redText">{{ losses }}</r>
         </div>
-    </body>
+        <span class="br"></span>
+        <div style="padding-left: 10px;">
+            <r2>Winrate</r2><br>
+            <r {{ rgb }}>{{ winrate }}%</r>
+        </div>
+    </div>
+</div>
+</body>
 </html>

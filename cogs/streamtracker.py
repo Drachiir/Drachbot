@@ -98,7 +98,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
     else:
         elo_str = ""
         rgb2 = 'class="redText"'
-    simple = ""
+    simple = "Simple/"
     def get_rank_url(elo):
         if elo >= 2800:
             rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Legend.png'
