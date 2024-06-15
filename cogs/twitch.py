@@ -1,7 +1,10 @@
 import os
+import platform
 import traceback
 import concurrent.futures
 import functools
+from datetime import datetime
+
 import cogs.streamtracker
 import discord
 from discord.ext import commands, tasks
@@ -114,10 +117,21 @@ class TwitchHandler(commands.Cog):
                     if self.messages[streamer]["ingame_name"] != " ":
                         loop = asyncio.get_running_loop()
                         if os.path.isfile(f'sessions/session_{self.messages[streamer]["ingame_name"]}.json'):
-                            os.remove(f'sessions/session_{self.messages[streamer]["ingame_name"]}.json')
-                        with concurrent.futures.ThreadPoolExecutor() as pool:
-                            print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, self.messages[streamer]["ingame_name"], stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")
-                            pool.shutdown()
+                            mod_date = datetime.utcfromtimestamp(os.path.getmtime(f'sessions/session_{self.messages[streamer]["ingame_name"]}.json'))
+                            date_diff = datetime.now() - mod_date
+                            if platform.system() == "Linux":
+                                minutes_diff = date_diff.total_seconds() / 60
+                            else:
+                                minutes_diff = date_diff.total_seconds() / 60 - 60
+                            if minutes_diff > 30:
+                                os.remove(f'sessions/session_{self.messages[streamer]["ingame_name"]}.json')
+                                with concurrent.futures.ThreadPoolExecutor() as pool:
+                                    print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, self.messages[streamer]["ingame_name"], stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")
+                                    pool.shutdown()
+                        else:
+                            with concurrent.futures.ThreadPoolExecutor() as pool:
+                                print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, self.messages[streamer]["ingame_name"], stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")
+                                pool.shutdown()
                         with open("sessions/session_"+self.messages[streamer]["ingame_name"]+".json", "r") as f:
                             session = json.load(f)
                             f.close()
@@ -156,7 +170,6 @@ class TwitchHandler(commands.Cog):
                         end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
                             f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change}) {session["current_rank"]}'
                             f'\n{wins}W-{losses}L, WR: {winrate}%')
-                        os.remove("sessions/session_" + self.messages[streamer]["ingame_name"] + ".json")
                     else:
                         end_string = ""
                     embed = discord.Embed(color=util.random_color(), title=f"{streamer} stopped streaming LTD2.", description=end_string, url='https://www.twitch.tv/' + streamer)
