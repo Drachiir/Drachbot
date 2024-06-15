@@ -103,7 +103,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
         if elo >= 2800:
             rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Legend.png'
         elif elo >= 2600:
-            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Grandmaster.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}GrandMaster.png'
         elif elo >= 2400:
             rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}SeniorMaster.png'
         elif elo >= 2200:

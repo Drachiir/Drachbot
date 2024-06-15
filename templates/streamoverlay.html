@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="5">
+    <meta http-equiv="refresh" content="7">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
@@ -21,7 +21,7 @@
           font-family: "Roboto", sans-serif;
           font-weight: 300;
           font-style: normal;
-          font-size: 170%;
+          font-size: 220%;
           padding-left: 5px;
           color: white;
           white-space: nowrap;
@@ -31,7 +31,7 @@
           font-family: "Roboto", sans-serif;
           font-weight: 300;
           font-style: normal;
-          font-size: 110%;
+          font-size: 150%;
           padding-left: 5px;
           color: #cccccc;
           white-space: nowrap;
@@ -58,13 +58,13 @@
     <div style="padding-top: 5px; padding-bottom: 5px;" class="container2">
         <div>
             <r2>Start</r2><br>
-            <img style="padding-left: 5px;" width="26" height="auto" src="{{ rank_url_int }}">
+            <img style="padding-left: 5px;" width="30" height="auto" src="{{ rank_url_int }}">
             <r>{{ initial_elo }} {{ initial_rank }}</r>
         </div>
         <span class="br"></span>
         <div>
             <r2>Current</r2><r2 {{ rgb2 }}>({{ elo_str }}{{ elo_diff }})</r2><br>
-            <img style="padding-left: 5px;" width="26" height="auto"  src="{{ rank_url_current }}">
+            <img style="padding-left: 5px;" width="30" height="auto"  src="{{ rank_url_current }}">
             <r>{{ current_elo }} {{ current_rank }}</r>
         </div>
     </div>
