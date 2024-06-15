@@ -141,7 +141,7 @@ def ladder_update(amount=100):
 
 def get_recent_games(calls=100):
     date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    date_after = (datetime.now(tz=timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    date_after = (datetime.now(tz=timezone.utc) - timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")
     date_now = date_now.replace(" ", "%20")
     date_now = date_now.replace(":", "%3A")
     date_after = date_after.replace(" ", "%20")
@@ -170,8 +170,8 @@ def get_recent_games(calls=100):
     print("Starting Games Update...")
     t1 = time.time()
     for i in range(calls):
-        if timeout_count == 10:
-            print("Breaking Game Update loops because no new games in last 50 calls..")
+        if timeout_count == 3:
+            print("Breaking Game Update loops because no new games in last 3 calls..")
             break
         temp = 0
         url = (f'https://apiv2.legiontd2.com/games'
@@ -187,6 +187,9 @@ def get_recent_games(calls=100):
             continue
         for game in history_raw:
             if (game['queueType'] == 'Normal'):
+                if game["gameElo"] < 1800:
+                    temp = 50
+                    break
                 if GameData.get_or_none(GameData.game_id == game["_id"]) is None:
                     timeout_count = 0
                     add_game_count(game["gameElo"])

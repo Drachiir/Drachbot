@@ -7,6 +7,8 @@ import discord
 from discord.ext import commands
 import os
 from datetime import datetime, timedelta, timezone, time
+
+import cogs.scheduled_tasks
 import legion_api
 import cogs.scheduled_tasks as s_tasks
 import util
@@ -80,6 +82,13 @@ class ManageCommands(commands.Cog):
                 await s_tasks.ltdle_notify(self)
             except Exception:
                 traceback.print_exc()
+        else:
+            await ctx.channel.send("No permission to use this command.")
+    
+    @commands.command()
+    async def reset_ltdle(self, ctx: commands.Context):
+        if ctx.author.name == "drachir_":
+            cogs.scheduled_tasks.reset(self)
         else:
             await ctx.channel.send("No permission to use this command.")
     

@@ -22,10 +22,10 @@ with open("Files/json/slang.json", "r") as slang_file:
     slang_file.close()
 
 task_times1=[
-    time(hour=3, minute=54, second=0, tzinfo=timezone.utc),
-    time(hour=9, minute=54, second=0, tzinfo=timezone.utc),
-    time(hour=15, minute=54, second=0, tzinfo=timezone.utc),
-    time(hour=21, minute=54, second=0, tzinfo=timezone.utc)
+    time(hour=4, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=0, second=0, tzinfo=timezone.utc)
 ]
 
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))

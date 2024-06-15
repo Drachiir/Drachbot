@@ -406,7 +406,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             mod_date = datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y").timestamp()
             timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
             embed = create_embed("You lost :frowning:. Try again next time "+timestamp+"\nYour guess history:\n" + "\n".join(session["game1"]["guesses"]))
-            if session["game1"]["last_played"] in session["game1"]["scores_dict"]:
+            if session["game1"]["last_played"] in session["scores_dict"]:
                 session["game1"]["scores_dict"][session["game1"]["last_played"]][0] = 0
             else:
                 session["game1"]["scores_dict"][session["game1"]["last_played"]] = [0,0,0,0]
