@@ -8,6 +8,7 @@ from discord.ext import commands
 import os
 from datetime import datetime, timedelta, timezone, time
 
+import cogs.streamtracker
 import cogs.scheduled_tasks
 import legion_api
 import cogs.scheduled_tasks as s_tasks
@@ -89,6 +90,16 @@ class ManageCommands(commands.Cog):
     async def reset_ltdle(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
             cogs.scheduled_tasks.reset(self)
+        else:
+            await ctx.channel.send("No permission to use this command.")
+    
+    @commands.command()
+    async def overlay(self, ctx: commands.Context):
+        if ctx.author.name == "drachir_":
+            try:
+                cogs.streamtracker.stream_overlay("drachir")
+            except Exception:
+                traceback.print_exc()
         else:
             await ctx.channel.send("No permission to use this command.")
     

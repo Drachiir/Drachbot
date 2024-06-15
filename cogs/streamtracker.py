@@ -1,3 +1,4 @@
+import platform
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -8,6 +9,13 @@ import functools
 import json
 import os
 import legion_api
+import jinja2
+from jinja2 import Environment, FileSystemLoader
+
+if platform.system() == "Linux":
+    shared_folder = "/shared/"
+else:
+    shared_folder = "shared/"
 
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
     if not os.path.isfile("sessions/session_" + playername + ".json"):
@@ -90,92 +98,38 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
     else:
         elo_str = ""
         rgb2 = 'class="redText"'
+    simple = ""
     def get_rank_url(elo):
         if elo >= 2800:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Legend.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Legend.png'
         elif elo >= 2600:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Grandmaster.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Grandmaster.png'
         elif elo >= 2400:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/SeniorMaster.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}SeniorMaster.png'
         elif elo >= 2200:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Master.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Master.png'
         elif elo >= 2000:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Expert.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Expert.png'
         elif elo >= 1800:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Diamond.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Diamond.png'
         elif elo >= 1600:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Platinum.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Platinum.png'
         elif elo >= 1400:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Gold.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Gold.png'
         elif elo >= 1200:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Silver.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Silver.png'
         else:
-            rank_url = 'https://cdn.legiontd2.com/icons/Ranks/Bronze.png'
+            rank_url = f'https://cdn.legiontd2.com/icons/Ranks/{simple}Bronze.png'
         return rank_url
-    html_file = """
-    <!doctype html>
-    <html>
-    <head>
-      <meta http-equiv="refresh" content="5">
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-    <style>
-      .container {
-        min-height: 0px;
-        max-height: 120px;
-        display: flex;
-        flex-direction: right;
-        align-items: center;
-		padding-left: 10px;
-        overflow: hidden;
-      }
-      r {
-        font-family: "Roboto", sans-serif;
-        font-weight: 700;
-        font-style: normal;
-        font-size: 190%;
-        padding-left: 10px;
-        color: white;
-        white-space: nowrap;
-        letter-spacing: 1px;
-		text-shadow:
-            /* Outline */
-            -1px -1px 0 #000000,
-            1px -1px 0 #000000,
-            -1px 1px 0 #000000,
-            1px 1px 0 #000000,
-            -2px 0 0 #000000,
-            2px 0 0 #000000,
-            0 2px 0 #000000,
-            0 -2px 0 #000000;
-      }
-      .redText
-      {
-        color:rgb(219, 0, 0);
-      }
-      .greenText
-      {
-        color:rgb(0, 153, 0);
-      }
-    </style>
-    <title>Streamtracker by Drachbot</title>
-    </head>
-    <body>
-    <div class="container">
-          <img src="""+get_rank_url(initial_elo)+""">
-          <r><b>"""+str(initial_elo)+" "+f"{initial_rank}"+"""</b></r>
-        </div>
-    <div class="container">
-		  <img src="""+get_rank_url(current_elo)+""">
-          <r><b>"""+str(current_elo)+" "+f"{current_rank}"+"""</b></r><r """+rgb2+"""><b>("""+elo_str+str(elo_diff)+""")</b></r>
-        </div>
-    <div class="container">
-          <r><b>"""+str(wins)+"""W-"""+str(losses)+"""L,&thinsp;WR:</b></r><r """+rgb+"""><b>"""+str(winrate)+"""%</b></r>
-        </div>
-    </body>
-    </html>"""
-    with open('/shared/'+playername+'_output.html', "w") as f:
+    rank_url_int = get_rank_url(initial_elo)
+    rank_url_current = get_rank_url(current_elo)
+    enviorment = jinja2.Environment(loader=FileSystemLoader("templates/"))
+    template = enviorment.get_template("streamoverlay.html")
+    html_file = template.render(rank_url_int=rank_url_int, rank_url_current=rank_url_current,
+                                initial_elo=initial_elo, initial_rank=initial_rank, current_rank=current_rank,
+                                wins=wins, losses=losses, current_elo=current_elo, winrate=winrate,
+                                elo_diff=elo_diff, elo_str=elo_str, rgb=rgb, rgb2=rgb2)
+    with open(shared_folder+playername+'_output.html', "w") as f:
         f.write(html_file)
     return playername+'_output.html'
 
