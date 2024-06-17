@@ -980,28 +980,6 @@ class RefreshButtonLtdleAvg(discord.ui.View):
             traceback.print_exc()
 
 
-class RefreshButtonLtdleTotalAsc(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
-    
-    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh_totalasc')
-    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.defer()
-            bucket = self.cd_mapping.get_bucket(interaction.message)
-            retry_after = bucket.update_rate_limit()
-            if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, sort="asc"))
-                pool.shutdown()
-                await interaction.edit_original_response(embed=response)
-        except Exception:
-            traceback.print_exc()
-
-
 class RefreshButtonLtdleDailyAsc(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -1022,29 +1000,7 @@ class RefreshButtonLtdleDailyAsc(discord.ui.View):
                 await interaction.edit_original_response(embed=response)
         except Exception:
             traceback.print_exc()
-
-
-class RefreshButtonLtdleAvgAsc(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
-    
-    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh_avgasc')
-    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.defer()
-            bucket = self.cd_mapping.get_bucket(interaction.message)
-            retry_after = bucket.update_rate_limit()
-            if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True, sort="asc"))
-                pool.shutdown()
-                await interaction.edit_original_response(embed=response)
-        except Exception:
-            traceback.print_exc()
-
+            
 
 class Legiontdle(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -1134,7 +1090,7 @@ class Legiontdle(commands.Cog):
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             if game != "all" or sort == "asc":
-                                await interaction.followup.send(embed=response, view=RefreshButtonLtdleTotalAsc())
+                                await interaction.followup.send(embed=response)
                             else:
                                 await interaction.followup.send(embed=response, view=RefreshButtonLtdleTotal())
                         else:
@@ -1145,7 +1101,7 @@ class Legiontdle(commands.Cog):
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             if game != "all" or sort == "asc":
-                                await interaction.followup.send(embed=response, view=RefreshButtonLtdleAvgAsc())
+                                await interaction.followup.send(embed=response)
                             else:
                                 await interaction.followup.send(embed=response, view=RefreshButtonLtdleAvg())
                         else:

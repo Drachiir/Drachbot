@@ -308,7 +308,10 @@ def calc_leak(leak, wave):
         elif x in incmercs:
             leak_amount += incmercs.get(x) / 20 * 4
         elif x in powermercs:
-            leak_amount += powermercs.get(x) / 20 * 6
+            if x == "Imp":
+                leak_amount += powermercs.get(x) / 20 * 3
+            else:
+                leak_amount += powermercs.get(x) / 20 * 6
     return round(leak_amount / wave_total * 100, 1)
 
 def im_has_alpha(img_arr):

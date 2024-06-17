@@ -11,6 +11,7 @@ import util
 import legion_api
 from peewee_pg import GameData, PlayerData
 
+send_order = {0: 2, 1: 3, 2: 1, 3: 0}
 
 def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Sent"):
     if playername.lower() == 'all':
@@ -42,7 +43,6 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     leaks_pre10_list = []
     gameelo_list = []
     mercs_pre10 = [0,0]
-    mercs = [0,0]
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids, GameData.left_king_hp, GameData.right_king_hp,
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.workers_per_wave, PlayerData.leaks_per_wave, PlayerData.income_per_wave],
                    ["game_id", "date", "version", "ending_wave", "game_elo", "left_king_hp", "right_king_hp"],
@@ -126,14 +126,25 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                 leak_amount = 0
                 leak_pre10_amount = 0
                 for y in range(game["ending_wave"]):
-                    try:
-                        if len(player["leaks_per_wave"][y]) > 0:
-                            p = util.calc_leak(player["leaks_per_wave"][y], y)
-                            leak_amount += p
-                            if y < 10:
-                                leak_pre10_amount += p
-                    except IndexError:
-                        break
+                    if saves == "Received":
+                        try:
+                            if len(player["leaks_per_wave"][y]) > 0:
+                                p = util.calc_leak(player["leaks_per_wave"][y], y)
+                                leak_amount += p
+                                if y < 10:
+                                    leak_pre10_amount += p
+                        except IndexError:
+                            break
+                    else:
+                        enemy_index = send_order.get(i)
+                        try:
+                            if len(game["players_data"][enemy_index]["leaks_per_wave"][y]) > 0:
+                                p = util.calc_leak(game["players_data"][enemy_index]["leaks_per_wave"][y], y)
+                                leak_amount += p
+                                if y < 10:
+                                    leak_pre10_amount += p
+                        except IndexError:
+                            break
                 leaks_list.append(leak_amount / game["ending_wave"])
                 leaks_pre10_list.append(leak_pre10_amount / 10)
                 try:
@@ -186,15 +197,19 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
         playername = profile["playerName"]
     if playerid == 'all':
         saves = ''
+    if saves == "Sent":
+        leak_string = " Caused"
+    else:
+        leak_string = ""
     embed = discord.Embed(color=0x4565d9, description='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")\n\n" +
                                                       '**Saves first 10:** ' + str(saves_pre10) + '/10 waves (' + str(round(saves_pre10 / 10 * 100, 2)) + '%)\n' +
                                                       '**Saves after 10:** ' + str(saves_post10) + '/' + str(round(waves_post10, 2)) + ' waves (' + str(round(saves_post10 / waves_post10 * 100, 2)) + '%)\n' +
                                                       f'**Pre 10 Mercs:** Income: {mercs_pre10_percent}%, Power: {100-mercs_pre10_percent}%\n'+
                                                       '**Worker on 10:** ' + str(round(sum(worker_10_list) / len(worker_10_list), 2)) + "\n" +
-                                                      '**Leaks:** ' + str(leaks_total) + "% (First 10: " + str(leaks_pre10_total) + "%)\n" +
+                                                      f'**Leaks{leak_string}:** ' + str(leaks_total) + "% (First 10: " + str(leaks_pre10_total) + "%)\n" +
                                                       string2+
                                                       '**Income on 10:** ' + str(round(sum(income_10_list) / len(income_10_list), 1)) + "\n" +
-                                                      '**Mythium:** ' + str(mythium) + ' (Pre 10: ' + str(mythium_pre10) + ', Post 10: ' + str(mythium - mythium_pre10) + ')\n')
+                                                      f'**Myth {saves}:** Pre 10: ' + str(mythium_pre10) + ', Post 10: ' + str(mythium - mythium_pre10) + '\n')
     embed.set_author(name=playername + suffix +" " + saves +" elcringo stats", icon_url=avatar)
     embed.set_footer(text='Patches: ' + ', '.join(patches))
     return embed

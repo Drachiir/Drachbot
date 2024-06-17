@@ -211,6 +211,12 @@ def get_recent_games(calls=100):
                          title=f"Pulled {util.human_format(ranked_count)} new ranked games.",
                          description=output).set_author(name="[Scheduled Update]", icon_url="https://overlay.drachbot.site/favicon.ico")
 
+def save_game_by_id(game_id):
+    url = 'https://apiv2.legiontd2.com/games/byId/' + game_id + '?includeDetails=true'
+    api_response = requests.get(url, headers=header)
+    x = json.loads(api_response.text)
+    peewee_pg.save_game(x)
+
 def pull_games_by_id(file, name):
     path = '/home/container/Profiles/' + name
     if not Path(Path(str(path + '/gamedata/'))).is_dir():

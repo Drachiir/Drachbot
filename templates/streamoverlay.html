@@ -11,8 +11,8 @@
           display: inline-flex;
           padding-left: 10px;
           padding-right: 10px;
-          background: rgba(0, 0, 0, 0.9);
-          border-radius: 25px;
+          background: rgba(0, 0, 0, 0.8);
+          border-radius: 15px;
         }
         .container2 {
           display: block;
@@ -22,7 +22,6 @@
           font-weight: 300;
           font-style: normal;
           font-size: 220%;
-          padding-left: 5px;
           color: white;
           white-space: nowrap;
           letter-spacing: 1px;
@@ -31,15 +30,14 @@
           font-family: "Roboto", sans-serif;
           font-weight: 300;
           font-style: normal;
-          font-size: 150%;
-          padding-left: 5px;
-          color: #cccccc;
+          font-size: 140%;
+          color: #a6a6a6;
           white-space: nowrap;
           letter-spacing: 1px;
         }
         .redText
         {
-          color:rgb(219, 0, 0);
+          color: rgb(243, 0, 0);
         }
         .greenText
         {
@@ -50,6 +48,9 @@
             display: block;
             margin-bottom: 0em;
         }
+        #mask {
+          filter: drop-shadow(0 0 0.2rem rgba(149, 149, 149, 0.5));
+        }
     </style>
     <title>Streamtracker by Drachbot</title>
 </head>
@@ -58,13 +59,13 @@
     <div style="padding-top: 5px; padding-bottom: 5px;" class="container2">
         <div>
             <r2>Start</r2><br>
-            <img style="padding-left: 5px;" width="30" height="auto" src="{{ rank_url_int }}">
+            <img id="mask" width="30" height="auto" src="{{ rank_url_int }}">
             <r>{{ initial_elo }} {{ initial_rank }}</r>
         </div>
         <span class="br"></span>
         <div>
-            <r2>Current</r2><r2 {{ rgb2 }}>({{ elo_str }}{{ elo_diff }})</r2><br>
-            <img style="padding-left: 5px;" width="30" height="auto"  src="{{ rank_url_current }}">
+            <r2>Current </r2><r2 {{ rgb2 }}>({{ elo_str }}{{ elo_diff }})</r2><br>
+            <img id="mask" width="30" height="auto"  src="{{ rank_url_current }}">
             <r>{{ current_elo }} {{ current_rank }}</r>
         </div>
     </div>
