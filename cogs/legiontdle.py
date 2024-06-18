@@ -526,32 +526,40 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
         with open('Files/json/units.json', 'r') as f:
             units_json = json.load(f)
             f.close()
-        if text_input in util.slang:
-            text_input = util.slang.get(text_input)
-        unit_dict = {}
-        for u_js in units_json:
-            if u_js["categoryClass"] == "Special" or u_js["categoryClass"] == "Passive":
-                continue
-            string = u_js["unitId"]
-            string = string.replace('_', ' ')
-            string = string.replace(' unit id', '')
-            if string == "skyfish":
-                string = "metaldragon"
-            elif string == "imp mercenary":
-                string = "imp"
-            elif string == "octopus":
-                string = "quadrapus"
-            unit_dict[string] = u_js
-        close_matches = difflib.get_close_matches(text_input.lower(), list(unit_dict.keys()), cutoff=0.8)
-        if len(close_matches) > 0:
-            text_input = close_matches[0]
+        if text_input != "Skip":
+            if text_input in util.slang:
+                text_input = util.slang.get(text_input)
+            unit_dict = {}
+            for u_js in units_json:
+                if u_js["categoryClass"] == "Special" or u_js["categoryClass"] == "Passive":
+                    continue
+                string = u_js["unitId"]
+                string = string.replace('_', ' ')
+                string = string.replace(' unit id', '')
+                if string == "skyfish":
+                    string = "metaldragon"
+                elif string == "imp mercenary":
+                    string = "imp"
+                elif string == "octopus":
+                    string = "quadrapus"
+                unit_dict[string] = u_js
+            close_matches = difflib.get_close_matches(text_input.lower(), list(unit_dict.keys()), cutoff=0.8)
+            if len(close_matches) > 0:
+                text_input = close_matches[0]
+            else:
+                return text_input + " unit not found."
+            new_name = ""
+            for icon_string in text_input.split(" "):
+                new_name += icon_string.capitalize()
         else:
-            return text_input + " unit not found."
-        new_name = ""
-        for icon_string in text_input.split(" "):
-            new_name += icon_string.capitalize()
+            new_name = "Skip"
         if new_name == ltdle_data["game_4_selected_unit"][0]:
-            game4_score = round(12 - image_index*2)
+            skip_count = 0
+            for g in session["game4"]["guesses"]:
+                if g == "Skip":
+                    skip_count += 1
+                    break
+            game4_score = round(12 - image_index*2 + skip_count)
             if game4_score < 0: game4_score = 0
             if image_index == 6:
                 game4_score = 1
@@ -748,6 +756,40 @@ class ModalButton2(discord.ui.View):
                 traceback.print_exc()
         else:
             await interaction.response.defer()
+            await interaction.channel.send(played_check)
+            return
+    
+    @discord.ui.button(label='Skip (-1 point)', style=discord.ButtonStyle.green, custom_id='persistent_view:guesstheiconskip')
+    async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        played_check = check_if_played_today(interaction.user.name, 4)
+        await interaction.response.defer()
+        if type(played_check) == type(dict()):
+            try:
+                loop = asyncio.get_running_loop()
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
+                    with open(path + "/data.json", "r") as f:
+                        data = json.load(f)
+                        f.close()
+                    with open("ltdle_data/ltdle.json", "r") as f:
+                        ltdle_data = json.load(f)
+                        f.close()
+                    response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 4, input="Skip"))
+                    pool.shutdown()
+                    if type(response) == list:
+                        if len(response) == 2:
+                            temp = await interaction.original_response()
+                            await temp.delete()
+                            await interaction.channel.send(file=response[0], embed=response[1], view=ModalButton2())
+                        else:
+                            temp = await interaction.original_response()
+                            await temp.delete()
+                            await interaction.channel.send(file=response[0], embed=response[1], view=GameSelectionButtons())
+                    else:
+                        await interaction.channel.send(response)
+            except Exception:
+                traceback.print_exc()
+        else:
             await interaction.channel.send(played_check)
             return
 

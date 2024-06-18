@@ -27,8 +27,8 @@ else:
 site = "https://overlay.drachbot.site/Images/"
 
 utc = timezone.utc
-task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
-#task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
+#task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
+task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
 
 def reset_game1(json_data):
     with open("Files/json/units.json", "r") as f2:
@@ -133,7 +133,7 @@ def season_reset(json_data):
     print("Success!")
     return json_data
 
-async def ltdle_notify(self):
+async def ltdle_notify(self, update):
     with open("ltdle_data/ltdle.json", "r") as f:
         json_data = json.load(f)
         f.close()
@@ -144,7 +144,10 @@ async def ltdle_notify(self):
     try:
         guild = self.client.get_guild(discord_channels["drachbot_update"][0])
         channel = guild.get_channel(discord_channels["drachbot_update"][1])
-        message = await channel.send("New Legiontdle is up! :brain: <a:dinkdonk:1120126536343896106>")
+        if update == 1:
+            message = await channel.send("New Legiontdle is up! :brain: <a:dinkdonk:1120126536343896106>")
+        else:
+            message = await channel.send(f"Legiontdle Season {json_data["season"][0]} is up! :brain: <a:dinkdonk:1120126536343896106>")
         await message.publish()
     except Exception:
         pass
@@ -168,7 +171,9 @@ def reset(self):
         json_data = json.load(f)
         f.close()
     if datetime.strptime(json_data["next_reset"], "%m/%d/%Y") < datetime.now():
+        new_season = 1
         if json_data["next_reset"].split("/")[1] == "01":
+            new_season = 2
             json_data = season_reset(json_data)
         json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
         json_data = reset_game1(json_data)
@@ -176,9 +181,9 @@ def reset(self):
         json_data = reset_game3(json_data)
         json_data = reset_game4(json_data)
         with open("ltdle_data/ltdle.json", "w") as f:
-            json_data = json.dump(json_data, f, indent=2)
+            json.dump(json_data, f, indent=2)
             f.close()
-        return True
+        return new_season
     else:
         return False
 
@@ -203,7 +208,7 @@ class ScheduledTasks(commands.Cog):
             if not update:
                 print("No reset required now.")
                 return
-            await ltdle_notify(self)
+            await ltdle_notify(self, update)
         except Exception:
             traceback.print_exc()
     

@@ -26,6 +26,7 @@ def handle_response(message, author) -> str:
     if 'jokeonu' in p_message:      return "look dis brah, snacc <:snacc:1225281693393616936>"
     if 'mrbuzz' in p_message:       return "(On his smurf)"
     if 'nyctea' in p_message:       return "toikan,"
+    if 'modabuse' in p_message:     return "Julian, do not talk to me. <:Stare:1148703530039902319>"
     if 'lwon' in p_message:         return "<:AgentEggwon:1215622131187191828> fucking teamates, nothing you can do"
     if '!github' in p_message:      return 'https://github.com/Drachiir/Drachbot'
     if '!novaupdate' in p_message and str(author) == 'drachir_':    return legion_api.pull_games_by_id(message.split('|')[1],message.split('|')[2])
