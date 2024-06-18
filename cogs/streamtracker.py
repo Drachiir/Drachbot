@@ -19,7 +19,7 @@ else:
 
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
     if not os.path.isfile("sessions/session_" + playername + ".json"):
-        leaderboard = legion_api.get_leaderboard(200)
+        leaderboard = legion_api.get_leaderboard(100)
         for i, player in enumerate(leaderboard):
             if player["profile"][0]["playerName"].casefold() == playername.casefold():
                 initial_rank = "#"+str(i+1)
@@ -50,7 +50,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
             session_dict = json.load(f)
             try:
                 initial_rank = session_dict["int_rank"]
-                leaderboard = legion_api.get_leaderboard(200)
+                leaderboard = legion_api.get_leaderboard(100)
                 for i, player in enumerate(leaderboard):
                     if player["profile"][0]["playerName"].casefold() == playername.casefold():
                         current_rank = "#"+str(i + 1)
@@ -59,6 +59,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     current_rank = ""
             except Exception:
                 initial_rank = ""
+            live = session_dict["live"]
             initial_elo = session_dict["int_elo"]
             initial_wins = session_dict["int_wins"]
             initial_losses = session_dict["int_losses"]
@@ -79,7 +80,8 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 else:
                     current_losses = session_dict["current_losses"]
         with open("sessions/session_" + playername + ".json", "w") as f:
-            session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
+                            "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live}
             json.dump(session_dict, f, default=str)
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses

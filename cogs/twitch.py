@@ -128,12 +128,20 @@ class TwitchHandler(commands.Cog):
                                 with concurrent.futures.ThreadPoolExecutor() as pool:
                                     print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, self.messages[streamer]["ingame_name"], stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")
                                     pool.shutdown()
+                            else:
+                                with concurrent.futures.ThreadPoolExecutor() as pool:
+                                    await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, self.messages[streamer]["ingame_name"], update=True))
+                                    pool.shutdown()
                         else:
                             with concurrent.futures.ThreadPoolExecutor() as pool:
                                 print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, self.messages[streamer]["ingame_name"], stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")
                                 pool.shutdown()
                         with open("sessions/session_"+self.messages[streamer]["ingame_name"]+".json", "r") as f:
                             session = json.load(f)
+                            f.close()
+                        session["live"] = True
+                        with open("sessions/session_" + self.messages[streamer]["ingame_name"] + ".json", "w") as f:
+                            json.dump(session, f)
                             f.close()
                         end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
                     else:
@@ -155,6 +163,10 @@ class TwitchHandler(commands.Cog):
                     if os.path.isfile("sessions/session_" + self.messages[streamer]["ingame_name"] + ".json"):
                         with open("sessions/session_"+self.messages[streamer]["ingame_name"]+".json", "r") as f:
                             session = json.load(f)
+                            f.close()
+                        session["live"] = False
+                        with open("sessions/session_"+self.messages[streamer]["ingame_name"]+".json", "w") as f:
+                            json.dump(session, f)
                             f.close()
                         elo_change = session["current_elo"]-session["int_elo"]
                         if elo_change >= 0:
