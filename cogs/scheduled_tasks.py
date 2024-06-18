@@ -27,8 +27,8 @@ else:
 site = "https://overlay.drachbot.site/Images/"
 
 utc = timezone.utc
-#task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
-task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
+task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
+#task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
 
 def reset_game1(json_data):
     with open("Files/json/units.json", "r") as f2:
