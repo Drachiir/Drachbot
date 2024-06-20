@@ -558,12 +558,12 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
             for g in session["game4"]["guesses"]:
                 if g == "Skip":
                     skip_count += 1
-                    break
-            game4_score = round(12 - image_index*2 + skip_count)
+            game4_score = round((12 - image_index * 2) + skip_count)
             if game4_score < 0: game4_score = 0
+            if image_index == 5:
+                game4_score = 3
             if image_index == 6:
                 game4_score = 1
-            session["game4"]["image"] += 1
             session["score"] += game4_score
             session["game4"]["score"] += game4_score
             if session["game4"]["last_played"] in session["scores_dict"]:

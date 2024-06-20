@@ -123,7 +123,7 @@ class TwitchHandler(commands.Cog):
                                 minutes_diff = date_diff.total_seconds() / 60
                             else:
                                 minutes_diff = date_diff.total_seconds() / 60 - 60
-                            if minutes_diff > 30:
+                            if minutes_diff > 5:
                                 os.remove(f'sessions/session_{self.messages[streamer]["ingame_name"]}.json')
                                 with concurrent.futures.ThreadPoolExecutor() as pool:
                                     print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, self.messages[streamer]["ingame_name"], stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")

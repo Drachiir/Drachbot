@@ -30,6 +30,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 current_wins = player["rankedWinsThisSeason"]
                 initial_losses = player["rankedLossesThisSeason"]
                 current_losses = player["rankedLossesThisSeason"]
+                live = False
                 break
         else:
             initial_rank = ""
@@ -42,8 +43,11 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
             current_wins = stats["rankedWinsThisSeason"]
             initial_losses = stats["rankedLossesThisSeason"]
             current_losses = stats["rankedLossesThisSeason"]
+            live = False
         with open("sessions/session_" + playername + ".json", "w") as f:
-            session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses}
+            session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
+                            "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins,
+                            "int_losses": initial_losses, "current_losses": current_losses, "live": live}
             json.dump(session_dict, f, default=str)
     else:
         with open("sessions/session_" + playername + ".json", "r") as f:
@@ -79,10 +83,11 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     current_losses = session_dict["current_losses"] + 1
                 else:
                     current_losses = session_dict["current_losses"]
-        with open("sessions/session_" + playername + ".json", "w") as f:
-            session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
-                            "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live}
-            json.dump(session_dict, f, default=str)
+        if live:
+            with open("sessions/session_" + playername + ".json", "w") as f:
+                session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
+                                "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live}
+                json.dump(session_dict, f, default=str)
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
     try:

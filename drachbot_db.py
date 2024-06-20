@@ -272,8 +272,6 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                            .limit(games * 4)).dicts()
         for i, row in enumerate(game_data_query.iterator()):
             p_data = {}
-            if row["version"] == "v11.05":
-                continue
             for field in req_columns[2]:
                 p_data[field] = row[field]
             if i % 4 == 0:
