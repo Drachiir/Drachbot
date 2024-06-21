@@ -98,7 +98,7 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
                 if player["spell_location"] != "-1|-1":
                     spell_loc = player["spell_location"].split("|")
                     spell_loc = (float(spell_loc[0]), float(spell_loc[1]))
-                    if spellname in util.aura_spells:
+                    if spell_name in util.aura_spells:
                         target_locations = calculate_positions(spell_loc[0], spell_loc[1])
                     else:
                         target_locations = [spell_loc]

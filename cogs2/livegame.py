@@ -45,23 +45,28 @@ async def handler(message) -> None:
                 f.close()
             for entry in data:
                 playername = entry.split("|")[1].replace("\n", "")
-                for p in players:
-                    if p.split(":")[0] == playername and os.path.isfile("sessions/session_" + playername + ".json") == True:
-                        with open("sessions/session_" + playername + ".json", "r") as f:
-                            session = json.load(f)
-                            f.close()
-                        if session["live"]:
-                            mod_date = datetime.utcfromtimestamp(os.path.getmtime("sessions/session_" + playername + ".json"))
-                            date_diff = datetime.now() - mod_date
-                            if platform.system() == "Linux":
-                                minutes_diff = date_diff.total_seconds() / 60
-                            else:
-                                minutes_diff = date_diff.total_seconds() / 60 - 60
-                            if minutes_diff > 5:
-                                loop = asyncio.get_running_loop()
-                                with concurrent.futures.ThreadPoolExecutor() as pool:
-                                    await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, playername, update=True))
-                                    pool.shutdown()
+                if "," in playername:
+                    accounts = playername.split(",")
+                else:
+                    accounts = [playername]
+                for acc in accounts:
+                    for p in players:
+                        if p.split(":")[0] == acc and os.path.isfile("sessions/session_" + acc + ".json") == True:
+                            with open("sessions/session_" + acc + ".json", "r") as f:
+                                session = json.load(f)
+                                f.close()
+                            if session["live"]:
+                                mod_date = datetime.utcfromtimestamp(os.path.getmtime("sessions/session_" + acc + ".json"))
+                                date_diff = datetime.now() - mod_date
+                                if platform.system() == "Linux":
+                                    minutes_diff = date_diff.total_seconds() / 60
+                                else:
+                                    minutes_diff = date_diff.total_seconds() / 60 - 60
+                                if minutes_diff > 5:
+                                    loop = asyncio.get_running_loop()
+                                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
+                                        pool.shutdown()
     elif str(message.channel) == "game-results":
         embeds = message.embeds
         for embed in embeds:
@@ -77,28 +82,33 @@ async def handler(message) -> None:
                 data = f.readlines()
                 for entry in data:
                     playername = entry.split("|")[1].replace("\n", "")
-                    if playername in desc3[1]:
-                        elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
-                        if os.path.isfile("sessions/session_" + playername + ".json"):
-                            with open("sessions/session_" + playername + ".json", "r") as f:
-                                session = json.load(f)
-                                f.close()
-                            if session["live"]:
-                                loop = asyncio.get_running_loop()
-                                with concurrent.futures.ThreadPoolExecutor() as pool:
-                                    await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, playername, elo_change=elo_change))
-                                    pool.shutdown()
-                    elif playername in desc3[2]:
-                        elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
-                        if os.path.isfile("sessions/session_" + playername + ".json"):
-                            with open("sessions/session_" + playername + ".json", "r") as f:
-                                session = json.load(f)
-                                f.close()
-                            if session["live"]:
-                                loop = asyncio.get_running_loop()
-                                with concurrent.futures.ThreadPoolExecutor() as pool:
-                                    await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, playername, elo_change=elo_change))
-                                    pool.shutdown()
+                    if "," in playername:
+                        accounts = playername.split(",")
+                    else:
+                        accounts = [playername]
+                    for acc in accounts:
+                        if acc in desc3[1]:
+                            elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
+                            if os.path.isfile("sessions/session_" + acc + ".json"):
+                                with open("sessions/session_" + acc + ".json", "r") as f:
+                                    session = json.load(f)
+                                    f.close()
+                                if session["live"]:
+                                    loop = asyncio.get_running_loop()
+                                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
+                                        pool.shutdown()
+                        elif acc in desc3[2]:
+                            elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
+                            if os.path.isfile("sessions/session_" + acc + ".json"):
+                                with open("sessions/session_" + acc + ".json", "r") as f:
+                                    session = json.load(f)
+                                    f.close()
+                                if session["live"]:
+                                    loop = asyncio.get_running_loop()
+                                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
+                                        pool.shutdown()
         if "elo" in desc or "**TIED**" in desc2:
             path = 'Livegame/Ranked/'
             livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
