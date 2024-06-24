@@ -52,6 +52,8 @@ def check_if_played_today(name: str, game: int):
             playedstring = "You already played todays **Guess The Elo**:gem:, next reset is "
         case 4:
             playedstring = "You already played todays **Guess The Icon**:mag:, next reset is "
+        case 5:
+            playedstring = "You already played todays **Guess The Winner**:crown:, next reset is "
     if "scores_dict" not in session:
         session["scores_dict"] = {}
     if "game2" not in session:
@@ -62,12 +64,14 @@ def check_if_played_today(name: str, game: int):
         session["game3"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
     if "game4" not in session:
         session["game4"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+    if "game5" not in session:
+        session["game5"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
     update_user_data(session, session["name"])
     if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
         session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
         session["game"+str(game)]["game_finished"] = False
         session["game"+str(game)]["guesses"] = []
-        if game == 2 or game == 3 or game == 4:
+        if game == 2 or game == 3 or game == 4 or game == 5:
             session["game"+str(game)]["image"] = 0
         update_user_data(session, session["name"])
         return session
@@ -96,6 +100,8 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
             return ltdle_game3(session, input, ltdle_data)
         case 4:
             return ltdle_game4(session, input, ltdle_data)
+        case 5:
+            return ltdle_game5(session, ltdle_data)
             
 
 def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
@@ -111,9 +117,10 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
             continue
         if daily:
             daily_score1 = 0
-            daily_score2 = 0
+            #daily_score2 = 0
             daily_score3 = 0
             daily_score4 = 0
+            daily_score5 = 0
             with open("ltdle_data/ltdle.json", "r") as f:
                 ltdle_data = json.load(f)
                 f.close()
@@ -125,18 +132,18 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
                         daily_score1 = 0
             else:
                 daily_score1 = 0
-            try:
-                if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-                    if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
-                            if p_data["game2"]["game_finished"] == True:
-                                daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][3]-p_data["game2"]["guesses"][0])/9)
-                            else:
-                                daily_score2 = 0
-                else:
-                    daily_score2 = 0
-            except Exception:
-                daily_score2 = 0
-                pass
+            # try:
+            #     if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+            #         if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+            #                 if p_data["game2"]["game_finished"] == True:
+            #                     daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][3]-p_data["game2"]["guesses"][0])/9)
+            #                 else:
+            #                     daily_score2 = 0
+            #     else:
+            #         daily_score2 = 0
+            # except Exception:
+            #     daily_score2 = 0
+            #     pass
             try:
                 if datetime.strptime(p_data["game3"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                     if datetime.strptime(p_data["game3"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
@@ -161,9 +168,21 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
             except Exception:
                 daily_score4 = 0
                 pass
-            if daily_score1 + daily_score2 + daily_score3 + daily_score4 == 0:
+            try:
+                if datetime.strptime(p_data["game5"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                    if datetime.strptime(p_data["game5"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+                        if p_data["game5"]["game_finished"]:
+                            daily_score5 = p_data["scores_dict"][p_data["game5"]["last_played"]][4]
+                        else:
+                            daily_score5 = 0
+                else:
+                    daily_score5 = 0
+            except Exception:
+                daily_score5 = 0
+                pass
+            if daily_score1 + daily_score3 + daily_score4 + daily_score5 == 0:
                 continue
-            scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score2, daily_score3, daily_score4))
+            scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score5, daily_score3, daily_score4))
         elif game_mode[0] != "all":
             try:
                 avg_pts = p_data[game_mode[1]]["score"]/p_data[game_mode[1]]["games_played"]
@@ -202,7 +221,7 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
         else:
             ranked_emote = util.get_ranked_emote(ranks[3])
         if daily:
-            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]+pscore[3]+pscore[4]) + "pts ("+str(pscore[1])+", "+str(pscore[2]) +", "+str(pscore[3])+", "+str(pscore[4])+ ")\n"
+            output += ranked_emote+" "+pscore[0] + ": " + str(pscore[1]+pscore[2]+pscore[3]+pscore[4]) + "pts ("+str(pscore[1])+", "+str(pscore[2]) +", "+str(pscore[3])+", "+str(pscore[4])+")\n"
         else:
             try:
                 pts = round(pscore[1]/pscore[2],1)
@@ -260,6 +279,12 @@ def ltdle_profile(player, avatar):
         embed.add_field(name="Guess The Icon:mag:", value="Games played: " + str(p_data["game4"]["games_played"]) +
                                                                 "\nPoints: " + str(p_data["game4"]["score"]) +
                                                                 "\nAvg: " + str(round(p_data["game4"]["score"] / p_data["game4"]["games_played"], 1)) + " points", inline=True)
+    except Exception:
+        pass
+    try:
+        embed.add_field(name="Guess The Winner:crown:", value="Games played: " + str(p_data["game5"]["games_played"]) +
+                                                                "\nPoints: " + str(p_data["game5"]["score"]) +
+                                                                "\nAvg: " + str(round(p_data["game5"]["score"] / p_data["game5"]["games_played"], 1)) + " points", inline=True)
     except Exception:
         pass
     embed.set_author(name=player.capitalize()+"'s", icon_url=avatar)
@@ -409,7 +434,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             if session["game1"]["last_played"] in session["scores_dict"]:
                 session["game1"]["scores_dict"][session["game1"]["last_played"]][0] = 0
             else:
-                session["game1"]["scores_dict"][session["game1"]["last_played"]] = [0,0,0,0]
+                session["game1"]["scores_dict"][session["game1"]["last_played"]] = [0,0,0,0,0]
             update_user_data(session, session["name"])
             return embed
     if correct_count == 6:
@@ -424,7 +449,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         if session["game1"]["last_played"] in session["scores_dict"]:
             session["scores_dict"][session["game1"]["last_played"]][0] = game1_score
         else:
-            session["scores_dict"][session["game1"]["last_played"]] = [game1_score, 0, 0, 0]
+            session["scores_dict"][session["game1"]["last_played"]] = [game1_score, 0, 0, 0, 0]
         update_user_data(session, session["name"])
         return [embed]
     else:
@@ -458,7 +483,7 @@ def ltdle_game2(session: dict, input: int, ltdle_data: dict):
         if session["game2"]["last_played"] in session["scores_dict"]:
             session["scores_dict"][session["game2"]["last_played"]][1] = game2_score
         else:
-            session["scores_dict"][session["game2"]["last_played"]] = [0, game2_score, 0, 0]
+            session["scores_dict"][session["game2"]["last_played"]] = [0, game2_score, 0, 0, 0]
         session["games_played"] += 1
         session["game2"]["games_played"] += 1
         session["game2"]["game_finished"] = True
@@ -493,7 +518,7 @@ def ltdle_game3(session: dict, input: int, ltdle_data: dict):
         if session["game3"]["last_played"] in session["scores_dict"]:
             session["scores_dict"][session["game3"]["last_played"]][2] = game3_score
         else:
-            session["scores_dict"][session["game3"]["last_played"]] = [0, 0, game3_score, 0]
+            session["scores_dict"][session["game3"]["last_played"]] = [0, 0, game3_score, 0, 0]
         session["games_played"] += 1
         session["game3"]["games_played"] += 1
         session["game3"]["game_finished"] = True
@@ -572,7 +597,7 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
                 except IndexError:
                     session["scores_dict"][session["game4"]["last_played"]].append(game4_score)
             else:
-                session["scores_dict"][session["game4"]["last_played"]] = [0, 0, 0, game4_score]
+                session["scores_dict"][session["game4"]["last_played"]] = [0, 0, 0, game4_score, 0]
             session["games_played"] += 1
             session["game4"]["games_played"] += 1
             session["game4"]["game_finished"] = True
@@ -598,6 +623,64 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
         session["game4"]["image"] = image_index
         update_user_data(session, session["name"])
         return embed1(ltdle_data["game_4_selected_unit"][1][0])
+
+
+def ltdle_game5(session: dict, ltdle_data: dict):
+    color = random_color()
+    image_index = session["game5"]["image"]
+    if image_index == len(ltdle_data["game_5_games"]):
+        game_5_score = 0
+        end_string = ""
+        for i, g in enumerate(session["game5"]["guesses"]):
+            if g == ltdle_data["game_5_games"][i][2]:
+                end_string += "✅"
+                game_5_score += 2
+            else:
+                end_string += "❌"
+        embed = discord.Embed(color=color, title=f"You got {round(game_5_score/2)}/5 games correct (+{game_5_score} points)\nGuess history:\n{end_string}")
+        session["score"] += game_5_score
+        session["game5"]["score"] += game_5_score
+        if session["game5"]["last_played"] in session["scores_dict"]:
+            try:
+                session["scores_dict"][session["game5"]["last_played"]][4] = game_5_score
+            except IndexError:
+                session["scores_dict"][session["game5"]["last_played"]].append(game_5_score)
+        else:
+            session["scores_dict"][session["game5"]["last_played"]] = [0, 0, 0, 0, game_5_score]
+        session["games_played"] += 1
+        session["game5"]["games_played"] += 1
+        session["game5"]["game_finished"] = True
+        update_user_data(session, session["name"])
+        return [embed]
+    image = shared_folder+ltdle_data["game_5_games"][image_index][0].split("/")[-1]
+    embed = discord.Embed(color=color, title=f"Guess The Winner :crown: {image_index+1}/5",
+                          description=f"Guess which team won using the buttons below.\n"
+                                      f"Game Elo: {ltdle_data["game_5_games"][image_index][3]}{util.get_ranked_emote(ltdle_data["game_5_games"][image_index][3])}",
+                          url=ltdle_data["game_5_games"][image_index][0])
+    file = discord.File(image, filename=image.split("/")[-1])
+    embed.set_image(url="attachment://"+image.split("/")[-1])
+    session["game5"]["image"] += 1
+    update_user_data(session, session["name"])
+    return [file, embed]
+
+
+def get_game5_embed(image_index, guess):
+    color = random_color()
+    with open("ltdle_data/ltdle.json", "r") as f:
+        ltdle_data = json.load(f)
+        f.close()
+    if guess == ltdle_data["game_5_games"][image_index][2]:
+        pt_string = "You guessed right ✅"
+    else:
+        pt_string = "You guessed wrong ❌"
+    image = shared_folder + ltdle_data["game_5_games"][image_index][1].split("/")[-1]
+    embed = discord.Embed(color=color, title=pt_string,
+                          description=f"{ltdle_data["game_5_games"][image_index][2]} Team won on Wave {ltdle_data["game_5_games"][image_index][4]}\n"
+                                      f"Game Elo: {ltdle_data["game_5_games"][image_index][3]}{util.get_ranked_emote(ltdle_data["game_5_games"][image_index][3])}",
+                          url=ltdle_data["game_5_games"][image_index][1])
+    file = discord.File(image, filename=image.split("/")[-1])
+    embed.set_image(url="attachment://" + image.split("/")[-1])
+    return [file, embed]
 
 
 class UnitInput(ui.Modal, title='Enter a unit!'):
@@ -792,6 +875,63 @@ class ModalButton2(discord.ui.View):
         else:
             await interaction.channel.send(played_check)
             return
+        
+
+class WinnerButtons(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label='West Win', style=discord.ButtonStyle.red, custom_id='persistent_view:gtw1')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            with open("ltdle_data/ltdle.json", "r") as f:
+                ltdle_data = json.load(f)
+                f.close()
+            played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 5))
+            if type(played_check) == type(dict()):
+                played_check["game5"]["guesses"].append("West")
+                update_user_data(played_check, played_check["name"])
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
+                winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, played_check["game5"]["image"] - 2, "West"))
+                if len(response) == 2:
+                    await interaction.channel.send(file=winner[0], embed=winner[1])
+                    await asyncio.sleep(1)
+                    await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
+                else:
+                    await interaction.channel.send(file=winner[0], embed=winner[1])
+                    await asyncio.sleep(1)
+                    await interaction.channel.send(embed=response[0], view=GameSelectionButtons())
+            else:
+                await interaction.channel.send(played_check)
+                return
+    
+    @discord.ui.button(label='East Win', style=discord.ButtonStyle.blurple, custom_id='persistent_view:gtw2')
+    async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            with open("ltdle_data/ltdle.json", "r") as f:
+                ltdle_data = json.load(f)
+                f.close()
+            played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 5))
+            if type(played_check) == type(dict()):
+                played_check["game5"]["guesses"].append("East")
+                update_user_data(played_check, played_check["name"])
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
+                winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, played_check["game5"]["image"] - 2, "East"))
+                if len(response) == 2:
+                    await interaction.channel.send(file=winner[0], embed=winner[1])
+                    await asyncio.sleep(1)
+                    await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
+                else:
+                    await interaction.channel.send(file=winner[0], embed=winner[1])
+                    await asyncio.sleep(1)
+                    await interaction.channel.send(embed=response[0], view=GameSelectionButtons())
+            else:
+                await interaction.channel.send(played_check)
+                return
 
             
 class ModalLeakButton(discord.ui.View):
@@ -854,40 +994,40 @@ class GameSelectionButtons(discord.ui.View):
             await interaction.channel.send(played_check)
             return
     
-    @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="😬",row=1)
-    async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-        try:
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
-                with open(path + "/data.json", "r") as f:
-                    data = json.load(f)
-                    f.close()
-                with open("ltdle_data/ltdle.json", "r") as f:
-                    ltdle_data = json.load(f)
-                    f.close()
-                if not ltdle_data["game_2_selected_leak"]:
-                    await interaction.channel.send("This game is currently disabled.")
-                    return
-                played_check = check_if_played_today(interaction.user.name, 2)
-                if type(played_check) == type(dict()):
-                    data = played_check
-                    pass
-                else:
-                    await interaction.channel.send(played_check)
-                    return
-                response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 2))
-                pool.shutdown()
-                if type(response) == list:
-                    if len(response) == 2:
-                        await interaction.channel.send(file=response[0], embed=response[1], view=ModalLeakButton())
-                    else:
-                        await interaction.channel.send(file=response[0], embed=response[1])
-                else:
-                    await interaction.channel.send(response)
-        except Exception:
-            traceback.print_exc()
+    # @discord.ui.button(label='Guess The Leak', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game2', emoji="😬",row=1)
+    # async def callback2(self, interaction: discord.Interaction, button: discord.ui.Button):
+    #     await interaction.response.defer()
+    #     try:
+    #         loop = asyncio.get_running_loop()
+    #         with concurrent.futures.ThreadPoolExecutor() as pool:
+    #             path = str(pathlib.Path(__file__).parent.parent.resolve()) + "/ltdle_data/" + interaction.user.name
+    #             with open(path + "/data.json", "r") as f:
+    #                 data = json.load(f)
+    #                 f.close()
+    #             with open("ltdle_data/ltdle.json", "r") as f:
+    #                 ltdle_data = json.load(f)
+    #                 f.close()
+    #             if not ltdle_data["game_2_selected_leak"]:
+    #                 await interaction.channel.send("This game is currently disabled.")
+    #                 return
+    #             played_check = check_if_played_today(interaction.user.name, 2)
+    #             if type(played_check) == type(dict()):
+    #                 data = played_check
+    #                 pass
+    #             else:
+    #                 await interaction.channel.send(played_check)
+    #                 return
+    #             response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 2))
+    #             pool.shutdown()
+    #             if type(response) == list:
+    #                 if len(response) == 2:
+    #                     await interaction.channel.send(file=response[0], embed=response[1], view=ModalLeakButton())
+    #                 else:
+    #                     await interaction.channel.send(file=response[0], embed=response[1])
+    #             else:
+    #                 await interaction.channel.send(response)
+    #     except Exception:
+    #         traceback.print_exc()
     
     @discord.ui.button(label='Guess The Elo', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game3', emoji="💎",row=2)
     async def callback3(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -948,6 +1088,37 @@ class GameSelectionButtons(discord.ui.View):
                     if type(response) == list:
                         if len(response) == 2:
                             await interaction.channel.send(file=response[0], embed=response[1], view=ModalButton2())
+                        else:
+                            await interaction.channel.send(file=response[0], embed=response[1])
+                    else:
+                        await interaction.channel.send(response)
+        except Exception:
+            traceback.print_exc()
+    
+    @discord.ui.button(label='Guess The Winner', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game5', emoji="👑", row=1)
+    async def callback5(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                if not ltdle_data["game_5_games"]:
+                    await interaction.channel.send("This game is currently disabled.")
+                    return
+                else:
+                    played_check = check_if_played_today(interaction.user.name, 5)
+                    if type(played_check) == type(dict()):
+                        data = played_check
+                    else:
+                        await interaction.channel.send(played_check)
+                        return
+                    response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 5))
+                    pool.shutdown()
+                    if type(response) == list:
+                        if len(response) == 2:
+                            await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
                         else:
                             await interaction.channel.send(file=response[0], embed=response[1])
                     else:

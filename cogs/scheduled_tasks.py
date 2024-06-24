@@ -18,6 +18,9 @@ from PIL import Image, ImageOps
 import PIL
 import platform
 
+current_patch = "v11.05"
+current_min_elo = 2500
+
 if platform.system() == "Linux":
     shared_folder = "/shared/Images/"
     shared2_folder = "/shared2/"
@@ -46,7 +49,7 @@ def reset_game2(json_data):
     query = (PlayerData
              .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, PlayerData.player_slot, PlayerData.leaks_per_wave)
              .join(GameData)
-             .where((GameData.queue == "Normal") & (GameData.game_elo > 2400) & GameData.version.startswith("v11.05"))
+             .where((GameData.queue == "Normal") & (GameData.game_elo > current_min_elo) & GameData.version.startswith(current_patch))
              .order_by(fn.Random())
              ).dicts()
     leaks_list = []
@@ -115,6 +118,32 @@ def reset_game4(json_data):
     json_data["game_4_selected_unit"][1].append(f"{random_id}.png")
     return json_data
 
+def reset_game5(json_data):
+    query = (GameData
+             .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, GameData.ending_wave)
+             .where((GameData.queue == "Normal") & (GameData.game_elo > current_min_elo) & GameData.version.startswith(current_patch) & (GameData.ending_wave > 10))
+             .order_by(fn.Random())
+             ).limit(5).dicts()
+    games = []
+    for row in query.iterator():
+        query2 = (PlayerData
+                  .select(PlayerData.game_result, PlayerData.player_slot)
+                  .where(PlayerData.game_id == row["game_id"])).dicts()
+        winner = ""
+        for row2 in query2:
+            if row2["player_slot"] == 1 and row2["game_result"] == "won":
+                winner = "West"
+                break
+            if row2["player_slot"] == 5 and row2["game_result"] == "won":
+                winner = "East"
+                break
+        if winner in ["West", "East"]:
+            im1 = elo.gameid_visualizer(row["game_id"], random.randint(9, row["ending_wave"]-1), hide_names=True)
+            im2 = elo.gameid_visualizer(row["game_id"], row["ending_wave"])
+            games.append([im1, im2, winner, row["game_elo"], row["ending_wave"]])
+    json_data["game_5_games"] = games
+    return json_data
+
 def season_reset(json_data):
     print("Starting Season Reset...")
     for player in os.listdir("ltdle_data/"):
@@ -126,7 +155,8 @@ def season_reset(json_data):
                         "game1": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "game_finished": False, "guesses": []},
                         "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
                         "game3": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
-                        "game4": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
+                        "game4": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
+                        "game5": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
                 json.dump(data, f, indent=2)
                 f.close()
     json_data["season"][0] += 1
@@ -166,7 +196,7 @@ async def ltdle_notify(self, update):
                 traceback.print_exc()
     print(f"Successfully sent {count} DM notis")
 
-def reset(self):
+def reset():
     with open("ltdle_data/ltdle.json", "r") as f:
         json_data = json.load(f)
         f.close()
@@ -177,9 +207,10 @@ def reset(self):
             json_data = season_reset(json_data)
         json_data["next_reset"] = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
         json_data = reset_game1(json_data)
-        json_data = reset_game2(json_data)
+        #json_data = reset_game2(json_data)
         json_data = reset_game3(json_data)
         json_data = reset_game4(json_data)
+        json_data = reset_game5(json_data)
         with open("ltdle_data/ltdle.json", "w") as f:
             json.dump(json_data, f, indent=2)
             f.close()
@@ -203,7 +234,7 @@ class ScheduledTasks(commands.Cog):
             print("Starting scheduled reset...")
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                update = await loop.run_in_executor(pool, functools.partial(reset, self))
+                update = await loop.run_in_executor(pool, reset)
                 pool.shutdown()
             if not update:
                 print("No reset required now.")
