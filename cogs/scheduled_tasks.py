@@ -121,7 +121,7 @@ def reset_game4(json_data):
 def reset_game5(json_data):
     query = (GameData
              .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, GameData.ending_wave)
-             .where((GameData.queue == "Normal") & (GameData.game_elo > current_min_elo) & GameData.version.startswith(current_patch) & (GameData.ending_wave > 10))
+             .where((GameData.queue == "Normal") & (GameData.game_elo > current_min_elo) & GameData.version.startswith(current_patch) & (GameData.ending_wave > 12))
              .order_by(fn.Random())
              ).limit(5).dicts()
     games = []

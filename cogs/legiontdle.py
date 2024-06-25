@@ -894,12 +894,13 @@ class WinnerButtons(discord.ui.View):
                 played_check["game5"]["guesses"].append("West")
                 update_user_data(played_check, played_check["name"])
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
-                winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, played_check["game5"]["image"] - 2, "West"))
                 if len(response) == 2:
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, played_check["game5"]["image"] - 2, "West"))
                     await interaction.channel.send(file=winner[0], embed=winner[1])
                     await asyncio.sleep(1)
                     await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
                 else:
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, 4, "West"))
                     await interaction.channel.send(file=winner[0], embed=winner[1])
                     await asyncio.sleep(1)
                     await interaction.channel.send(embed=response[0], view=GameSelectionButtons())
@@ -920,12 +921,13 @@ class WinnerButtons(discord.ui.View):
                 played_check["game5"]["guesses"].append("East")
                 update_user_data(played_check, played_check["name"])
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
-                winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, played_check["game5"]["image"] - 2, "East"))
                 if len(response) == 2:
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, played_check["game5"]["image"] - 2, "East"))
                     await interaction.channel.send(file=winner[0], embed=winner[1])
                     await asyncio.sleep(1)
                     await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
                 else:
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, 4, "East"))
                     await interaction.channel.send(file=winner[0], embed=winner[1])
                     await asyncio.sleep(1)
                     await interaction.channel.send(embed=response[0], view=GameSelectionButtons())

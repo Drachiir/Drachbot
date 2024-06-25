@@ -56,17 +56,10 @@ async def handler(message) -> None:
                                 session = json.load(f)
                                 f.close()
                             if session["live"]:
-                                mod_date = datetime.utcfromtimestamp(os.path.getmtime("sessions/session_" + acc + ".json"))
-                                date_diff = datetime.now() - mod_date
-                                if platform.system() == "Linux":
-                                    minutes_diff = date_diff.total_seconds() / 60
-                                else:
-                                    minutes_diff = date_diff.total_seconds() / 60 - 60
-                                if minutes_diff > 5:
-                                    loop = asyncio.get_running_loop()
-                                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
-                                        pool.shutdown()
+                                loop = asyncio.get_running_loop()
+                                with concurrent.futures.ThreadPoolExecutor() as pool:
+                                    await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
+                                    pool.shutdown()
     elif str(message.channel) == "game-results":
         embeds = message.embeds
         for embed in embeds:
