@@ -650,6 +650,7 @@ def ltdle_game5(session: dict, ltdle_data: dict):
         session["games_played"] += 1
         session["game5"]["games_played"] += 1
         session["game5"]["game_finished"] = True
+        print(session["name"] + " played guess the winner.")
         update_user_data(session, session["name"])
         return [embed]
     image = shared_folder+ltdle_data["game_5_games"][image_index][0].split("/")[-1]
