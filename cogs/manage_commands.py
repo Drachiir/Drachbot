@@ -81,7 +81,7 @@ class ManageCommands(commands.Cog):
     async def notify(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
             try:
-                await s_tasks.ltdle_notify(self)
+                await s_tasks.ltdle_notify(self, 1)
             except Exception:
                 traceback.print_exc()
         else:
@@ -90,7 +90,7 @@ class ManageCommands(commands.Cog):
     @commands.command()
     async def reset_ltdle(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
-            cogs.scheduled_tasks.reset(self)
+            cogs.scheduled_tasks.reset()
         else:
             await ctx.channel.send("No permission to use this command.")
     
