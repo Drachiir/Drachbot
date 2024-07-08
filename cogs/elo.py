@@ -100,7 +100,7 @@ def elo(playername, rank):
         playername = legion_api.getprofile(playerid)["playerName"]
         rank_emote = util.get_ranked_emote(player['overallElo'])
         peak_emote = util.get_ranked_emote(player['overallPeakEloThisSeason'])
-        history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True)
+        history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True, req_columns=req_columns)
         for game in history_raw:
             for player2 in game["players_data"]:
                 if player2["player_id"] == playerid:

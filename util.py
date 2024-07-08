@@ -37,7 +37,7 @@ task_times2=[
     time(hour=22, minute=10, second=0, tzinfo=timezone.utc)
 ]
 
-website_patches = ["11.05"] # "11.03", "11.02", "11.01","11.00"
+website_patches = ["11.06", "11.05"] # "11.03", "11.02", "11.01","11.00"
 
 incmercs = const_file.get("incmercs")
 powermercs = const_file.get("powermercs")
@@ -200,6 +200,8 @@ def get_icons_image(type, name):
                 image_path = "Files/splashes/PriestessoftheAbyss.png"
             if image_path == "Files/splashes/PackRat(footprints).png":
                 image_path = "Files/splashes/PackRatNest.png"
+            if image_path == "Files/splashes/ImpMercenary.png":
+                image_path = "Files/splashes/Imp.png"
         case "icon_send":
             image_path = 'Files/icons/' + name + ".png"
             if image_path == "Files/icons/PresstheAttack.png":

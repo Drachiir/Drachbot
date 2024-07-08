@@ -262,8 +262,8 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
             if games == 0:
                 games = GameData.select().where(GameData.game_elo >= min_elo).count()
             expr = True
-        if games > 100000:
-            games = 100000
+        if games > 150000:
+            games = 150000
         game_data_query = (PlayerData
                            .select(*req_columns[0])
                            .join(GameData)

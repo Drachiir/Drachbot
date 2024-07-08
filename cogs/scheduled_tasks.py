@@ -138,7 +138,7 @@ def reset_game5(json_data):
                 winner = "East"
                 break
         if winner in ["West", "East"]:
-            im1 = elo.gameid_visualizer(row["game_id"], random.randint(9, row["ending_wave"]-1), hide_names=True)
+            im1 = elo.gameid_visualizer(row["game_id"], random.randint(11, row["ending_wave"]-1), hide_names=True)
             im2 = elo.gameid_visualizer(row["game_id"], row["ending_wave"])
             games.append([im1, im2, winner, row["game_elo"], row["ending_wave"]])
     json_data["game_5_games"] = games

@@ -7,6 +7,7 @@ import os
 import pathlib
 import random
 import traceback
+import typing
 from datetime import datetime, timedelta
 from pathlib import Path
 import discord
@@ -104,13 +105,17 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
             return ltdle_game5(session, ltdle_data)
             
 
-def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
+def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", season = "current"):
     color = random_color()
     player_data_list = os.listdir("ltdle_data")
     scores = []
     for player in player_data_list:
         if player.endswith(".json"): continue
-        with open("ltdle_data/"+player+"/data.json", "r") as f:
+        if season != "current":
+            end_string = f"_season{season}"
+        else:
+            end_string = ""
+        with open("ltdle_data/"+player+f"/data{end_string}.json", "r") as f:
             p_data = json.load(f)
             f.close()
         if avg and p_data["games_played"] < 6:
@@ -238,8 +243,12 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc"):
         title = f"Legiontdle Leaderboard({game_mode[0]}):"
     else:
         title = "Legiontdle Leaderboard:"
+    if season != "current":
+        title_string = f" Season {season}"
+    else:
+        title_string = ""
     embed = discord.Embed(color=color, title=title, description="**"+output+"**")
-    embed.set_author(name="Drachbot", icon_url="https://overlay.drachbot.site/favicon.ico")
+    embed.set_author(name=f"Drachbot{title_string}", icon_url="https://overlay.drachbot.site/favicon.ico")
     return embed
 
 
@@ -1275,14 +1284,15 @@ class Legiontdle(commands.Cog):
         discord.app_commands.Choice(name='Guess The Unit', value='game1'),
         discord.app_commands.Choice(name='Guess The Leak', value='game2'),
         discord.app_commands.Choice(name='Guess The Elo', value='game3'),
-        discord.app_commands.Choice(name='Guess The Icon', value='game4')
+        discord.app_commands.Choice(name='Guess The Icon', value='game4'),
+        discord.app_commands.Choice(name='Guess The Winner', value='game5')
     ])
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='Descending', value='dsc'),
         discord.app_commands.Choice(name='Ascending', value='asc')
     ])
     async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None,
-                               game: discord.app_commands.Choice[str] = "all", sort: discord.app_commands.Choice[str] = "dsc"):
+                               game: discord.app_commands.Choice[str] = "all", sort: discord.app_commands.Choice[str] = "dsc", season: typing.Literal['current', '1', '2'] = "current"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
@@ -1302,7 +1312,7 @@ class Legiontdle(commands.Cog):
                     pass
                 match option:
                     case "Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, game_mode=game_options, sort=sort))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, game_mode=game_options, sort=sort, season = season))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             if game != "all" or sort == "asc":
@@ -1313,7 +1323,7 @@ class Legiontdle(commands.Cog):
                             await interaction.followup.send(response)
                         return
                     case "Avg Leaderboard":
-                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True, game_mode=game_options, sort=sort))
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True, game_mode=game_options, sort=sort, season = season))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             if game != "all" or sort == "asc":

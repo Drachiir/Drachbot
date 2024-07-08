@@ -67,6 +67,8 @@ class Livegame(commands.Bot):
                 continue
             elif "cog_template" in e:
                 continue
+            elif "wavestats" in e:
+                continue
             self.exts.append("cogs2." + e.split(".")[0])
     
     async def setup_hook(self) -> None:
