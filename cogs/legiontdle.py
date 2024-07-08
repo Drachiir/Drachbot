@@ -901,6 +901,9 @@ class WinnerButtons(discord.ui.View):
                 f.close()
             played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 5))
             if type(played_check) == type(dict()):
+                if played_check["game5"]["image"] == 0:
+                    await interaction.followup.send("Guess The Winner game not started yet.")
+                    return
                 played_check["game5"]["guesses"].append("West")
                 update_user_data(played_check, played_check["name"])
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
@@ -928,6 +931,9 @@ class WinnerButtons(discord.ui.View):
                 f.close()
             played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 5))
             if type(played_check) == type(dict()):
+                if played_check["game5"]["image"] == 0:
+                    await interaction.followup.send("Guess The Winner game not started yet.")
+                    return
                 played_check["game5"]["guesses"].append("East")
                 update_user_data(played_check, played_check["name"])
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
