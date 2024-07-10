@@ -131,7 +131,7 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
                 f.close()
             if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                 if datetime.strptime(p_data["game1"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y")-timedelta(days=1):
-                    if p_data["game1"]["game_finished"] == True:
+                    if p_data["game1"]["game_finished"]:
                         daily_score1 = 11-len(p_data["game1"]["guesses"])
                     else:
                         daily_score1 = 0
@@ -152,7 +152,7 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             try:
                 if datetime.strptime(p_data["game3"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                     if datetime.strptime(p_data["game3"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
-                        if p_data["game3"]["game_finished"] == True:
+                        if p_data["game3"]["game_finished"]:
                             daily_score3 = round(10-abs(ltdle_data["game_3_selected_game"][2]-p_data["game3"]["guesses"][0])/75)
                         else:
                             daily_score3 = 0

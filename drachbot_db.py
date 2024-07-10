@@ -72,7 +72,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
         else:
             return []
     games_count = 0
-    if playerid != 'all' and 'nova cup' not in playerid:
+    if playerid != 'all':
         if games == 0:
             games2 = GameData.select().where(GameData.player_ids.contains(playerid)).count()
         else:
@@ -182,72 +182,6 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                             temp_data = {}
                     except KeyError:
                         temp_data = {}
-    elif 'nova cup' in playerid:
-        patch = "0"
-        if min_elo == util.current_minelo:
-            min_elo = 0
-        path2 = str(pathlib.Path(__file__).parent.resolve()) + "/Profiles/" + playerid + '/gamedata/'
-        json_files = []
-        raw_data = []
-        try:
-            if patch != '0':
-                for y in patch_list:
-                    json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and pos_json.split('_')[-3].startswith('v' + y.replace('.', '-')) and int(pos_json.split('_')[-2]) >= min_elo])
-            else:
-                json_files.extend([path2 + pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.json') and int(pos_json.split('_')[-2]) >= min_elo])
-            sorted_json_files = sorted(json_files, key=lambda x: time.mktime(time.strptime(x.split('_')[-4].split('/')[-1], "%Y-%m-%d-%H-%M-%S")), reverse=True)
-        except FileNotFoundError:
-            return playerid + " not found. :("
-        count = 0
-        for i, x in enumerate(sorted_json_files):
-            if count == games and games != 0:
-                break
-            with open(x) as f:
-                try:
-                    raw_data_partial:dict = json.load(f)
-                except json.decoder.JSONDecodeError:
-                    os.remove(x)
-                    print("file error")
-                f.close()
-                raw_data_partial["game_id"] = raw_data_partial.pop("_id")
-                raw_data_partial["ending_wave"] = raw_data_partial.pop("endingWave")
-                raw_data_partial["game_elo"] = raw_data_partial.pop("gameElo")
-                raw_data_partial["left_king_hp"] = raw_data_partial.pop("leftKingPercentHp")
-                raw_data_partial["right_king_hp"] = raw_data_partial.pop("rightKingPercentHp")
-                raw_data_partial["players_data"] = raw_data_partial.pop("playersData")
-                for index, player in enumerate(raw_data_partial["players_data"]):
-                    def convert_data(keys):
-                        for key in keys:
-                            new_list = []
-                            for i, wave in enumerate(player[key]):
-                                if len(wave) == 0:
-                                    new_list.append("")
-                                else:
-                                    new_list.append("!".join(wave))
-                            player[key] = new_list
-                    convert_data(["mercenariesSentPerWave", "mercenariesReceivedPerWave", "leaksPerWave", "buildPerWave", "kingUpgradesPerWave", "opponentKingUpgradesPerWave"])
-                    raw_data_partial["players_data"][index]["player_id"] = raw_data_partial["players_data"][index].pop("playerId")
-                    raw_data_partial["players_data"][index]["player_name"] = raw_data_partial["players_data"][index].pop("playerName")
-                    raw_data_partial["players_data"][index]["game_result"] = raw_data_partial["players_data"][index].pop("gameResult")
-                    raw_data_partial["players_data"][index]["player_elo"] = raw_data_partial["players_data"][index].pop("overallElo")
-                    raw_data_partial["players_data"][index]["elo_change"] = raw_data_partial["players_data"][index].pop("eloChange")
-                    raw_data_partial["players_data"][index]["spell"] = raw_data_partial["players_data"][index].pop("chosenSpell")
-                    raw_data_partial["players_data"][index]["spell_location"] = raw_data_partial["players_data"][index].pop("chosenSpellLocation")
-                    raw_data_partial["players_data"][index]["opener"] = raw_data_partial["players_data"][index].pop("firstWaveFighters")
-                    raw_data_partial["players_data"][index]["workers_per_wave"] = raw_data_partial["players_data"][index].pop("workersPerWave")
-                    raw_data_partial["players_data"][index]["income_per_wave"] = raw_data_partial["players_data"][index].pop("incomePerWave")
-                    raw_data_partial["players_data"][index]["mercs_sent_per_wave"] = raw_data_partial["players_data"][index].pop("mercenariesSentPerWave")
-                    raw_data_partial["players_data"][index]["mercs_received_per_wave"] = raw_data_partial["players_data"][index].pop("mercenariesReceivedPerWave")
-                    raw_data_partial["players_data"][index]["leaks_per_wave"] = raw_data_partial["players_data"][index].pop("leaksPerWave")
-                    raw_data_partial["players_data"][index]["build_per_wave"] = raw_data_partial["players_data"][index].pop("buildPerWave")
-                    raw_data_partial["players_data"][index]["kingups_sent_per_wave"] = raw_data_partial["players_data"][index].pop("kingUpgradesPerWave")
-                    raw_data_partial["players_data"][index]["kingups_received_per_wave"] = raw_data_partial["players_data"][index].pop("opponentKingUpgradesPerWave")
-                if earlier_than_wave10 == True:
-                    count += 1
-                    raw_data.append(raw_data_partial)
-                elif raw_data_partial['ending_wave'] > 10 and earlier_than_wave10 == False:
-                    count += 1
-                    raw_data.append(raw_data_partial)
     else:
         raw_data = []
         if patch == "11" or patch == "10":

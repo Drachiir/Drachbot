@@ -25,7 +25,6 @@ with open('Files/json/Secrets.json') as f:
 class Drachbot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
-        intents.message_content = True
         super().__init__(command_prefix=commands.when_mentioned_or("."), intents=intents)
         self.exts = []
         for e in os.listdir("cogs"):
