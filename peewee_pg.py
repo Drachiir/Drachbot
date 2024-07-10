@@ -26,7 +26,7 @@ db = PooledPostgresqlExtDatabase(
     max_connections=10,
     stale_timeout=300,
     server_side_cursors=True,
-    user="postgres",
+    user=secret_file["pg_user"],
     password=secret_file["pg_password"],
     host=secret_file["pg_host"],
     port="5432"
@@ -190,19 +190,19 @@ def save_game(data):
             except Exception:
                 traceback.print_exc()
 
-def main():
-    file_list = os.listdir(games_folder)
-    for index, game in enumerate(file_list):
-        with open(games_folder+game, "r") as f:
-            data = json.load(f)
-            f.close()
-        save_game(data)
-        print(f"{index + 1} out of {len(file_list)}")
-
-def drop_tables():
-    db.drop_tables([PlayerProfile])
-    db.create_tables([PlayerProfile])
-    
-if __name__ == '__main__':
-    main()
-    quit()
+# def main():
+#     file_list = os.listdir(games_folder)
+#     for index, game in enumerate(file_list):
+#         with open(games_folder+game, "r") as f:
+#             data = json.load(f)
+#             f.close()
+#         save_game(data)
+#         print(f"{index + 1} out of {len(file_list)}")
+#
+# def drop_tables():
+#     db.drop_tables([PlayerProfile, GameData, PlayerData])
+#     db.create_tables([PlayerProfile, GameData, PlayerData])
+#
+# if __name__ == '__main__':
+#     main()
+#     quit()

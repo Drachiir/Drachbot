@@ -2,14 +2,8 @@ import asyncio
 import json
 import os
 import platform
-from contextlib import suppress
-
-import aiohttp.http_exceptions
 import discord
 from discord.ext import commands
-from discord.ext.commands import Context, errors
-from discord.ext.commands._types import BotT
-
 import cogs.legiontdle
 import cogs.topgames
 import cogs.novacup
@@ -81,7 +75,10 @@ if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     client = Drachbot()
-    client2 = Livegame()
     loop.create_task(client.start(secret_file["token"]))
-    loop.create_task(client2.start(secret_file["livegametoken"]))
+    try:
+        client2 = Livegame()
+        loop.create_task(client2.start(secret_file["livegametoken"]))
+    except Exception:
+        pass
     loop.run_forever()
