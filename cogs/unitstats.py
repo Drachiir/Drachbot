@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone, timedelta
 
 import discord
 from discord import app_commands
@@ -17,7 +18,7 @@ import legion_api
 from peewee_pg import GameData, PlayerData
 
 
-def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000, data_only = False, transparent = False):
+def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000, data_only = False, transparent = False, rollstats = False):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
@@ -80,8 +81,32 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
         for player in game["players_data"]:
             if player["player_id"] != playerid and playerid != "all": continue
             fighter_set = set(player["fighters"].lower().split(","))
+            fighter_set_copy = set(player["fighters"].lower().split(","))
+            if rollstats:
+                for fighter in fighter_set_copy:
+                    if fighter == "" or fighter not in unit_dict:
+                        continue
+                    if fighter == "kingpin":
+                        fighter_set.add("angler")
+                        fighter_set.remove(fighter)
+                    elif fighter == "sakura":
+                        fighter_set.add("seedling")
+                        fighter_set.remove(fighter)
+                    elif fighter == "iron maiden":
+                        fighter_set.add("cursed casket")
+                        fighter_set.remove(fighter)
+                    elif fighter == "hell raiser":
+                        fighter_set.add("masked spirit")
+                        fighter_set.remove(fighter)
+                    elif fighter == "hydra":
+                        fighter_set.add("eggsack")
+                        fighter_set.remove(fighter)
+                    elif unit_dict[fighter]["upgradesFrom"]:
+                        fighter_set.add(unit_dict[fighter]["upgradesFrom"])
+                        fighter_set.remove(fighter)
             for fighter in fighter_set:
-                if fighter == "" or fighter not in unit_dict: continue
+                if fighter == "" or fighter not in unit_dict:
+                    continue
                 unit_dict[fighter]["Count"] += 1
                 unit_dict[fighter]["Elo"] += player["player_elo"]
                 if player["spell"] in unit_dict[fighter]["Spells"]:
@@ -137,7 +162,7 @@ class Unitstats(commands.Cog):
                            min_elo='Enter minium average game elo to include in the data set',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
                            sort="Sort by?", unit="Fighter name for specific stats, or 'all' for all Spells.",
-                           min_cost="Min Gold cost of a unit.", max_cost="Max Gold cost of a unit.",
+                           min_cost="Min Gold cost of a unit.", max_cost="Max Gold cost of a unit.", rollstats = "Doesnt differentiate between upgrade/base units",
                            transparency="Transparent Background?")
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='date', value="date"),
@@ -146,7 +171,7 @@ class Unitstats(commands.Cog):
     @app_commands.autocomplete(unit=util.unit_autocomplete)
     async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season,
                         sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0,
-                        max_cost: int = 2000, transparency: bool = False):
+                        max_cost: int = 2000, rollstats: bool = False, transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -158,7 +183,8 @@ class Unitstats(commands.Cog):
                 pass
             try:
                 response = await loop.run_in_executor(pool, functools.partial(unitstats, str(playername).lower(), games, min_elo, patch,
-                                                                              sort=sort, unit=unit, min_cost=min_cost, max_cost=max_cost, transparent=transparency))
+                                                                              sort=sort, unit=unit, min_cost=min_cost, max_cost=max_cost,
+                                                                              transparent=transparency, rollstats=rollstats))
                 pool.shutdown()
                 if response.endswith(".png"):
                     await interaction.followup.send(file=discord.File(response))
@@ -180,9 +206,16 @@ class Unitstats(commands.Cog):
                     for file in os.listdir(f"{util.shared2_folder}data/unitstats/"):
                         if file.startswith(patch):
                             os.remove(f"{util.shared2_folder}data/unitstats/{file}")
+                    for file in os.listdir(f"{util.shared2_folder}data/rollstats/"):
+                        if file.startswith(patch):
+                            os.remove(f"{util.shared2_folder}data/rollstats/{file}")
                     for elo in elos:
                         data = await loop.run_in_executor(pool, functools.partial(unitstats, "all", 0, elo, patch, data_only=True))
                         with open(f"{util.shared2_folder}data/unitstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
+                            json.dump(data[0], f)
+                            f.close()
+                        data = await loop.run_in_executor(pool, functools.partial(unitstats, "all", 0, elo, patch, data_only=True, rollstats=True))
+                        with open(f"{util.shared2_folder}data/rollstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
                             json.dump(data[0], f)
                             f.close()
             print("Website data update success!")
