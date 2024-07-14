@@ -841,6 +841,12 @@ class ModalButton2(discord.ui.View):
     
     @discord.ui.button(label='Enter unit', style=discord.ButtonStyle.green, custom_id='persistent_view:guesstheicon')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        with open("ltdle_data/ltdle.json", "r") as f:
+            ltdle_data = json.load(f)
+            f.close()
+        if not ltdle_data["game_4_selected_unit"]:
+            await interaction.channel.send("This game is currently disabled.")
+            return
         played_check = check_if_played_today(interaction.user.name, 4)
         if type(played_check) == type(dict()):
             try:
@@ -867,6 +873,9 @@ class ModalButton2(discord.ui.View):
                     with open("ltdle_data/ltdle.json", "r") as f:
                         ltdle_data = json.load(f)
                         f.close()
+                    if not ltdle_data["game_4_selected_unit"]:
+                        await interaction.channel.send("This game is currently disabled.")
+                        return
                     response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 4, input="Skip"))
                     pool.shutdown()
                     if type(response) == list:

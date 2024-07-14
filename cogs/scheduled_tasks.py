@@ -101,6 +101,8 @@ def reset_game4(json_data):
     new_name = ""
     for icon_string in name.split("_"):
         new_name += icon_string.capitalize()
+    if new_name == "ImpMercenary":
+        new_name = "Imp"
     json_data["game_4_selected_unit"] = [new_name, []]
     rand_x = random.randint(50,450)
     rand_y = random.randint(50, 450)
