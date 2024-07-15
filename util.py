@@ -37,7 +37,7 @@ task_times2=[
     time(hour=22, minute=10, second=0, tzinfo=timezone.utc)
 ]
 
-website_patches = ["11.06", "11.05"] # "11.03", "11.02", "11.01","11.00"
+website_patches = ["11.04"] # "11.04", "11.03", "11.02", "11.01", "11.00"
 
 incmercs = const_file.get("incmercs")
 powermercs = const_file.get("powermercs")
@@ -295,7 +295,7 @@ def count_mythium(send):
             send_amount += powermercs.get(x)
     return send_amount
 
-def calc_leak(leak, wave):
+def calc_leak(leak, wave, return_gold = False):
     if type(leak) != type(list()):
         if leak == "":
             leak = []
@@ -314,7 +314,10 @@ def calc_leak(leak, wave):
                 leak_amount += powermercs.get(x) / 20 * 3
             else:
                 leak_amount += powermercs.get(x) / 20 * 6
-    return round(leak_amount / wave_total * 100, 1)
+    if return_gold:
+        return leak_amount
+    else:
+        return round(leak_amount / wave_total * 100, 1)
 
 def im_has_alpha(img_arr):
     h,w,c = img_arr.shape

@@ -187,14 +187,14 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
         if patch == "11" or patch == "10":
             expr = GameData.version.startswith("v" + patch)
             if games == 0:
-                games = GameData.select().where((GameData.version.startswith("v" + patch)) & (GameData.game_elo >= min_elo)).count()
+                games = GameData.select().where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
         elif patch != "0":
             expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
             if games == 0:
-                games = GameData.select().where(expr & (GameData.game_elo >= min_elo)).count()
+                games = GameData.select().where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
         else:
             if games == 0:
-                games = GameData.select().where(GameData.game_elo >= min_elo).count()
+                games = GameData.select().where((GameData.queue == "Normal") & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
             expr = True
         if games > 150000:
             games = 150000

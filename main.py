@@ -26,8 +26,6 @@ class Drachbot(commands.Bot):
                 continue
             elif "cog_template" in e:
                 continue
-            elif "wavestats" in e:
-                continue
             elif platform.system() == "Windows" and "twitch" in e:
                 continue
             self.exts.append("cogs." + e.split(".")[0])
@@ -61,8 +59,6 @@ class Livegame(commands.Bot):
             if "__pycache__" in e:
                 continue
             elif "cog_template" in e:
-                continue
-            elif "wavestats" in e:
                 continue
             self.exts.append("cogs2." + e.split(".")[0])
     
