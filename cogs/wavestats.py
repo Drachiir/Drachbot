@@ -59,9 +59,12 @@ def wavestats(games, min_elo, patch, sort="date"):
                 elif player["kingups_sent_per_wave"][i]:
                     wave_dict[f"wave{i+1}"]["SendCount"] += 1
                 #ITERATE THROUGH UNITS BUILT
-                unit_wave = player["build_per_wave"][i].split("!")
-                for unit in unit_wave:
+                unit_wave_temp = player["build_per_wave"][i].split("!")
+                unit_wave = set()
+                for unit in unit_wave_temp:
                     unit = unit.split("_unit_")[0].replace("_", " ")
+                    unit_wave.add(unit)
+                for unit in unit_wave:
                     if unit not in wave_dict[f"wave{i+1}"]["Units"]:
                         wave_dict[f"wave{i+1}"]["Units"][unit] = {"Count": 1, "Wins": 0}
                     else:
