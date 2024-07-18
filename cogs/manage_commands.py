@@ -84,6 +84,7 @@ class ManageCommands(commands.Cog):
                 await s_tasks.ltdle_notify(self, 1)
             except Exception:
                 traceback.print_exc()
+            await ctx.message.add_reaction("✅")
         else:
             await ctx.channel.send("No permission to use this command.")
     
@@ -91,6 +92,7 @@ class ManageCommands(commands.Cog):
     async def reset_ltdle(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
             cogs.scheduled_tasks.reset()
+            await ctx.message.add_reaction("✅")
         else:
             await ctx.channel.send("No permission to use this command.")
     

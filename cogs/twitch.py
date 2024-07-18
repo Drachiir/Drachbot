@@ -151,6 +151,8 @@ class TwitchHandler(commands.Cog):
                         end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
                     else:
                         end_string = ""
+                    if self.messages[streamer]["noti_string"] == "X":
+                        return
                     embed = discord.Embed(color=util.random_color(), title=self.messages[streamer]["title"],description=end_string, url='https://www.twitch.tv/'+streamer)
                     try:
                         embed.set_thumbnail(url=self.messages[streamer]["avatar"])

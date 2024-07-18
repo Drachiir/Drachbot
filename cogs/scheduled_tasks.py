@@ -18,7 +18,7 @@ from PIL import Image, ImageOps
 import PIL
 import platform
 
-current_patch = "v11.05"
+current_patch = "v11.06"
 current_min_elo = 2500
 
 if platform.system() == "Linux":

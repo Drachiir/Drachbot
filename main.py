@@ -43,6 +43,7 @@ class Drachbot(commands.Bot):
         self.add_view(cogs.legiontdle.RefreshButtonLtdleDaily())
         self.add_view(cogs.legiontdle.RefreshButtonLtdleAvg())
         self.add_view(cogs.legiontdle.RefreshButtonLtdleDailyAsc())
+        self.add_view(cogs.legiontdle.WinnerButtons())
         self.add_view(cogs.novacup.RefreshButtonDiv1())
         self.add_view(cogs.novacup.RefreshButtonDiv2())
     

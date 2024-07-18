@@ -48,7 +48,11 @@ def wavestats(games, min_elo, patch, sort="date"):
                 if player["mercs_sent_per_wave"][i]:
                     wave_dict[f"wave{i+1}"]["SendCount"] += 1
                     #ITERATE THROUGH MERCS SENT IF THERE WAS A SEND
-                    merc_wave = player["mercs_sent_per_wave"][i].split("!")
+                    merc_wave_temp = player["mercs_sent_per_wave"][i].split("!")
+                    merc_wave = set()
+                    for merc in merc_wave_temp:
+                        merc = merc.split("_unit_")[0].replace("_", " ")
+                        merc_wave.add(merc)
                     for merc in merc_wave:
                         if merc not in wave_dict[f"wave{i+1}"]["Mercs"]:
                             wave_dict[f"wave{i+1}"]["Mercs"][merc] = {"Count": 1, "Wins": 0}
