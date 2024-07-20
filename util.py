@@ -322,3 +322,28 @@ def calc_leak(leak, wave, return_gold = False):
 def im_has_alpha(img_arr):
     h,w,c = img_arr.shape
     return True if c ==4 else False
+
+def get_rank_name(elo):
+    if elo >= 2800:
+        rank_url = 'Legend'
+    elif elo >= 2600:
+        rank_url = 'Grandmaster'
+    elif elo >= 2400:
+        rank_url = 'SeniorMaster'
+    elif elo >= 2200:
+        rank_url = 'Master'
+    elif elo >= 2000:
+        rank_url = 'Expert'
+    elif elo >= 1800:
+        rank_url = 'Diamond'
+    elif elo >= 1600:
+        rank_url = 'Platinum'
+    elif elo >= 1400:
+        rank_url = 'Gold'
+    elif elo >= 1200:
+        rank_url = 'Silver'
+    elif elo >= 1000:
+        rank_url = 'Bronze'
+    else:
+        rank_url = 'Unranked'
+    return rank_url

@@ -33,19 +33,13 @@ class Drachbot(commands.Bot):
     async def setup_hook(self) -> None:
         for extension in self.exts:
             await self.load_extension(extension)
-        self.add_view(cogs.topgames.RefreshButton())
-        self.add_view(cogs.legiontdle.ModalButton())
-        self.add_view(cogs.legiontdle.GameSelectionButtons())
-        self.add_view(cogs.legiontdle.ModalLeakButton())
-        self.add_view(cogs.legiontdle.ModalEloButton())
-        self.add_view(cogs.legiontdle.ModalButton2())
-        self.add_view(cogs.legiontdle.RefreshButtonLtdleTotal())
-        self.add_view(cogs.legiontdle.RefreshButtonLtdleDaily())
-        self.add_view(cogs.legiontdle.RefreshButtonLtdleAvg())
-        self.add_view(cogs.legiontdle.RefreshButtonLtdleDailyAsc())
-        self.add_view(cogs.legiontdle.WinnerButtons())
-        self.add_view(cogs.novacup.RefreshButtonDiv1())
-        self.add_view(cogs.novacup.RefreshButtonDiv2())
+        persistent_views = [cogs.topgames.RefreshButton(), cogs.legiontdle.ModalButton(), cogs.legiontdle.GameSelectionButtons(),
+                            cogs.legiontdle.ModalLeakButton(), cogs.legiontdle.ModalEloButton(), cogs.legiontdle.ModalButton2(),
+                            cogs.legiontdle.RefreshButtonLtdleTotal(), cogs.legiontdle.RefreshButtonLtdleDaily(),
+                            cogs.legiontdle.RefreshButtonLtdleAvg(), cogs.novacup.RefreshButtonDiv2(), cogs.novacup.RefreshButtonDiv1(),
+                            cogs.legiontdle.RefreshButtonLtdleDailyAsc(), cogs.legiontdle.WinnerButtons()]
+        for view in persistent_views:
+            self.add_view(view)
     
     async def on_ready(self):
         print(f'"{self.user.display_name}" is now running!')

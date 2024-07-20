@@ -8,6 +8,7 @@ import shutil
 import time
 import traceback
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 import platform
 
@@ -211,6 +212,9 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
                     else:
                         im.paste(av_image, (x, y2))
                     I1.text((x+80, y2), str(player["playerName"]), font=myFont_title, stroke_width=2,stroke_fill=(0,0,0), fill=(255, 255, 255))
+                    width2 = I1.textlength(str(player["playerName"]), font=myFont_title)
+                    rank_icon = Image.open(f"Files/icons/Ranks/{util.get_rank_name(player["overallElo"])}.png")
+                    im.paste(rank_icon, (x+int(width2)+90, y2), mask=rank_icon)
                 if wave > 9:
                     im.paste(util.get_icons_image("icon_send", player["chosenSpell"].replace(" ", "")), (x+500, y2))
                 try:
