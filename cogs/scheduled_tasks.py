@@ -146,6 +146,20 @@ def reset_game5(json_data):
     json_data["game_5_games"] = games
     return json_data
 
+# def reset_game6(json_data):
+#     query = (GameData
+#              .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, GameData.ending_wave)
+#              .where((GameData.queue == "Normal") & (GameData.game_elo > current_min_elo) & GameData.version.startswith(current_patch) & (GameData.ending_wave >= 12))
+#              .order_by(fn.Random())
+#              ).limit(5).dicts()
+#     games = []
+#     for row in query.iterator():
+#         im1 = elo.gameid_visualizer(row["game_id"], 11, hide_names=True)
+#         im2 = elo.gameid_visualizer(row["game_id"], row["ending_wave"])
+#         games.append([im1, im2, row["game_elo"], row["ending_wave"]])
+#     json_data["game_6_games"] = games
+#     return json_data
+
 def season_reset(json_data):
     print("Starting Season Reset...")
     for player in os.listdir("ltdle_data/"):

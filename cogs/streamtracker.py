@@ -19,7 +19,7 @@ else:
 
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
     if not os.path.isfile("sessions/session_" + playername + ".json"):
-        leaderboard = legion_api.get_leaderboard(100)
+        leaderboard = legion_api.get_leaderboard(99)
         for i, player in enumerate(leaderboard):
             if player["profile"][0]["playerName"].casefold() == playername.casefold():
                 initial_rank = "#"+str(i+1)
@@ -54,7 +54,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
             session_dict = json.load(f)
             try:
                 initial_rank = session_dict["int_rank"]
-                leaderboard = legion_api.get_leaderboard(100)
+                leaderboard = legion_api.get_leaderboard(99)
                 for i, player in enumerate(leaderboard):
                     if player["profile"][0]["playerName"].casefold() == playername.casefold():
                         current_rank = "#"+str(i + 1)

@@ -9,6 +9,8 @@ from discord import app_commands
 import difflib
 from datetime import datetime, time, timezone, timedelta
 
+import legion_api
+
 
 def random_color():
     return random.randrange(0, 2 ** 24)
@@ -45,6 +47,7 @@ creep_values = const_file.get("creep_values")
 wave_values = const_file.get("wave_values")
 rank_emotes = const_file.get("rank_emotes")
 wave_emotes = const_file.get("wave_emotes")
+mm_emotes = const_file.get("mm_emotes")
 current_season = const_file.get("current_patches")
 current_minelo = const_file.get("current_minelo")
 
@@ -347,3 +350,14 @@ def get_rank_name(elo):
     else:
         rank_url = 'Unranked'
     return rank_url
+
+def validate_playername(playername):
+    playerid = legion_api.getid(playername)
+    if playerid == 0:
+        raise RuntimeError('Player ' + playername + ' not found.')
+    if playerid == 1:
+        raise RuntimeError('API limit reached, you can still use "all" commands.')
+    return playerid
+
+def cleanup_version_string(version:str):
+    return ".".join(version.replace("v", "").split(".")[:2])

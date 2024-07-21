@@ -17,12 +17,8 @@ import legion_api
 from peewee_pg import GameData, PlayerData
 
 def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", data_only = False, transparent = False):
-    novacup = False
     if playername == 'all':
         playerid = 'all'
-    elif 'nova cup' in playername:
-        novacup = True
-        playerid = playername
     else:
         playerid = legion_api.getid(playername)
         if playerid == 0:
@@ -154,8 +150,6 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
     avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
-    if novacup:
-        playerid = playername
     if data_only:
         if mastermind == "Megamind":
             return [masterminds_dict, megamind_count, avg_gameelo]
