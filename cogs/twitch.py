@@ -152,6 +152,7 @@ class TwitchHandler(commands.Cog):
                     else:
                         end_string = ""
                     if self.messages[streamer]["noti_string"] == "X":
+                        self.messages[streamer]["noti_sent"] = True
                         return
                     embed = discord.Embed(color=util.random_color(), title=self.messages[streamer]["title"],description=end_string, url='https://www.twitch.tv/'+streamer)
                     try:
