@@ -13,397 +13,188 @@ import util
 import legion_api
 from peewee_pg import GameData, PlayerData
 
+player_map = {1:[0,1],2:[1,0],5:[2,3],6:[3,2]}
 
-def winrate(playername, playername2, option, games, patch, min_elo = 0, sort = "Count"):
-    mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', "All"]
-    mm1 = ""
-    mm2 = ""
-    if "," in playername:
-        playername = playername.split(",")
-        if playername[0].lower() != 'all':
-            playerid = legion_api.getid(playername[0])
-        else:
-            playerid = "all"
-        for mm in mmnames_list:
-            if mm.lower() == playername[1].replace(" ", "").lower() and mm.lower() != "all":
-                mm1 = mm
-                break
-        else:
-            return playername[1] + " mastermind not found."
+def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 0, sort = "Count"):
+    if playername1.casefold() != "all":
+        try:
+            playerid1 = util.validate_playername(playername1)
+        except Exception as e:
+            return e
     else:
-        playerid = legion_api.getid(playername)
-    if playerid == 0:
-        if type(playername) == list:
-            playername = playername[0]
-        return 'Player ' + playername + ' not found.'
-    if playerid == 1:
-        return 'API limit reached.'
-    if "," in playername2:
-        playername2 = playername2.split(",")
-        if playername2[0].lower() != 'all':
-            playerid2 = legion_api.getid(playername2[0])
-        else:
-            playerid2 = "all"
-        for mm in mmnames_list:
-            if mm.lower() == playername2[1].replace(" ", "").lower():
-                mm2 = mm
-                break
-        else:
-            return playername2[1] + " mastermind not found."
+        playerid1 = "all"
+    if mm2 == "all" and playerid1 == "all":
+        playerid2 = "all"
+    elif playername2.casefold() != "all":
+        try:
+            playerid2 = util.validate_playername(playername2)
+        except Exception as e:
+            return e
     else:
-        if playername2 != "all":
-            playerid2 = legion_api.getid(playername2)
-        else:
-            playerid2 = "all"
-    if playerid2 == 0:
-        if type(playername2) == list:
-            playername2 = playername2[0]
-        return 'Player ' + playername2 + ' not found.'
-    if playerid2 == 1:
-        return 'API limit reached.'
-    win_count = 0
-    game_count = 0
+        playerid2 = "all"
+    if playerid1 == "all":
+        if not mm1:
+            return "You need to select a `mm1` when using `playername1:all`"
+        avatar = "https://cdn.legiontd2.com/icons/Items/"+mm1+".png"
+        playername1 = "All"
+    else:
+        profile = legion_api.getprofile(playerid1)
+        avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+        playername1 = profile["playerName"]
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
                     PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.elo_change],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                    ["player_id", "player_name", "player_slot", "game_result", "legion", "elo_change"]]
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True, req_columns=req_columns)
+    history_raw = drachbot_db.get_matchistory(playerid1, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
     gameelo_list = []
-    patches_list = []
-    all_dict = {}
-    elo_change_list = []
+    patches = set()
+    winrate_dict = {"Count": 0, "Wins": 0, "EloChange": 0, "Teammates":{}, "Enemies":{}, "Masterminds":{}}
     for game in history_raw:
-        gameresult_ranked_west = game["players_data"][0]["game_result"]
-        gameresult_ranked_east = game["players_data"][2]["game_result"]
-        playerids_ranked_west = [game["players_data"][0]["player_id"], game["players_data"][1]["player_id"]]
-        playerids_ranked_east = [game["players_data"][2]["player_id"], game["players_data"][3]["player_id"]]
-        masterminds_ranked_west = [game["players_data"][0]["legion"], game["players_data"][1]["legion"]]
-        masterminds_ranked_east = [game["players_data"][2]["legion"], game["players_data"][3]["legion"]]
-        elo_change_ranked_west = game["players_data"][0]["elo_change"]
-        elo_change_ranked_east = game["players_data"][2]["elo_change"]
-        gameelo_list.append(game["game_elo"])
-        if (playerid2 != 'all') or (playerid2 == "all" and mm2 != "" and mm2 != "All") or (playerid2 == "all" and mm1 != "" and mm2 == ""):
-            for i, x in enumerate(playerids_ranked_west):
-                if (x == playerid and (mm1 == masterminds_ranked_west[i] or mm1 == "")) or (playerid == "all" and x != playerid2 and (mm1 == masterminds_ranked_west[i] or mm1 == "")):
-                    if option == 'against':
-                        if (playerids_ranked_east[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[0] or mm2 == ""):
-                            patches_list.append(game["version"])
-                            elo_change_list.append(elo_change_ranked_west)
-                            game_count += 1
-                            if gameresult_ranked_west == 'won':
-                                win_count += 1
-                        elif (playerids_ranked_east[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[1] or mm2 == ""):
-                            patches_list.append(game["version"])
-                            elo_change_list.append(elo_change_ranked_west)
-                            game_count += 1
-                            if gameresult_ranked_west == 'won':
-                                win_count += 1
-                    elif option == 'with':
-                        if i == 0:
-                            teammate = 1
-                        else:
-                            teammate = 0
-                        if type(playername) != list and type(playername2) != list and playername.lower() == playername2.lower():
-                            if (playerids_ranked_west[0] == playerid2) and (mm2 == masterminds_ranked_west[0] or mm2 == ""):
-                                patches_list.append(game["version"])
-                                elo_change_list.append(elo_change_ranked_west)
-                                game_count += 1
-                                if gameresult_ranked_west == 'won':
-                                    win_count += 1
-                            elif (playerids_ranked_west[1] == playerid2) and (mm2 == masterminds_ranked_west[1] or mm2 == ""):
-                                patches_list.append(game["version"])
-                                elo_change_list.append(elo_change_ranked_west)
-                                game_count += 1
-                                if gameresult_ranked_west == 'won':
-                                    win_count += 1
-                        else:
-                            if (playerids_ranked_west[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[teammate] or mm2 == ""):
-                                patches_list.append(game["version"])
-                                elo_change_list.append(elo_change_ranked_west)
-                                game_count += 1
-                                if gameresult_ranked_west == 'won':
-                                    win_count += 1
-            for i, x in enumerate(playerids_ranked_east):
-                if (x == playerid and (mm1 == masterminds_ranked_east[i] or mm1 == "")) or (playerid == "all" and x != playerid2 and (mm1 == masterminds_ranked_east[i] or mm1 == "")):
-                    if option == 'against':
-                        if (playerids_ranked_west[0] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[0] or mm2 == ""):
-                            patches_list.append(game["version"])
-                            elo_change_list.append(elo_change_ranked_east)
-                            game_count += 1
-                            if gameresult_ranked_east == 'won':
-                                win_count += 1
-                        elif (playerids_ranked_west[1] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_west[1] or mm2 == ""):
-                            patches_list.append(game["version"])
-                            elo_change_list.append(elo_change_ranked_east)
-                            game_count += 1
-                            if gameresult_ranked_east == 'won':
-                                win_count += 1
-                    elif option == 'with':
-                        if i == 0:
-                            teammate = 1
-                        else:
-                            teammate = 0
-                        if type(playername) != list and type(playername2) != list and playername.lower() == playername2.lower():
-                            if (playerids_ranked_east[0] == playerid2) and (mm2 == masterminds_ranked_east[0] or mm2 == ""):
-                                patches_list.append(game["version"])
-                                elo_change_list.append(elo_change_ranked_east)
-                                game_count += 1
-                                if gameresult_ranked_east == 'won':
-                                    win_count += 1
-                            elif (playerids_ranked_east[1] == playerid2) and (mm2 == masterminds_ranked_east[1] or mm2 == ""):
-                                patches_list.append(game["version"])
-                                elo_change_list.append(elo_change_ranked_east)
-                                game_count += 1
-                                if gameresult_ranked_east == 'won':
-                                    win_count += 1
-                        else:
-                            if (playerids_ranked_east[teammate] == playerid2 or playerid2 == 'all') and (mm2 == masterminds_ranked_east[teammate] or mm2 == ""):
-                                patches_list.append(game["version"])
-                                elo_change_list.append(elo_change_ranked_east)
-                                game_count += 1
-                                if gameresult_ranked_east == 'won':
-                                    win_count += 1
-        elif playerid != "all" and playerid2 == "all" and mm1 == "" and mm2 == "":
-            patches_list.append(game["version"])
-            for i, x in enumerate(playerids_ranked_west):
-                if x == playerid:
-                    if option == 'against':
-                        if playerids_ranked_east[0] in all_dict:
-                            all_dict[playerids_ranked_east[0]]["Count"] += 1
-                            all_dict[playerids_ranked_east[0]]["EloChange"] += elo_change_ranked_west
-                            if gameresult_ranked_west == "won":
-                                all_dict[playerids_ranked_east[0]]["Wins"] += 1
-                        else:
-                            all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["players_data"][2]["player_name"]}
-                            if gameresult_ranked_west == "won":
-                                all_dict[playerids_ranked_east[0]]["Wins"] += 1
-                        if playerids_ranked_east[1] in all_dict:
-                            all_dict[playerids_ranked_east[1]]["Count"] += 1
-                            all_dict[playerids_ranked_east[1]]["EloChange"] += elo_change_ranked_west
-                            if gameresult_ranked_west == "won":
-                                all_dict[playerids_ranked_east[1]]["Wins"] += 1
-                        else:
-                            all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west, "playername": game["players_data"][3]["player_name"]}
-                            if gameresult_ranked_west == "won":
-                                all_dict[playerids_ranked_east[1]]["Wins"] += 1
-                    elif option == 'with':
-                        if playerids_ranked_west[0] != playerid:
-                            if playerids_ranked_west[0] in all_dict:
-                                all_dict[playerids_ranked_west[0]]["Count"] += 1
-                                all_dict[playerids_ranked_west[0]]["EloChange"] += elo_change_ranked_west
-                                if gameresult_ranked_west == "won":
-                                    all_dict[playerids_ranked_west[0]]["Wins"] += 1
-                            else:
-                                all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["players_data"][0]["player_name"]}
-                                if gameresult_ranked_west == "won":
-                                    all_dict[playerids_ranked_west[0]]["Wins"] += 1
-                        elif playerids_ranked_west[1] != playerid:
-                            if playerids_ranked_west[1] in all_dict:
-                                all_dict[playerids_ranked_west[1]]["Count"] += 1
-                                all_dict[playerids_ranked_west[1]]["EloChange"] += elo_change_ranked_west
-                                if gameresult_ranked_west == "won":
-                                    all_dict[playerids_ranked_west[1]]["Wins"] += 1
-                            else:
-                                all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west, "playername": game["players_data"][1]["player_name"]}
-                                if gameresult_ranked_west == "won":
-                                    all_dict[playerids_ranked_west[1]]["Wins"] += 1
-            for i, x in enumerate(playerids_ranked_east):
-                if x == playerid:
-                    if option == 'against':
-                        if playerids_ranked_west[0] in all_dict:
-                            all_dict[playerids_ranked_west[0]]["Count"] += 1
-                            all_dict[playerids_ranked_west[0]]["EloChange"] += elo_change_ranked_east
-                            if gameresult_ranked_east == "won":
-                                all_dict[playerids_ranked_west[0]]["Wins"] += 1
-                        else:
-                            all_dict[playerids_ranked_west[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["players_data"][0]["player_name"]}
-                            if gameresult_ranked_east == "won":
-                                all_dict[playerids_ranked_west[0]]["Wins"] += 1
-                        if playerids_ranked_west[1] in all_dict:
-                            all_dict[playerids_ranked_west[1]]["Count"] += 1
-                            all_dict[playerids_ranked_west[1]]["EloChange"] += elo_change_ranked_east
-                            if gameresult_ranked_east == "won":
-                                all_dict[playerids_ranked_west[1]]["Wins"] += 1
-                        else:
-                            all_dict[playerids_ranked_west[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east, "playername": game["players_data"][1]["player_name"]}
-                            if gameresult_ranked_east == "won":
-                                all_dict[playerids_ranked_west[1]]["Wins"] += 1
-                    elif option == 'with':
-                        if playerids_ranked_east[0] != playerid:
-                            if playerids_ranked_east[0] in all_dict:
-                                all_dict[playerids_ranked_east[0]]["Count"] += 1
-                                all_dict[playerids_ranked_east[0]]["EloChange"] += elo_change_ranked_east
-                                if gameresult_ranked_east == "won":
-                                    all_dict[playerids_ranked_east[0]]["Wins"] += 1
-                            else:
-                                all_dict[playerids_ranked_east[0]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["players_data"][2]["player_name"]}
-                                if gameresult_ranked_east == "won":
-                                    all_dict[playerids_ranked_east[0]]["Wins"] += 1
-                        elif playerids_ranked_east[1] != playerid:
-                            if playerids_ranked_east[1] in all_dict:
-                                all_dict[playerids_ranked_east[1]]["Count"] += 1
-                                all_dict[playerids_ranked_east[1]]["EloChange"] += elo_change_ranked_east
-                                if gameresult_ranked_east == "won":
-                                    all_dict[playerids_ranked_east[1]]["Wins"] += 1
-                            else:
-                                all_dict[playerids_ranked_east[1]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east, "playername": game["players_data"][3]["player_name"]}
-                                if gameresult_ranked_east == "won":
-                                    all_dict[playerids_ranked_east[1]]["Wins"] += 1
-        else:
-            patches_list.append(game["version"])
-            for i, x in enumerate(playerids_ranked_west):
-                if (x == playerid or playerid == "all") and (masterminds_ranked_west[i] == mm1 or mm1 == "" or mm1 == "All"):
-                    if option == 'against':
-                        if masterminds_ranked_east[0] in all_dict:
-                            all_dict[masterminds_ranked_east[0]]["Count"] += 1
-                            all_dict[masterminds_ranked_east[0]]["EloChange"] += elo_change_ranked_west
-                            if gameresult_ranked_west == "won":
-                                all_dict[masterminds_ranked_east[0]]["Wins"] += 1
-                        else:
-                            all_dict[masterminds_ranked_east[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west}
-                            if gameresult_ranked_west == "won":
-                                all_dict[masterminds_ranked_east[0]]["Wins"] += 1
-                        if masterminds_ranked_east[1] == masterminds_ranked_east[0]:
+        for player in game["players_data"]:
+            if (playerid1 == player["player_id"] and not mm1) or (playerid1 == "all" and mm1 == player["legion"])\
+                    or (playerid1 == player["player_id"] and mm1 and mm1 == player["legion"]):
+                if playerid2 == "all":
+                    gameelo_list.append(game["game_elo"])
+                    patches.add(util.cleanup_version_string(game["version"]))
+                winrate_dict["Count"] += 1
+                winrate_dict["EloChange"] += player["elo_change"]
+                if player["game_result"] == "won":
+                    winrate_dict["Wins"] += 1
+                for player_slot in player_map:
+                    if player["player_slot"] == player_slot:
+                        continue
+                    if player_map[player_slot][0] == player_map[player["player_slot"]][1]:
+                        if option == "against":
                             continue
-                        if masterminds_ranked_east[1] in all_dict:
-                            all_dict[masterminds_ranked_east[1]]["Count"] += 1
-                            all_dict[masterminds_ranked_east[1]]["EloChange"] += elo_change_ranked_west
-                            if gameresult_ranked_west == "won":
-                                all_dict[masterminds_ranked_east[1]]["Wins"] += 1
-                        else:
-                            all_dict[masterminds_ranked_east[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_west}
-                            if gameresult_ranked_west == "won":
-                                all_dict[masterminds_ranked_east[1]]["Wins"] += 1
-                    elif option == 'with':
-                        if i == 0: teammate = 1
-                        else: teammate = 0
-                        if masterminds_ranked_west[teammate] in all_dict:
-                            all_dict[masterminds_ranked_west[teammate]]["Count"] += 1
-                            all_dict[masterminds_ranked_west[teammate]]["EloChange"] += elo_change_ranked_west
-                            if gameresult_ranked_west == "won":
-                                all_dict[masterminds_ranked_west[teammate]]["Wins"] += 1
-                        else:
-                            all_dict[masterminds_ranked_west[teammate]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_west}
-                            if gameresult_ranked_west == "won":
-                                all_dict[masterminds_ranked_west[teammate]]["Wins"] += 1
-            for i, x in enumerate(playerids_ranked_east):
-                if (x == playerid or playerid == "all") and (masterminds_ranked_east[i] == mm1 or mm1 == "" or mm1 == "All"):
-                    if option == 'against':
-                        if masterminds_ranked_west[0] in all_dict:
-                            all_dict[masterminds_ranked_west[0]]["Count"] += 1
-                            all_dict[masterminds_ranked_west[0]]["EloChange"] += elo_change_ranked_east
-                            if gameresult_ranked_east == "won":
-                                all_dict[masterminds_ranked_west[0]]["Wins"] += 1
-                        else:
-                            all_dict[masterminds_ranked_west[0]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east}
-                            if gameresult_ranked_east == "won":
-                                all_dict[masterminds_ranked_west[0]]["Wins"] += 1
-                        if masterminds_ranked_west[1] == masterminds_ranked_west[0]:
+                        player_type = "Teammates"
+                    else:
+                        if option == "with":
                             continue
-                        if masterminds_ranked_west[1] in all_dict:
-                            all_dict[masterminds_ranked_west[1]]["Count"] += 1
-                            all_dict[masterminds_ranked_west[1]]["EloChange"] += elo_change_ranked_east
-                            if gameresult_ranked_east == "won":
-                                all_dict[masterminds_ranked_west[1]]["Wins"] += 1
+                        player_type = "Enemies"
+                    if (mm2 == "all" and (playerid1 == "all" or playerid2 == "all")) or (playerid2 == "all" and mm2 != "all" and mm2):
+                        temp_pid = game["players_data"][player_map[player_slot][0]]["legion"]
+                        temp_legion = None
+                    else:
+                        temp_pid = game["players_data"][player_map[player_slot][0]]["player_id"]
+                        if playerid2 == temp_pid:
+                            gameelo_list.append(game["game_elo"])
+                            patches.add(util.cleanup_version_string(game["version"]))
+                        temp_legion = game["players_data"][player_map[player_slot][0]]["legion"]
+                    target_dict = winrate_dict[player_type]
+                    if temp_pid not in target_dict:
+                        target_dict[temp_pid] = {"Count": 1, "Wins": 0, "EloChange": 0, "Masterminds": {}, "PlayerName": game["players_data"][player_map[player_slot][0]]["player_name"]}
+                    else:
+                        target_dict[temp_pid]["Count"] += 1
+                    target_dict[temp_pid]["EloChange"] += player["elo_change"]
+                    if player["game_result"] == "won":
+                        target_dict[temp_pid]["Wins"] += 1
+                    if mm2 != "all" or playerid1 != "all":
+                        if temp_legion not in target_dict[temp_pid]["Masterminds"]:
+                            target_dict[temp_pid]["Masterminds"][temp_legion] = {"Count": 1, "Wins": 0, "EloChange": 0}
                         else:
-                            all_dict[masterminds_ranked_west[1]] = {"Count": 1, "Wins": 0, "EloChange": elo_change_ranked_east}
-                            if gameresult_ranked_east == "won":
-                                all_dict[masterminds_ranked_west[1]]["Wins"] += 1
-                    elif option == 'with':
-                        if i == 0: teammate = 1
-                        else: teammate = 0
-                        if playerids_ranked_east[teammate] != playerid:
-                            if masterminds_ranked_east[teammate] in all_dict:
-                                all_dict[masterminds_ranked_east[teammate]]["Count"] += 1
-                                all_dict[masterminds_ranked_east[teammate]]["EloChange"] += elo_change_ranked_east
-                                if gameresult_ranked_east == "won":
-                                    all_dict[masterminds_ranked_east[teammate]]["Wins"] += 1
-                            else:
-                                all_dict[masterminds_ranked_east[teammate]] = {"Count": 1, "Wins": 0,"EloChange": elo_change_ranked_east}
-                                if gameresult_ranked_east == "won":
-                                    all_dict[masterminds_ranked_east[teammate]]["Wins"] += 1
-    patches = list(dict.fromkeys(patches_list))
-    new_patches = []
-    for x in patches:
-        string = x
-        periods = string.count('.')
-        new_patches.append(string.split('.', periods)[0].replace('v', '') + '.' + string.split('.', periods)[1])
-    patches = list(dict.fromkeys(new_patches))
-    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
-    if type(playername) == list:
-        if playername[0] != 'all':
-            suffix = "'s"
-        else:
-            suffix = ""
-        output_string_1 = playername[0].capitalize() + suffix + " " + mm1 + " winrate " + option + " "
-    else:
-        output_string_1 = playername.capitalize() + "'s winrate " + option + " "
-    if type(playername2) == list:
-        if playername2[0] != 'all':
-            suffix = "'s"
-        else:
-            suffix = ""
-        if mm2 == "All":
-            mm2_str = "Masterminds"
-        else:
-            mm2_str = mm2
-        output_string_2 = playername2[0].capitalize() + suffix + " " + mm2_str
-    else:
-        output_string_2 = playername2.capitalize()
-    if playerid == "all":
-        avatar = "https://cdn.legiontd2.com/icons/Items/"+mm1+".png"
-    else:
-        avatar = "https://cdn.legiontd2.com/" + legion_api.getprofile(playerid)['avatarUrl']
-    output = ""
-    longest_text = 0
-    if all_dict:
-        reverse = True
+                            target_dict[temp_pid]["Masterminds"][temp_legion]["Count"] += 1
+                        target_dict[temp_pid]["Masterminds"][temp_legion]["EloChange"] += player["elo_change"]
+                        if player["game_result"] == "won":
+                            target_dict[temp_pid]["Masterminds"][temp_legion]["Wins"] += 1
+    #SOME SETUP BEFORE CREATING THE EMBED
+    output_string = ""
+    reverse = True
+    if playerid1 != "all":
         if sort == "EloChange+":
             sort = "EloChange"
             reverse = True
         elif sort == "EloChange-":
             sort = "EloChange"
             reverse = False
-        newIndex = sorted(all_dict, key=lambda x: all_dict[x][sort], reverse=reverse)
-        all_dict = {k: all_dict[k] for k in newIndex}
-        final_output = ""
-        for indx, player in enumerate(all_dict):
-            if indx == 6: break
-            if all_dict[player]["EloChange"] > 0:
-                elo_prefix = "+"
-            else:
-                elo_prefix = ""
-            if mm2 != "All":
-                p_name = all_dict[player]["playername"]
-            else:
-                p_name = player
-            win_lose_text = str(all_dict[player]["Wins"]) + 'W - ' + str(all_dict[player]["Count"] - all_dict[player]["Wins"]) + 'L**  ('
-            output += "**"+p_name + ": " + win_lose_text + str(round(all_dict[player]["Wins"] / all_dict[player]["Count"] * 100, 1)) + '% ' + elo_prefix + str(all_dict[player]["EloChange"]) + " Elo)\n"
     else:
-        if len(elo_change_list) > 0:
-            sum_elo = sum(elo_change_list)
-            if sum_elo > 0:
-                string_pm = "+"
-            else:
-                string_pm = ""
-            elo_change_sum = ", Elo change: " + string_pm + str(sum_elo)
-        else:
-            elo_change_sum = ""
+        sort = "Count"
+    if option == "against":
+        player_type = "Enemies"
+    else:
+        player_type = "Teammates"
+    if (playerid2 != "all" and mm2 != "all") or (playerid2 == "all" and mm2 != "all" and mm2):
         try:
-            winrate = round(win_count / game_count * 100, 2)
-        except ZeroDivisionError as e:
-            print(e)
-            return "No games found."
-        output += "**"+str(win_count) + 'W - ' + str(game_count - win_count) + 'L (' + str(winrate) + '% winrate' + elo_change_sum + ')**'
-    embed = discord.Embed(color=0x21eb1e)
-    embed.add_field(name='(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")", value=output)
-    embed.set_author(name=output_string_1 + output_string_2, icon_url=avatar)
+            if not mm2 or (playerid2 == "all" and mm2 != "all" and mm2):
+                if playerid2 == "all" and mm2 != "all" and mm2:
+                    playerid2 = mm2
+                games = winrate_dict[player_type][playerid2]["Count"]
+                wins = winrate_dict[player_type][playerid2]["Wins"]
+                losses = games-wins
+                elo_change = winrate_dict[player_type][playerid2]["EloChange"]
+            else:
+                games = winrate_dict[player_type][playerid2]["Masterminds"][mm2]["Count"]
+                wins = winrate_dict[player_type][playerid2]["Masterminds"][mm2]["Wins"]
+                losses = games-wins
+                elo_change = winrate_dict[player_type][playerid2]["Masterminds"][mm2]["EloChange"]
+        except KeyError:
+            return f"No games {option} {playername2, mm2} found."
+        output_string = f"**{wins}W - {losses}L, {round(wins/games*100,1)}%WR, {elo_change:+} Elo**"
+    else:
+        if playerid2 == "all":
+            target_dict = winrate_dict
+        else:
+            target_dict = winrate_dict[player_type][playerid2]
+        games = target_dict["Count"]
+        wins = target_dict["Wins"]
+        losses = games - wins
+        elo_change = target_dict["EloChange"]
+        output_string = f"**Total Stats:** {wins}W - {losses}L, {round(wins / games * 100, 1)}% Winrate, {elo_change:+} Elo\n"
+        if playerid2 == "all":
+            target_dict = winrate_dict[player_type]
+        else:
+            target_dict = winrate_dict[player_type][playerid2]["Masterminds"]
+        newIndex = sorted(target_dict, key=lambda x: target_dict[x][sort], reverse=reverse)
+        target_dict = {k: target_dict[k] for k in newIndex}
+        for i, x in enumerate(target_dict):
+            games2 = target_dict[x]["Count"]
+            wins2 = target_dict[x]["Wins"]
+            losses2 = games2 - wins2
+            elo_change2 = target_dict[x]["EloChange"]
+            if elo_change2 >= 0:
+                elo_change2 = "+"+str(elo_change2)
+            if mm2 == "all":
+                if len(x) > 10:
+                    x_string = x[:10]
+                else:
+                    x_string = x
+                x_string = x_string + " " * (10 - len(x))
+                emoji = util.mm_emotes[x]
+            else:
+                if i == 10:
+                    break
+                x_string = target_dict[x]["PlayerName"]
+                if len(x_string) > 10:
+                    x_string = x_string[:10]
+                else:
+                    x_string = x_string
+                x_string = x_string + " " * (10 - len(x_string))
+                emoji = ""
+            output_string += (f"{emoji}`{x_string}: {wins2}W{" "*(4-len(str(wins2)))} - {losses2}L,{" "*(4-len(str(losses2)))}"
+                              f" {round(wins2 / games2 * 100, 1)}%WR,{" "*(5-len(str(round(wins2 / games2 * 100, 1))))} "
+                              f"{elo_change2}{" "*(4-len(str(elo_change2)))} Elo`\n")
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    embed = discord.Embed(color=0x21eb1e, description='**(From ' + str(games) + ' ranked games, avg. elo: ' +
+                                                      str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")**\n"+output_string)
+    if not mm1:
+        mm1 = ""
+    else:
+        mm1 = "-"+mm1
+    if not mm2:
+        mm2 = ""
+    elif mm2 == "all":
+        mm2 = " Masterminds"
+    else:
+        mm2 = "-"+mm2
+    embed.set_author(name=f"{playername1}{mm1} {option} {playername2.capitalize()}{mm2}", icon_url=avatar)
+    if len(patches) > 9:
+        patches = patches[:9]
+        patches.append("...")
     embed.set_footer(text='Patches: ' + ', '.join(patches))
     return embed
 
@@ -419,33 +210,38 @@ class Winrate(commands.Cog):
         discord.app_commands.Choice(name='against', value='against'),
         discord.app_commands.Choice(name='with', value='with')
     ])
+    @app_commands.choices(mm1=util.mm_choices)
+    @app_commands.choices(mm2=[discord.app_commands.Choice(name="All", value="all")]+util.mm_choices)
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='Count', value='Count'),
         discord.app_commands.Choice(name='EloChange+', value='EloChange+'),
         discord.app_commands.Choice(name='EloChange-', value='EloChange-')
     ])
-    async def winrate(self, interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str], games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "Count"):
-        loop = asyncio.get_running_loop()
-        with concurrent.futures.ProcessPoolExecutor() as pool:
-            await interaction.response.defer(ephemeral=False, thinking=True)
-            if "," in playername1:
-                if playername1.split(",")[0].lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                    min_elo = util.current_minelo
-            try:
-                sort = sort.value
-            except AttributeError:
-                pass
-            try:
-                response = await loop.run_in_executor(pool, functools.partial(winrate, playername1, playername2, option.value, games, patch, min_elo=min_elo, sort=sort))
+    async def winrate(self, interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str],
+                      mm1: discord.app_commands.Choice[str] = None, mm2: discord.app_commands.Choice[str] = None, games: int = 0, min_elo: int = 0,
+                      patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "Count"):
+        await interaction.response.defer(ephemeral=False, thinking=True)
+        if playername1.split(",")[0].lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
+            min_elo = util.current_minelo
+        try: sort = sort.value
+        except AttributeError: pass
+        try: mm1 = mm1.value
+        except AttributeError: pass
+        try: mm2 = mm2.value
+        except AttributeError: pass
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                response = await loop.run_in_executor(pool, functools.partial(winrate, playername1, playername2, option.value, mm1, mm2, games, patch, min_elo=min_elo, sort=sort))
                 pool.shutdown()
                 if type(response) == discord.Embed:
                     await interaction.followup.send(embed=response)
                 else:
                     await interaction.followup.send(response)
-            except Exception:
-                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
-                traceback.print_exc()
-                await interaction.followup.send("Bot error :sob:")
+        except Exception:
+            print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
+            traceback.print_exc()
+            await interaction.followup.send("Bot error :sob:")
 
 async def setup(bot:commands.Bot):
     await bot.add_cog(Winrate(bot))
