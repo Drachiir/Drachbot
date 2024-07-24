@@ -159,10 +159,10 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
             player_dict[player["playerName"]] = {"avatar_url": legion_api.getprofile(player["playerId"])["avatarUrl"],
                                                  "roll": player["rolls"].replace(" ", "").split(","), "legion": player["legion"], "elo": player["overallElo"],
                                                  "elo_change": player["eloChange"]}
-        if start_wave != 0:
-            waves = [start_wave-1]
-        elif start_wave > gamedata["endingWave"] and start_wave != 0:
+        if start_wave > gamedata["endingWave"] and start_wave != 0:
             return "Game ended on Wave " + str(gamedata["endingWave"])
+        elif start_wave != 0:
+            waves = [start_wave-1]
         else:
             waves = range(gamedata["endingWave"])
         first = True

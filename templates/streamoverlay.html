@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="7">
+    <meta http-equiv="refresh" content="5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
@@ -9,21 +9,22 @@
     <style>
         .container {
             display: inline-flex;
-            padding-left: 10px;
-            padding-right: 10px;
+            padding-left: 8px;
+            padding-right: 8px;
             background: rgba(12, 12, 12, 0.95);
-            border-radius: 15px;
+            border-radius: 16px;
         }
         .container2 {
           display: block;
         }
         r {
-          font-family: "Roboto", sans-serif;
-          font-weight: 300;
-          font-style: normal;
-          font-size: 200%;
-          color: white;
-          white-space: nowrap;
+            font-family: "Roboto", sans-serif;
+            font-weight: 300;
+            font-style: normal;
+            font-size: 200%;
+            color: white;
+            white-space: nowrap;
+            vertical-align:text-bottom;
         }
         r2 {
           font-family: "Roboto", sans-serif;
@@ -35,11 +36,13 @@
         }
         .redText
         {
-            color: rgb(255, 0, 0);
+            color: rgb(255, 55, 0);
+            vertical-align:text-bottom;
         }
         .greenText
         {
-            color: rgb(0, 255, 0);
+            color: rgb(0, 220, 0);
+            vertical-align:text-bottom;
         }
         .br
         {
@@ -48,11 +51,11 @@
         }
         r3 {
 			font-family: "Roboto", sans-serif;
-            vertical-align:text-bottom;
+            vertical-align:0.5rem;
 			font-weight: 300;
 			font-style: normal;
 			font-size: 130%;
-			color: #cacac3;
+			color: #b8b8b3;
 			white-space: nowrap;
         }
     </style>
@@ -63,13 +66,13 @@
     <div style="padding-top: 5px; padding-bottom: 5px;" class="container2">
         <div>
             <r2>Start</r2><br>
-            <img width="30" height="auto" src="{{ rank_url_int }}">
+            <img width="32" height="auto" src="{{ rank_url_int }}">
             <r>{{ initial_elo }}</r><r3>{{ initial_rank }}</r3>
         </div>
         <span class="br"></span>
         <div>
             <r2>Current </r2><r2 style="font-weight: 400;" {{ rgb2 }}>({{ elo_str }}{{ elo_diff }})</r2><br>
-            <img width="30" height="auto"  src="{{ rank_url_current }}">
+            <img width="32" height="auto"  src="{{ rank_url_current }}">
             <r>{{ current_elo }}</r><r3>{{ current_rank }}</r3>
         </div>
     </div>

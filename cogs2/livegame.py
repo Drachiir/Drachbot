@@ -91,6 +91,8 @@ async def handler(message) -> None:
                                     with concurrent.futures.ThreadPoolExecutor() as pool:
                                         await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
                                         pool.shutdown()
+                                else:
+                                    return
                             await asyncio.sleep(10)
                             loop = asyncio.get_running_loop()
                             with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -107,6 +109,8 @@ async def handler(message) -> None:
                                     with concurrent.futures.ThreadPoolExecutor() as pool:
                                         await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
                                         pool.shutdown()
+                                else:
+                                    return
                             await asyncio.sleep(10)
                             loop = asyncio.get_running_loop()
                             with concurrent.futures.ThreadPoolExecutor() as pool:
