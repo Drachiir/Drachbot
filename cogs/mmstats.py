@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone, timedelta
 
 import discord
 from discord import app_commands
@@ -33,13 +34,14 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
         mmnames_list = [mastermind]
     masterminds_dict = {}
     for x in mmnames_list:
-        masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0}
+        masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Targets": {}}
     gameelo_list = []
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.player_elo, PlayerData.legion,
-                    PlayerData.opener, PlayerData.spell, PlayerData.workers_per_wave, PlayerData.megamind],
+                    PlayerData.opener, PlayerData.spell, PlayerData.workers_per_wave, PlayerData.megamind, PlayerData.build_per_wave, PlayerData.champ_location],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
-                   ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave", "megamind"]]
+                   ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave", "megamind", "build_per_wave",
+                    "champ_location"]]
     history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
@@ -106,6 +108,26 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                             masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
                             if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                        if player["legion"] == "Champion":
+                            champ_loc = player["champ_location"].split("|")
+                            try:
+                                champ_loc = (float(champ_loc[0]), float(champ_loc[1]))
+                            except Exception:
+                                continue
+                            for unit in player["build_per_wave"][-1].split("!"):
+                                try:
+                                    unit_loc = unit.split(":")[1].split("|")
+                                except IndexError:
+                                    continue
+                                unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
+                                if unit_loc == champ_loc:
+                                    unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
+                                    if unit_name in masterminds_dict["Champion"]["Targets"]:
+                                        masterminds_dict["Champion"]["Targets"][unit_name]["Count"] += 1
+                                    else:
+                                        masterminds_dict["Champion"]["Targets"][unit_name] = {"Count": 1, "Wins": 0}
+                                    if player["game_result"] == "won":
+                                        masterminds_dict["Champion"]["Targets"][unit_name]["Wins"] += 1
             case mastermind if mastermind in case_list:
                 for player in game["players_data"]:
                     if (playerid == 'all' or player["player_id"] == playerid) and (mastermind == player["legion"]):
@@ -209,7 +231,7 @@ class MMstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(time=util.task_times2)
+    @tasks.loop(time=datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]

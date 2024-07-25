@@ -67,6 +67,8 @@ async def handler(message) -> None:
         for field in embed_dict["fields"]:
             if field["name"] == "Game ID":
                 gameid_result = field["value"]
+            else:
+                gameid_result = ""
         desc = embed_dict["description"].split(")")[0].split("(")[1]
         desc2 = embed_dict["description"].split("(")[0]
         desc3 = embed_dict["description"].split("Markdown")
@@ -91,13 +93,11 @@ async def handler(message) -> None:
                                     with concurrent.futures.ThreadPoolExecutor() as pool:
                                         await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
                                         pool.shutdown()
-                                else:
-                                    return
-                            await asyncio.sleep(10)
-                            loop = asyncio.get_running_loop()
-                            with concurrent.futures.ThreadPoolExecutor() as pool:
-                                await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
-                                pool.shutdown()
+                                    await asyncio.sleep(10)
+                                    loop = asyncio.get_running_loop()
+                                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
+                                        pool.shutdown()
                         elif acc in desc3[2]:
                             elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
                             if os.path.isfile("sessions/session_" + acc + ".json"):
@@ -109,13 +109,11 @@ async def handler(message) -> None:
                                     with concurrent.futures.ThreadPoolExecutor() as pool:
                                         await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
                                         pool.shutdown()
-                                else:
-                                    return
-                            await asyncio.sleep(10)
-                            loop = asyncio.get_running_loop()
-                            with concurrent.futures.ThreadPoolExecutor() as pool:
-                                await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
-                                pool.shutdown()
+                                    await asyncio.sleep(10)
+                                    loop = asyncio.get_running_loop()
+                                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
+                                        pool.shutdown()
         if "elo" in desc or "**TIED**" in desc2:
             path = 'Livegame/Ranked/'
             livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]

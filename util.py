@@ -33,10 +33,10 @@ task_times1=[
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
 
 task_times2=[
-    time(hour=4, minute=10, second=0, tzinfo=timezone.utc),
-    time(hour=10, minute=10, second=0, tzinfo=timezone.utc),
-    time(hour=16, minute=10, second=0, tzinfo=timezone.utc),
-    time(hour=22, minute=10, second=0, tzinfo=timezone.utc)
+    time(hour=4, minute=5, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=5, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=5, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=5, second=0, tzinfo=timezone.utc)
 ]
 
 website_patches = ["11.06"] # , "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"

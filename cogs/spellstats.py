@@ -104,7 +104,10 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
                         target_locations = [spell_loc]
                     excluded_units = []
                     for unit in player["build_per_wave"][-1].split("!"):
-                        unit_loc = unit.split(":")[1].split("|")
+                        try:
+                            unit_loc = unit.split(":")[1].split("|")
+                        except IndexError:
+                            continue
                         unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
                         if unit_loc in target_locations:
                             unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
