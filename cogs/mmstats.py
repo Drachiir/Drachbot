@@ -35,6 +35,20 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     masterminds_dict = {}
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Targets": {}}
+    unit_dict = {}
+    with open('Files/json/units.json', 'r') as f:
+        units_json = json.load(f)
+    for u_js in units_json:
+        if u_js["totalValue"] != '':
+            string = u_js["unitId"]
+            string = string.replace('_', ' ')
+            string = string.replace(' unit id', '')
+            if u_js["upgradesFrom"]:
+                string2 = u_js["upgradesFrom"][0]
+                string2 = string2.replace('_', ' ').replace(' unit id', '').replace('units ', '')
+            else:
+                string2 = ""
+            unit_dict[string] = {'Count': 0, 'Wins': 0, 'Elo': 0, 'ComboUnit': {}, 'MMs': {}, 'Spells': {}, "upgradesFrom": string2}
     gameelo_list = []
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.player_elo, PlayerData.legion,
@@ -63,9 +77,9 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
             case 'All' | 'Megamind':
                 for player in game["players_data"]:
                     if player["player_id"] == playerid or playerid == "all":
-                        if (game["version"].startswith('v10') or game["version"].startswith('v9')):
+                        if game["version"].startswith('v10') or game["version"].startswith('v9'):
                             player["megamind"] = False
-                        if player["megamind"] == True:
+                        if player["megamind"]:
                             megamind_count += 1
                             if mastermind != "Megamind":
                                 mastermind_current = 'Megamind'
@@ -122,6 +136,22 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                                 unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
                                 if unit_loc == champ_loc:
                                     unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
+                                    if unit_name == "" or unit_name not in unit_dict:
+                                        continue
+                                    if unit_name == "kingpin":
+                                        unit_name = "angler"
+                                    elif unit_name == "sakura":
+                                        unit_name = "seedling"
+                                    elif unit_name == "iron maiden":
+                                        unit_name = "cursed casket"
+                                    elif unit_name == "hell raiser":
+                                        unit_name = "masked spirit"
+                                    elif unit_name == "hydra":
+                                        unit_name = "eggsack"
+                                    elif unit_name == "oathbreaker final form":
+                                        unit_name = "chained fist"
+                                    elif unit_dict[unit_name]["upgradesFrom"]:
+                                        unit_name = unit_dict[unit_name]["upgradesFrom"]
                                     if unit_name in masterminds_dict["Champion"]["Targets"]:
                                         masterminds_dict["Champion"]["Targets"][unit_name]["Count"] += 1
                                     else:
@@ -162,6 +192,42 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                             masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
                             if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                        if player["legion"] == "Champion":
+                            champ_loc = player["champ_location"].split("|")
+                            try:
+                                champ_loc = (float(champ_loc[0]), float(champ_loc[1]))
+                            except Exception:
+                                continue
+                            for unit in player["build_per_wave"][-1].split("!"):
+                                try:
+                                    unit_loc = unit.split(":")[1].split("|")
+                                except IndexError:
+                                    continue
+                                unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
+                                if unit_loc == champ_loc:
+                                    unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
+                                    if unit_name == "" or unit_name not in unit_dict:
+                                        continue
+                                    if unit_name == "kingpin":
+                                        unit_name = "angler"
+                                    elif unit_name == "sakura":
+                                        unit_name = "seedling"
+                                    elif unit_name == "iron maiden":
+                                        unit_name = "cursed casket"
+                                    elif unit_name == "hell raiser":
+                                        unit_name = "masked spirit"
+                                    elif unit_name == "hydra":
+                                        unit_name = "eggsack"
+                                    elif unit_name == "oathbreaker final form":
+                                        unit_name = "chained fist"
+                                    elif unit_dict[unit_name]["upgradesFrom"]:
+                                        unit_name = unit_dict[unit_name]["upgradesFrom"]
+                                    if unit_name in masterminds_dict["Champion"]["Targets"]:
+                                        masterminds_dict["Champion"]["Targets"][unit_name]["Count"] += 1
+                                    else:
+                                        masterminds_dict["Champion"]["Targets"][unit_name] = {"Count": 1, "Wins": 0}
+                                    if player["game_result"] == "won":
+                                        masterminds_dict["Champion"]["Targets"][unit_name]["Wins"] += 1
     new_patches = []
     for x in patches:
         string = x
@@ -231,7 +297,7 @@ class MMstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(time=datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
+    @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]

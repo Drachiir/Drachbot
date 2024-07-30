@@ -4,6 +4,7 @@ import os
 import platform
 import traceback
 from datetime import datetime, timezone
+import re
 
 import discord
 import discord_timestamps
@@ -48,10 +49,16 @@ def get_top_games():
             string1 = string1.split(":")
             string2 = string2.split(":")
             max_char = 14
+            if re.search(u'[\u4e00-\u9fff]', string1[0]):
+                max_char = 11
             if len(string1[0]) > max_char:
                 string1[0] = string1[0][:max_char-2]+".."
             else:
                 string1[0] = string1[0] + " " * (max_char-len(string1[0]))
+            if re.search(u'[\u4e00-\u9fff]', string2[0]):
+                max_char = 11
+            else:
+                max_char = 14
             if len(string2[0]) > max_char:
                 string2[0] = string2[0][:max_char-2]+".."
             else:

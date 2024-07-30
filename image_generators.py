@@ -152,10 +152,16 @@ def create_image_stats_specific(dict, games, playerid, avgelo, patch, mode, spec
         config = ['RGB', (49, 51, 56)]
     match mode:
         case "Mastermind":
-            im = PIL.Image.new(mode=config[0], size=(1700, 545), color=config[1])
-            keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
-            dict_values = ["Opener", "Spell"]
-            icon_type = "legion"
+            if specific_value == "Champion":
+                im = PIL.Image.new(mode=config[0], size=(1700, 745), color=config[1])
+                keys = ['Targets:', '', 'Games:', 'Winrate:', 'Playrate:', 'Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+                dict_values = ["Targets", "Opener", "Spell"]
+                icon_type = "legion"
+            else:
+                im = PIL.Image.new(mode=config[0], size=(1700, 545), color=config[1])
+                keys = ['Open:', '', 'Games:', 'Winrate:', 'Playrate:', 'Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
+                dict_values = ["Opener", "Spell"]
+                icon_type = "legion"
         case "Open":
             im = PIL.Image.new(mode=config[0], size=(1700, 745), color=config[1])
             keys = ['Adds:', '', 'Games:', 'Winrate:', 'Playrate:', 'MMs:','', 'Games:', 'Winrate:', 'Playrate:', 'Spell:','', 'Games:', 'Winrate:', 'Playrate:']

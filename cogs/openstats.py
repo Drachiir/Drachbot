@@ -1,5 +1,6 @@
 import os
 import platform
+from datetime import datetime, timezone, timedelta
 
 import discord
 from discord import app_commands
@@ -35,8 +36,8 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
-                unit_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
-    unit_dict['pack rat nest'] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}}
+                unit_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}, "Cost": u_js["totalValue"]}
+    unit_dict['pack rat nest'] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}, "Cost": 75}
     if unit != "all":
         if unit in util.slang:
             unit = util.slang.get(unit)
@@ -147,32 +148,43 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
                     continue
                 for y in s:
                     try:
-                        i = 0
-                        if y != opener_ranked[counter][0]:
-                            if y in unit_dict[opener_ranked[counter][0]]['OpenWith']:
-                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Count'] += 1
-                                if player["game_result"] == 'won':
-                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
-                            else:
-                                unit_dict[opener_ranked[counter][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                if player["game_result"] == 'won':
-                                    unit_dict[opener_ranked[counter][0]]['OpenWith'][y]['Wins'] += 1
+                        opener_set = set(opener_ranked[counter])
+                        if y not in opener_ranked[counter]:
+                            for opener in opener_set:
+                                if y in unit_dict[opener]['OpenWith']:
+                                    unit_dict[opener]['OpenWith'][y]['Count'] += 1
+                                    if player["game_result"] == 'won':
+                                        unit_dict[opener]['OpenWith'][y]['Wins'] += 1
+                                else:
+                                    unit_dict[opener]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
+                                    if player["game_result"] == 'won':
+                                        unit_dict[opener]['OpenWith'][y]['Wins'] += 1
                         else:
-                            unit_dict[opener_ranked[counter][0]]['Count'] += 1
-                            if player["legion"] not in unit_dict[opener_ranked[counter][0]]['MMs']:
-                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
+                            unit_dict[y]['Count'] += 1
+                            if player["legion"] not in unit_dict[y]['MMs']:
+                                unit_dict[y]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
                             else:
-                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Count'] += 1
-                            if player["spell"] not in unit_dict[opener_ranked[counter][0]]['Spells']:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]] = {'Count': 1, 'Wins': 0}
+                                unit_dict[y]['MMs'][player["legion"]]['Count'] += 1
+                            if player["spell"] not in unit_dict[y]['Spells']:
+                                unit_dict[y]['Spells'][player["spell"]] = {'Count': 1, 'Wins': 0}
                             else:
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]]['Count'] += 1
-                            unit_dict[opener_ranked[counter][0]]['Worker'] += player["workers_per_wave"][3]
-                            unit_dict[opener_ranked[counter][0]]['Elo'] += player["player_elo"]
+                                unit_dict[y]['Spells'][player["spell"]]['Count'] += 1
+                            unit_dict[y]['Worker'] += player["workers_per_wave"][3]
+                            unit_dict[y]['Elo'] += player["player_elo"]
                             if player["game_result"] == 'won':
-                                unit_dict[opener_ranked[counter][0]]['Wins'] += 1
-                                unit_dict[opener_ranked[counter][0]]['MMs'][player["legion"]]['Wins'] += 1
-                                unit_dict[opener_ranked[counter][0]]['Spells'][player["spell"]]['Wins'] += 1
+                                unit_dict[y]['Wins'] += 1
+                                unit_dict[y]['MMs'][player["legion"]]['Wins'] += 1
+                                unit_dict[y]['Spells'][player["spell"]]['Wins'] += 1
+                            for opener in opener_set:
+                                if opener != y:
+                                    if opener in unit_dict[y]['OpenWith']:
+                                        unit_dict[y]['OpenWith'][opener]['Count'] += 1
+                                        if player["game_result"] == 'won':
+                                            unit_dict[y]['OpenWith'][opener]['Wins'] += 1
+                                    else:
+                                        unit_dict[y]['OpenWith'][opener] = {'Count': 1, 'Wins': 0}
+                                        if player["game_result"] == 'won':
+                                            unit_dict[y]['OpenWith'][opener]['Wins'] += 1
                     except IndexError:
                         continue
                     except KeyError:
@@ -241,7 +253,7 @@ class Openstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(time=util.task_times2)
+    @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]

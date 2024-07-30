@@ -61,17 +61,23 @@ async def handler(message) -> None:
                                     await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
                                     pool.shutdown()
     elif str(message.channel) == "game-results":
+        gameid_result = ""
         embeds = message.embeds
         for embed in embeds:
             embed_dict = embed.to_dict()
         for field in embed_dict["fields"]:
             if field["name"] == "Game ID":
                 gameid_result = field["value"]
-            else:
-                gameid_result = ""
+                break
         desc = embed_dict["description"].split(")")[0].split("(")[1]
         desc2 = embed_dict["description"].split("(")[0]
         desc3 = embed_dict["description"].split("Markdown")
+        if "elo" in desc or "**TIED**" in desc2:
+            path = 'Livegame/Ranked/'
+            livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+            for game in livegame_files:
+                if game.split("_")[0] == gameid_result:
+                    os.remove(path + game)
         if "elo" in desc:
             with open("Files/whitelist.txt", "r") as f:
                 data = f.readlines()
@@ -114,12 +120,6 @@ async def handler(message) -> None:
                                     with concurrent.futures.ThreadPoolExecutor() as pool:
                                         await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
                                         pool.shutdown()
-        if "elo" in desc or "**TIED**" in desc2:
-            path = 'Livegame/Ranked/'
-            livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
-            for game in livegame_files:
-                if game.split("_")[0] == gameid_result:
-                    os.remove(path + game)
 
 class Livegame(commands.Cog):
     def __init__(self, client: commands.Bot):
