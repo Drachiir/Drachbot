@@ -103,6 +103,10 @@ def reset_game4(json_data):
         new_name += icon_string.capitalize()
     if new_name == "ImpMercenary":
         new_name = "Imp"
+    elif new_name == "Skyfish":
+        new_name = "MetalDragon"
+    elif new_name == "octopus":
+        new_name = "quadrapus"
     json_data["game_4_selected_unit"] = [new_name, []]
     rand_x = random.randint(50,450)
     rand_y = random.randint(50, 450)

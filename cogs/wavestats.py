@@ -98,6 +98,11 @@ class Wavestats(commands.Cog):
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
                 for patch in patches:
+                    try:
+                        _ = await loop.run_in_executor(pool, functools.partial(wavestats, "all", 0, 1800, patch, data_only=True))
+                    except Exception:
+                        print("Database error, stopping website update....")
+                        break
                     for file in os.listdir(f"{util.shared2_folder}data/wavestats/"):
                         if file.startswith(patch):
                             os.remove(f"{util.shared2_folder}data/wavestats/{file}")

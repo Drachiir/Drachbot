@@ -123,17 +123,18 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
                 if player["game_result"] == "won":
                     spell_dict[spell_name]["Wins"] += 1
                 if "," in player["opener"]:
-                    opener_current = player["opener"].split(",")[-1]
+                    opener_current_list = set(player["opener"].split(","))
                 else:
-                    opener_current = player["opener"]
-                if opener_current in spell_dict[spell_name]["Opener"]:
-                    spell_dict[spell_name]["Opener"][opener_current]["Count"] += 1
-                    if player["game_result"] == "won":
-                        spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
-                else:
-                    spell_dict[spell_name]["Opener"][opener_current] = {"Count": 1, "Wins": 0}
-                    if player["game_result"] == "won":
-                        spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
+                    opener_current_list = [player["opener"]]
+                for opener_current in opener_current_list:
+                    if opener_current in spell_dict[spell_name]["Opener"]:
+                        spell_dict[spell_name]["Opener"][opener_current]["Count"] += 1
+                        if player["game_result"] == "won":
+                            spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
+                    else:
+                        spell_dict[spell_name]["Opener"][opener_current] = {"Count": 1, "Wins": 0}
+                        if player["game_result"] == "won":
+                            spell_dict[spell_name]["Opener"][opener_current]["Wins"] += 1
                 if player["legion"] in spell_dict[spell_name]["MMs"]:
                     spell_dict[spell_name]["MMs"][player["legion"]]["Count"] += 1
                     if player["game_result"] == "won":
@@ -213,6 +214,11 @@ class Spellstats(commands.Cog):
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
                 for patch in patches:
+                    try:
+                        _ = await loop.run_in_executor(pool, functools.partial(spellstats, "all", 0, 1800, patch, data_only=True))
+                    except Exception:
+                        print("Database error, stopping website update....")
+                        break
                     for file in os.listdir(f"{shared2_folder}data/spellstats/"):
                         if file.startswith(patch):
                             os.remove(f"{shared2_folder}data/spellstats/{file}")

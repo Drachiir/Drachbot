@@ -115,9 +115,12 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             end_string = f"_season{season}"
         else:
             end_string = ""
-        with open("ltdle_data/"+player+f"/data{end_string}.json", "r") as f:
-            p_data = json.load(f)
-            f.close()
+        try:
+            with open("ltdle_data/"+player+f"/data{end_string}.json", "r") as f:
+                p_data = json.load(f)
+                f.close()
+        except Exception:
+            continue
         if avg and p_data["games_played"] < 6:
             continue
         if daily:
@@ -1307,7 +1310,7 @@ class Legiontdle(commands.Cog):
         discord.app_commands.Choice(name='Ascending', value='asc')
     ])
     async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None,
-                               game: discord.app_commands.Choice[str] = "all", sort: discord.app_commands.Choice[str] = "dsc", season: typing.Literal['current', '1', '2'] = "current"):
+                               game: discord.app_commands.Choice[str] = "all", sort: discord.app_commands.Choice[str] = "dsc", season: typing.Literal['current', '1', '2', '3'] = "current"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:

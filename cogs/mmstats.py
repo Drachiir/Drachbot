@@ -102,10 +102,9 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                         masterminds_dict[mastermind_current]['Elo'] += player["player_elo"]
                         if ',' in player["opener"]:
                             string = player["opener"]
-                            commas = string.count(',')
-                            opener = string.split(',', commas)[commas]
+                            opener_list = set(string.split(','))
                         else:
-                            opener = player["opener"]
+                            opener_list = [player["opener"]]
                         if player["spell"] not in masterminds_dict[mastermind_current]['Spell']:
                             masterminds_dict[mastermind_current]['Spell'][player["spell"]] = {"Count": 1, "Wins": 0}
                             if player["game_result"] == 'won':
@@ -114,14 +113,15 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                             masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Count"] += 1
                             if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Wins"] += 1
-                        if opener not in masterminds_dict[mastermind_current]['Opener']:
-                            masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
-                            if player["game_result"] == 'won':
-                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
-                        else:
-                            masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
-                            if player["game_result"] == 'won':
-                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                        for opener in opener_list:
+                            if opener not in masterminds_dict[mastermind_current]['Opener']:
+                                masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
+                                if player["game_result"] == 'won':
+                                    masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                            else:
+                                masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
+                                if player["game_result"] == 'won':
+                                    masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
                         if player["legion"] == "Champion":
                             champ_loc = player["champ_location"].split("|")
                             try:
@@ -172,10 +172,9 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                         masterminds_dict[mastermind_current]['Elo'] += player["player_elo"]
                         if ',' in player["opener"]:
                             string = player["opener"]
-                            commas = string.count(',')
-                            opener = string.split(',', commas)[commas]
+                            opener_list = set(string.split(','))
                         else:
-                            opener = player["opener"]
+                            opener_list = [player["opener"]]
                         if player["spell"] not in masterminds_dict[mastermind_current]['Spell']:
                             masterminds_dict[mastermind_current]['Spell'][player["spell"]] = {"Count": 1, "Wins": 0}
                             if player["game_result"] == 'won':
@@ -184,14 +183,15 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                             masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Count"] += 1
                             if player["game_result"] == 'won':
                                 masterminds_dict[mastermind_current]['Spell'][player["spell"]]["Wins"] += 1
-                        if opener not in masterminds_dict[mastermind_current]['Opener']:
-                            masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
-                            if player["game_result"] == 'won':
-                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
-                        else:
-                            masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
-                            if player["game_result"] == 'won':
-                                masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                        for opener in opener_list:
+                            if opener not in masterminds_dict[mastermind_current]['Opener']:
+                                masterminds_dict[mastermind_current]['Opener'][opener] = {"Count": 1, "Wins": 0}
+                                if player["game_result"] == 'won':
+                                    masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
+                            else:
+                                masterminds_dict[mastermind_current]['Opener'][opener]["Count"] += 1
+                                if player["game_result"] == 'won':
+                                    masterminds_dict[mastermind_current]['Opener'][opener]["Wins"] += 1
                         if player["legion"] == "Champion":
                             champ_loc = player["champ_location"].split("|")
                             try:
@@ -305,6 +305,11 @@ class MMstats(commands.Cog):
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
                 for patch in patches:
+                    try:
+                        _ = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, 1800, patch, data_only=True))
+                    except Exception:
+                        print("Database error, stopping website update....")
+                        break
                     for file in os.listdir(f"{util.shared2_folder}data/mmstats/"):
                         if file.startswith(patch):
                             os.remove(f"{util.shared2_folder}data/mmstats/{file}")
