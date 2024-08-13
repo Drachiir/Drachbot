@@ -218,6 +218,7 @@ class Spellstats(commands.Cog):
                         _ = await loop.run_in_executor(pool, functools.partial(spellstats, "all", 0, 1800, patch, data_only=True))
                     except Exception:
                         print("Database error, stopping website update....")
+                        traceback.print_exc()
                         break
                     for file in os.listdir(f"{shared2_folder}data/spellstats/"):
                         if file.startswith(patch):

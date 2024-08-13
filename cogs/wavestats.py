@@ -99,9 +99,10 @@ class Wavestats(commands.Cog):
             with concurrent.futures.ProcessPoolExecutor() as pool:
                 for patch in patches:
                     try:
-                        _ = await loop.run_in_executor(pool, functools.partial(wavestats, "all", 0, 1800, patch, data_only=True))
+                        _ = await loop.run_in_executor(pool, functools.partial(wavestats, 0, 1800, patch))
                     except Exception:
                         print("Database error, stopping website update....")
+                        traceback.print_exc()
                         break
                     for file in os.listdir(f"{util.shared2_folder}data/wavestats/"):
                         if file.startswith(patch):

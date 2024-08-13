@@ -309,6 +309,7 @@ class MMstats(commands.Cog):
                         _ = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, 1800, patch, data_only=True))
                     except Exception:
                         print("Database error, stopping website update....")
+                        traceback.print_exc()
                         break
                     for file in os.listdir(f"{util.shared2_folder}data/mmstats/"):
                         if file.startswith(patch):
