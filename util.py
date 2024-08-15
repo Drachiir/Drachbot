@@ -199,8 +199,6 @@ def get_icons_image(type, name):
                 image_path = "Files/splashes/HellRaiser.png"
             if image_path == "Files/splashes/Mps.png":
                 image_path = "Files/splashes/MPS.png"
-            if image_path == "Files/splashes/PriestessOfTheAbyss.png":
-                image_path = "Files/splashes/PriestessoftheAbyss.png"
             if image_path == "Files/splashes/PackRat(footprints).png":
                 image_path = "Files/splashes/PackRatNest.png"
             if image_path == "Files/splashes/ImpMercenary.png":
