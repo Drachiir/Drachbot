@@ -189,7 +189,10 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
             if games == 0:
                 games = GameData.select().where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
         elif patch != "0":
-            expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
+            if len(patch_list) == 1:
+                expr = fn.Substr(GameData.version, 2, len(patch_list[0])).in_(patch_list)
+            else:
+                expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
             if games == 0:
                 games = GameData.select().where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
         else:
@@ -206,6 +209,8 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                            .limit(games * 4)).dicts()
         for i, row in enumerate(game_data_query.iterator()):
             p_data = {}
+            # if row["version"] == "v11.07":
+            #     continue
             for field in req_columns[2]:
                 p_data[field] = row[field]
             if i % 4 == 0:
