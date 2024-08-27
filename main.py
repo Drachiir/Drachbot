@@ -35,7 +35,7 @@ class Drachbot(commands.Bot):
             await self.load_extension(extension)
         persistent_views = [cogs.topgames.RefreshButton(), cogs.legiontdle.ModalButton(), cogs.legiontdle.GameSelectionButtons(),
                             cogs.legiontdle.ModalLeakButton(), cogs.legiontdle.ModalEloButton(), cogs.legiontdle.ModalButton2(),
-                            cogs.legiontdle.RefreshButtonLtdleTotal(), cogs.legiontdle.RefreshButtonLtdleDaily(),
+                            cogs.legiontdle.RefreshButtonLtdleTotal(), cogs.legiontdle.RefreshButtonLtdleDaily(), cogs.legiontdle.ModalButtonWave(),
                             cogs.legiontdle.RefreshButtonLtdleAvg(), cogs.novacup.RefreshButtonDiv2(), cogs.novacup.RefreshButtonDiv1(),
                             cogs.legiontdle.RefreshButtonLtdleDailyAsc(), cogs.legiontdle.WinnerButtons()]
         for view in persistent_views:

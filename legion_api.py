@@ -42,12 +42,12 @@ def api_call_logger(request_type):
 
 def get_random_games():
     games = []
-    for i in range(7):
+    for i in range(8):
         games.append([1400+200*i, 1400+200*(i+1), ""])
     offset = 200
     games_found = 0
     tries = 0
-    while games_found < 7:
+    while games_found < 8:
         if tries == 50: break
         try:
             url = 'https://apiv2.legiontd2.com/games?limit=50&offset='+str(offset)+'&sortBy=date&sortDirection=-1&includeDetails=false&countResults=false&queueType=Normal'

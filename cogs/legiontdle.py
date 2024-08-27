@@ -19,6 +19,7 @@ import util
 import platform
 import difflib
 
+max_gte_elo = 3000
 
 def random_color():
     return random.randrange(0, 2 ** 24)
@@ -67,12 +68,14 @@ def check_if_played_today(name: str, game: int):
         session["game4"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
     if "game5" not in session:
         session["game5"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+    if "game6" not in session:
+        session["game6"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
     update_user_data(session, session["name"])
     if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
         session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
         session["game"+str(game)]["game_finished"] = False
         session["game"+str(game)]["guesses"] = []
-        if game == 2 or game == 3 or game == 4 or game == 5:
+        if game in [2,3,4,5,6]:
             session["game"+str(game)]["image"] = 0
         update_user_data(session, session["name"])
         return session
@@ -103,6 +106,8 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
             return ltdle_game4(session, input, ltdle_data)
         case 5:
             return ltdle_game5(session, ltdle_data)
+        case 6:
+            return ltdle_game6(session, ltdle_data)
             
 
 def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", season = "current"):
@@ -129,6 +134,7 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             daily_score3 = 0
             daily_score4 = 0
             daily_score5 = 0
+            daily_score6 = 0
             with open("ltdle_data/ltdle.json", "r") as f:
                 ltdle_data = json.load(f)
                 f.close()
@@ -164,18 +170,18 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             except Exception:
                 daily_score3 = 0
                 pass
-            try:
-                if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-                    if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
-                        if p_data["game4"]["game_finished"]:
-                            daily_score4 = p_data["scores_dict"][p_data["game4"]["last_played"]][3]
-                        else:
-                            daily_score4 = 0
-                else:
-                    daily_score4 = 0
-            except Exception:
-                daily_score4 = 0
-                pass
+            # try:
+            #     if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+            #         if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+            #             if p_data["game4"]["game_finished"]:
+            #                 daily_score4 = p_data["scores_dict"][p_data["game4"]["last_played"]][3]
+            #             else:
+            #                 daily_score4 = 0
+            #     else:
+            #         daily_score4 = 0
+            # except Exception:
+            #     daily_score4 = 0
+            #     pass
             try:
                 if datetime.strptime(p_data["game5"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                     if datetime.strptime(p_data["game5"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
@@ -188,9 +194,21 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             except Exception:
                 daily_score5 = 0
                 pass
-            if daily_score1 + daily_score3 + daily_score4 + daily_score5 == 0:
+            try:
+                if datetime.strptime(p_data["game6"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                    if datetime.strptime(p_data["game6"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+                        if p_data["game6"]["game_finished"]:
+                            daily_score6 = p_data["scores_dict"][p_data["game6"]["last_played"]][5]
+                        else:
+                            daily_score6 = 0
+                else:
+                    daily_score6 = 0
+            except Exception:
+                daily_score6 = 0
+                pass
+            if daily_score1 + daily_score3 + daily_score5 + daily_score6 == 0:
                 continue
-            scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score5, daily_score3, daily_score4))
+            scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score5, daily_score3, daily_score6))
         elif game_mode[0] != "all":
             try:
                 avg_pts = p_data[game_mode[1]]["score"]/p_data[game_mode[1]]["games_played"]
@@ -297,6 +315,12 @@ def ltdle_profile(player, avatar):
         embed.add_field(name="Guess The Winner:crown:", value="Games played: " + str(p_data["game5"]["games_played"]) +
                                                                 "\nPoints: " + str(p_data["game5"]["score"]) +
                                                                 "\nAvg: " + str(round(p_data["game5"]["score"] / p_data["game5"]["games_played"], 1)) + " points", inline=True)
+    except Exception:
+        pass
+    try:
+        embed.add_field(name="Guess The End:brain:", value="Games played: " + str(p_data["game6"]["games_played"]) +
+                                                                "\nPoints: " + str(p_data["game6"]["score"]) +
+                                                                "\nAvg: " + str(round(p_data["game6"]["score"] / p_data["game6"]["games_played"], 1)) + " points", inline=True)
     except Exception:
         pass
     embed.set_author(name=player.capitalize()+"'s", icon_url=avatar)
@@ -509,7 +533,7 @@ def ltdle_game3(session: dict, input: int, ltdle_data: dict):
     color = random_color()
     image_index = session["game3"]["image"]
     def embed1(image):
-        embed = discord.Embed(color=color, title="Guess The Elo :gem:", description="Guess the average elo of this game. (1400-2800 range:bangbang:)", url=ltdle_data["game_3_selected_game"][0])
+        embed = discord.Embed(color=color, title="Guess The Elo :gem:", description=f"Guess the average elo of this game. (1400-{max_gte_elo} range:bangbang:)", url=ltdle_data["game_3_selected_game"][0])
         file = discord.File(image, filename=image.split("/")[-1])
         embed.set_image(url="attachment://"+image.split("/")[-1])
         return [file, embed]
@@ -649,9 +673,7 @@ def ltdle_game5(session: dict, ltdle_data: dict):
                 game_5_score += 3
             else:
                 end_string += "❌"
-        embed = discord.Embed(color=color, title=f"You got {round(game_5_score/2)}/3 games correct (+{game_5_score} points)\nGuess history:\n{end_string}")
-        if game_5_score == 9:
-            game_5_score = 10
+        embed = discord.Embed(color=color, title=f"You got {round(game_5_score/3)}/3 games correct (+{game_5_score} points)\nGuess history:\n{end_string}")
         session["score"] += game_5_score
         session["game5"]["score"] += game_5_score
         if session["game5"]["last_played"] in session["scores_dict"]:
@@ -693,6 +715,80 @@ def get_game5_embed(image_index, guess):
                           description=f"{ltdle_data["game_5_games"][image_index][2]} Team won on Wave {ltdle_data["game_5_games"][image_index][4]}\n"
                                       f"Game Elo: {ltdle_data["game_5_games"][image_index][3]}{util.get_ranked_emote(ltdle_data["game_5_games"][image_index][3])}",
                           url=ltdle_data["game_5_games"][image_index][1])
+    file = discord.File(image, filename=image.split("/")[-1])
+    embed.set_image(url="attachment://" + image.split("/")[-1])
+    return [file, embed]
+
+
+def ltdle_game6(session: dict, ltdle_data: dict):
+    color = random_color()
+    image_index = session["game6"]["image"]
+    if image_index == len(ltdle_data["game_6_games"]):
+        game_6_score = 0
+        end_string = ""
+        correct_count = 0
+        for i, g in enumerate(session["game6"]["guesses"]):
+            if g == ltdle_data["game_6_games"][i][3]:
+                end_string += "✅"
+                game_6_score += 3
+                correct_count += 1
+            elif abs(g - ltdle_data["game_6_games"][i][3]) < 2:
+                end_string += "🟨"
+                game_6_score += 3 - abs(g - ltdle_data["game_6_games"][i][3])
+                correct_count += 1
+            elif abs(g - ltdle_data["game_6_games"][i][3]) < 3:
+                end_string += "🟧"
+                game_6_score += 3 - abs(g - ltdle_data["game_6_games"][i][3])
+                correct_count += 1
+            else:
+                end_string += "❌"
+        embed = discord.Embed(color=color, title=f"You got {correct_count}/3 games correct (+{game_6_score} points)\nGuess history:\n{end_string}")
+        session["score"] += game_6_score
+        session["game6"]["score"] += game_6_score
+        if session["game6"]["last_played"] in session["scores_dict"]:
+            try:
+                session["scores_dict"][session["game6"]["last_played"]][5] = game_6_score
+            except IndexError:
+                session["scores_dict"][session["game6"]["last_played"]].append(game_6_score)
+        else:
+            session["scores_dict"][session["game6"]["last_played"]] = [0, 0, 0, 0, 0, game_6_score]
+        session["games_played"] += 1
+        session["game6"]["games_played"] += 1
+        session["game6"]["game_finished"] = True
+        print(session["name"] + " played guess the end.")
+        update_user_data(session, session["name"])
+        return [embed]
+    image = shared_folder+ltdle_data["game_6_games"][image_index][0].split("/")[-1]
+    embed = discord.Embed(color=color, title=f"Guess The End :brain: {image_index+1}/3",
+                          description=f"Guess which Wave this game ends on.\n"
+                                      f"Game Elo: {ltdle_data["game_6_games"][image_index][2]}{util.get_ranked_emote(ltdle_data["game_6_games"][image_index][2])}",
+                          url=ltdle_data["game_6_games"][image_index][0])
+    file = discord.File(image, filename=image.split("/")[-1])
+    embed.set_image(url="attachment://"+image.split("/")[-1])
+    session["game6"]["image"] += 1
+    update_user_data(session, session["name"])
+    return [file, embed]
+
+
+def get_game6_embed(image_index, guess):
+    color = random_color()
+    with open("ltdle_data/ltdle.json", "r") as f:
+        ltdle_data = json.load(f)
+        f.close()
+    if guess ==ltdle_data["game_6_games"][image_index][3]:
+        pt_string = f"Perfect guess! ✅ +3 Points"
+    elif abs(guess - ltdle_data["game_6_games"][image_index][3]) < 2:
+        pt_string = f"Close enough! 🟨 +{3-abs(guess - ltdle_data["game_6_games"][image_index][3])} Points"
+    elif abs(guess - ltdle_data["game_6_games"][image_index][3]) < 3:
+        pt_string = f"I'll allow it. 🟧 +{3-abs(guess - ltdle_data["game_6_games"][image_index][3])} Points"
+    else:
+        pt_string = "You guessed wrong ❌"
+    image = shared_folder + ltdle_data["game_6_games"][image_index][1].split("/")[-1]
+    embed = discord.Embed(color=color, title=pt_string,
+                          description=f"Your Guess: Wave {guess}\n"
+                                      f"Game ended on Wave {ltdle_data["game_6_games"][image_index][3]}\n"
+                                      f"Game Elo: {ltdle_data["game_6_games"][image_index][2]}{util.get_ranked_emote(ltdle_data["game_6_games"][image_index][2])}",
+                          url=ltdle_data["game_6_games"][image_index][1])
     file = discord.File(image, filename=image.split("/")[-1])
     embed.set_image(url="attachment://" + image.split("/")[-1])
     return [file, embed]
@@ -787,16 +883,15 @@ class LeakInput(ui.Modal, title='Enter a Leak!'):
         except Exception:
             traceback.print_exc()
 
-
 class EloInput(ui.Modal, title='Enter a Elo!'):
-    answer = ui.TextInput(label='Elo (1400-2800)', style=discord.TextStyle.short, max_length=4)
+    answer = ui.TextInput(label=f'Elo (1400-{max_gte_elo})', style=discord.TextStyle.short, max_length=4)
     
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer()
         try:
             input = int(self.answer.value)
-            if input<1400 or input>2800:
-                await interaction.followup.send("Elo range is **1400-2800**, try again.")
+            if input<1400 or input>max_gte_elo:
+                await interaction.followup.send(f"Elo range is **1400-{max_gte_elo}**, try again.")
                 return
         except Exception:
             await interaction.followup.send("Invalid input, try again.")
@@ -822,6 +917,47 @@ class EloInput(ui.Modal, title='Enter a Elo!'):
             traceback.print_exc()
 
 
+class WaveInput(ui.Modal, title='Enter a Wave!'):
+    answer = ui.TextInput(label='Wave number (12-21)', style=discord.TextStyle.short, max_length=2)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        try:
+            input = int(self.answer.value)
+            if input < 12 or input > 21:
+                await interaction.followup.send("Invalid wave, try again.")
+                return
+        except Exception:
+            await interaction.followup.send("Invalid input, try again.")
+            return
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            with open("ltdle_data/ltdle.json", "r") as f:
+                ltdle_data = json.load(f)
+                f.close()
+            played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 6))
+            if type(played_check) == type(dict()):
+                if played_check["game6"]["image"] == 0:
+                    await interaction.followup.send("Guess The Winner game not started yet.")
+                    return
+                played_check["game6"]["guesses"].append(input)
+                update_user_data(played_check, played_check["name"])
+                response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 6))
+                if len(response) == 2:
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game6_embed, played_check["game6"]["image"] - 2, input))
+                    await interaction.channel.send(file=winner[0], embed=winner[1])
+                    await asyncio.sleep(1)
+                    await interaction.channel.send(file=response[0], embed=response[1], view=ModalButtonWave())
+                else:
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game6_embed, 2, input))
+                    await interaction.channel.send(file=winner[0], embed=winner[1])
+                    await asyncio.sleep(1)
+                    await interaction.channel.send(embed=response[0], view=GameSelectionButtons())
+            else:
+                await interaction.channel.send(played_check)
+                return
+
+
 class ModalButton(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -832,6 +968,24 @@ class ModalButton(discord.ui.View):
         if type(played_check) == type(dict()):
             try:
                 await interaction.response.send_modal(UnitInput())
+            except Exception:
+                traceback.print_exc()
+        else:
+            await interaction.response.defer()
+            await interaction.channel.send(played_check)
+            return
+
+
+class ModalButtonWave(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label='Enter Wave', style=discord.ButtonStyle.green, custom_id='persistent_view:modalwave')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        played_check = check_if_played_today(interaction.user.name, 6)
+        if type(played_check) == type(dict()):
+            try:
+                await interaction.response.send_modal(WaveInput())
             except Exception:
                 traceback.print_exc()
         else:
@@ -1096,36 +1250,36 @@ class GameSelectionButtons(discord.ui.View):
         except Exception:
             traceback.print_exc()
     
-    @discord.ui.button(label='Guess The Icon', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game4', emoji="🔍", row=2)
-    async def callback4(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-        try:
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                with open("ltdle_data/ltdle.json", "r") as f:
-                    ltdle_data = json.load(f)
-                    f.close()
-                if not ltdle_data["game_4_selected_unit"]:
-                    await interaction.channel.send("This game is currently disabled.")
-                    return
-                else:
-                    played_check = check_if_played_today(interaction.user.name, 4)
-                    if type(played_check) == type(dict()):
-                        data = played_check
-                    else:
-                        await interaction.channel.send(played_check)
-                        return
-                    response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 4))
-                    pool.shutdown()
-                    if type(response) == list:
-                        if len(response) == 2:
-                            await interaction.channel.send(file=response[0], embed=response[1], view=ModalButton2())
-                        else:
-                            await interaction.channel.send(file=response[0], embed=response[1])
-                    else:
-                        await interaction.channel.send(response)
-        except Exception:
-            traceback.print_exc()
+    # @discord.ui.button(label='Guess The Icon', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game4', emoji="🔍", row=2)
+    # async def callback4(self, interaction: discord.Interaction, button: discord.ui.Button):
+    #     await interaction.response.defer()
+    #     try:
+    #         loop = asyncio.get_running_loop()
+    #         with concurrent.futures.ThreadPoolExecutor() as pool:
+    #             with open("ltdle_data/ltdle.json", "r") as f:
+    #                 ltdle_data = json.load(f)
+    #                 f.close()
+    #             if not ltdle_data["game_4_selected_unit"]:
+    #                 await interaction.channel.send("This game is currently disabled.")
+    #                 return
+    #             else:
+    #                 played_check = check_if_played_today(interaction.user.name, 4)
+    #                 if type(played_check) == type(dict()):
+    #                     data = played_check
+    #                 else:
+    #                     await interaction.channel.send(played_check)
+    #                     return
+    #                 response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 4))
+    #                 pool.shutdown()
+    #                 if type(response) == list:
+    #                     if len(response) == 2:
+    #                         await interaction.channel.send(file=response[0], embed=response[1], view=ModalButton2())
+    #                     else:
+    #                         await interaction.channel.send(file=response[0], embed=response[1])
+    #                 else:
+    #                     await interaction.channel.send(response)
+    #     except Exception:
+    #         traceback.print_exc()
     
     @discord.ui.button(label='Guess The Winner', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game5', emoji="👑", row=1)
     async def callback5(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -1151,6 +1305,37 @@ class GameSelectionButtons(discord.ui.View):
                     if type(response) == list:
                         if len(response) == 2:
                             await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
+                        else:
+                            await interaction.channel.send(file=response[0], embed=response[1])
+                    else:
+                        await interaction.channel.send(response)
+        except Exception:
+            traceback.print_exc()
+    
+    @discord.ui.button(label='Guess The End', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game6', emoji="🧠", row=2)
+    async def callback6(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                if not ltdle_data["game_6_games"]:
+                    await interaction.channel.send("This game is currently disabled.")
+                    return
+                else:
+                    played_check = check_if_played_today(interaction.user.name, 6)
+                    if type(played_check) == type(dict()):
+                        data = played_check
+                    else:
+                        await interaction.channel.send(played_check)
+                        return
+                    response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 6))
+                    pool.shutdown()
+                    if type(response) == list:
+                        if len(response) == 2:
+                            await interaction.channel.send(file=response[0], embed=response[1], view=ModalButtonWave())
                         else:
                             await interaction.channel.send(file=response[0], embed=response[1])
                     else:
@@ -1302,10 +1487,11 @@ class Legiontdle(commands.Cog):
     ])
     @app_commands.choices(game=[
         discord.app_commands.Choice(name='Guess The Unit', value='game1'),
-        discord.app_commands.Choice(name='Guess The Leak', value='game2'),
+        #discord.app_commands.Choice(name='Guess The Leak', value='game2'),
         discord.app_commands.Choice(name='Guess The Elo', value='game3'),
-        discord.app_commands.Choice(name='Guess The Icon', value='game4'),
-        discord.app_commands.Choice(name='Guess The Winner', value='game5')
+        #discord.app_commands.Choice(name='Guess The Icon', value='game4'),
+        discord.app_commands.Choice(name='Guess The Winner', value='game5'),
+        discord.app_commands.Choice(name='Guess The End', value='game6')
     ])
     @app_commands.choices(sort=[
         discord.app_commands.Choice(name='Descending', value='dsc'),
