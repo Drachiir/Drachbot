@@ -646,10 +646,12 @@ def ltdle_game5(session: dict, ltdle_data: dict):
         for i, g in enumerate(session["game5"]["guesses"]):
             if g == ltdle_data["game_5_games"][i][2]:
                 end_string += "✅"
-                game_5_score += 2
+                game_5_score += 3
             else:
                 end_string += "❌"
-        embed = discord.Embed(color=color, title=f"You got {round(game_5_score/2)}/5 games correct (+{game_5_score} points)\nGuess history:\n{end_string}")
+        embed = discord.Embed(color=color, title=f"You got {round(game_5_score/2)}/3 games correct (+{game_5_score} points)\nGuess history:\n{end_string}")
+        if game_5_score == 9:
+            game_5_score = 10
         session["score"] += game_5_score
         session["game5"]["score"] += game_5_score
         if session["game5"]["last_played"] in session["scores_dict"]:
@@ -666,7 +668,7 @@ def ltdle_game5(session: dict, ltdle_data: dict):
         update_user_data(session, session["name"])
         return [embed]
     image = shared_folder+ltdle_data["game_5_games"][image_index][0].split("/")[-1]
-    embed = discord.Embed(color=color, title=f"Guess The Winner :crown: {image_index+1}/5",
+    embed = discord.Embed(color=color, title=f"Guess The Winner :crown: {image_index+1}/3",
                           description=f"Guess which team won using the buttons below.\n"
                                       f"Game Elo: {ltdle_data["game_5_games"][image_index][3]}{util.get_ranked_emote(ltdle_data["game_5_games"][image_index][3])}",
                           url=ltdle_data["game_5_games"][image_index][0])
@@ -925,7 +927,7 @@ class WinnerButtons(discord.ui.View):
                     await asyncio.sleep(1)
                     await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
                 else:
-                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, 4, "West"))
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, 2, "West"))
                     await interaction.channel.send(file=winner[0], embed=winner[1])
                     await asyncio.sleep(1)
                     await interaction.channel.send(embed=response[0], view=GameSelectionButtons())
@@ -955,7 +957,7 @@ class WinnerButtons(discord.ui.View):
                     await asyncio.sleep(1)
                     await interaction.channel.send(file=response[0], embed=response[1], view=WinnerButtons())
                 else:
-                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, 4, "East"))
+                    winner = await loop.run_in_executor(pool, functools.partial(get_game5_embed, 2, "East"))
                     await interaction.channel.send(file=winner[0], embed=winner[1])
                     await asyncio.sleep(1)
                     await interaction.channel.send(embed=response[0], view=GameSelectionButtons())

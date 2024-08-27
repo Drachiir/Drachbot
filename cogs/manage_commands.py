@@ -99,6 +99,7 @@ class ManageCommands(commands.Cog):
     @commands.command()
     async def overlay(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
+            print("test")
             try:
                 cogs.streamtracker.stream_overlay("drachir")
             except Exception:

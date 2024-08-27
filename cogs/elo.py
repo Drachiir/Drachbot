@@ -156,7 +156,11 @@ def gameid_visualizer(gameid, start_wave=0, hide_names = False):
             return "GameID not found. (Games that are not concluded or older than 1 year are not available in the API)"
         player_dict = {}
         for player in gamedata["playersData"]:
-            player_dict[player["playerName"]] = {"avatar_url": legion_api.getprofile(player["playerId"])["avatarUrl"],
+            try:
+                avatar = legion_api.getprofile(player["playerId"])["avatarUrl"]
+            except Exception:
+                avatar = ""
+            player_dict[player["playerName"]] = {"avatar_url": avatar,
                                                  "roll": player["rolls"].replace(" ", "").split(","), "legion": player["legion"], "elo": player["overallElo"],
                                                  "elo_change": player["eloChange"]}
         if start_wave > gamedata["endingWave"] and start_wave != 0:

@@ -145,7 +145,7 @@ def get_ranked_emote(rank):
 def get_icons_image(type, name):
     match type:
         case "avatar":
-            if name == "icons/DefaultAvatar.png":
+            if name == "icons/DefaultAvatar.png" or not name:
                 name = "Icons/DefaultAvatar.png"
             name = name.split("Icons/")
             image_path = 'Files/icons/' + name[1]
