@@ -56,6 +56,8 @@ def check_if_played_today(name: str, game: int):
             playedstring = "You already played todays **Guess The Icon**:mag:, next reset is "
         case 5:
             playedstring = "You already played todays **Guess The Winner**:crown:, next reset is "
+        case 6:
+            playedstring = "You already played todays **Guess The End**:brain:, next reset is "
     if "scores_dict" not in session:
         session["scores_dict"] = {}
     if "game2" not in session:
