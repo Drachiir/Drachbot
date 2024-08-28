@@ -730,17 +730,17 @@ def ltdle_game6(session: dict, ltdle_data: dict):
         end_string = ""
         correct_count = 0
         for i, g in enumerate(session["game6"]["guesses"]):
-            if g == ltdle_data["game_6_games"][i][3]:
+            if abs(g - ltdle_data["game_6_games"][i][3]) <= 1:
                 end_string += "✅"
                 game_6_score += 3
                 correct_count += 1
-            elif abs(g - ltdle_data["game_6_games"][i][3]) < 2:
+            elif abs(g - ltdle_data["game_6_games"][i][3]) == 2:
                 end_string += "🟨"
-                game_6_score += 3 - abs(g - ltdle_data["game_6_games"][i][3])
+                game_6_score += 2
                 correct_count += 1
-            elif abs(g - ltdle_data["game_6_games"][i][3]) < 3:
+            elif abs(g - ltdle_data["game_6_games"][i][3]) == 3:
                 end_string += "🟧"
-                game_6_score += 3 - abs(g - ltdle_data["game_6_games"][i][3])
+                game_6_score += 1
                 correct_count += 1
             else:
                 end_string += "❌"
@@ -777,12 +777,12 @@ def get_game6_embed(image_index, guess):
     with open("ltdle_data/ltdle.json", "r") as f:
         ltdle_data = json.load(f)
         f.close()
-    if guess ==ltdle_data["game_6_games"][image_index][3]:
-        pt_string = f"Perfect guess! ✅ +3 Points"
-    elif abs(guess - ltdle_data["game_6_games"][image_index][3]) < 2:
-        pt_string = f"Close enough! 🟨 +{3-abs(guess - ltdle_data["game_6_games"][image_index][3])} Points"
-    elif abs(guess - ltdle_data["game_6_games"][image_index][3]) < 3:
-        pt_string = f"I'll allow it. 🟧 +{3-abs(guess - ltdle_data["game_6_games"][image_index][3])} Points"
+    if abs(guess - ltdle_data["game_6_games"][image_index][3]) <= 1:
+        pt_string = f"Great guess! ✅ +3 Points"
+    elif abs(guess - ltdle_data["game_6_games"][image_index][3]) == 2:
+        pt_string = f"Close enough! 🟨 +2 Points"
+    elif abs(guess - ltdle_data["game_6_games"][image_index][3]) == 3:
+        pt_string = f"I'll allow it. 🟧 +1 Points"
     else:
         pt_string = "You guessed wrong ❌"
     image = shared_folder + ltdle_data["game_6_games"][image_index][1].split("/")[-1]
