@@ -128,7 +128,7 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
                 f.close()
         except Exception:
             continue
-        if avg and p_data["games_played"] < 6 and game_mode == ["all","all"]:
+        if avg and p_data["games_played"] < 6 and (game_mode[0] == "all" and game_mode[1] == "all"):
             continue
         if daily:
             daily_score1 = 0
