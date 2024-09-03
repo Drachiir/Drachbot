@@ -211,7 +211,10 @@ def get_icons_image(type, name):
             image_path = 'Files/icons/Items/' + name.replace(" ", "") + ".png"
         case _:
             image_path = "Files/icons/Granddaddy.png"
-    return Image.open(open(image_path, "rb"))
+    try:
+        return Image.open(open(image_path, "rb"))
+    except Exception:
+        return Image.open(open("Files/icons/Caution.png", "rb"))
 
 def validate_spell_input(spell):
     spell_list = []
