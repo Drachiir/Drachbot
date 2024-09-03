@@ -169,16 +169,16 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                     break
                 x_string = target_dict[x]["PlayerName"]
                 if re.search(u'[\u4e00-\u9fff]', x_string):
-                    max_char = 6
+                    max_char = 7
                 else:
-                    max_char = 9
+                    max_char = 11
                 if len(x_string) > max_char:
                     x_string = x_string[:max_char]
                 else:
                     x_string = x_string
                 x_string = x_string + " " * (max_char - len(x_string))
                 emoji = ""
-            output_string += (f"{emoji}`{x_string}: {wins2}W{" "*(3-len(str(wins2)))} - {losses2}L,{" "*(3-len(str(losses2)))}"
+            output_string += (f"{emoji}`{x_string}: {wins2}W{" "*(3-len(str(wins2)))} {losses2}L,{" "*(3-len(str(losses2)))}"
                               f" {round(wins2 / games2 * 100, 1)}%,{" "*(4-len(str(round(wins2 / games2 * 100, 1))))} "
                               f"{elo_change2}{" "*(4-len(str(elo_change2)))} Elo`\n")
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
