@@ -124,7 +124,9 @@ def pullgamedata(playerid, offset, expected):
                 ranked_count += 1
                 try:
                     peewee_pg.save_game(x)
-                except peewee.IntegrityError:
+                except peewee.IntegrityError as e:
+                    print(e)
+                    print(f"Peewee Integrity Error: {x["_id"]}")
                     break
         games_count += 1
     return [ranked_count, games_count]
