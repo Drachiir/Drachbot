@@ -34,7 +34,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
         mmnames_list = [mastermind]
     masterminds_dict = {}
     for x in mmnames_list:
-        masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Targets": {}}
+        masterminds_dict[x] = {"Count": 0, "Wins": 0, "Worker": 0, "Opener": {}, "Spell": {}, "Elo": 0, "Targets": {}, "Rolls": {}}
     unit_dict = {}
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
@@ -128,36 +128,65 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                                 champ_loc = (float(champ_loc[0]), float(champ_loc[1]))
                             except Exception:
                                 continue
-                            for unit in player["build_per_wave"][-1].split("!"):
-                                try:
-                                    unit_loc = unit.split(":")[1].split("|")
-                                except IndexError:
-                                    continue
-                                unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
-                                if unit_loc == champ_loc:
-                                    unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
-                                    if unit_name == "" or unit_name not in unit_dict:
-                                        continue
-                                    if unit_name == "kingpin":
-                                        unit_name = "angler"
-                                    elif unit_name == "sakura":
-                                        unit_name = "seedling"
-                                    elif unit_name == "iron maiden":
-                                        unit_name = "cursed casket"
-                                    elif unit_name == "hell raiser":
-                                        unit_name = "masked spirit"
-                                    elif unit_name == "hydra":
-                                        unit_name = "eggsack"
-                                    elif unit_name == "oathbreaker final form":
-                                        unit_name = "chained fist"
-                                    elif unit_dict[unit_name]["upgradesFrom"]:
-                                        unit_name = unit_dict[unit_name]["upgradesFrom"]
-                                    if unit_name in masterminds_dict["Champion"]["Targets"]:
-                                        masterminds_dict["Champion"]["Targets"][unit_name]["Count"] += 1
-                                    else:
-                                        masterminds_dict["Champion"]["Targets"][unit_name] = {"Count": 1, "Wins": 0}
-                                    if player["game_result"] == "won":
-                                        masterminds_dict["Champion"]["Targets"][unit_name]["Wins"] += 1
+                        else:
+                            champ_loc = None
+                        for unit in player["build_per_wave"][-1].split("!"):
+                            try:
+                                unit_loc = unit.split(":")[1].split("|")
+                            except IndexError:
+                                continue
+                            unit_loc = (float(unit_loc[0]), float(unit_loc[1]))
+                            unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
+                            if unit_name == "" or unit_name not in unit_dict:
+                                continue
+                            if unit_name == "kingpin":
+                                unit_name = "angler"
+                            elif unit_name == "sakura":
+                                unit_name = "seedling"
+                            elif unit_name == "iron maiden":
+                                unit_name = "cursed casket"
+                            elif unit_name == "hell raiser":
+                                unit_name = "masked spirit"
+                            elif unit_name == "hydra":
+                                unit_name = "eggsack"
+                            elif unit_name == "oathbreaker final form":
+                                unit_name = "chained fist"
+                            elif unit_dict[unit_name]["upgradesFrom"]:
+                                unit_name = unit_dict[unit_name]["upgradesFrom"]
+                            if unit_loc == champ_loc:
+                                if unit_name in masterminds_dict["Champion"]["Targets"]:
+                                    masterminds_dict["Champion"]["Targets"][unit_name]["Count"] += 1
+                                else:
+                                    masterminds_dict["Champion"]["Targets"][unit_name] = {"Count": 1, "Wins": 0}
+                                if player["game_result"] == "won":
+                                    masterminds_dict["Champion"]["Targets"][unit_name]["Wins"] += 1
+                        fighter_set = set()
+                        for unit2 in player["build_per_wave"][-1].split("!"):
+                            unit_name2 = unit2.split(":")[0].replace("_", " ").replace(" unit id", "")
+                            if unit_name2 == "" or unit_name2 not in unit_dict:
+                                continue
+                            if unit_name2 == "kingpin":
+                                unit_name2 = "angler"
+                            elif unit_name2 == "sakura":
+                                unit_name2 = "seedling"
+                            elif unit_name2 == "iron maiden":
+                                unit_name2 = "cursed casket"
+                            elif unit_name2 == "hell raiser":
+                                unit_name2 = "masked spirit"
+                            elif unit_name2 == "hydra":
+                                unit_name2 = "eggsack"
+                            elif unit_name2 == "oathbreaker final form":
+                                unit_name2 = "chained fist"
+                            elif unit_dict[unit_name2]["upgradesFrom"]:
+                                unit_name2 = unit_dict[unit_name2]["upgradesFrom"]
+                            fighter_set.add(unit_name2)
+                        for fighter in fighter_set:
+                            if fighter in masterminds_dict[mastermind_current]["Rolls"]:
+                                masterminds_dict[mastermind_current]["Rolls"][fighter]["Count"] += 1
+                            else:
+                                masterminds_dict[mastermind_current]["Rolls"][fighter] = {"Count": 1, "Wins": 0}
+                            if player["game_result"] == "won":
+                                masterminds_dict[mastermind_current]["Rolls"][fighter]["Wins"] += 1
             case mastermind if mastermind in case_list:
                 for player in game["players_data"]:
                     if (playerid == 'all' or player["player_id"] == playerid) and (mastermind == player["legion"]):
