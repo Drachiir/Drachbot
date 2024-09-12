@@ -416,7 +416,7 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
         output2 += ":red_square:"
     #upgraded
     unit_upgraded = unit_data["sortOrder"].split(".")[1].endswith("U") or unit_data["sortOrder"].split(".")[1].endswith("U2")
-    ltdle_unit_upgraded = ltdle_data["game_1_selected_unit"]["sortOrder"].split(".")[1].endswith("U")
+    ltdle_unit_upgraded = ltdle_data["game_1_selected_unit"]["sortOrder"].split(".")[1].endswith("U") or ltdle_data["game_1_selected_unit"]["sortOrder"].split(".")[1].endswith("U2")
     if lstring == "Merc":
         ustring = "Merc unit"
     elif lstring == "Wave":
