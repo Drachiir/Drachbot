@@ -104,6 +104,8 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                         if player["game_result"] == "won":
                             target_dict[temp_pid]["Masterminds"][temp_legion]["Wins"] += 1
     #SOME SETUP BEFORE CREATING THE EMBED
+    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
+    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     output_string = ""
     reverse = True
     if playerid1 != "all":
@@ -145,7 +147,11 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
         wins = target_dict["Wins"]
         losses = games - wins
         elo_change = target_dict["EloChange"]
-        output_string = f"**Total Stats:** {wins}W - {losses}L, {round(wins / games * 100, 1)}% Winrate, {elo_change:+} Elo\n"
+        if text_output:
+            output_string = '(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n"
+            output_string += f"Total Stats: {wins}W - {losses}L, {round(wins / games * 100, 1)}% Winrate, {elo_change:+} Elo\n"
+        else:
+            output_string = f"**Total Stats:** {wins}W - {losses}L, {round(wins / games * 100, 1)}% Winrate, {elo_change:+} Elo\n"
         if playerid2 == "all":
             target_dict = winrate_dict[player_type]
         else:
@@ -183,8 +189,6 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
             output_string += (f"{emoji}`{x_string}: {wins2}W{" "*(3-len(str(wins2)))} {losses2}L,{" "*(3-len(str(losses2)))}"
                               f" {round(wins2 / games2 * 100, 1)}%,{" "*(4-len(str(round(wins2 / games2 * 100, 1))))} "
                               f"{elo_change2}{" "*(4-len(str(elo_change2)))} Elo`\n")
-    patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
     if text_output:
         with open("Files/temp.txt", "w", encoding="utf-8") as f:
             f.write(output_string.replace("`", ""))
