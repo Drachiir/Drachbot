@@ -9,11 +9,22 @@ import re
 import discord
 import discord_timestamps
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord_timestamps import TimestampType
 
 import util
 
+def clean_top_games():
+    path = "Livegame/Ranked/"
+    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+    livegame_files = sorted(livegame_files, key=lambda x: int(x.split("_")[1].split(".")[0]), reverse=True)
+    for game in livegame_files:
+        path2 = path + game
+        mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc)
+        date_diff = datetime.now(tz=timezone.utc) - mod_date
+        minutes_diff = date_diff.total_seconds() / 60
+        if minutes_diff > 35:
+            os.remove(path2)
 
 def get_top_games():
     path = "Livegame/Ranked/"
@@ -22,12 +33,9 @@ def get_top_games():
     topgames = []
     for game in livegame_files:
         path2 = path + game
-        mod_date = datetime.utcfromtimestamp(os.path.getmtime(path2))
-        date_diff = datetime.now() - mod_date
-        if platform.system() == "Linux":
-            minutes_diff = date_diff.total_seconds() / 60
-        elif platform.system() == "Windows":
-            minutes_diff = date_diff.total_seconds() / 60 - 120
+        mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc)
+        date_diff = datetime.now(tz=timezone.utc) - mod_date
+        minutes_diff = date_diff.total_seconds() / 60
         if minutes_diff > 35:
             os.remove(path2)
             continue
@@ -97,7 +105,11 @@ class RefreshButton(discord.ui.View):
 class Topgames(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-    
+        self.clean.start()
+        
+    def cog_unload(self) -> None:
+        self.clean.cancel()
+        
     @app_commands.command(name="topgames", description="Shows the 4 highest elo games in Ranked.")
     async def topgames(self, interaction: discord.Interaction):
         loop = asyncio.get_running_loop()
@@ -113,6 +125,13 @@ class Topgames(commands.Cog):
             except Exception:
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
+    
+    @tasks.loop(hours=1)
+    async def clean(self):
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            await loop.run_in_executor(pool, clean_top_games)
+            pool.shutdown()
 
 async def setup(bot:commands.Bot):
     await bot.add_cog(Topgames(bot))
