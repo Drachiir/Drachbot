@@ -15,7 +15,7 @@ from peewee_pg import GameData, PlayerData
 
 player_map = {1:[0,1],2:[1,0],5:[2,3],6:[3,2]}
 
-def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 0, sort = "Count"):
+def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 0, sort = "Count", text_output = False, soloq = False):
     if playername1.casefold() != "all":
         try:
             playerid1 = util.validate_playername(playername1)
@@ -42,9 +42,9 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
         avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
         playername1 = profile["playerName"]
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
-                    PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.elo_change],
+                    PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.elo_change, PlayerData.party_size],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
-                   ["player_id", "player_name", "player_slot", "game_result", "legion", "elo_change"]]
+                   ["player_id", "player_name", "player_slot", "game_result", "legion", "elo_change", "party_size"]]
     history_raw = drachbot_db.get_matchistory(playerid1, games, min_elo=min_elo, patch=patch, earlier_than_wave10=True, req_columns=req_columns)
     if type(history_raw) == str:
         return history_raw
@@ -58,6 +58,8 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
         for player in game["players_data"]:
             if (playerid1 == player["player_id"] and not mm1) or (playerid1 == "all" and mm1 == player["legion"])\
                     or (playerid1 == player["player_id"] and mm1 and mm1 == player["legion"]):
+                if soloq and player["party_size"] == 2:
+                    continue
                 if playerid2 == "all":
                     gameelo_list.append(game["game_elo"])
                     patches.add(util.cleanup_version_string(game["version"]))
@@ -165,7 +167,7 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                 x_string = x_string + " " * (10 - len(x))
                 emoji = util.mm_emotes[x]
             else:
-                if i == 10:
+                if i == 10 and not text_output:
                     break
                 x_string = target_dict[x]["PlayerName"]
                 if re.search(u'[\u4e00-\u9fff]', x_string):
@@ -183,6 +185,11 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                               f"{elo_change2}{" "*(4-len(str(elo_change2)))} Elo`\n")
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    if text_output:
+        with open("Files/temp.txt", "w", encoding="utf-8") as f:
+            f.write(output_string.replace("`", ""))
+            f.close()
+        return "Files/temp.txt"
     embed = discord.Embed(color=0x21eb1e, description='**(From ' + str(games) + ' ranked games, avg. elo: ' +
                                                       str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")**\n"+output_string)
     if not mm1:
@@ -209,7 +216,7 @@ class Winrate(commands.Cog):
     @app_commands.command(name="winrate", description="Shows player1's winrate against/with player2.")
     @app_commands.describe(playername1='Enter playername1.', playername2='Enter playername2 or all for 6 most common players', option='Against or with?', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set', patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           sort="Sort by? (Only for playername2 = all)")
+                           sort="Sort by? (Only for playername2 = all)", text_output = "Output all the data into a text file.", soloq_only = "Only consider soloq games from player1. (Default = False)")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='against', value='against'),
         discord.app_commands.Choice(name='with', value='with')
@@ -223,7 +230,7 @@ class Winrate(commands.Cog):
     ])
     async def winrate(self, interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str],
                       mm1: discord.app_commands.Choice[str] = None, mm2: discord.app_commands.Choice[str] = None, games: int = 0, min_elo: int = 0,
-                      patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "Count"):
+                      patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "Count", text_output: bool = False, soloq_only: bool = False):
         await interaction.response.defer(ephemeral=False, thinking=True)
         if playername1.split(",")[0].lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
             min_elo = util.current_minelo
@@ -236,9 +243,11 @@ class Winrate(commands.Cog):
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
-                response = await loop.run_in_executor(pool, functools.partial(winrate, playername1, playername2, option.value, mm1, mm2, games, patch, min_elo=min_elo, sort=sort))
+                response = await loop.run_in_executor(pool, functools.partial(winrate, playername1, playername2, option.value, mm1, mm2, games, patch, min_elo=min_elo, sort=sort, text_output=text_output, soloq=soloq_only))
                 pool.shutdown()
-                if type(response) == discord.Embed:
+                if text_output:
+                    await interaction.followup.send(file=discord.File(response, filename="temp.txt"))
+                elif type(response) == discord.Embed:
                     await interaction.followup.send(embed=response)
                 else:
                     await interaction.followup.send(response)
