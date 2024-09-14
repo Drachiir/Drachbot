@@ -180,6 +180,8 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                     max_char = 7
                 else:
                     max_char = 11
+                if text_output:
+                    max_char = 16
                 if len(x_string) > max_char:
                     x_string = x_string[:max_char]
                 else:
