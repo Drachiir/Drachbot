@@ -95,101 +95,61 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
             for y in x:
                 string = y.split('_unit_id:')
                 opener_ranked[i].append(string[0].replace('_', ' '))
-        if playerid.lower() != 'all' and 'nova cup' not in playerid:
-            for player in game["players_data"]:
-                if player["player_id"] == playerid:
-                    s = set()
-                    try:
-                        for x in range(4):
-                            for y in opener_ranked[x]:
-                                s.add(y)
-                    except IndexError:
-                        continue
-                    for y in s:
-                        try:
-                            if y != opener_ranked[0][0]:
-                                if y in unit_dict[opener_ranked[0][0]]['OpenWith']:
-                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Count'] += 1
-                                    if player["game_result"] == 'won':
-                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                                else:
-                                    unit_dict[opener_ranked[0][0]]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                    if player["game_result"] == 'won':
-                                        unit_dict[opener_ranked[0][0]]['OpenWith'][y]['Wins'] += 1
-                            else:
-                                unit_dict[opener_ranked[0][0]]['Count'] += 1
-                                if player["legion"] not in unit_dict[opener_ranked[0][0]]['MMs']:
-                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]] = {'Count': 1, 'Wins': 0}
-                                else:
-                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Count'] += 1
-                                if player["spell"] not in unit_dict[opener_ranked[0][0]]['Spells']:
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]] = {'Count': 1, 'Wins': 0}
-                                else:
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]]['Count'] += 1
-                                unit_dict[opener_ranked[0][0]]['Worker'] += player["workers_per_wave"][3]
-                                unit_dict[opener_ranked[0][0]]['Elo'] += player["player_elo"]
-                                if player["game_result"] == 'won':
-                                    unit_dict[opener_ranked[0][0]]['Wins'] += 1
-                                    unit_dict[opener_ranked[0][0]]['MMs'][player["legion"]]['Wins'] += 1
-                                    unit_dict[opener_ranked[0][0]]['Spells'][player["spell"]]['Wins'] += 1
-                        except IndexError:
-                            continue
-                        except KeyError:
-                            continue
-        else:
-            counter = 0
-            for player in game["players_data"]:
-                s = set()
+        counter = 0
+        for player in game["players_data"]:
+            if player["player_id"] != playerid and playerid != "all":
+                continue
+            s = set()
+            try:
+                for x in range(counter, counter+4):
+                    for y in opener_ranked[x]:
+                        s.add(y)
+            except IndexError:
+                continue
+            for y in s:
                 try:
-                    for x in range(counter, counter+4):
-                        for y in opener_ranked[x]:
-                            s.add(y)
+                    opener_set = set(opener_ranked[counter])
+                    if y not in opener_ranked[counter]:
+                        for opener in opener_set:
+                            if y in unit_dict[opener]['OpenWith']:
+                                unit_dict[opener]['OpenWith'][y]['Count'] += 1
+                                if player["game_result"] == 'won':
+                                    unit_dict[opener]['OpenWith'][y]['Wins'] += 1
+                            else:
+                                unit_dict[opener]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
+                                if player["game_result"] == 'won':
+                                    unit_dict[opener]['OpenWith'][y]['Wins'] += 1
+                    else:
+                        unit_dict[y]['Count'] += 1
+                        if player["legion"] not in unit_dict[y]['MMs']:
+                            unit_dict[y]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
+                        else:
+                            unit_dict[y]['MMs'][player["legion"]]['Count'] += 1
+                        if player["spell"] not in unit_dict[y]['Spells']:
+                            unit_dict[y]['Spells'][player["spell"]] = {'Count': 1, 'Wins': 0}
+                        else:
+                            unit_dict[y]['Spells'][player["spell"]]['Count'] += 1
+                        unit_dict[y]['Worker'] += player["workers_per_wave"][3]
+                        unit_dict[y]['Elo'] += player["player_elo"]
+                        if player["game_result"] == 'won':
+                            unit_dict[y]['Wins'] += 1
+                            unit_dict[y]['MMs'][player["legion"]]['Wins'] += 1
+                            unit_dict[y]['Spells'][player["spell"]]['Wins'] += 1
+                        for opener in opener_set:
+                            if opener != y:
+                                if opener in unit_dict[y]['OpenWith']:
+                                    unit_dict[y]['OpenWith'][opener]['Count'] += 1
+                                    if player["game_result"] == 'won':
+                                        unit_dict[y]['OpenWith'][opener]['Wins'] += 1
+                                else:
+                                    unit_dict[y]['OpenWith'][opener] = {'Count': 1, 'Wins': 0}
+                                    if player["game_result"] == 'won':
+                                        unit_dict[y]['OpenWith'][opener]['Wins'] += 1
                 except IndexError:
                     continue
-                for y in s:
-                    try:
-                        opener_set = set(opener_ranked[counter])
-                        if y not in opener_ranked[counter]:
-                            for opener in opener_set:
-                                if y in unit_dict[opener]['OpenWith']:
-                                    unit_dict[opener]['OpenWith'][y]['Count'] += 1
-                                    if player["game_result"] == 'won':
-                                        unit_dict[opener]['OpenWith'][y]['Wins'] += 1
-                                else:
-                                    unit_dict[opener]['OpenWith'][y] = {'Count': 1, 'Wins': 0}
-                                    if player["game_result"] == 'won':
-                                        unit_dict[opener]['OpenWith'][y]['Wins'] += 1
-                        else:
-                            unit_dict[y]['Count'] += 1
-                            if player["legion"] not in unit_dict[y]['MMs']:
-                                unit_dict[y]['MMs'][player["legion"]] = {'Count': 1,'Wins': 0}
-                            else:
-                                unit_dict[y]['MMs'][player["legion"]]['Count'] += 1
-                            if player["spell"] not in unit_dict[y]['Spells']:
-                                unit_dict[y]['Spells'][player["spell"]] = {'Count': 1, 'Wins': 0}
-                            else:
-                                unit_dict[y]['Spells'][player["spell"]]['Count'] += 1
-                            unit_dict[y]['Worker'] += player["workers_per_wave"][3]
-                            unit_dict[y]['Elo'] += player["player_elo"]
-                            if player["game_result"] == 'won':
-                                unit_dict[y]['Wins'] += 1
-                                unit_dict[y]['MMs'][player["legion"]]['Wins'] += 1
-                                unit_dict[y]['Spells'][player["spell"]]['Wins'] += 1
-                            for opener in opener_set:
-                                if opener != y:
-                                    if opener in unit_dict[y]['OpenWith']:
-                                        unit_dict[y]['OpenWith'][opener]['Count'] += 1
-                                        if player["game_result"] == 'won':
-                                            unit_dict[y]['OpenWith'][opener]['Wins'] += 1
-                                    else:
-                                        unit_dict[y]['OpenWith'][opener] = {'Count': 1, 'Wins': 0}
-                                        if player["game_result"] == 'won':
-                                            unit_dict[y]['OpenWith'][opener]['Wins'] += 1
-                    except IndexError:
-                        continue
-                    except KeyError:
-                        continue
-                counter += 4
+                except KeyError:
+                    continue
+            counter += 4
     new_patches = []
     for x in patches:
         string = x
