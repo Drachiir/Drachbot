@@ -39,7 +39,7 @@ task_times2=[
     time(hour=22, minute=5, second=0, tzinfo=timezone.utc)
 ]
 
-website_patches = ["11.07"] # ,"11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
+website_patches = ["11.08"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
 
 incmercs = const_file.get("incmercs")
 powermercs = const_file.get("powermercs")
