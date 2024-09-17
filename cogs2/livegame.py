@@ -9,6 +9,7 @@ from datetime import datetime
 from discord.ext import commands
 import legion_api
 import cogs.streamtracker
+import util
 
 with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
@@ -16,7 +17,7 @@ with open('Files/json/Secrets.json') as f:
 
 def save_live_game(gameid, playerlist):
     if len(playerlist) == 5:
-        with open("Livegame/Ranked/" + str(gameid) + "_" + str(playerlist[4]) + ".txt", "w", encoding="utf_8") as f:
+        with open(util.shared_folder_livegames + str(gameid) + "_" + str(playerlist[4]) + ".txt", "w", encoding="utf_8") as f:
             f.write('\n'.join(playerlist))
             f.close()
 
@@ -73,7 +74,7 @@ async def handler(message) -> None:
         desc2 = embed_dict["description"].split("(")[0]
         desc3 = embed_dict["description"].split("Markdown")
         if "elo" in desc or "**TIED**" in desc2:
-            path = 'Livegame/Ranked/'
+            path = util.shared_folder_livegames
             livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
             for game in livegame_files:
                 if game.split("_")[0] == gameid_result:

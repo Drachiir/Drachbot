@@ -15,7 +15,7 @@ from discord_timestamps import TimestampType
 import util
 
 def clean_top_games():
-    path = "Livegame/Ranked/"
+    path = util.shared_folder_livegames
     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
     livegame_files = sorted(livegame_files, key=lambda x: int(x.split("_")[1].split(".")[0]), reverse=True)
     for game in livegame_files:
@@ -27,7 +27,7 @@ def clean_top_games():
             os.remove(path2)
 
 def get_top_games():
-    path = "Livegame/Ranked/"
+    path = util.shared_folder_livegames
     livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
     livegame_files = sorted(livegame_files, key=lambda x: int(x.split("_")[1].split(".")[0]), reverse=True)
     topgames = []

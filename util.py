@@ -59,9 +59,11 @@ for mm in mm_list:
     mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
 
 if platform.system() == "Linux":
+    shared_folder_livegames = "/shared/livegames/"
     shared_folder = "/shared/Images/"
     shared2_folder = "/shared2/"
 else:
+    shared_folder_livegames = "shared/livegames/"
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
 
