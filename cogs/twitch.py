@@ -169,7 +169,10 @@ class TwitchHandler(commands.Cog):
                             mention_string = role.mention
                         else:
                             mention_string = ""
-                        message = await channel.send(content=f"{streamer} is live playing LTD2! {mention_string}", embed=embed)
+                        try:
+                            message = await channel.send(content=f"{streamer} is live playing LTD2! {mention_string}", embed=embed)
+                        except Exception:
+                            print(f"Error sending message to {server} streams channel")
                         self.messages[streamer]["last_msg"][server] = message.id
                     self.messages[streamer]["noti_sent"] = True
                 elif self.messages[streamer]["noti_sent"] and self.messages[streamer]["live"] == False:
@@ -226,7 +229,10 @@ class TwitchHandler(commands.Cog):
                         guild = self.client.get_guild(discord_channels["notify_channels"][server][0])
                         channel = guild.get_channel(discord_channels["notify_channels"][server][1])
                         message = await channel.fetch_message(message_id)
-                        await message.edit(content="", embed=embed)
+                        try:
+                            await message.edit(content="", embed=embed)
+                        except Exception:
+                            print(f"Error editing message on {server} streams channel")
             except Exception:
                 traceback.print_exc()
     
