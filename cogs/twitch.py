@@ -176,6 +176,7 @@ class TwitchHandler(commands.Cog):
                             message = await channel.send(content=f"{streamer} is live playing LTD2! {mention_string}", embed=embed)
                         except Exception:
                             print(f"Error sending message to {server} streams channel")
+                            traceback.print_exc()
                         self.messages[streamer]["last_msg"][server] = message.id
                     self.messages[streamer]["noti_sent"] = True
                 elif self.messages[streamer]["noti_sent"] and self.messages[streamer]["live"] == False:
@@ -236,6 +237,7 @@ class TwitchHandler(commands.Cog):
                             await message.edit(content="", embed=embed)
                         except Exception:
                             print(f"Error editing message on {server} streams channel")
+                            traceback.print_exc()
             except Exception:
                 traceback.print_exc()
     
