@@ -37,7 +37,7 @@ class TwitchHandler(commands.Cog):
             self.messages: dict = {}
             for n in data:
                 string = n.replace("\n", "").split("|")
-                self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": 0}
+                self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
         self.twitch_names = []
         for n in data:
             string = n.replace("\n", "").split("|")
@@ -161,11 +161,17 @@ class TwitchHandler(commands.Cog):
                     with open("Files/json/discord_channels.json", "r") as f:
                         discord_channels = json.load(f)
                         f.close()
-                    guild = self.client.get_guild(discord_channels["toikan_streams"][0])
-                    channel = guild.get_channel(discord_channels["toikan_streams"][1])
-                    message = await channel.send(content=f"{streamer} is live playing LTD2! {self.messages[streamer]["noti_string"]}", embed=embed)
+                    for server in discord_channels["notify_channels"]:
+                        guild = self.client.get_guild(discord_channels["notify_channels"][server][0])
+                        channel = guild.get_channel(discord_channels["notify_channels"][server][1])
+                        if self.messages[streamer]["noti_string"] == "Y":
+                            role = guild.get_role(discord_channels["notify_channels"][server][2])
+                            mention_string = role.mention
+                        else:
+                            mention_string = ""
+                        message = await channel.send(content=f"{streamer} is live playing LTD2! {mention_string}", embed=embed)
+                        self.messages[streamer]["last_msg"][server] = message.id
                     self.messages[streamer]["noti_sent"] = True
-                    self.messages[streamer]["last_msg"] = message.id
                 elif self.messages[streamer]["noti_sent"] and self.messages[streamer]["live"] == False:
                     print("editing message")
                     end_string = ""
@@ -212,14 +218,15 @@ class TwitchHandler(commands.Cog):
                         embed.set_thumbnail(url=self.messages[streamer]["avatar"])
                     except KeyError: pass
                     self.messages[streamer]["noti_sent"] = False
-                    message_id = self.messages[streamer]["last_msg"]
                     with open("Files/json/discord_channels.json", "r") as f:
                         discord_channels = json.load(f)
                         f.close()
-                    guild = self.client.get_guild(discord_channels["toikan_streams"][0])
-                    channel = guild.get_channel(discord_channels["toikan_streams"][1])
-                    message = await channel.fetch_message(message_id)
-                    await message.edit(content="", embed=embed)
+                    for server in self.messages[streamer]["last_msg"]:
+                        message_id = self.messages[streamer]["last_msg"][server]
+                        guild = self.client.get_guild(discord_channels["notify_channels"][server][0])
+                        channel = guild.get_channel(discord_channels["notify_channels"][server][1])
+                        message = await channel.fetch_message(message_id)
+                        await message.edit(content="", embed=embed)
             except Exception:
                 traceback.print_exc()
     
