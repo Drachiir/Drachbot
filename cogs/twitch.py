@@ -289,6 +289,18 @@ class TwitchHandler(commands.Cog):
             await ctx.message.add_reaction("❌")
     
     @commands.command()
+    async def mock_online(self, ctx: commands.Context):
+        text = ctx.message.content[13:]
+        streamer = text.split(" ")[0]
+        title = text.split(" ")[1]
+        self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": " ", "ingame_name": "", "last_msg": {}, "title": title}
+        
+    @commands.command()
+    async def mock_offline(self, ctx: commands.Context):
+        text = ctx.message.content[14:]
+        self.messages[text]["live"] = False
+        
+    @commands.command()
     async def check_online(self, ctx: commands.Context):
         try:
             username = ctx.message.content[14:]
