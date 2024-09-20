@@ -166,7 +166,10 @@ class TwitchHandler(commands.Cog):
                         channel = guild.get_channel(discord_channels["notify_channels"][server][1])
                         if self.messages[streamer]["noti_string"] == "Y":
                             role = guild.get_role(discord_channels["notify_channels"][server][2])
-                            mention_string = role.mention
+                            try:
+                                mention_string = role.mention
+                            except Exception:
+                                mention_string = ""
                         else:
                             mention_string = ""
                         try:
