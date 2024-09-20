@@ -293,7 +293,7 @@ class TwitchHandler(commands.Cog):
         text = ctx.message.content[13:]
         streamer = text.split(" ")[0]
         title = text.split(" ")[1]
-        self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": " ", "ingame_name": "", "last_msg": {}, "title": title}
+        self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": " ", "ingame_name": "", "last_msg": {}, "title": title, "stream_started_at": ""}
         
     @commands.command()
     async def mock_offline(self, ctx: commands.Context):
