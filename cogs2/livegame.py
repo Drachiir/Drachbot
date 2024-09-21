@@ -73,7 +73,7 @@ async def handler(message) -> None:
         desc = embed_dict["description"].split(")")[0].split("(")[1]
         desc2 = embed_dict["description"].split("(")[0]
         desc3 = embed_dict["description"].split("Markdown")
-        if "elo" in desc or "**TIED**" in desc2:
+        if ("elo" in desc) or ("**TIED**" in desc2) or ("Practice" in desc):
             path = util.shared_folder_livegames
             livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
             for game in livegame_files:
