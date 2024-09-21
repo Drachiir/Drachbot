@@ -126,7 +126,7 @@ class Topgames(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(hours=1)
+    @tasks.loop(minutes=30)
     async def clean(self):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
