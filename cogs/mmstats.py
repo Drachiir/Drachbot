@@ -266,7 +266,10 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
     newIndex = sorted(masterminds_dict, key=lambda x: masterminds_dict[x]['Count'], reverse=True)
     masterminds_dict = {k: masterminds_dict[k] for k in newIndex}
-    avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
+    try:
+        avg_gameelo = round(sum(gameelo_list)/len(gameelo_list))
+    except ZeroDivisionError:
+        avg_gameelo = 0
     if data_only:
         if mastermind == "Megamind":
             return [masterminds_dict, megamind_count, avg_gameelo]
@@ -328,6 +331,7 @@ class MMstats(commands.Cog):
     
     @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
+        print("Starting Website Update")
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]
         try:
