@@ -368,7 +368,7 @@ def matchhistory_viewer(playername:str):
         west_players = normalize_string(per_game_list[0][0].replace("\n", ""), per_game_list[1][0].replace("\n", ""))
         east_players = normalize_string(per_game_list[2][0].replace("\n", ""), per_game_list[3][0].replace("\n", ""))
         embed.add_field(name="", value=(f"{emoji} [{result} on Wave {game["ending_wave"]} "
-                                     f"({elo_prefix}{elo_change} Elo)](https://ltd2.pro/game/{game["game_id"]})"
+                                     f"({elo_prefix}{elo_change} Elo)](https://stats.drachbot.site/gameviewer/{game["game_id"]})"
                                      f" {game_timestamp}\n"
                                      f"{per_game_list[0][1]}`{west_players[0]}` {per_game_list[2][1]}`{east_players[0]}`\n"
                                      f"{per_game_list[1][1]}`{west_players[1]}` {per_game_list[3][1]}`{east_players[1]}`"),inline=False)
