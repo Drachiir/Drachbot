@@ -275,7 +275,7 @@ class ScheduledTasks(commands.Cog):
                     f.close()
                 loop = asyncio.get_running_loop()
                 with concurrent.futures.ProcessPoolExecutor() as pool:
-                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 100))
+                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 50))
                     pool.shutdown()
                 guild = self.client.get_guild(discord_channels["drachbot_game"][0])
                 channel = guild.get_channel(discord_channels["drachbot_game"][1])

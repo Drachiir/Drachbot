@@ -143,7 +143,7 @@ def ladder_update(amount=100):
 
 def get_recent_games(calls=100):
     date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    date_after = (datetime.now(tz=timezone.utc) - timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")
+    date_after = (datetime.now(tz=timezone.utc) - timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
     date_now = date_now.replace(" ", "%20")
     date_now = date_now.replace(":", "%3A")
     date_after = date_after.replace(" ", "%20")

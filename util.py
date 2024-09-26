@@ -24,10 +24,14 @@ with open("Files/json/slang.json", "r") as slang_file:
     slang_file.close()
 
 task_times1=[
-    time(hour=4, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=10, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=16, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=22, minute=0, second=0, tzinfo=timezone.utc)
+    time(hour=2, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=5, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=8, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=11, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=14, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=17, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=20, minute=0, second=0, tzinfo=timezone.utc),
+    time(hour=23, minute=0, second=0, tzinfo=timezone.utc)
 ]
 
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
