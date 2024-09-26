@@ -105,7 +105,10 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                             target_dict[temp_pid]["Masterminds"][temp_legion]["Wins"] += 1
     #SOME SETUP BEFORE CREATING THE EMBED
     patches = sorted(patches, key=lambda x: int(x.split(".")[0] + x.split(".")[1]), reverse=True)
-    avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    try:
+        avg_gameelo = round(sum(gameelo_list) / len(gameelo_list))
+    except ZeroDivisionError:
+        avg_gameelo = 0
     output_string = ""
     reverse = True
     if playerid1 != "all":
