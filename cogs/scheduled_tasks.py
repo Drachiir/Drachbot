@@ -214,7 +214,8 @@ async def ltdle_notify(self, update):
                 count += 1
                 await asyncio.sleep(0.5)
             except Exception:
-                traceback.print_exc()
+                print(f"Error delivering DM to {player}")
+                continue
     print(f"Successfully sent {count} DM notis")
 
 def reset():
