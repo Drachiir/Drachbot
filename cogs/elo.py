@@ -448,23 +448,11 @@ class Elo(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @app_commands.command(name="gameid_viewer", description="Outputs image(s) of the gameid provided.")
+    @app_commands.command(name="gameid_viewer", description="Outputs link of the gameid provided.")
     @app_commands.describe(game_id="Enter the GameID.", wave='Enter a specific wave to output, or just 0 for an Album of every wave.')
     async def gameid_viewer(self, interaction: discord.Interaction, game_id: str, wave: int):
-        loop = asyncio.get_running_loop()
-        with concurrent.futures.ProcessPoolExecutor() as pool:
-            await interaction.response.defer(ephemeral=False, thinking=True)
-            try:
-                if len(game_id) != len("a3bcd7578727fa2f229e06d10d367d9d58ec94adaf13c955ba8872e9da46aaab"):
-                    await interaction.followup.send("Invalid GameID format.")
-                response = await loop.run_in_executor(pool, functools.partial(gameid_visualizer, game_id, wave))
-                pool.shutdown()
-                if len(response) > 0:
-                    await interaction.followup.send(response)
-            except Exception:
-                print("/" + interaction.command.name + " failed. args: " + str(interaction.data.values()))
-                traceback.print_exc()
-                await interaction.followup.send("Bot error :sob:")
+        await interaction.response.defer(ephemeral=False, thinking=True)
+        interaction.followup.send(f"https://stats.drachbot.site/gameviewer/{game_id}/{wave}")
     
     @app_commands.command(name="help", description="Gives some info on how to use all the commands.")
     async def help(self, interaction: discord.Interaction):
