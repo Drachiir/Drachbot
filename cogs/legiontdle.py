@@ -940,7 +940,7 @@ class WaveInput(ui.Modal, title='Enter a Wave!'):
             played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 6))
             if type(played_check) == type(dict()):
                 if played_check["game6"]["image"] == 0:
-                    await interaction.followup.send("Guess The Winner game not started yet.")
+                    await interaction.followup.send("Guess The End game not started yet.")
                     return
                 played_check["game6"]["guesses"].append(input)
                 update_user_data(played_check, played_check["name"])
