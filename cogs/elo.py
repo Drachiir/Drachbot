@@ -140,14 +140,14 @@ def gamestats(playername):
         'Winrate: ') + str(round(winrate * 100)) + ('%\n'
         'Behavior score: ') + str(stats['behaviorScore'] / 10)
 
-def gameid_visualizer(gameid, start_wave=0, hide_names = False):
+def gameid_visualizer(gameid, start_wave=0, hide_names = False, force_generate = False):
     if start_wave > 21:
         return "Invalid wave number."
     elif start_wave < 0:
         return "Invalid wave number."
     image_ids = []
     image_link = ""
-    if not Path(Path(shared_folder + gameid + "/")).is_dir():
+    if not Path(Path(shared_folder + gameid + "/")).is_dir() or force_generate:
         url = 'https://apiv2.legiontd2.com/games/byId/' + gameid + '?includeDetails=true'
         api_response = requests.get(url, headers=header)
         gamedata = json.loads(api_response.text)

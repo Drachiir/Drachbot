@@ -144,8 +144,8 @@ def reset_game5(json_data):
                 winner = "East"
                 break
         if winner in ["West", "East"]:
-            im1 = elo.gameid_visualizer(row["game_id"], random.randint(11, row["ending_wave"]-1), hide_names=True)
-            im2 = elo.gameid_visualizer(row["game_id"], row["ending_wave"])
+            im1 = elo.gameid_visualizer(row["game_id"], random.randint(11, row["ending_wave"]-1), hide_names=True, force_generate=True)
+            im2 = elo.gameid_visualizer(row["game_id"], row["ending_wave"], force_generate=True)
             games.append([im1, im2, winner, row["game_elo"], row["ending_wave"]])
     json_data["game_5_games"] = games
     return json_data
@@ -158,8 +158,8 @@ def reset_game6(json_data):
              ).limit(3).dicts()
     games = []
     for row in query.iterator():
-        im1 = elo.gameid_visualizer(row["game_id"], 11, hide_names=True)
-        im2 = elo.gameid_visualizer(row["game_id"], row["ending_wave"])
+        im1 = elo.gameid_visualizer(row["game_id"], 11, hide_names=True, force_generate=True)
+        im2 = elo.gameid_visualizer(row["game_id"], row["ending_wave"], force_generate=True)
         games.append([im1, im2, row["game_elo"], row["ending_wave"]])
     json_data["game_6_games"] = games
     return json_data
