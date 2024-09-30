@@ -470,9 +470,9 @@ def ltdle_game1(session: dict, text_input: str, ltdle_data: dict):
             timestamp = discord_timestamps.format_timestamp(mod_date, TimestampType.RELATIVE)
             embed = create_embed("You lost :frowning:. Try again next time "+timestamp+"\nYour guess history:\n" + "\n".join(session["game1"]["guesses"]))
             if session["game1"]["last_played"] in session["scores_dict"]:
-                session["game1"]["scores_dict"][session["game1"]["last_played"]][0] = 0
+                session["scores_dict"][session["game1"]["last_played"]][0] = 0
             else:
-                session["game1"]["scores_dict"][session["game1"]["last_played"]] = [0,0,0,0,0]
+                session["scores_dict"][session["game1"]["last_played"]] = [0,0,0,0,0]
             update_user_data(session, session["name"])
             return embed
     if correct_count == 6:
