@@ -1527,7 +1527,7 @@ class Legiontdle(commands.Cog):
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False, game_mode=game_options, sort=sort, season = season))
                         pool.shutdown()
                         if type(response) == discord.Embed:
-                            if game != "all" or sort == "asc":
+                            if game != "all" or sort == "asc" or season != 'current':
                                 await interaction.followup.send(embed=response)
                             else:
                                 await interaction.followup.send(embed=response, view=RefreshButtonLtdleTotal())
