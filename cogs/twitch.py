@@ -316,10 +316,9 @@ class TwitchHandler(commands.Cog):
                 stream = await first(self.twitchclient.get_streams(user_login=[streamer]))
                 user = await first(self.twitchclient.get_users(logins=[streamer]))
                 if type(stream) == type(None):
-                    game = "Legion TD 2"
-                    started_at = ""
-                    title = ""
-                    avatar = user.profile_image_url
+                    game = ""
+                    self.messages[streamer]["live"] = False
+                    print(f'{streamer} is done streaming')
                 else:
                     game = stream.game_name
                     started_at = str(stream.started_at)
