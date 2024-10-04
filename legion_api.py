@@ -189,7 +189,7 @@ def get_recent_games(calls=100):
             continue
         for game in history_raw:
             if (game['queueType'] == 'Normal'):
-                if game["gameElo"] < 1800:
+                if game["gameElo"] < 1600:
                     temp = 50
                     break
                 if GameData.get_or_none(GameData.game_id == game["_id"]) is None:
