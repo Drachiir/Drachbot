@@ -18,7 +18,7 @@ from PIL import Image, ImageOps
 import PIL
 import platform
 
-current_patch = util.current_season.split("-")[1]
+current_patch = "v" + util.current_season.split("-")[1]
 current_min_elo = 2800
 
 if platform.system() == "Linux":
