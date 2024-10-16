@@ -279,7 +279,7 @@ class TwitchHandler(commands.Cog):
                 string = n.replace("\n", "").split("|")
                 if string[0] not in self.twitch_names:
                     self.twitch_names.append(string[0])
-                    self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": 0}
+                    self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
                     users = await first(self.twitchclient.get_users(logins=[string[0]]))
                     await self.eventsub.listen_stream_online(users.id, self.on_online)
                     await self.eventsub.listen_stream_offline(users.id, self.on_offline)

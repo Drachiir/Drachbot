@@ -23,27 +23,16 @@ with open("Files/json/slang.json", "r") as slang_file:
     slang = json.load(slang_file)
     slang_file.close()
 
-task_times1=[
-    time(hour=1, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=4, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=7, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=10, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=13, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=16, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=19, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=22, minute=0, second=0, tzinfo=timezone.utc)
-]
-
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
 
 task_times2=[
-    time(hour=4, minute=5, second=0, tzinfo=timezone.utc),
-    time(hour=10, minute=5, second=0, tzinfo=timezone.utc),
-    time(hour=16, minute=5, second=0, tzinfo=timezone.utc),
-    time(hour=22, minute=5, second=0, tzinfo=timezone.utc)
+    time(hour=4, minute=20, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=20, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=20, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=20, second=0, tzinfo=timezone.utc)
 ]
 
-website_patches = ["11.08"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
+website_patches = ["11.09"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
 
 incmercs = const_file.get("incmercs")
 powermercs = const_file.get("powermercs")

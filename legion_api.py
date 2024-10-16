@@ -141,9 +141,9 @@ def ladder_update(amount=100):
         games_count += drachbot_db.get_matchistory(player["_id"], 0, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
 
-def get_recent_games(calls=100):
+def get_recent_games(calls=10, time_delta=15):
     date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    date_after = (datetime.now(tz=timezone.utc) - timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
+    date_after = (datetime.now(tz=timezone.utc) - timedelta(minutes=time_delta+1)).strftime("%Y-%m-%d %H:%M:%S")
     date_now = date_now.replace(" ", "%20")
     date_now = date_now.replace(":", "%3A")
     date_after = date_after.replace(" ", "%20")
@@ -169,11 +169,8 @@ def get_recent_games(calls=100):
             if elo >= ranks_dict[elo_bracket][0]:
                 ranks_dict[elo_bracket][2] += 1
                 break
-    print("Starting Games Update...")
-    t1 = time.time()
     for i in range(calls):
-        if timeout_count == 3:
-            print("Breaking Game Update loops because no new games in last 3 calls..")
+        if timeout_count == 1:
             break
         temp = 0
         url = (f'https://apiv2.legiontd2.com/games'
@@ -189,7 +186,7 @@ def get_recent_games(calls=100):
             continue
         for game in history_raw:
             if (game['queueType'] == 'Normal'):
-                if game["gameElo"] < 1600:
+                if game["gameElo"] < 1800:
                     temp = 50
                     break
                 if GameData.get_or_none(GameData.game_id == game["_id"]) is None:
@@ -201,9 +198,6 @@ def get_recent_games(calls=100):
                     temp += 1
         if temp == 50:
             timeout_count += 1
-        print(f"{i+1} out of {calls}")
-    t2 = time.time()
-    print(f"Finished Game update in {(t2-t1)/60} Minutes.")
     output = ""
     for i in ranks_dict:
         if ranks_dict[i][2] != 0:

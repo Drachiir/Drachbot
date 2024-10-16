@@ -449,8 +449,10 @@ class Elo(commands.Cog):
                 await interaction.followup.send("Bot error :sob:")
     
     @app_commands.command(name="gameid_viewer", description="Outputs link of the gameid provided.")
-    @app_commands.describe(game_id="Enter the GameID.", wave='Enter a specific wave to output, or just 0 for an Album of every wave.')
-    async def gameid_viewer(self, interaction: discord.Interaction, game_id: str, wave: int):
+    @app_commands.describe(game_id="Enter the GameID.", wave='Enter a specific wave to output')
+    async def gameid_viewer(self, interaction: discord.Interaction, game_id: str, wave: int = 1):
+        if wave < 1:
+            wave = 1
         await interaction.response.send_message(f"https://stats.drachbot.site/gameviewer/{game_id}/{wave}")
     
     @app_commands.command(name="help", description="Gives some info on how to use all the commands.")

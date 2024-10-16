@@ -23,7 +23,7 @@ with open("Files/json/Secrets.json", "r") as f:
 
 db = PooledPostgresqlExtDatabase(
     "postgres",
-    max_connections=100,
+    max_connections=None,
     stale_timeout=300,
     server_side_cursors=True,
     user=secret_file["pg_user"],
@@ -41,7 +41,7 @@ class BaseModel(Model):
 class PlayerProfile(BaseModel):
     id = AutoField()
     player_id = TextField(unique=True)
-    player_name = TextField(unique=True)
+    player_name = TextField()
     total_games_played = IntegerField()
     ranked_wins_current_season = IntegerField()
     ranked_losses_current_season = IntegerField()

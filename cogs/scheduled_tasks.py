@@ -266,7 +266,7 @@ class ScheduledTasks(commands.Cog):
         except Exception:
             traceback.print_exc()
     
-    @tasks.loop(time=util.task_times1)
+    @tasks.loop(minutes=3)
     async def game_update(self):
         try:
             # games update
@@ -276,7 +276,7 @@ class ScheduledTasks(commands.Cog):
                     f.close()
                 loop = asyncio.get_running_loop()
                 with concurrent.futures.ProcessPoolExecutor() as pool:
-                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 50))
+                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, 2, time_delta = 3))
                     pool.shutdown()
                 guild = self.client.get_guild(discord_channels["drachbot_game"][0])
                 channel = guild.get_channel(discord_channels["drachbot_game"][1])
