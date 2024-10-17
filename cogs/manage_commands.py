@@ -91,7 +91,11 @@ class ManageCommands(commands.Cog):
     @commands.command()
     async def reset_ltdle(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
-            cogs.scheduled_tasks.reset()
+            print("Starting scheduled reset...")
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                await loop.run_in_executor(pool, s_tasks.reset)
+                pool.shutdown()
             await ctx.message.add_reaction("✅")
         else:
             await ctx.channel.send("No permission to use this command.")
