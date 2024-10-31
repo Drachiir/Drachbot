@@ -280,7 +280,6 @@ def statsgraph(playernames: list, games, min_elo, patch, key: discord.app_comman
 def leaderboard(ranks=10, transparency=False):
     url = 'https://apiv2.legiontd2.com/players/stats?limit=' + str(ranks) + '&sortBy=overallElo&sortDirection=-1'
     api_response = requests.get(url, headers=legion_api.header)
-    legion_api.api_call_logger("players/stats")
     leaderboard = json.loads(api_response.text)
     if transparency:
         mode = 'RGBA'

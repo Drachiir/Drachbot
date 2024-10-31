@@ -63,6 +63,21 @@ def wavestats(games, min_elo, patch, sort="date"):
                                 wave_dict[f"wave{i+1}"]["Mercs"][merc]["Wins"] += 1
                     elif player["kingups_sent_per_wave"][i]:
                         wave_dict[f"wave{i+1}"]["SendCount"] += 1
+                        kingups_list = player["kingups_sent_per_wave"][i].split("!")
+                        for kingup in kingups_list:
+                            if kingup not in wave_dict[f"wave{i+1}"]["Mercs"]:
+                                wave_dict[f"wave{i+1}"]["Mercs"][kingup] = {"Count": 1, "Wins": 0}
+                            else:
+                                wave_dict[f"wave{i+1}"]["Mercs"][kingup]["Count"] += 1
+                            if player["game_result"] == "won":
+                                wave_dict[f"wave{i+1}"]["Mercs"][kingup]["Wins"] += 1
+                    else:
+                        if "Save" not in wave_dict[f"wave{i + 1}"]["Mercs"]:
+                            wave_dict[f"wave{i + 1}"]["Mercs"]["Save"] = {"Count": 1, "Wins": 0}
+                        else:
+                            wave_dict[f"wave{i + 1}"]["Mercs"]["Save"]["Count"] += 1
+                        if player["game_result"] == "won":
+                            wave_dict[f"wave{i + 1}"]["Mercs"]["Save"]["Wins"] += 1
                     #ITERATE THROUGH UNITS BUILT
                     unit_wave_temp = player["build_per_wave"][i].split("!")
                     unit_wave = set()
@@ -93,7 +108,7 @@ class Wavestats(commands.Cog):
     def cog_unload(self) -> None:
         self.website_data.cancel()
     
-    @tasks.loop(time=util.task_times2)
+    @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]

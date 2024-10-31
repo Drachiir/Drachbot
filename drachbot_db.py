@@ -158,7 +158,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                          .select(*req_columns[0])
                          .join(GameData)
                          .where((GameData.queue == "Normal") & GameData.player_ids.contains(playerid) & (GameData.game_elo >= min_elo) & expr & (GameData.ending_wave >= earliest_wave))
-                         .order_by(sort_arg.desc())
+                         .order_by(sort_arg.desc(), GameData.id.desc(), PlayerData.player_slot)
                          .limit(games2*4)).dicts()
             for i, row in enumerate(game_data_query.iterator()):
                 p_data = {}
@@ -205,7 +205,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                            .select(*req_columns[0])
                            .join(GameData)
                            .where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave))
-                           .order_by(sort_arg.desc())
+                           .order_by(sort_arg.desc(), GameData.id.desc(), PlayerData.player_slot)
                            .limit(games * 4)).dicts()
         for i, row in enumerate(game_data_query.iterator()):
             p_data = {}

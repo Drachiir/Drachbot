@@ -22,24 +22,6 @@ with open('Files/json/Secrets.json', 'r') as f:
 
 header = {'x-api-key': secret_file.get('apikey')}
 
-def api_call_logger(request_type):
-    try:
-        with open("Files/json/api_calls.json", "r") as file:
-            api_call_dict = json.load(file)
-        date = datetime.now()
-        if "next_reset" not in api_call_dict:
-            api_call_dict["next_reset"] = (date + timedelta(days=1)).strftime("%m/%d/%Y")
-        elif datetime.strptime(api_call_dict["next_reset"], "%m/%d/%Y") < datetime.now():
-            api_call_dict = {"next_reset": (date + timedelta(days=1)).strftime("%m/%d/%Y")}
-        if request_type not in api_call_dict:
-            api_call_dict[request_type] = 1
-        else:
-            api_call_dict[request_type] += 1
-        with open("Files/json/api_calls.json", "w") as file:
-            json.dump(api_call_dict, file)
-    except Exception:
-        traceback.print_exc()
-
 def get_random_games():
     games = []
     for i in range(8):
@@ -51,7 +33,6 @@ def get_random_games():
         if tries == 50: break
         try:
             url = 'https://apiv2.legiontd2.com/games?limit=50&offset='+str(offset)+'&sortBy=date&sortDirection=-1&includeDetails=false&countResults=false&queueType=Normal'
-            api_call_logger("/games")
             response = json.loads(requests.get(url, headers=header).text)
             for game in response:
                 if game["endingWave"] < 5: continue
@@ -85,7 +66,6 @@ def getid(playername):
     except requests.exceptions.HTTPError:
         return 0
     else:
-        api_call_logger(request_type)
         playerid = json.loads(api_response.text)
         return playerid['_id']
 
@@ -94,7 +74,6 @@ def getprofile(playerid):
     url = 'https://apiv2.legiontd2.com/' + request_type + playerid
     api_response = requests.get(url, headers=header)
     player_profile = json.loads(api_response.text)
-    api_call_logger(request_type)
     return player_profile
 
 def getstats(playerid):
@@ -102,7 +81,6 @@ def getstats(playerid):
     url = 'https://apiv2.legiontd2.com/' + request_type + playerid
     api_response = requests.get(url, headers=header)
     stats = json.loads(api_response.text)
-    api_call_logger(request_type)
     return stats
 
 def pullgamedata(playerid, offset, expected):
@@ -111,7 +89,6 @@ def pullgamedata(playerid, offset, expected):
     url = 'https://apiv2.legiontd2.com/players/matchHistory/' + str(playerid) + '?limit=' + str(50) + '&offset=' + str(offset) + '&countResults=false'
     print('Pulling ' + str(50) + ' games from API...')
     api_response = requests.get(url, headers=header)
-    api_call_logger("players/matchHistory/")
     raw_data = json.loads(api_response.text)
     print('Saving ranked games.')
     for x in raw_data:
@@ -141,9 +118,9 @@ def ladder_update(amount=100):
         games_count += drachbot_db.get_matchistory(player["_id"], 0, 0, '0', 1)
     return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
 
-def get_recent_games(calls=10, time_delta=15):
+def get_recent_games(calls=2, time_delta=3):
     date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    date_after = (datetime.now(tz=timezone.utc) - timedelta(minutes=time_delta+1)).strftime("%Y-%m-%d %H:%M:%S")
+    date_after = (datetime.now(tz=timezone.utc) - timedelta(minutes=time_delta+10)).strftime("%Y-%m-%d %H:%M:%S")
     date_now = date_now.replace(" ", "%20")
     date_now = date_now.replace(":", "%3A")
     date_after = date_after.replace(" ", "%20")
@@ -178,7 +155,6 @@ def get_recent_games(calls=10, time_delta=15):
                 f'&dateBefore={date_now}'
                 f'&dateAfter={date_after}'
                 f'&includeDetails=true&countResults=false&queueType=Normal')
-        api_call_logger("/games")
         history_raw = json.loads(requests.get(url, headers= header).text)
         if (history_raw == {'message': 'Internal server error'}) or (history_raw == {'err': 'Entry not found.'}):
             timeout_count += 1

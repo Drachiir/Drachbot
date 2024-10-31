@@ -4,6 +4,7 @@ import functools
 import json
 import os
 import platform
+import time
 import traceback
 from datetime import datetime
 from discord.ext import commands
@@ -31,36 +32,26 @@ def get_game_elo(playerlist):
     new_list.append(str(round(elo / len(playerlist))))
     return new_list
 
-async def handler(message) -> None:
+
+def handler(message) -> None:
     if str(message.channel) == "game-starts":
         players = str(message.content).splitlines()[1:]
         gameid = str(message.author).split("#")[0].replace("Game started! ", "")
         if len(players) == 4:
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                players_new = await loop.run_in_executor(pool, functools.partial(get_game_elo, players))
-                pool.shutdown()
+            players_new = get_game_elo(players)
             save_live_game(gameid, players_new)
             with open("Files/whitelist.txt", "r") as f:
                 data = f.readlines()
-                f.close()
             for entry in data:
                 playername = entry.split("|")[1].replace("\n", "")
-                if "," in playername:
-                    accounts = playername.split(",")
-                else:
-                    accounts = [playername]
+                accounts = playername.split(",") if "," in playername else [playername]
                 for acc in accounts:
                     for p in players:
-                        if p.split(":")[0] == acc and os.path.isfile("sessions/session_" + acc + ".json") == True:
-                            with open("sessions/session_" + acc + ".json", "r") as f:
+                        if p.split(":")[0] == acc and os.path.isfile(f"sessions/session_{acc}.json"):
+                            with open(f"sessions/session_{acc}.json", "r") as f:
                                 session = json.load(f)
-                                f.close()
                             if session["live"]:
-                                loop = asyncio.get_running_loop()
-                                with concurrent.futures.ThreadPoolExecutor() as pool:
-                                    await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
-                                    pool.shutdown()
+                                cogs.streamtracker.stream_overlay(acc, update=True)
     elif str(message.channel) == "game-results":
         gameid_result = ""
         embeds = message.embeds
@@ -73,7 +64,7 @@ async def handler(message) -> None:
         desc = embed_dict["description"].split(")")[0].split("(")[1]
         desc2 = embed_dict["description"].split("(")[0]
         desc3 = embed_dict["description"].split("Markdown")
-        if ("elo" in desc) or ("**TIED**" in desc2) or ("Practice" in desc):
+        if "elo" in desc or "**TIED**" in desc2 or "Practice" in desc:
             path = util.shared_folder_livegames
             livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
             for game in livegame_files:
@@ -82,56 +73,44 @@ async def handler(message) -> None:
         if "elo" in desc:
             with open("Files/whitelist.txt", "r") as f:
                 data = f.readlines()
-                for entry in data:
-                    playername = entry.split("|")[1].replace("\n", "")
-                    if "," in playername:
-                        accounts = playername.split(",")
-                    else:
-                        accounts = [playername]
-                    for acc in accounts:
-                        if acc in desc3[1]:
-                            elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
-                            if os.path.isfile("sessions/session_" + acc + ".json"):
-                                with open("sessions/session_" + acc + ".json", "r") as f:
-                                    session = json.load(f)
-                                    f.close()
-                                if session["live"]:
-                                    loop = asyncio.get_running_loop()
-                                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
-                                        pool.shutdown()
-                                    await asyncio.sleep(10)
-                                    loop = asyncio.get_running_loop()
-                                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
-                                        pool.shutdown()
-                        elif acc in desc3[2]:
-                            elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
-                            if os.path.isfile("sessions/session_" + acc + ".json"):
-                                with open("sessions/session_" + acc + ".json", "r") as f:
-                                    session = json.load(f)
-                                    f.close()
-                                if session["live"]:
-                                    loop = asyncio.get_running_loop()
-                                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, elo_change=elo_change))
-                                        pool.shutdown()
-                                    await asyncio.sleep(10)
-                                    loop = asyncio.get_running_loop()
-                                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                                        await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, update=True))
-                                        pool.shutdown()
+            for entry in data:
+                playername = entry.split("|")[1].replace("\n", "")
+                accounts = playername.split(",") if "," in playername else [playername]
+                for acc in accounts:
+                    if acc in desc3[1]:
+                        elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
+                        if os.path.isfile(f"sessions/session_{acc}.json"):
+                            with open(f"sessions/session_{acc}.json", "r") as f:
+                                session = json.load(f)
+                            if session["live"]:
+                                cogs.streamtracker.stream_overlay(acc, elo_change=elo_change)
+                                time.sleep(15)
+                                cogs.streamtracker.stream_overlay(acc, update=True)
+                    elif acc in desc3[2]:
+                        elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
+                        if os.path.isfile(f"sessions/session_{acc}.json"):
+                            with open(f"sessions/session_{acc}.json", "r") as f:
+                                session = json.load(f)
+                            if session["live"]:
+                                cogs.streamtracker.stream_overlay(acc, elo_change=elo_change)
+                                time.sleep(15)
+                                cogs.streamtracker.stream_overlay(acc, update=True)
 
 class Livegame(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-                
+        self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=100)
+
     @commands.Cog.listener()
     async def on_message(self, message):
         try:
-            await handler(message)
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(self.pool, functools.partial(handler, message))
         except Exception:
             traceback.print_exc()
 
-async def setup(bot:commands.Bot):
+    def cog_unload(self):
+        self.pool.shutdown(wait=True)
+
+async def setup(bot: commands.Bot):
     await bot.add_cog(Livegame(bot))

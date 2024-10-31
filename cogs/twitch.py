@@ -105,7 +105,8 @@ class TwitchHandler(commands.Cog):
                     self.messages[event_data.event.broadcaster_user_name]["live"] = False
                     print(f'{event_data.event.broadcaster_user_name} stopped playing ltd2!')
                 # elif event_data.event.category_name == "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"]:
-                #     pass
+                #     self.messages[event_data.event.broadcaster_user_name]["update_title"] = True
+                #     self.messages[event_data.event.broadcaster_user_name]["title"] = title
         except Exception:
             traceback.print_exc()
     
@@ -114,6 +115,7 @@ class TwitchHandler(commands.Cog):
         for streamer in self.messages:
             try:
                 if self.messages[streamer]["live"] and self.messages[streamer]["noti_sent"] == False:
+                    rank = 0
                     if self.messages[streamer]["ingame_name"] != " ":
                         loop = asyncio.get_running_loop()
                         if "," in self.messages[streamer]["ingame_name"]:
@@ -145,6 +147,7 @@ class TwitchHandler(commands.Cog):
                                 session = json.load(f)
                                 f.close()
                             session["live"] = True
+                            rank = session["int_elo"]
                             with open("sessions/session_" + acc + ".json", "w") as f:
                                 json.dump(session, f)
                                 f.close()
@@ -157,14 +160,15 @@ class TwitchHandler(commands.Cog):
                     embed = discord.Embed(color=util.random_color(), title=self.messages[streamer]["title"],description=end_string, url='https://www.twitch.tv/'+streamer)
                     try:
                         embed.set_thumbnail(url=self.messages[streamer]["avatar"])
-                    except KeyError: pass
+                    except KeyError:
+                        pass
                     with open("Files/json/discord_channels.json", "r") as f:
                         discord_channels = json.load(f)
                         f.close()
                     for server in discord_channels["notify_channels"]:
                         guild = self.client.get_guild(discord_channels["notify_channels"][server][0])
                         channel = guild.get_channel(discord_channels["notify_channels"][server][1])
-                        if self.messages[streamer]["noti_string"] == "Y":
+                        if (self.messages[streamer]["noti_string"] == "Y") or (rank >= 2700):
                             role = guild.get_role(discord_channels["notify_channels"][server][2])
                             try:
                                 mention_string = role.mention
@@ -239,6 +243,7 @@ class TwitchHandler(commands.Cog):
                             print(f"Error editing message on {server} streams channel")
                             traceback.print_exc()
             except Exception:
+                self.messages[streamer]["live"] = False
                 traceback.print_exc()
     
     @commands.command()
