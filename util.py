@@ -92,11 +92,13 @@ def human_format(num):
     return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
 async def unit_autocomplete(interaction: discord.Interaction, interaction_input):
+    unit_list = []
     if interaction.command.name == "openstats":
         max_cost = 270
+        unit_list.append('pack rat nest')
+        unit_list.append('worker')
     else:
         max_cost = 1337
-    unit_list = []
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
