@@ -311,7 +311,7 @@ def leaderboard(ranks=10, transparency=False):
                         PlayerData.player_id, PlayerData.player_slot],
                        ["game_id", "date", "version", "ending_wave", "game_elo"],
                        ["player_id", "player_slot"]]
-        last_game = drachbot_db.get_matchistory(player["_id"], 1, earlier_than_wave10=True, req_columns=req_columns)
+        last_game = drachbot_db.get_matchistory(player["_id"], 1, earlier_than_wave10=True, req_columns=req_columns, skip_stats=True)
         game_date = last_game[0]["date"]
         if game_date < datetime.now() - timedelta(days=2):
             tent = Image.open('Files/tent.png')

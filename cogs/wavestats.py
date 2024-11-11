@@ -35,7 +35,6 @@ def wavestats(games, min_elo, patch, sort="date"):
     games = len(history_raw)
     for i in range(1,22):
         wave_dict[f"wave{i}"] = {"Count": 0, "EndCount": 0, "SendCount": 0, "LeakedGold": 0, "Mercs": {}, "Units": {}}
-    print('Starting wavestats command...')
     for game in history_raw:
         gameelo_list.append(game["game_elo"])
         wave_dict[f"wave{game["ending_wave"]}"]["EndCount"] += 1
@@ -108,7 +107,7 @@ class Wavestats(commands.Cog):
     def cog_unload(self) -> None:
         self.website_data.cancel()
     
-    @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
+    @tasks.loop(time=util.task_times4) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]
@@ -122,15 +121,15 @@ class Wavestats(commands.Cog):
                         print("Database error, stopping website update....")
                         traceback.print_exc()
                         break
-                    for file in os.listdir(f"{util.shared2_folder}data/wavestats/"):
-                        if file.startswith(patch):
-                            os.remove(f"{util.shared2_folder}data/wavestats/{file}")
                     for elo in elos:
                         data = await loop.run_in_executor(pool, functools.partial(wavestats, 0, elo, patch))
+                        for file in os.listdir(f"{util.shared2_folder}data/wavestats/"):
+                            if file.startswith(patch) and int(file.split("_")[1]) == elo:
+                                os.remove(f"{util.shared2_folder}data/wavestats/{file}")
                         with open(f"{util.shared2_folder}data/wavestats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
                             json.dump(data[0], f)
                             f.close()
-            print("Website data update success!")
+            print("[WEBSITE]: Wave Stats Website data update success!")
         except Exception:
             traceback.print_exc()
 

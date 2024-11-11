@@ -32,12 +32,13 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
         units_json = json.load(f)
     for u_js in units_json:
         if u_js["totalValue"] != '':
-            if u_js["unitId"] and 270 > int(u_js["totalValue"]) > 0:
+            if u_js["unitId"] and 270 >= int(u_js["totalValue"]) > 0:
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
                 string = string.replace(' unit id', '')
                 unit_dict[string] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}, "Cost": u_js["totalValue"]}
     unit_dict['pack rat nest'] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}, "Cost": 75}
+    unit_dict['worker'] = {'Count': 0, 'Wins': 0, 'Worker': 0, 'Elo': 0, 'OpenWith': {}, 'MMs': {}, 'Spells': {}, "Cost": 0}
     if unit != "all":
         if unit in util.slang:
             unit = util.slang.get(unit)
@@ -74,7 +75,6 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
         playerid = 'all'
     patches = set()
     gameelo_list = []
-    print("starting openstats...")
     for game in history_raw:
         if game["ending_wave"] < 4: continue
         patches.add(game["version"])
@@ -93,6 +93,8 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
             opener_ranked.extend([[]])
             x = x.split("!")
             for y in x:
+                if not y:
+                    y = "worker"
                 string = y.split('_unit_id:')
                 opener_ranked[i].append(string[0].replace('_', ' '))
         counter = 0
@@ -213,7 +215,7 @@ class Openstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
+    @tasks.loop(time=util.task_times3) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]
@@ -227,15 +229,15 @@ class Openstats(commands.Cog):
                         print("Database error, stopping website update....")
                         traceback.print_exc()
                         break
-                    for file in os.listdir(f"{shared2_folder}data/openstats/"):
-                        if file.startswith(patch):
-                            os.remove(f"{shared2_folder}data/openstats/{file}")
                     for elo in elos:
                         data = await loop.run_in_executor(pool, functools.partial(openstats, "all", 0, elo, patch, data_only=True))
+                        for file in os.listdir(f"{shared2_folder}data/openstats/"):
+                            if file.startswith(patch) and int(file.split("_")[1]) == elo:
+                                os.remove(f"{shared2_folder}data/openstats/{file}")
                         with open(f"{shared2_folder}data/openstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
                             json.dump(data[0], f)
                             f.close()
-            print("Website data update success!")
+            print("[WEBSITE]: Open Stats Website data update success!")
         except Exception:
             traceback.print_exc()
 

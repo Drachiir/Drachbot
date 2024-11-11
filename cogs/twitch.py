@@ -116,6 +116,7 @@ class TwitchHandler(commands.Cog):
             try:
                 if self.messages[streamer]["live"] and self.messages[streamer]["noti_sent"] == False:
                     rank = 0
+                    end_string = ""
                     if self.messages[streamer]["ingame_name"] != " ":
                         loop = asyncio.get_running_loop()
                         if "," in self.messages[streamer]["ingame_name"]:
@@ -130,7 +131,7 @@ class TwitchHandler(commands.Cog):
                                     minutes_diff = date_diff.total_seconds() / 60
                                 else:
                                     minutes_diff = date_diff.total_seconds() / 60 - 60
-                                if minutes_diff > 5:
+                                if minutes_diff > 60:
                                     os.remove(f'sessions/session_{acc}.json')
                                     with concurrent.futures.ThreadPoolExecutor() as pool:
                                         print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")
@@ -143,17 +144,18 @@ class TwitchHandler(commands.Cog):
                                 with concurrent.futures.ThreadPoolExecutor() as pool:
                                     print(await loop.run_in_executor(pool, functools.partial(cogs.streamtracker.stream_overlay, acc, stream_started_at=self.messages[streamer]["stream_started_at"])) + " session started.")
                                     pool.shutdown()
-                            with open("sessions/session_"+acc+".json", "r") as f:
-                                session = json.load(f)
-                                f.close()
+                            try:
+                                with open("sessions/session_"+acc+".json", "r") as f:
+                                    session = json.load(f)
+                                    f.close()
+                            except FileNotFoundError:
+                                continue
                             session["live"] = True
                             rank = session["int_elo"]
                             with open("sessions/session_" + acc + ".json", "w") as f:
                                 json.dump(session, f)
                                 f.close()
-                        end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
-                    else:
-                        end_string = ""
+                            end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
                     if self.messages[streamer]["noti_string"] == "X":
                         self.messages[streamer]["noti_sent"] = True
                         return
@@ -168,7 +170,7 @@ class TwitchHandler(commands.Cog):
                     for server in discord_channels["notify_channels"]:
                         guild = self.client.get_guild(discord_channels["notify_channels"][server][0])
                         channel = guild.get_channel(discord_channels["notify_channels"][server][1])
-                        if (self.messages[streamer]["noti_string"] == "Y") or (rank >= 2700):
+                        if (self.messages[streamer]["noti_string"] == "Y") or (rank >= 2800):
                             role = guild.get_role(discord_channels["notify_channels"][server][2])
                             try:
                                 mention_string = role.mention
@@ -181,6 +183,7 @@ class TwitchHandler(commands.Cog):
                         except Exception:
                             print(f"Error sending message to {server} streams channel")
                             traceback.print_exc()
+                            continue
                         self.messages[streamer]["last_msg"][server] = message.id
                     self.messages[streamer]["noti_sent"] = True
                 elif self.messages[streamer]["noti_sent"] and self.messages[streamer]["live"] == False:

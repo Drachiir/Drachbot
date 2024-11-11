@@ -81,7 +81,6 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
         playerid = 'all'
     patches = []
     gameelo_list = []
-    print('Starting spellstats command...')
     for game in history_raw:
         patches.append(game["version"])
         gameelo_list.append(game["game_elo"])
@@ -206,7 +205,7 @@ class Spellstats(commands.Cog):
                 traceback.print_exc()
                 await interaction.followup.send("Bot error :sob:")
     
-    @tasks.loop(time=util.task_times2)
+    @tasks.loop(time=util.task_times3)
     async def website_data(self):
         patches = util.website_patches
         elos = [1800, 2000, 2200, 2400, 2600, 2800]
@@ -220,15 +219,15 @@ class Spellstats(commands.Cog):
                         print("Database error, stopping website update....")
                         traceback.print_exc()
                         break
-                    for file in os.listdir(f"{shared2_folder}data/spellstats/"):
-                        if file.startswith(patch):
-                            os.remove(f"{shared2_folder}data/spellstats/{file}")
                     for elo in elos:
                         data = await loop.run_in_executor(pool, functools.partial(spellstats, "all", 0, elo, patch, data_only=True))
+                        for file in os.listdir(f"{shared2_folder}data/spellstats/"):
+                            if file.startswith(patch) and int(file.split("_")[1]) == elo:
+                                os.remove(f"{shared2_folder}data/spellstats/{file}")
                         with open(f"{shared2_folder}data/spellstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
                             json.dump(data[0], f)
                             f.close()
-            print("Website data update success!")
+            print("[WEBSITE]: Spell Stats Website data update success!")
         except Exception:
             traceback.print_exc()
     

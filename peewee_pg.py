@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from peewee import *
 import platform
 from playhouse.postgres_ext import *
+from playhouse.migrate import *
 from playhouse.pool import PooledPostgresqlExtDatabase
 import requests
 import time
@@ -42,6 +43,8 @@ class PlayerProfile(BaseModel):
     id = AutoField()
     player_id = TextField(unique=True)
     player_name = TextField()
+    avatar_url = TextField(null=True)
+    country = TextField(null=True)
     total_games_played = IntegerField()
     ranked_wins_current_season = IntegerField()
     ranked_losses_current_season = IntegerField()
@@ -186,19 +189,10 @@ def save_game(data):
             except Exception:
                 traceback.print_exc()
 
-# def main():
-#     file_list = os.listdir(games_folder)
-#     for index, game in enumerate(file_list):
-#         with open(games_folder+game, "r") as f:
-#             data = json.load(f)
-#             f.close()
-#         save_game(data)
-#         print(f"{index + 1} out of {len(file_list)}")
-#
-# def drop_tables():
-#     db.drop_tables([PlayerProfile, GameData, PlayerData])
-#     db.create_tables([PlayerProfile, GameData, PlayerData])
-#
 # if __name__ == '__main__':
-#     main()
+#     migrator = PostgresqlMigrator(db)
+#     migrate(
+#         migrator.add_column('playerprofile', 'avatar_url', PlayerProfile.avatar_url),
+#         migrator.add_column('playerprofile', 'country', PlayerProfile.country)
+#     )
 #     quit()

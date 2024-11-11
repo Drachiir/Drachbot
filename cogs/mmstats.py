@@ -17,6 +17,23 @@ import util
 import legion_api
 from peewee_pg import GameData, PlayerData
 
+def get_roll(unit_dict, unit_name):
+    if unit_name == "kingpin":
+        unit_name = "angler"
+    elif unit_name == "sakura":
+        unit_name = "seedling"
+    elif unit_name == "iron maiden":
+        unit_name = "cursed casket"
+    elif unit_name == "hell raiser":
+        unit_name = "masked spirit"
+    elif unit_name == "hydra":
+        unit_name = "eggsack"
+    elif unit_name == "oathbreaker final form":
+        unit_name = "chained fist"
+    elif unit_dict[unit_name]["upgradesFrom"]:
+        unit_name = unit_dict[unit_name]["upgradesFrom"]
+    return unit_name
+
 def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", data_only = False, transparent = False):
     if playername == 'all':
         playerid = 'all'
@@ -67,7 +84,6 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     case_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard']
     patches = set()
     megamind_count = 0
-    print('Starting mmstats command...')
     for game in history_raw:
         if (game["version"].startswith('v10') or game["version"].startswith('v9')) and (mastermind == 'Megamind' or mastermind == 'Champion'):
             continue
@@ -139,20 +155,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                             unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
                             if unit_name == "" or unit_name not in unit_dict:
                                 continue
-                            if unit_name == "kingpin":
-                                unit_name = "angler"
-                            elif unit_name == "sakura":
-                                unit_name = "seedling"
-                            elif unit_name == "iron maiden":
-                                unit_name = "cursed casket"
-                            elif unit_name == "hell raiser":
-                                unit_name = "masked spirit"
-                            elif unit_name == "hydra":
-                                unit_name = "eggsack"
-                            elif unit_name == "oathbreaker final form":
-                                unit_name = "chained fist"
-                            elif unit_dict[unit_name]["upgradesFrom"]:
-                                unit_name = unit_dict[unit_name]["upgradesFrom"]
+                            unit_name = get_roll(unit_dict, unit_name)
                             if unit_loc == champ_loc:
                                 if unit_name in masterminds_dict["Champion"]["Targets"]:
                                     masterminds_dict["Champion"]["Targets"][unit_name]["Count"] += 1
@@ -165,20 +168,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                             unit_name2 = unit2.split(":")[0].replace("_", " ").replace(" unit id", "")
                             if unit_name2 == "" or unit_name2 not in unit_dict:
                                 continue
-                            if unit_name2 == "kingpin":
-                                unit_name2 = "angler"
-                            elif unit_name2 == "sakura":
-                                unit_name2 = "seedling"
-                            elif unit_name2 == "iron maiden":
-                                unit_name2 = "cursed casket"
-                            elif unit_name2 == "hell raiser":
-                                unit_name2 = "masked spirit"
-                            elif unit_name2 == "hydra":
-                                unit_name2 = "eggsack"
-                            elif unit_name2 == "oathbreaker final form":
-                                unit_name2 = "chained fist"
-                            elif unit_dict[unit_name2]["upgradesFrom"]:
-                                unit_name2 = unit_dict[unit_name2]["upgradesFrom"]
+                            unit_name2 = get_roll(unit_dict, unit_name2)
                             fighter_set.add(unit_name2)
                         for fighter in fighter_set:
                             if fighter in masterminds_dict[mastermind_current]["Rolls"]:
@@ -237,20 +227,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                                     unit_name = unit.split(":")[0].replace("_", " ").replace(" unit id", "")
                                     if unit_name == "" or unit_name not in unit_dict:
                                         continue
-                                    if unit_name == "kingpin":
-                                        unit_name = "angler"
-                                    elif unit_name == "sakura":
-                                        unit_name = "seedling"
-                                    elif unit_name == "iron maiden":
-                                        unit_name = "cursed casket"
-                                    elif unit_name == "hell raiser":
-                                        unit_name = "masked spirit"
-                                    elif unit_name == "hydra":
-                                        unit_name = "eggsack"
-                                    elif unit_name == "oathbreaker final form":
-                                        unit_name = "chained fist"
-                                    elif unit_dict[unit_name]["upgradesFrom"]:
-                                        unit_name = unit_dict[unit_name]["upgradesFrom"]
+                                    unit_name = get_roll(unit_dict, unit_name)
                                     if unit_name in masterminds_dict["Champion"]["Targets"]:
                                         masterminds_dict["Champion"]["Targets"][unit_name]["Count"] += 1
                                     else:
@@ -344,22 +321,22 @@ class MMstats(commands.Cog):
                         print("Database error, stopping website update....")
                         traceback.print_exc()
                         break
-                    for file in os.listdir(f"{util.shared2_folder}data/mmstats/"):
-                        if file.startswith(patch):
-                            os.remove(f"{util.shared2_folder}data/mmstats/{file}")
-                    for file in os.listdir(f"{util.shared2_folder}data/megamindstats/"):
-                        if file.startswith(patch):
-                            os.remove(f"{util.shared2_folder}data/megamindstats/{file}")
                     for elo in elos:
                         data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, data_only=True))
+                        for file in os.listdir(f"{util.shared2_folder}data/mmstats/"):
+                            if file.startswith(patch) and int(file.split("_")[1]) == elo:
+                                os.remove(f"{util.shared2_folder}data/mmstats/{file}")
                         with open(f"{util.shared2_folder}data/mmstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
                             json.dump(data[0], f)
                             f.close()
                         data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, mastermind="Megamind", data_only=True))
+                        for file in os.listdir(f"{util.shared2_folder}data/megamindstats/"):
+                            if file.startswith(patch) and int(file.split("_")[1]) == elo:
+                                os.remove(f"{util.shared2_folder}data/megamindstats/{file}")
                         with open(f"{util.shared2_folder}data/megamindstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
                             json.dump(data[0], f)
                             f.close()
-            print("Website data update success!")
+            print("[WEBSITE]: MM Stats Website data update success!")
         except Exception:
             traceback.print_exc()
 

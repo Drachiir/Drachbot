@@ -18,76 +18,94 @@ else:
     shared_folder = "shared/"
 
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
-    if not os.path.isfile("sessions/session_" + playername + ".json"):
-        leaderboard = legion_api.get_leaderboard(99)
-        for i, player in enumerate(leaderboard):
-            if player["profile"][0]["playerName"].casefold() == playername.casefold():
-                initial_rank = "#"+str(i+1)
-                current_rank = "#"+str(i + 1)
-                initial_elo = player["overallElo"]
-                current_elo = player["overallElo"]
-                initial_wins = player["rankedWinsThisSeason"]
-                current_wins = player["rankedWinsThisSeason"]
-                initial_losses = player["rankedLossesThisSeason"]
-                current_losses = player["rankedLossesThisSeason"]
-                live = False
-                break
-        else:
-            initial_rank = ""
-            current_rank = ""
-            playerid = legion_api.getid(playername)
-            stats = legion_api.getstats(playerid)
-            initial_elo = stats["overallElo"]
-            current_elo = stats["overallElo"]
-            initial_wins = stats["rankedWinsThisSeason"]
-            current_wins = stats["rankedWinsThisSeason"]
-            initial_losses = stats["rankedLossesThisSeason"]
-            current_losses = stats["rankedLossesThisSeason"]
-            live = False
-        with open("sessions/session_" + playername + ".json", "w") as f:
-            session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
-                            "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins,
-                            "int_losses": initial_losses, "current_losses": current_losses, "live": live}
-            json.dump(session_dict, f, default=str)
-    else:
-        with open("sessions/session_" + playername + ".json", "r") as f:
-            session_dict = json.load(f)
-            try:
-                initial_rank = session_dict["int_rank"]
-                leaderboard = legion_api.get_leaderboard(99)
-                for i, player in enumerate(leaderboard):
-                    if player["profile"][0]["playerName"].casefold() == playername.casefold():
-                        current_rank = "#"+str(i + 1)
-                        break
-                else:
-                    current_rank = ""
-            except Exception:
+    try:
+        if not os.path.isfile("sessions/session_" + playername + ".json"):
+            leaderboard = legion_api.get_leaderboard(99)
+            for i, player in enumerate(leaderboard):
+                if player["profile"][0]["playerName"].casefold() == playername.casefold():
+                    initial_rank = "#"+str(i+1)
+                    current_rank = "#"+str(i + 1)
+                    initial_elo = player["overallElo"]
+                    current_elo = player["overallElo"]
+                    initial_wins = player["rankedWinsThisSeason"]
+                    current_wins = player["rankedWinsThisSeason"]
+                    initial_losses = player["rankedLossesThisSeason"]
+                    current_losses = player["rankedLossesThisSeason"]
+                    live = False
+                    break
+            else:
                 initial_rank = ""
-            live = session_dict["live"]
-            initial_elo = session_dict["int_elo"]
-            initial_wins = session_dict["int_wins"]
-            initial_losses = session_dict["int_losses"]
-            if update:
+                current_rank = ""
                 playerid = legion_api.getid(playername)
                 stats = legion_api.getstats(playerid)
+                initial_elo = stats["overallElo"]
                 current_elo = stats["overallElo"]
-                current_wins = stats["rankedWinsThisSeason"]
-                current_losses = stats["rankedLossesThisSeason"]
-            else:
-                current_elo = session_dict["current_elo"] + elo_change
-                if elo_change > 0:
-                    current_wins = session_dict["current_wins"] + 1
-                else:
-                    current_wins = session_dict["current_wins"]
-                if elo_change < 0:
-                    current_losses = session_dict["current_losses"] + 1
-                else:
-                    current_losses = session_dict["current_losses"]
-        if live:
+                try:
+                    initial_wins = stats["rankedWinsThisSeason"]
+                    current_wins = stats["rankedWinsThisSeason"]
+                except Exception:
+                    initial_wins = 0
+                    current_wins = 0
+                try:
+                    initial_losses = stats["rankedLossesThisSeason"]
+                    current_losses = stats["rankedLossesThisSeason"]
+                except Exception:
+                    initial_losses = 0
+                    current_losses = 0
+            live = False
             with open("sessions/session_" + playername + ".json", "w") as f:
-                session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
-                                "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live}
+                session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
+                                "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins,
+                                "int_losses": initial_losses, "current_losses": current_losses, "live": live}
                 json.dump(session_dict, f, default=str)
+        else:
+            with open("sessions/session_" + playername + ".json", "r") as f:
+                session_dict = json.load(f)
+                try:
+                    initial_rank = session_dict["int_rank"]
+                    leaderboard = legion_api.get_leaderboard(99)
+                    for i, player in enumerate(leaderboard):
+                        if player["profile"][0]["playerName"].casefold() == playername.casefold():
+                            current_rank = "#"+str(i + 1)
+                            break
+                    else:
+                        current_rank = ""
+                except Exception:
+                    initial_rank = ""
+                live = session_dict["live"]
+                initial_elo = session_dict["int_elo"]
+                initial_wins = session_dict["int_wins"]
+                initial_losses = session_dict["int_losses"]
+                if update:
+                    playerid = legion_api.getid(playername)
+                    stats = legion_api.getstats(playerid)
+                    current_elo = stats["overallElo"]
+                    try:
+                        current_wins = stats["rankedWinsThisSeason"]
+                    except Exception:
+                        current_wins = 0
+                    try:
+                        current_losses = stats["rankedLossesThisSeason"]
+                    except Exception:
+                        current_losses = 0
+                else:
+                    current_elo = session_dict["current_elo"] + elo_change
+                    if elo_change > 0:
+                        current_wins = session_dict["current_wins"] + 1
+                    else:
+                        current_wins = session_dict["current_wins"]
+                    if elo_change < 0:
+                        current_losses = session_dict["current_losses"] + 1
+                    else:
+                        current_losses = session_dict["current_losses"]
+            if live:
+                with open("sessions/session_" + playername + ".json", "w") as f:
+                    session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
+                                    "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live}
+                    json.dump(session_dict, f, default=str)
+    except Exception:
+        print(f"Couldn't create session for: {playername}")
+        return None
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
     try:

@@ -59,7 +59,6 @@ def stats_explorer(playername, unit: list, games, min_elo, patch, sort="date", m
     occurrence_count = 0
     win_count = 0
     patches = []
-    print('Starting stats-explorer command...')
     for game in history_raw:
         patches.append(game["version"])
         gameelo_list.append(game["game_elo"])

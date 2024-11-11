@@ -88,7 +88,8 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                         send = util.count_mythium(player[merc_field][n]) + kingups
                         if n <= 9:
                             ip_myth = util.get_inc_power_myth(player[merc_field][n].split("!"))
-                            mercs_pre10[0] += len(player[king_field][n].split("!")) * 20
+                            if player[king_field][n]:
+                                mercs_pre10[0] += len(player[king_field][n].split("!")) * 20
                             mercs_pre10[0] += ip_myth[0]
                             mercs_pre10[1] += ip_myth[1]
                     except IndexError:
@@ -102,11 +103,11 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
                         elif send == 0 and option == "No":
                             save_count_pre10 += 1
                     elif n > 9:
-                        if game["version"].startswith('v11') or game["version"].startswith('v9'):
+                        if game["version"].startswith('v11') or game["version"].startswith('v12'):
                             worker_adjusted = player["workers_per_wave"][n]
-                        elif game["version"].startswith('v10'):
+                        else:
                             worker_adjusted = player["workers_per_wave"][n] * (pow((1 + 6 / 100), n + 1))
-                        small_send = worker_adjusted / 4 * 20
+                        small_send = (worker_adjusted - 5) / 4 * 20
                         if send <= small_send and option == "Yes":
                             save_count += 1
                         elif send == 0 and option == "No":

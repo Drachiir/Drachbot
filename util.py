@@ -26,10 +26,24 @@ with open("Files/json/slang.json", "r") as slang_file:
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
 
 task_times2=[
+    time(hour=4, minute=15, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=15, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=15, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=15, second=0, tzinfo=timezone.utc)
+]
+
+task_times3=[
     time(hour=4, minute=20, second=0, tzinfo=timezone.utc),
     time(hour=10, minute=20, second=0, tzinfo=timezone.utc),
     time(hour=16, minute=20, second=0, tzinfo=timezone.utc),
     time(hour=22, minute=20, second=0, tzinfo=timezone.utc)
+]
+
+task_times4=[
+    time(hour=4, minute=25, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=25, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=25, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=25, second=0, tzinfo=timezone.utc)
 ]
 
 website_patches = ["11.09"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
@@ -278,22 +292,26 @@ def get_inc_power_myth(send):
             power += powermercs.get(x)
     return [income, power]
 
-def count_mythium(send):
+def count_mythium(send, seperate = False):
     if type(send) != type(list()):
         if send == "":
             send = []
         else:
             send = send.split("!")
-    send_amount = 0
+    inc_amount = 0
+    power_amount = 0
     for x in send:
         if "Upgrade" in x:
             continue
         if x in incmercs:
-            send_amount += incmercs.get(x)
+            inc_amount += incmercs.get(x)
         else:
-            send_amount += powermercs.get(x)
-    return send_amount
-
+            power_amount += powermercs.get(x)
+    if seperate:
+        return inc_amount, power_amount
+    else:
+        return inc_amount + power_amount
+    
 def calc_leak(leak, wave, return_gold = False):
     if type(leak) != type(list()):
         if leak == "":
