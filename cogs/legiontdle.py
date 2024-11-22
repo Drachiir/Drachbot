@@ -77,7 +77,9 @@ def check_if_played_today(name: str, game: int):
         session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
         session["game"+str(game)]["game_finished"] = False
         session["game"+str(game)]["guesses"] = []
-        if game in [2,3,4,5,6]:
+        if game in [5,6]:
+            session["game"+str(game)]["image"] = -1
+        if game in [2,3,4]:
             session["game"+str(game)]["image"] = 0
         update_user_data(session, session["name"])
         return session
@@ -669,6 +671,8 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
 
 def ltdle_game5(session: dict, ltdle_data: dict):
     color = random_color()
+    if session["game5"]["image"] == -1:
+        session["game5"]["image"] += 1
     image_index = session["game5"]["image"]
     if image_index == len(ltdle_data["game_5_games"]):
         game_5_score = 0
@@ -702,7 +706,6 @@ def ltdle_game5(session: dict, ltdle_data: dict):
                           url=ltdle_data["game_5_games"][image_index][0])
     file = discord.File(image, filename=image.split("/")[-1])
     embed.set_image(url="attachment://"+image.split("/")[-1])
-    session["game5"]["image"] += 1
     update_user_data(session, session["name"])
     return [file, embed]
 
@@ -728,6 +731,8 @@ def get_game5_embed(image_index, guess):
 
 def ltdle_game6(session: dict, ltdle_data: dict):
     color = random_color()
+    if session["game6"]["image"] == -1:
+        session["game6"]["image"] += 1
     image_index = session["game6"]["image"]
     if image_index == len(ltdle_data["game_6_games"]):
         game_6_score = 0
@@ -771,7 +776,6 @@ def ltdle_game6(session: dict, ltdle_data: dict):
                           url=ltdle_data["game_6_games"][image_index][0])
     file = discord.File(image, filename=image.split("/")[-1])
     embed.set_image(url="attachment://"+image.split("/")[-1])
-    session["game6"]["image"] += 1
     update_user_data(session, session["name"])
     return [file, embed]
 
@@ -943,10 +947,11 @@ class WaveInput(ui.Modal, title='Enter a Wave!'):
                 f.close()
             played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 6))
             if type(played_check) == type(dict()):
-                if played_check["game6"]["image"] == 0:
+                if played_check["game6"]["image"] == -1:
                     await interaction.followup.send("Guess The End game not started yet.")
                     return
                 played_check["game6"]["guesses"].append(input)
+                played_check["game6"]["image"] += 1
                 update_user_data(played_check, played_check["name"])
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 6))
                 if len(response) == 2:
@@ -1075,10 +1080,11 @@ class WinnerButtons(discord.ui.View):
                 f.close()
             played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 5))
             if type(played_check) == type(dict()):
-                if played_check["game5"]["image"] == 0:
+                if played_check["game5"]["image"] == -1:
                     await interaction.followup.send("Guess The Winner game not started yet.")
                     return
                 played_check["game5"]["guesses"].append("West")
+                played_check["game5"]["image"] += 1
                 update_user_data(played_check, played_check["name"])
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
                 if len(response) == 2:
@@ -1105,10 +1111,11 @@ class WinnerButtons(discord.ui.View):
                 f.close()
             played_check = await loop.run_in_executor(pool, functools.partial(check_if_played_today, interaction.user.name, 5))
             if type(played_check) == type(dict()):
-                if played_check["game5"]["image"] == 0:
+                if played_check["game5"]["image"] == -1:
                     await interaction.followup.send("Guess The Winner game not started yet.")
                     return
                 played_check["game5"]["guesses"].append("East")
+                played_check["game5"]["image"] += 1
                 update_user_data(played_check, played_check["name"])
                 response = await loop.run_in_executor(pool, functools.partial(ltdle, played_check, ltdle_data, 5))
                 if len(response) == 2:
