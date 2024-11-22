@@ -176,8 +176,8 @@ def season_reset(json_data):
                         "game2": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
                         "game3": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
                         "game4": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
-                        "game5": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []},
-                        "game6": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}}
+                        "game5": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": -1, "game_finished": False, "guesses": []},
+                        "game6": {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": -1, "game_finished": False, "guesses": []}}
                 json.dump(data, f, indent=2)
                 f.close()
     json_data["season"][0] += 1

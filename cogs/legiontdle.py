@@ -69,9 +69,9 @@ def check_if_played_today(name: str, game: int):
     if "game4" not in session:
         session["game4"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
     if "game5" not in session:
-        session["game5"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+        session["game5"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": -1, "game_finished": False, "guesses": []}
     if "game6" not in session:
-        session["game6"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": 0, "game_finished": False, "guesses": []}
+        session["game6"] = {"games_played": 0, "score": 0, "last_played": date_now.strftime("%m/%d/%Y"), "image": -1, "game_finished": False, "guesses": []}
     update_user_data(session, session["name"])
     if datetime.strptime(session["game"+str(game)]["last_played"], "%m/%d/%Y") + timedelta(days=1) < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
         session["game"+str(game)]["last_played"] = date_now.strftime("%m/%d/%Y")
