@@ -671,8 +671,6 @@ def ltdle_game4(session: dict, text_input: str, ltdle_data: dict):
 
 def ltdle_game5(session: dict, ltdle_data: dict):
     color = random_color()
-    if session["game5"]["image"] == -1:
-        session["game5"]["image"] += 1
     image_index = session["game5"]["image"]
     if image_index == len(ltdle_data["game_5_games"]):
         game_5_score = 0
@@ -711,6 +709,8 @@ def ltdle_game5(session: dict, ltdle_data: dict):
 
 
 def get_game5_embed(image_index, guess):
+    if image_index != 2:
+        image_index += 1
     color = random_color()
     with open("ltdle_data/ltdle.json", "r") as f:
         ltdle_data = json.load(f)
@@ -781,6 +781,8 @@ def ltdle_game6(session: dict, ltdle_data: dict):
 
 
 def get_game6_embed(image_index, guess):
+    if image_index != 2:
+        image_index += 1
     color = random_color()
     with open("ltdle_data/ltdle.json", "r") as f:
         ltdle_data = json.load(f)
@@ -1313,6 +1315,9 @@ class GameSelectionButtons(discord.ui.View):
                     else:
                         await interaction.channel.send(played_check)
                         return
+                    if data["game5"]["image"] == -1:
+                        data["game5"]["image"] += 1
+                    update_user_data(data, data["name"])
                     response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 5))
                     pool.shutdown()
                     if type(response) == list:
@@ -1344,6 +1349,9 @@ class GameSelectionButtons(discord.ui.View):
                     else:
                         await interaction.channel.send(played_check)
                         return
+                    if data["game5"]["image"] == -1:
+                        data["game5"]["image"] += 1
+                    update_user_data(data, data["name"])
                     response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 6))
                     pool.shutdown()
                     if type(response) == list:
