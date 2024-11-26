@@ -112,7 +112,46 @@ def ltdle(session: dict, ltdle_data: dict, game: int, input = ""):
             return ltdle_game5(session, ltdle_data)
         case 6:
             return ltdle_game6(session, ltdle_data)
-            
+
+def ltdle_highscores(season):
+    color = random_color()
+    player_data_list = os.listdir("ltdle_data")
+    scores = []
+    for player in player_data_list:
+        if player.endswith(".json"): continue
+        if season != "current":
+            end_string = f"_season{season}"
+        else:
+            end_string = ""
+        try:
+            with open("ltdle_data/" + player + f"/data{end_string}.json", "r") as f:
+                p_data = json.load(f)
+            last_value = 0
+            day_string = ""
+            for key, value in p_data["scores_dict"].items():
+                if sum(value) > last_value:
+                    last_value = sum(value)
+                    day_string = key
+        except Exception:
+            continue
+        scores.append((player, last_value, day_string))
+        
+    sorted_data = sorted(scores, key=lambda x: x[1], reverse=True)
+    top_10 = sorted_data[:10]
+    name_width = 15
+    rank_width = 2
+    result = "\n".join([
+        f"`{str(i + 1).rjust(rank_width)}. {name.ljust(name_width)} {score}pts - {date}`"
+        for i, (name, score, date) in enumerate(top_10)
+    ])
+    
+    if season != "current":
+        title_string = f" Season {season}"
+    else:
+        title_string = ""
+    embed = discord.Embed(color=color, title=f"Top 10 Scores", description=result)
+    embed.set_author(name=f"Drachbot{title_string}", icon_url="https://overlay.drachbot.site/favicon.ico")
+    return embed
 
 def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", season = "current"):
     color = random_color()
@@ -1504,7 +1543,8 @@ class Legiontdle(commands.Cog):
         discord.app_commands.Choice(name='Leaderboard', value='Leaderboard'),
         discord.app_commands.Choice(name='Avg Leaderboard', value='Avg Leaderboard'),
         discord.app_commands.Choice(name='Daily Leaderboard', value='Daily Leaderboard'),
-        discord.app_commands.Choice(name='Profile', value='Profile')
+        discord.app_commands.Choice(name='Profile', value='Profile'),
+        discord.app_commands.Choice(name='HighScores', value='HighScores')
     ])
     @app_commands.choices(game=[
         discord.app_commands.Choice(name='Guess The Unit', value='game1'),
@@ -1582,6 +1622,14 @@ class Legiontdle(commands.Cog):
                         else:
                             avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
                         response = await loop.run_in_executor(pool, functools.partial(ltdle_profile, username, avatar))
+                        pool.shutdown()
+                        if type(response) == discord.Embed:
+                            await interaction.followup.send(embed=response)
+                        else:
+                            await interaction.followup.send(response)
+                        return
+                    case "HighScores":
+                        response = await loop.run_in_executor(pool, functools.partial(ltdle_highscores, season))
                         pool.shutdown()
                         if type(response) == discord.Embed:
                             await interaction.followup.send(embed=response)
