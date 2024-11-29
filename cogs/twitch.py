@@ -276,13 +276,18 @@ class TwitchHandler(commands.Cog):
         except Exception:
             traceback.print_exc()
             await ctx.message.add_reaction("❌")
-
+    
+    #twitchname|ign|discord_name|Y/X/
     @commands.command()
-    async def add_streamers(self, ctx: commands.Context):
+    async def add_streamer(self, ctx: commands.Context):
         try:
+            text = ctx.message.content[14:].split("|")
+            with open("Files/streamers.txt", "a") as f:
+                f.write(f"\n{text[0]}|{text[3]}|{text[1]}")
+            with open("Files/whitelist.txt", "a") as f:
+                f.write(f"\n{text[2]}|{text[1]}|{text[0]}")
             with open("Files/streamers.txt", "r") as f:
                 data = f.readlines()
-                f.close()
             for n in data:
                 string = n.replace("\n", "").split("|")
                 if string[0] not in self.twitch_names:
