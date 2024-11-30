@@ -46,7 +46,7 @@ def elo(playername, rank):
                     PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.elo_change],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                    ["player_id", "player_name", "player_slot", "game_result", "elo_change"]]
-    if playername != None:
+    if playername is not None:
         playerid = legion_api.getid(playername)
         if playerid == 0:
             return 'Player ' + str(playername) + ' not found.'
@@ -63,32 +63,40 @@ def elo(playername, rank):
                     else:
                         history_list.append("L")
                     elo_change += player2["elo_change"]
-    def elochange(elochange):
-        if elo_change >=0:
-            return "+" + str(elo_change)
+    def elochange(n):
+        if n >=0:
+            return "+" + str(n)
         else:
-            return str(elo_change)
+            return str(n)
+    def get_current_and_peak_rating_emote(player_data):
+        try:
+            peak = player_data['overallPeakEloThisSeason']
+        except KeyError:
+            peak = 0
+        try:
+            current = player_data['overallElo']
+        except KeyError:
+            current = 0
+        return util.get_ranked_emote(current), util.get_ranked_emote(peak), peak, current
+    
     if rank == 0:
         url = 'https://apiv2.legiontd2.com/players/stats?limit=100&sortBy=overallElo&sortDirection=-1'
         api_response = requests.get(url, headers=header)
         leaderboard = json.loads(api_response.text)
         for i, player in enumerate(leaderboard):
             if player["_id"] == playerid:
-                rank = i+1
-                rank_emote = util.get_ranked_emote(player['overallElo'])
-                peak_emote = util.get_ranked_emote(player['overallPeakEloThisSeason'])
+                rank_emote, peak_emote, peak, current = get_current_and_peak_rating_emote(player)
                 embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(i+1) + ' with ' + str(
-                    player['overallElo']) + " " + rank_emote+' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote+' and ' + str(
+                    current) + " " + rank_emote+' elo\nPeak: ' + str(peak) + " " + peak_emote+' and ' + str(
                     round((player['secondsPlayed'] / 60)/60)) + ' hours.\n' + \
                     str(win_count) + ' Win - '+str(len(history_raw)-win_count)+' Lose (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
                 embed.set_thumbnail(url="https://cdn.legiontd2.com/" + legion_api.getprofile(playerid)['avatarUrl'])
                 return embed
         else:
             player = legion_api.getstats(playerid)
-            rank_emote = util.get_ranked_emote(player['overallElo'])
-            peak_emote = util.get_ranked_emote(player['overallPeakEloThisSeason'])
-            embed = discord.Embed(color=0xFFD136, description="**"+playername + '** has ' + str(player['overallElo']) + " " + rank_emote +
-                ' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote + ' and ' +
+            rank_emote, peak_emote, peak, current = get_current_and_peak_rating_emote(player)
+            embed = discord.Embed(color=0xFFD136, description="**"+playername + '** has ' + str(current) + " " + rank_emote +
+                ' elo\nPeak: ' + str(peak) + " " + peak_emote + ' and ' +
                 str(round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
                 str(win_count) + ' W - '+str(len(history_raw)-win_count)+' L (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
             embed.set_thumbnail(url="https://cdn.legiontd2.com/" + legion_api.getprofile(playerid)['avatarUrl'])
@@ -99,8 +107,7 @@ def elo(playername, rank):
         player = json.loads(api_response.text)[0]
         playerid = player["_id"]
         playername = legion_api.getprofile(playerid)["playerName"]
-        rank_emote = util.get_ranked_emote(player['overallElo'])
-        peak_emote = util.get_ranked_emote(player['overallPeakEloThisSeason'])
+        rank_emote, peak_emote, peak, current = get_current_and_peak_rating_emote(player)
         history_raw = drachbot_db.get_matchistory(playerid, 10, earlier_than_wave10=True, req_columns=req_columns)
         for game in history_raw:
             for player2 in game["players_data"]:
@@ -113,7 +120,7 @@ def elo(playername, rank):
                         history_list.append("L")
                     elo_change += player2["elo_change"]
         embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(rank) + ' with ' + str(
-            player['overallElo']) + " " + rank_emote + ' elo\nPeak: ' + str(player['overallPeakEloThisSeason']) + " " + peak_emote + ' and ' + str(
+            current) + " " + rank_emote + ' elo\nPeak: ' + str(peak) + " " + peak_emote + ' and ' + str(
             round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
             str(win_count) + ' Win - ' + str(len(history_raw)-win_count) + ' Lose (Elo change: ' + elochange(elo_change) + ")\n"+"-".join(history_list))
         embed.set_thumbnail(url="https://cdn.legiontd2.com/" + legion_api.getprofile(playerid)['avatarUrl'])

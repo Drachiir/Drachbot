@@ -16,7 +16,7 @@ import legion_api
 
 
 def get_emote(emote_name):
-    seventvapi = "https://7tv.io/v3/emote-sets/65a6d017888d90ac522693b8"
+    seventvapi = "https://7tv.io/v3/emote-sets/01GNTXE1A000078471Z4M8YD0F"
     response = json.loads(requests.get(seventvapi).text)
     for emote in response["emotes"]:
         if emote["data"]["name"] == emote_name:
