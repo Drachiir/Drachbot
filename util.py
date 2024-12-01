@@ -47,7 +47,7 @@ task_times4=[
 ]
 
 website_patches = ["11.10"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
-
+website_elos = [1600, 1800, 2000, 2200, 2400, 2600, 2800]
 incmercs = const_file.get("incmercs")
 powermercs = const_file.get("powermercs")
 creep_values = const_file.get("creep_values")

@@ -310,7 +310,7 @@ class MMstats(commands.Cog):
     async def website_data(self):
         print("Starting Website Update")
         patches = util.website_patches
-        elos = [1800, 2000, 2200, 2400, 2600, 2800]
+        elos = util.website_elos
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
