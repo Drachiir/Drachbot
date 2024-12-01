@@ -283,6 +283,10 @@ class ScheduledTasks(commands.Cog):
                 message = await channel.send(embed=ladder_update)
         except Exception:
             traceback.print_exc()
+    
+    @game_update.before_loop
+    async def before_scheduled_rank_update(self):
+        await self.client.wait_until_ready()
         
 async def setup(bot: commands.Bot):
     await bot.add_cog(ScheduledTasks(bot))
