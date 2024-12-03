@@ -70,7 +70,6 @@ class Proleaks(commands.Cog):
     
     @tasks.loop(time=util.task_times4) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
-        print("[WEBSITE]: Proleaks starting Website Update...")
         patches = util.website_patches
         try:
             loop = asyncio.get_running_loop()
