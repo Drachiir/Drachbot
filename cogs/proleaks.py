@@ -76,7 +76,7 @@ class Proleaks(commands.Cog):
             with concurrent.futures.ProcessPoolExecutor() as pool:
                 for patch in patches:
                     try:
-                        data = await loop.run_in_executor(pool, functools.partial(proleaks, 0, 2000, patch))
+                        data = await loop.run_in_executor(pool, functools.partial(proleaks, 0, 1600, patch))
                     except Exception:
                         print("Database error, stopping website update....")
                         traceback.print_exc()
