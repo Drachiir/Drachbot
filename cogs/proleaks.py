@@ -68,7 +68,7 @@ class Proleaks(commands.Cog):
     def cog_unload(self) -> None:
         self.website_data.cancel()
     
-    @tasks.loop(time=util.task_times4) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
+    @tasks.loop(time=datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.website_patches
         try:
