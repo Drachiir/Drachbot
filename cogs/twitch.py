@@ -37,11 +37,11 @@ class TwitchHandler(commands.Cog):
             self.messages: dict = {}
             for n in data:
                 string = n.replace("\n", "").split("|")
-                self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
+                self.messages[string[0].lower()] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
         self.twitch_names = []
         for n in data:
             string = n.replace("\n", "").split("|")
-            self.twitch_names.append(string[0])
+            self.twitch_names.append(string[0].lower())
     
     async def cog_check(self, ctx:commands.Context):
         if ctx.author.name == "drachir_":
@@ -60,27 +60,29 @@ class TwitchHandler(commands.Cog):
                 print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data, trying again in 30 seconds")
                 await asyncio.sleep(30)
                 stream = await first(self.twitchclient.get_streams(user_id=[event_data.event.broadcaster_user_id]))
+            streamer_name = event_data.event.broadcaster_user_name.lower()
             if stream is not None:
                 game = stream.game_name
                 started_at = str(stream.started_at)
                 title = stream.title
                 avatar = user.profile_image_url
                 if game == "Legion TD 2":
-                    self.messages[event_data.event.broadcaster_user_name]["live"] = True
-                    self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
-                    self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
-                    self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
-                    self.messages[event_data.event.broadcaster_user_name]["title"] = title
-                    print(f'{event_data.event.broadcaster_user_name} is live playing ltd2!')
+                    self.messages[streamer_name]["live"] = True
+                    self.messages[streamer_name]["noti_sent"] = False
+                    self.messages[streamer_name]["stream_started_at"] = started_at
+                    self.messages[streamer_name]["avatar"] = avatar
+                    self.messages[streamer_name]["title"] = title
+                    print(f'{streamer_name} is live playing ltd2!')
             else:
-                print(f"Online event for {event_data.event.broadcaster_user_name} but no stream data")
+                print(f"Online event for {streamer_name} but no stream data")
         except Exception:
             traceback.print_exc()
     
     async def on_offline(self, event_data: StreamOfflineEvent):
         try:
-            print(f'{event_data.event.broadcaster_user_name} is done streaming.')
-            self.messages[event_data.event.broadcaster_user_name]["live"] = False
+            streamer_name = event_data.event.broadcaster_user_name.lower()
+            print(f'{streamer_name} is done streaming.')
+            self.messages[streamer_name]["live"] = False
         except Exception:
             traceback.print_exc()
     
@@ -94,16 +96,17 @@ class TwitchHandler(commands.Cog):
                 started_at = str(stream.started_at)
                 title = stream.title
                 avatar = user.profile_image_url
-                if event_data.event.category_name == "Legion TD 2" and not self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
-                    self.messages[event_data.event.broadcaster_user_name]["live"] = True
-                    self.messages[event_data.event.broadcaster_user_name]["noti_sent"] = False
-                    self.messages[event_data.event.broadcaster_user_name]["stream_started_at"] = started_at
-                    self.messages[event_data.event.broadcaster_user_name]["avatar"] = avatar
-                    self.messages[event_data.event.broadcaster_user_name]["title"] = title
-                    print(f'{event_data.event.broadcaster_user_name} changed to playing ltd2!')
-                elif event_data.event.category_name != "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"] and started_at != "":
-                    self.messages[event_data.event.broadcaster_user_name]["live"] = False
-                    print(f'{event_data.event.broadcaster_user_name} stopped playing ltd2!')
+                streamer_name = event_data.event.broadcaster_user_name.lower()
+                if event_data.event.category_name == "Legion TD 2" and not self.messages[streamer_name]["live"] and started_at != "":
+                    self.messages[streamer_name]["live"] = True
+                    self.messages[streamer_name]["noti_sent"] = False
+                    self.messages[streamer_name]["stream_started_at"] = started_at
+                    self.messages[streamer_name]["avatar"] = avatar
+                    self.messages[streamer_name]["title"] = title
+                    print(f'{streamer_name} changed to playing ltd2!')
+                elif event_data.event.category_name != "Legion TD 2" and self.messages[streamer_name]["live"] and started_at != "":
+                    self.messages[streamer_name]["live"] = False
+                    print(f'{streamer_name} stopped playing ltd2!')
                 # elif event_data.event.category_name == "Legion TD 2" and self.messages[event_data.event.broadcaster_user_name]["live"]:
                 #     self.messages[event_data.event.broadcaster_user_name]["update_title"] = True
                 #     self.messages[event_data.event.broadcaster_user_name]["title"] = title
@@ -290,14 +293,14 @@ class TwitchHandler(commands.Cog):
                 data = f.readlines()
             for n in data:
                 string = n.replace("\n", "").split("|")
-                if string[0] not in self.twitch_names:
-                    self.twitch_names.append(string[0])
-                    self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
+                if string[0].lower() not in self.twitch_names:
+                    self.twitch_names.append(string[0].lower())
+                    self.messages[string[0].lower()] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
                     users = await first(self.twitchclient.get_users(logins=[string[0]]))
                     await self.eventsub.listen_stream_online(users.id, self.on_online)
                     await self.eventsub.listen_stream_offline(users.id, self.on_offline)
                     await self.eventsub.listen_channel_update(users.id, self.on_change)
-                    print(f'added {string[0]} to the eventsub')
+                    print(f'added {string[0].lower()} to the eventsub')
             await ctx.message.add_reaction("✅")
         except Exception:
             traceback.print_exc()
@@ -322,7 +325,7 @@ class TwitchHandler(commands.Cog):
             for streamer in self.twitch_names:
                 if username == "all":
                     pass
-                elif username == streamer:
+                elif username.lower() == streamer:
                     pass
                 else:
                     continue
