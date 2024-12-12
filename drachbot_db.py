@@ -91,15 +91,6 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                 except KeyError:
                     losses = 0
                 playerprofile = legion_api.getprofile(playerid)
-                if Path(Path("Profiles/"+ playerid + "/")).is_dir():
-                    with open("Profiles/"+ playerid + "/gamecount_"+playerid+".txt") as f:
-                        try:
-                            txt = f.readlines()
-                            offset = int(txt[1].replace("\n", ""))
-                        except Exception:
-                            offset = 0
-                else:
-                    offset = 0
                 try:
                     ladder_points = playerstats["ladderPoints"]
                 except KeyError:
@@ -111,7 +102,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                     ranked_wins_current_season=wins,
                     ranked_losses_current_season=losses,
                     ladder_points=ladder_points,
-                    offset=offset,
+                    offset=0,
                     last_updated=datetime.now(tz=timezone.utc)
                 ).save()
                 data = get_games_loop(playerid, 0, 300)
@@ -210,8 +201,6 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                            .limit(games * 4)).dicts()
         for i, row in enumerate(game_data_query.iterator()):
             p_data = {}
-            # if row["version"] == "v11.07":
-            #     continue
             for field in req_columns[2]:
                 p_data[field] = row[field]
             if i % 4 == 0:
