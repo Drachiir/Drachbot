@@ -104,6 +104,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                                     "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live}
                     json.dump(session_dict, f, default=str)
     except Exception:
+        traceback.print_exc()
         print(f"Couldn't create session for: {playername}")
         return None
     wins = current_wins-initial_wins
