@@ -57,14 +57,6 @@ def get_leaderboard(num):
     return json.loads(api_response.text)
 
 def getid(playername):
-    profile_data_query = (PlayerProfile
-                          .select(PlayerProfile.player_name, PlayerProfile.player_id)
-                          .where(peewee.fn.LOWER(PlayerProfile.player_name) == peewee.fn.LOWER(playername))
-                          ).dicts()
-    if profile_data_query.count() == 1:
-        for row in profile_data_query:
-            return row["player_id"]
-    #Get id by api if not found in db
     request_type = 'players/byName/'
     url = 'https://apiv2.legiontd2.com/' + request_type + playername
     try:
