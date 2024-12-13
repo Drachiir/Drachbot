@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 import os
 from datetime import datetime, timedelta, timezone, time
-
+from peewee_pg import db
 import cogs.streamtracker
 import cogs.scheduled_tasks
 import legion_api
@@ -124,6 +124,7 @@ class ManageCommands(commands.Cog):
             await self.client.close()
             loop = asyncio.get_running_loop()
             loop.stop()
+            db.close()
         else:
             await ctx.channel.send("No permission to use this command.")
     
