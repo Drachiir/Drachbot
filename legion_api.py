@@ -14,7 +14,9 @@ import peewee_pg
 import util
 import peewee
 from peewee import fn
-from peewee_pg import PlayerProfile, GameData, PlayerData
+from peewee_pg import PlayerProfile, GameData, PlayerData, db
+from peewee import InterfaceError, OperationalError
+from psycopg2 import OperationalError as Psycopg2OperationalError
 import requests
 
 with open('Files/json/Secrets.json', 'r') as f:
@@ -57,6 +59,18 @@ def get_leaderboard(num):
     return json.loads(api_response.text)
 
 def getid(playername):
+    with db.atomic():
+        try:
+            profile_data_query = (PlayerProfile
+                                  .select(PlayerProfile.player_id)
+                                  .where(fn.LOWER(PlayerProfile.player_name) == fn.LOWER(playername))
+                                  .dicts())
+            rows = list(profile_data_query)
+            if len(rows) == 1:
+                return rows[0]["player_id"]
+        except (InterfaceError, OperationalError, Psycopg2OperationalError) as e:
+            print(f"Database error: {e}")
+    #Get id by api if not found in db
     request_type = 'players/byName/'
     url = 'https://apiv2.legiontd2.com/' + request_type + playername
     try:
