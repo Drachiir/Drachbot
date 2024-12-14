@@ -61,14 +61,22 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
     elif patch != "0" and "-" in patch:
         patch_new = patch.split("-")
         if len(patch_new) == 2:
-            patch_new2 = patch_new[0].split('.')
-            patch_new3 = patch_new[1].split('.')
-            for x in range(int(patch_new3[1])-int(patch_new2[1])+1):
-                if int(patch_new2[1]) + x < 10:
-                    prefix = "0"
+            start_major, start_minor = map(int, patch_new[0].split('.'))
+            end_major, end_minor = map(int, patch_new[1].split('.'))
+
+            for major in range(start_major, end_major + 1):
+                if major == start_major:
+                    for minor in range(start_minor, 12):
+                        prefix = "0" if minor < 10 else ""
+                        patch_list.append(f"{major}.{prefix}{minor}")
+                elif major == end_major:
+                    for minor in range(0, end_minor + 1):
+                        prefix = "0" if minor < 10 else ""
+                        patch_list.append(f"{major}.{prefix}{minor}")
                 else:
-                    prefix = ""
-                patch_list.append(patch_new2[0] + "." + prefix + str(int(patch_new2[1]) + x))
+                    for minor in range(0, 12):
+                        prefix = "0" if minor < 10 else ""
+                        patch_list.append(f"{major}.{prefix}{minor}")
         else:
             return []
     games_count = 0
