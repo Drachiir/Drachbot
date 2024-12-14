@@ -161,13 +161,13 @@ class StatsExplorer(commands.Cog):
                                spell=util.spell_autocomplete)
     async def stats_explorer(self, interaction: discord.Interaction, playername: str, unit1: str, unit2: str="", unit3: str="", unit4: str="",
                     mastermind: discord.app_commands.Choice[str] = "all", spell: str = "all", games: int = 0, min_elo: int = 0,
-                    patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date"
+                    patch: str = "", sort: discord.app_commands.Choice[str] = "date"
                     ):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                min_elo = util.current_minelo
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and not patch:
+                min_elo = util.get_current_minelo()
             try:
                 sort = sort.value
             except AttributeError:
@@ -176,6 +176,8 @@ class StatsExplorer(commands.Cog):
                 mastermind = mastermind.value
             except AttributeError:
                 pass
+            if not patch:
+                patch = util.get_current_patches()
             try:
                 unit = []
                 for i in [unit1,unit2,unit3,unit4]:

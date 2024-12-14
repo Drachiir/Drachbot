@@ -171,18 +171,20 @@ class Unitstats(commands.Cog):
         discord.app_commands.Choice(name='elo', value="elo")
     ])
     @app_commands.autocomplete(unit=util.unit_autocomplete)
-    async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season,
+    async def unitstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "",
                         sort: discord.app_commands.Choice[str] = "date", unit: str = "all", min_cost: int = 0,
                         max_cost: int = 2000, rollstats: bool = False, transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                min_elo = util.current_minelo
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and not patch:
+                min_elo = util.get_current_minelo()
             try:
                 sort = sort.value
             except AttributeError:
                 pass
+            if not patch:
+                patch = util.get_current_patches()
             try:
                 response = await loop.run_in_executor(pool, functools.partial(unitstats, str(playername).lower(), games, min_elo, patch,
                                                                               sort=sort, unit=unit, min_cost=min_cost, max_cost=max_cost,
@@ -199,7 +201,7 @@ class Unitstats(commands.Cog):
 
     @tasks.loop(time=util.task_times4)
     async def website_data(self):
-        patches = util.website_patches
+        patches = util.get_current_patches(only_current=True)
         elos = util.website_elos
         try:
             loop = asyncio.get_running_loop()

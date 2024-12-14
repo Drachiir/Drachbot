@@ -18,8 +18,7 @@ from PIL import Image, ImageOps
 import PIL
 import platform
 
-current_patch = "v" + util.current_season.split("-")[1]
-current_min_elo = 2800
+current_patch = "v" + util.get_current_patches().split("-")[1]
 
 if platform.system() == "Linux":
     shared_folder = "/shared/Images/"
@@ -46,6 +45,7 @@ def reset_game1(json_data):
     return json_data
 
 def reset_game2(json_data):
+    current_min_elo = util.get_current_ltdle_minelo()
     query = (PlayerData
              .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, PlayerData.player_slot, PlayerData.leaks_per_wave)
              .join(GameData)
@@ -125,6 +125,7 @@ def reset_game4(json_data):
     return json_data
 
 def reset_game5(json_data):
+    current_min_elo = util.get_current_ltdle_minelo()
     query = (GameData
              .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, GameData.ending_wave)
              .where((GameData.queue == "Normal") & (GameData.game_elo > current_min_elo) & GameData.version.startswith(current_patch) & (GameData.ending_wave > 12))
@@ -151,6 +152,7 @@ def reset_game5(json_data):
     return json_data
 
 def reset_game6(json_data):
+    current_min_elo = util.get_current_ltdle_minelo()
     query = (GameData
              .select(GameData.queue, GameData.game_id, GameData.game_elo, GameData.version, GameData.ending_wave)
              .where((GameData.queue == "Normal") & (GameData.game_elo > current_min_elo) & GameData.version.startswith(current_patch) & (GameData.ending_wave >= 12))

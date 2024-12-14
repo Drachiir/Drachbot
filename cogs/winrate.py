@@ -239,16 +239,24 @@ class Winrate(commands.Cog):
     ])
     async def winrate(self, interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str],
                       mm1: discord.app_commands.Choice[str] = None, mm2: discord.app_commands.Choice[str] = None, games: int = 0, min_elo: int = 0,
-                      patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "Count", text_output: bool = False, soloq_only: bool = False):
+                      patch: str = "", sort: discord.app_commands.Choice[str] = "Count", text_output: bool = False, soloq_only: bool = False):
         await interaction.response.defer(ephemeral=False, thinking=True)
-        if playername1.split(",")[0].lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-            min_elo = util.current_minelo
-        try: sort = sort.value
-        except AttributeError: pass
-        try: mm1 = mm1.value
-        except AttributeError: pass
-        try: mm2 = mm2.value
-        except AttributeError: pass
+        if playername1.split(",")[0].lower() == "all" and games == 0 and min_elo == 0 and not patch:
+            min_elo = util.get_current_minelo()
+        try:
+            sort = sort.value
+        except AttributeError:
+            pass
+        try:
+            mm1 = mm1.value
+        except AttributeError:
+            pass
+        try:
+            mm2 = mm2.value
+        except AttributeError:
+            pass
+        if not patch:
+            patch = util.get_current_patches()
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:

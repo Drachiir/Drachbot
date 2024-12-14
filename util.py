@@ -46,25 +46,6 @@ task_times4=[
     time(hour=22, minute=25, second=0, tzinfo=timezone.utc)
 ]
 
-website_patches = ["11.11"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
-website_elos = [1600, 1800, 2000, 2200, 2400, 2600, 2800]
-incmercs = const_file.get("incmercs")
-powermercs = const_file.get("powermercs")
-creep_values = const_file.get("creep_values")
-wave_values = const_file.get("wave_values")
-rank_emotes = const_file.get("rank_emotes")
-wave_emotes = const_file.get("wave_emotes")
-mm_emotes = const_file.get("mm_emotes")
-current_season = const_file.get("current_patches")
-current_minelo = const_file.get("current_minelo")
-
-aura_spells = ["hero", "magician", "vampire"]
-buff_spells = ["hero", "magician", "vampire", "divine blessing", "glacial touch", "guardian angel", "protector", "pulverizer", "sorcerer", "titan", "villain"]
-mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
-mm_choices = []
-for mm in mm_list:
-    mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
-
 if platform.system() == "Linux":
     shared_folder_livegames = "/shared/livegames/"
     shared_folder = "/shared/Images/"
@@ -73,6 +54,42 @@ else:
     shared_folder_livegames = "shared/livegames/"
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
+
+def get_current_patches(only_current = False):
+    with open(f"{shared_folder}currents.txt", 'r') as f:
+        patches = f.readlines()
+    if only_current:
+        return patches[0].split("-")[1]
+    else:
+        return patches[0]
+
+def get_current_minelo():
+    with open(f"{shared_folder}currents.txt", 'r') as f:
+        patches = f.readlines()
+    return patches[1]
+
+def get_current_ltdle_minelo():
+    with open(f"{shared_folder}currents.txt", 'r') as f:
+        patches = f.readlines()
+    return patches[2]
+
+#website_patches = ["11.11"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
+
+website_elos = [1600, 1800, 2000, 2200, 2400, 2600, 2800]
+incmercs = const_file.get("incmercs")
+powermercs = const_file.get("powermercs")
+creep_values = const_file.get("creep_values")
+wave_values = const_file.get("wave_values")
+rank_emotes = const_file.get("rank_emotes")
+wave_emotes = const_file.get("wave_emotes")
+mm_emotes = const_file.get("mm_emotes")
+
+aura_spells = ["hero", "magician", "vampire"]
+buff_spells = ["hero", "magician", "vampire", "divine blessing", "glacial touch", "guardian angel", "protector", "pulverizer", "sorcerer", "titan", "villain"]
+mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
+mm_choices = []
+for mm in mm_list:
+    mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))
 
 def zoom_at(img, x, y, zoom):
     w, h = img.size

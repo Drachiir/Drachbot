@@ -385,7 +385,9 @@ class Graphs(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def statsgraph(self, interaction: discord.Interaction, playernames: str, key: discord.app_commands.Choice[str], waves: str = "1-5", games: int = 0, min_elo: int = 0, patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date"):
+    async def statsgraph(self, interaction: discord.Interaction, playernames: str, key: discord.app_commands.Choice[str], waves: str = "1-5", games: int = 0, min_elo: int = 0, patch: str = "", sort: discord.app_commands.Choice[str] = "date"):
+        if not patch:
+            patch = util.get_current_patches()
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
@@ -426,7 +428,9 @@ class Graphs(commands.Cog):
     @app_commands.describe(playername='Enter playername.',
                            games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
-    async def elo_graph(self, interaction: discord.Interaction, playername: str, games: int = 0, patch: str = util.current_season):
+    async def elo_graph(self, interaction: discord.Interaction, playername: str, games: int = 0, patch: str = ""):
+        if not patch:
+            patch = util.get_current_patches()
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)

@@ -236,12 +236,12 @@ class Elcringo(commands.Cog):
         discord.app_commands.Choice(name='Sent', value='Sent'),
         discord.app_commands.Choice(name='Received', value='Received')
     ])
-    async def elcringo(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, option: discord.app_commands.Choice[str] = "Yes", sort: discord.app_commands.Choice[str] = "date", saves: discord.app_commands.Choice[str] = 'Sent'):
+    async def elcringo(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "", option: discord.app_commands.Choice[str] = "Yes", sort: discord.app_commands.Choice[str] = "date", saves: discord.app_commands.Choice[str] = 'Sent'):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                min_elo = util.current_minelo
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and not patch:
+                min_elo = util.get_current_minelo()
             try:
                 option = option.value
             except AttributeError:
@@ -254,6 +254,8 @@ class Elcringo(commands.Cog):
                 saves = saves.value
             except AttributeError:
                 pass
+            if not patch:
+                patch = util.get_current_patches()
             try:
                 response = await loop.run_in_executor(pool, functools.partial(elcringo, playername, games, patch, min_elo, option, sort=sort, saves=saves))
                 pool.shutdown()

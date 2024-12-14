@@ -192,16 +192,18 @@ class Openstats(commands.Cog):
     ])
     @app_commands.autocomplete(unit=util.unit_autocomplete)
     async def openstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0,
-                        patch: str = util.current_season, sort: discord.app_commands.Choice[str] = "date", unit: str = "all", transparency: bool = False):
+                        patch: str = "", sort: discord.app_commands.Choice[str] = "date", unit: str = "all", transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                min_elo = util.current_minelo
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and not patch:
+                min_elo = util.get_current_minelo()
             try:
                 sort = sort.value
             except AttributeError:
                 pass
+            if not patch:
+                patch = util.get_current_patches()
             try:
                 response = await loop.run_in_executor(pool, functools.partial(openstats, str(playername).lower(), games, min_elo, patch,
                                                                               sort=sort, unit=unit, transparent=transparency))
@@ -217,7 +219,7 @@ class Openstats(commands.Cog):
     
     @tasks.loop(time=util.task_times3) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
-        patches = util.website_patches
+        patches = util.get_current_patches(only_current=True)
         elos = util.website_elos
         try:
             loop = asyncio.get_running_loop()

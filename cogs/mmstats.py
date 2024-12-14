@@ -279,13 +279,13 @@ class MMstats(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def mmstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season,
+    async def mmstats(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "",
                       mastermind: discord.app_commands.Choice[str] = "All", sort: discord.app_commands.Choice[str] = "date", transparency: bool = False):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                min_elo = util.current_minelo
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and not patch:
+                min_elo = util.get_current_minelo()
             try:
                 mastermind = mastermind.value
             except AttributeError:
@@ -294,6 +294,8 @@ class MMstats(commands.Cog):
                 sort = sort.value
             except AttributeError:
                 pass
+            if not patch:
+                patch = util.get_current_patches()
             try:
                 response = await loop.run_in_executor(pool, functools.partial(mmstats, str(playername).lower(), games, min_elo, patch, mastermind, sort=sort, transparent=transparency))
                 pool.shutdown()
@@ -309,7 +311,7 @@ class MMstats(commands.Cog):
     @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         print("Starting Website Update")
-        patches = util.website_patches
+        patches = util.get_current_patches(only_current=True)
         elos = util.website_elos
         try:
             loop = asyncio.get_running_loop()

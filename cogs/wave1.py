@@ -140,12 +140,12 @@ class Wave1(commands.Cog):
         discord.app_commands.Choice(name='date', value="date"),
         discord.app_commands.Choice(name='elo', value="elo")
     ])
-    async def wave1(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = util.current_season, option: discord.app_commands.Choice[str] = "send", sort: discord.app_commands.Choice[str] = "date"):
+    async def wave1(self, interaction: discord.Interaction, playername: str, games: int = 0, min_elo: int = 0, patch: str = "", option: discord.app_commands.Choice[str] = "send", sort: discord.app_commands.Choice[str] = "date"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)
-            if playername.lower() == "all" and games == 0 and min_elo == 0 and patch == util.current_season:
-                min_elo = util.current_minelo
+            if playername.lower() == "all" and games == 0 and min_elo == 0 and not patch:
+                min_elo = util.get_current_minelo()
             try:
                 option = option.value
             except AttributeError:
@@ -154,6 +154,8 @@ class Wave1(commands.Cog):
                 sort = sort.value
             except AttributeError:
                 pass
+            if not patch:
+                patch = util.get_current_patches()
             try:
                 response = await loop.run_in_executor(pool, functools.partial(wave1tendency, playername, option, games, min_elo, patch, sort))
                 pool.shutdown()
