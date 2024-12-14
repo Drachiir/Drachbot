@@ -109,7 +109,7 @@ class Wavestats(commands.Cog):
     
     @tasks.loop(time=util.task_times4) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
-        patches = util.get_current_patches(only_current=True)
+        patches = [util.get_current_patches(only_current=True)]
         elos = util.website_elos
         try:
             loop = asyncio.get_running_loop()
