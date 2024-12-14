@@ -59,19 +59,19 @@ def get_current_patches(only_current = False):
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
     if only_current:
-        return patches[0].split("-")[1]
+        return patches[0].split("-")[1].replace("\n", "")
     else:
-        return patches[0]
+        return patches[0].replace("\n", "")
 
 def get_current_minelo():
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
-    return patches[1]
+    return patches[1].replace("\n", "")
 
 def get_current_ltdle_minelo():
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
-    return patches[2]
+    return patches[2].replace("\n", "")
 
 #website_patches = ["11.11"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
 
