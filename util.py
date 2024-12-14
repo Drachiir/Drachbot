@@ -26,24 +26,24 @@ with open("Files/json/slang.json", "r") as slang_file:
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
 
 task_times2=[
-    time(hour=4, minute=15, second=0, tzinfo=timezone.utc),
-    time(hour=10, minute=15, second=0, tzinfo=timezone.utc),
-    time(hour=16, minute=15, second=0, tzinfo=timezone.utc),
-    time(hour=22, minute=15, second=0, tzinfo=timezone.utc)
+    time(hour=4, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=45, second=0, tzinfo=timezone.utc)
 ]
 
 task_times3=[
-    time(hour=4, minute=20, second=0, tzinfo=timezone.utc),
-    time(hour=10, minute=20, second=0, tzinfo=timezone.utc),
-    time(hour=16, minute=20, second=0, tzinfo=timezone.utc),
-    time(hour=22, minute=20, second=0, tzinfo=timezone.utc)
+    time(hour=4, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=50, second=0, tzinfo=timezone.utc)
 ]
 
 task_times4=[
-    time(hour=4, minute=25, second=0, tzinfo=timezone.utc),
-    time(hour=10, minute=25, second=0, tzinfo=timezone.utc),
-    time(hour=16, minute=25, second=0, tzinfo=timezone.utc),
-    time(hour=22, minute=25, second=0, tzinfo=timezone.utc)
+    time(hour=4, minute=55, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=55, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=55, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=55, second=0, tzinfo=timezone.utc)
 ]
 
 if platform.system() == "Linux":
