@@ -56,7 +56,7 @@ else:
     shared2_folder = "shared2/"
 
 def get_current_patches(only_current = False):
-    with open(f"{shared_folder}currents.txt", 'r') as f:
+    with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
     if only_current:
         return patches[0].split("-")[1]
@@ -64,12 +64,12 @@ def get_current_patches(only_current = False):
         return patches[0]
 
 def get_current_minelo():
-    with open(f"{shared_folder}currents.txt", 'r') as f:
+    with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
     return patches[1]
 
 def get_current_ltdle_minelo():
-    with open(f"{shared_folder}currents.txt", 'r') as f:
+    with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
     return patches[2]
 
