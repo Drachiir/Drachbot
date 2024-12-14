@@ -59,7 +59,7 @@ def get_current_patches(only_current = False):
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
     if only_current:
-        return patches[0].split("-")[1].replace("\n", "")
+        return [patches[0].split("-")[1].replace("\n", "")]
     else:
         return patches[0].replace("\n", "")
 

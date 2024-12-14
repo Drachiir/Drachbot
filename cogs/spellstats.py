@@ -209,7 +209,7 @@ class Spellstats(commands.Cog):
     
     @tasks.loop(time=util.task_times3)
     async def website_data(self):
-        patches = [util.get_current_patches(only_current=True)]
+        patches = util.get_current_patches(only_current=True)
         elos = util.website_elos
         try:
             loop = asyncio.get_running_loop()
