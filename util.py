@@ -23,6 +23,10 @@ with open("Files/json/slang.json", "r") as slang_file:
     slang = json.load(slang_file)
     slang_file.close()
 
+with open('Files/json/Secrets.json') as f:
+    secret_file = json.load(f)
+    f.close()
+
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
 
 task_times2=[
@@ -75,6 +79,7 @@ def get_current_ltdle_minelo():
 
 #website_patches = ["11.11"] # ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"
 
+DEBUG = secret_file["debug"]
 website_elos = [1600, 1800, 2000, 2200, 2400, 2600, 2800]
 incmercs = const_file.get("incmercs")
 powermercs = const_file.get("powermercs")

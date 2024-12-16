@@ -26,7 +26,7 @@ class Drachbot(commands.Bot):
                 continue
             elif "cog_template" in e:
                 continue
-            elif platform.system() == "Windows" and "twitch" in e:
+            elif secret_file["debug"] and "twitch" in e:
                 continue
             self.exts.append("cogs." + e.split(".")[0])
     
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     asyncio.set_event_loop(loop)
     client = Drachbot()
     loop.create_task(client.start(secret_file["token"]))
-    if platform.system() != "Windows":
+    if not secret_file["debug"]:
         try:
             client2 = Livegame()
             loop.create_task(client2.start(secret_file["livegametoken"]))

@@ -28,6 +28,10 @@ else:
     shared2_folder = "shared2/"
 site = "https://overlay.drachbot.site/Images/"
 
+with open('Files/json/Secrets.json') as f:
+    secret_file = json.load(f)
+    f.close()
+
 utc = timezone.utc
 task_time = time(hour=0, minute=0, second=3, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
@@ -272,7 +276,7 @@ class ScheduledTasks(commands.Cog):
     async def game_update(self):
         try:
             # games update
-            if platform.system() != "Windows":
+            if not util.DEBUG:
                 with open("Files/json/discord_channels.json", "r") as f:
                     discord_channels = json.load(f)
                     f.close()
