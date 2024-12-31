@@ -196,10 +196,10 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             try:
                 if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                     if datetime.strptime(p_data["game2"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
-                            if p_data["game2"]["game_finished"] == True:
-                                daily_score2 = round(10-abs(ltdle_data["game_2_selected_leak"][3]-p_data["game2"]["guesses"][0])/9)
-                            else:
-                                daily_score2 = 0
+                        if p_data["game2"]["game_finished"]:
+                            daily_score2 = p_data["scores_dict"][p_data["game2"]["last_played"]][1]
+                        else:
+                            daily_score2 = 0
                 else:
                     daily_score2 = 0
             except Exception:
