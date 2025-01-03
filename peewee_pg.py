@@ -45,6 +45,7 @@ class PlayerProfile(BaseModel):
     player_name = TextField()
     avatar_url = TextField(null=True)
     country = TextField(null=True)
+    guild_tag = TextField(null=True)
     total_games_played = IntegerField()
     ranked_wins_current_season = IntegerField()
     ranked_losses_current_season = IntegerField()
@@ -192,7 +193,6 @@ def save_game(data):
 # if __name__ == '__main__':
 #     migrator = PostgresqlMigrator(db)
 #     migrate(
-#         migrator.add_column('playerprofile', 'avatar_url', PlayerProfile.avatar_url),
-#         migrator.add_column('playerprofile', 'country', PlayerProfile.country)
+#         migrator.add_column('playerprofile', 'guild_tag', TextField(null=True))
 #     )
 #     quit()
