@@ -46,7 +46,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     if mastermind == 'All':
         mmnames_list = util.mm_list
     elif mastermind == 'Megamind':
-        mmnames_list = util.mm_list
+        mmnames_list = util.mm_list[:]
         mmnames_list.remove("Megamind")
     else:
         mmnames_list = [mastermind]
