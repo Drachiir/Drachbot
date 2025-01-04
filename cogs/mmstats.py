@@ -44,9 +44,10 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
         if playerid == 1:
             return 'API limit reached, you can still use "all" commands.'
     if mastermind == 'All':
-        mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
+        mmnames_list = util.mm_list
     elif mastermind == 'Megamind':
-        mmnames_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard']
+        mmnames_list = util.mm_list
+        mmnames_list.remove("Megamind")
     else:
         mmnames_list = [mastermind]
     masterminds_dict = {}
@@ -81,7 +82,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     games = len(history_raw)
     if 'nova cup' in playerid:
         playerid = 'all'
-    case_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard']
+    case_list = util.mm_list
     patches = set()
     megamind_count = 0
     for game in history_raw:

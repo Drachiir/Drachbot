@@ -91,7 +91,7 @@ mm_emotes = const_file.get("mm_emotes")
 
 aura_spells = ["hero", "magician", "vampire"]
 buff_spells = ["hero", "magician", "vampire", "divine blessing", "glacial touch", "guardian angel", "protector", "pulverizer", "sorcerer", "titan", "villain"]
-mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Megamind']
+mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Saboteur', 'Megamind']
 mm_choices = []
 for mm in mm_list:
     mm_choices.append(discord.app_commands.Choice(name=mm, value=mm))

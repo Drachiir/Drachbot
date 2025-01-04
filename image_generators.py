@@ -20,7 +20,7 @@ else:
     shared_folder = "shared/Images/"
 site = "https://overlay.drachbot.site/Images/"
 
-def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = False, megamind_count = 0, transparency = False):
+def create_image_stats(dict: dict, games, playerid, avgelo, patch, mode, megamind = False, megamind_count = 0, transparency = False):
     if playerid != 'all' and 'nova cup' not in playerid:
         playername = legion_api.getprofile(playerid)['playerName']
         avatar = legion_api.getprofile(playerid)['avatarUrl']
@@ -42,8 +42,7 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
     else: config = ['RGB', (49,51,56)]
     match mode:
         case "Mastermind":
-            if megamind: im = PIL.Image.new(mode=config[0], size=(1380, 810), color=config[1])
-            else: im = PIL.Image.new(mode=config[0], size=(1485, 810), color=config[1])
+            im = PIL.Image.new(mode=config[0], size=(15+(105*(len(dict.keys())+1)), 810), color=config[1])
             keys = ['Games:', 'Winrate:', 'Pickrate:', 'Player Elo:', 'W on 10:', 'Best Open:', '', 'Games:', 'Winrate:', 'Playrate:','Best Spell:', '', 'Games:', 'Winrate:', 'Playrate:']
             dict_values = ["Opener", "Spell"]
             icon_type = "legion"
@@ -89,7 +88,7 @@ def create_image_stats(dict, games, playerid, avgelo, patch, mode, megamind = Fa
     offset3 = 0
     offset_counter = 5
     for i, dict_key in enumerate(dict):
-        if dict[dict_key]["Count"] == 0 or i == 15:
+        if dict[dict_key]["Count"] == 0 or i == 16:
             break
         im.paste(im2, (x - 12, 88))
         im.paste(util.get_icons_image(icon_type, dict_key), (x, 100))
