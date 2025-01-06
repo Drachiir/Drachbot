@@ -293,6 +293,26 @@ class ScheduledTasks(commands.Cog):
     @game_update.before_loop
     async def before_scheduled_rank_update(self):
         await self.client.wait_until_ready()
+
+    @commands.command()
+    async def start_game_fetch(self, ctx:commands.Context):
+        if ctx.author.name == "drachir_":
+            try:
+                self.game_update.start()
+            except Exception:
+                traceback.print_exc()
+        else:
+            await ctx.channel.send("No permission to use this command.")
+
+    @commands.command()
+    async def stop_game_fetch(self, ctx: commands.Context):
+        if ctx.author.name == "drachir_":
+            try:
+                self.game_update.cancel()
+            except Exception:
+                traceback.print_exc()
+        else:
+            await ctx.channel.send("No permission to use this command.")
         
 async def setup(bot: commands.Bot):
     await bot.add_cog(ScheduledTasks(bot))
