@@ -301,6 +301,7 @@ class ScheduledTasks(commands.Cog):
                 self.game_update.start()
             except Exception:
                 traceback.print_exc()
+            await ctx.message.add_reaction("✅")
         else:
             await ctx.channel.send("No permission to use this command.")
 
@@ -311,6 +312,7 @@ class ScheduledTasks(commands.Cog):
                 self.game_update.cancel()
             except Exception:
                 traceback.print_exc()
+            await ctx.message.add_reaction("✅")
         else:
             await ctx.channel.send("No permission to use this command.")
         
