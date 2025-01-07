@@ -52,10 +52,12 @@ task_times4=[
 
 if platform.system() == "Linux":
     shared_folder_livegames = "/shared/livegames/"
+    shared_folder_livegames1v1 = "/shared/livegames1v1/"
     shared_folder = "/shared/Images/"
     shared2_folder = "/shared2/"
 else:
     shared_folder_livegames = "shared/livegames/"
+    shared_folder_livegames1v1 = "shared/livegames1v1/"
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
 

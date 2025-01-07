@@ -21,6 +21,10 @@ def save_live_game(gameid, playerlist):
         with open(util.shared_folder_livegames + str(gameid) + "_" + str(playerlist[4]) + ".txt", "w", encoding="utf_8") as f:
             f.write('\n'.join(playerlist))
             f.close()
+    elif len(playerlist) == 3:
+        with open(util.shared_folder_livegames1v1 + str(gameid) + "_" + str(playerlist[2]) + ".txt", "w", encoding="utf_8") as f:
+            f.write('\n'.join(playerlist))
+            f.close()
 
 def get_game_elo(playerlist):
     elo = 0
@@ -37,7 +41,7 @@ def handler(message) -> None:
     if str(message.channel) == "game-starts":
         players = str(message.content).splitlines()[1:]
         gameid = str(message.author).split("#")[0].replace("Game started! ", "")
-        if len(players) == 4:
+        if len(players) == 4 or len(players) == 2:
             players_new = get_game_elo(players)
             save_live_game(gameid, players_new)
             with open("Files/whitelist.txt", "r") as f:
@@ -66,10 +70,16 @@ def handler(message) -> None:
         desc3 = embed_dict["description"].split("Markdown")
         if "elo" in desc or "**TIED**" in desc2 or "Practice" in desc:
             path = util.shared_folder_livegames
+            path2 = util.shared_folder_livegames1v1
             livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
             for game in livegame_files:
                 if game.split("_")[0] == gameid_result:
                     os.remove(path + game)
+            #Dirty copy for 1v1
+            livegame_files1v1 = [pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.txt')]
+            for game in livegame_files1v1:
+                if game.split("_")[0] == gameid_result:
+                    os.remove(path2 + game)
         if "elo" in desc:
             with open("Files/whitelist.txt", "r") as f:
                 data = f.readlines()

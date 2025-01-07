@@ -37,7 +37,7 @@ class Drachbot(commands.Bot):
                             cogs.legiontdle.ModalLeakButton(), cogs.legiontdle.ModalEloButton(), cogs.legiontdle.ModalButton2(),
                             cogs.legiontdle.RefreshButtonLtdleTotal(), cogs.legiontdle.RefreshButtonLtdleDaily(), cogs.legiontdle.ModalButtonWave(),
                             cogs.legiontdle.RefreshButtonLtdleAvg(), cogs.novacup.RefreshButtonDiv2(), cogs.novacup.RefreshButtonDiv1(),
-                            cogs.legiontdle.RefreshButtonLtdleDailyAsc(), cogs.legiontdle.WinnerButtons()]
+                            cogs.legiontdle.RefreshButtonLtdleDailyAsc(), cogs.legiontdle.WinnerButtons(), cogs.topgames.RefreshButton2()]
         for view in persistent_views:
             self.add_view(view)
     
