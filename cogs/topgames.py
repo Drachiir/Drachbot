@@ -44,7 +44,8 @@ def get_top_games():
         else:
             break
     if len(topgames) == 0:
-        return "No games found."
+        embed = discord.Embed(color=0x8c00ff, description="No ongoing games found")
+        return embed
     embed = discord.Embed(color=0x8c00ff)
     for idx, game2 in enumerate(topgames):
         with open(path + game2, "r", encoding="utf_8") as f2:
@@ -98,7 +99,7 @@ class RefreshButton(discord.ui.View):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, get_top_games)
                 pool.shutdown()
-                await interaction.edit_original_response(embed=response)
+            await interaction.edit_original_response(embed=response)
         except Exception:
             traceback.print_exc()
 
