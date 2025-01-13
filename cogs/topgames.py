@@ -69,13 +69,13 @@ def get_top_games(oneversusone=False):
         if oneversusone:
             west_player = txt[0].split(":")
             east_player = txt[1].split(":")
-            west_display = [west_player[1], west_player[0].ljust(max_char)]
-            east_display = [east_player[1], east_player[0].ljust(max_char)]
+            west_display = [west_player[1], west_player[0][:max_char].ljust(max_char)]
+            east_display = [east_player[1], east_player[0][:max_char].ljust(max_char)]
         else:
             west_players = [p.split(":") for p in txt[:2]]
             east_players = [p.split(":") for p in txt[2:4]]
-            west_display = [[p[1], p[0].ljust(max_char)] for p in west_players]
-            east_display = [[p[1], p[0].ljust(max_char)] for p in east_players]
+            west_display = [[p[1], p[0][:max_char].ljust(max_char)] for p in west_players]
+            east_display = [[p[1], p[0][:max_char].ljust(max_char)] for p in east_players]
 
         if oneversusone:
             output = (f"{util.get_ranked_emote(int(west_display[0]))}`{west_display[1]}`"

@@ -24,7 +24,7 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
-        if u_js["totalValue"] != '':
+        if (u_js["totalValue"] != '') and u_js["isEnabled"]:
             if u_js["unitId"] and min_cost <= int(u_js["totalValue"]) <= max_cost: #and (u_js["sortOrder"].split(".")[1].endswith("U") or u_js["sortOrder"].split(".")[1].endswith("U2") or "neko" in u_js["unitId"]):
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')

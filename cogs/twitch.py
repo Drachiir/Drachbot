@@ -173,7 +173,11 @@ class TwitchHandler(commands.Cog):
                     for server in discord_channels["notify_channels"]:
                         guild = self.client.get_guild(discord_channels["notify_channels"][server][0])
                         channel = guild.get_channel(discord_channels["notify_channels"][server][1])
-                        if (self.messages[streamer]["noti_string"] == "Y") or (rank >= 2800):
+                        try:
+                            elo_threshold = util.get_current_minelo(twitch=True)
+                        except Exception:
+                            elo_threshold = 2800
+                        if (self.messages[streamer]["noti_string"] == "Y") or (rank >= elo_threshold):
                             role = guild.get_role(discord_channels["notify_channels"][server][2])
                             try:
                                 mention_string = role.mention

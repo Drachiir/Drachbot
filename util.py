@@ -30,24 +30,24 @@ with open('Files/json/Secrets.json') as f:
 #task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
 
 task_times2=[
+    time(hour=4, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=45, second=0, tzinfo=timezone.utc)
+]
+
+task_times3=[
+    time(hour=4, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=50, second=0, tzinfo=timezone.utc)
+]
+
+task_times4=[
     time(hour=4, minute=55, second=0, tzinfo=timezone.utc),
     time(hour=10, minute=55, second=0, tzinfo=timezone.utc),
     time(hour=16, minute=55, second=0, tzinfo=timezone.utc),
     time(hour=22, minute=55, second=0, tzinfo=timezone.utc)
-]
-
-task_times3=[
-    time(hour=5, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=11, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=17, minute=0, second=0, tzinfo=timezone.utc),
-    time(hour=23, minute=0, second=0, tzinfo=timezone.utc)
-]
-
-task_times4=[
-    time(hour=5, minute=5, second=0, tzinfo=timezone.utc),
-    time(hour=11, minute=5, second=0, tzinfo=timezone.utc),
-    time(hour=17, minute=5, second=0, tzinfo=timezone.utc),
-    time(hour=23, minute=5, second=0, tzinfo=timezone.utc)
 ]
 
 if platform.system() == "Linux":
@@ -61,6 +61,8 @@ else:
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
 
+#0 = Current Patches, 1 = min elo, 2 = Ltdle min elo, 3 = Website data patch, 4 = Twitch noti ping threshold elo
+
 def get_current_patches(only_current = False):
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
@@ -69,10 +71,13 @@ def get_current_patches(only_current = False):
     else:
         return patches[0].replace("\n", "")
 
-def get_current_minelo():
+def get_current_minelo(twitch = False):
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
-    return int(patches[1].replace("\n", ""))
+    if twitch:
+        return int(patches[4].replace("\n", ""))
+    else:
+        return int(patches[1].replace("\n", ""))
 
 def get_current_ltdle_minelo():
     with open(f"{shared2_folder}currents.txt", 'r') as f:
@@ -126,7 +131,7 @@ async def unit_autocomplete(interaction: discord.Interaction, interaction_input)
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
-        if u_js["totalValue"] != '':
+        if (u_js["totalValue"] != '') and u_js["isEnabled"]:
             if u_js["unitId"] and int(u_js["totalValue"]) > 0 and int(u_js["totalValue"]) <= max_cost:
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')
@@ -279,7 +284,7 @@ def validate_unit_list_input(unit:list):
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
-        if u_js["totalValue"] != '':
+        if (u_js["totalValue"] != '') and u_js["isEnabled"]:
             if u_js["unitId"] and int(u_js["totalValue"]) > 0:
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')

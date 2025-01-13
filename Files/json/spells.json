@@ -230,5 +230,13 @@
     "iconPath": "Icons/RoboSquad.png",
     "name": "Robo Squad",
     "tooltip": "Summons Robos to attack your lane opponent: 1x on Wave 11, 2x on Wave 12, and 3x on Wave 13. (No income). Also +50 Mythium."
+  },
+  {
+    "_id": "spread_the_wealth_powerup_id",
+    "category": "spells",
+    "enabled": true,
+    "iconPath": "Icons/SpreadTheWealth.png",
+    "name": "Spread the Wealth",
+    "tooltip": ""
   }
 ]

@@ -57,7 +57,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
-        if u_js["totalValue"] != '':
+        if (u_js["totalValue"] != '') and u_js["isEnabled"]:
             string = u_js["unitId"]
             string = string.replace('_', ' ')
             string = string.replace(' unit id', '')

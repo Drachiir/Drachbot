@@ -31,7 +31,7 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
     with open('Files/json/units.json', 'r') as f:
         units_json = json.load(f)
     for u_js in units_json:
-        if u_js["totalValue"] != '':
+        if (u_js["totalValue"] != '') and u_js["isEnabled"]:
             if u_js["unitId"] and 270 >= int(u_js["totalValue"]) > 0:
                 string = u_js["unitId"]
                 string = string.replace('_', ' ')

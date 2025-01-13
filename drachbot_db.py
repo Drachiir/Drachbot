@@ -150,7 +150,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                     PlayerProfile.update(offset=games_count+data.offset).where(PlayerProfile.player_id == playerid).execute()
         if update == 0:
             raw_data = []
-            if patch == "11" or patch == "10":
+            if patch in ["12", "11", "10"]:
                 expr = GameData.version.startswith("v"+patch)
             elif patch != "0":
                 expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
@@ -186,7 +186,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                         temp_data = {}
     else:
         raw_data = []
-        if patch == "11" or patch == "10":
+        if patch in ["12", "11", "10"]:
             expr = GameData.version.startswith("v" + patch)
             if games == 0:
                 games = GameData.select().where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()

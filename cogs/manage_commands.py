@@ -44,6 +44,8 @@ class ManageCommands(commands.Cog):
                     print("Reloaded: "+ content)
             except Exception:
                 traceback.print_exc()
+                await ctx.message.add_reaction("❌")
+                return
         else:
             await ctx.channel.send("No permission to use this command.")
             return
