@@ -8,7 +8,8 @@ import discord
 from discord import app_commands
 import difflib
 from datetime import datetime, time, timezone, timedelta
-
+import requests
+import os
 import legion_api
 
 
@@ -251,10 +252,21 @@ def get_icons_image(type, name):
             image_path = 'Files/icons/Items/' + name.replace(" ", "") + ".png"
         case _:
             image_path = "Files/icons/Granddaddy.png"
+
+    fallback_path = "Files/icons/Caution.png"
+    image_url = f"https://cdn.legiontd2.com/icons/{image_path.split("/")[2]}"
     try:
         return Image.open(open(image_path, "rb"))
     except Exception:
-        return Image.open(open("Files/icons/Caution.png", "rb"))
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()
+            os.makedirs(os.path.dirname(image_path), exist_ok=True)
+            with open(image_path, "wb") as f:
+                f.write(response.content)
+            return Image.open(open(image_path, "rb"))
+        except Exception:
+            return Image.open(open(fallback_path, "rb"))
 
 def validate_spell_input(spell):
     spell_list = []

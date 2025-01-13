@@ -123,15 +123,6 @@ def pullgamedata(playerid, offset, expected):
         games_count += 1
     return [ranked_count, games_count]
 
-def ladder_update(amount=100):
-    url = 'https://apiv2.legiontd2.com/players/stats?limit='+str(amount)+'&sortBy=overallElo&sortDirection=-1'
-    api_response = requests.get(url, headers=header)
-    leaderboard = json.loads(api_response.text)
-    games_count = 0
-    for i, player in enumerate(leaderboard):
-        print(str(i+1) + '. ' + player["profile"][0]["playerName"])
-        games_count += drachbot_db.get_matchistory(player["_id"], 0, 0, '0', 1)
-    return 'Pulled ' + str(games_count) + ' new games from the Top ' + str(amount)
 
 def get_recent_games(calls=2, time_delta=3):
     date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -203,28 +194,3 @@ def save_game_by_id(game_id):
     api_response = requests.get(url, headers=header)
     x = json.loads(api_response.text)
     peewee_pg.save_game(x)
-
-def pull_games_by_id(file, name):
-    path = '/home/container/Profiles/' + name
-    if not Path(Path(str(path + '/gamedata/'))).is_dir():
-        print(name + ' profile not found, creating new folder...')
-        Path(str(path + '/gamedata/')).mkdir(parents=True, exist_ok=True)
-    with open(file, 'r') as f:
-        txt = f.readlines()
-        print('Pulling ' + str(len(txt)) + ' games from API...')
-        for game_id in txt:
-            game_id = str(game_id).replace('\n', '')
-            print('Pulling game id: ' + str(game_id))
-            url = 'https://apiv2.legiontd2.com/games/byId/'+game_id+'?includeDetails=true'
-            print(url)
-            api_response = requests.get(url, headers=header)
-            x = json.loads(api_response.text)
-            if (x == {'message': 'Internal server error'}) or (x == {'err': 'Entry not found.'}):
-                    print(x)
-                    break
-            if Path(Path(str(path + '/gamedata/') + x['date'].split('.')[0].replace('T', '-').replace(':','-') + '_' +x['version'].replace('.', '-') + '_' + str(x['gameElo']) + '_' + str(x['_id']) + ".json")).is_file():
-                print('File already there, breaking loop.')
-                break
-            with open(str(path + '/gamedata/') + x['date'].split('.')[0].replace('T', '-').replace(':','-') + '_' +x['version'].replace('.', '-') + '_' + str(x['gameElo']) + '_' + str(x['_id']) + ".json","w") as f:
-                json.dump(x, f)
-    return 'Success'
