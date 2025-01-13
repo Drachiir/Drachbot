@@ -184,6 +184,9 @@ def get_ranked_emote(rank):
     return rank_emote
 
 def get_icons_image(type, name):
+    fallback_path = "Files/icons/Caution.png"
+    if name == "none":
+        return Image.open(open(fallback_path, "rb"))
     match type:
         case "avatar":
             if name == "icons/DefaultAvatar.png" or not name:
@@ -253,7 +256,6 @@ def get_icons_image(type, name):
         case _:
             image_path = "Files/icons/Granddaddy.png"
 
-    fallback_path = "Files/icons/Caution.png"
     image_url = f"https://cdn.legiontd2.com/icons/{image_path.split("/")[2]}"
     try:
         return Image.open(open(image_path, "rb"))
