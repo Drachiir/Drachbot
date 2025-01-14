@@ -174,7 +174,10 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                 else:
                     x_string = x
                 x_string = x_string + " " * (10 - len(x))
-                emoji = util.mm_emotes[x]
+                try:
+                    emoji = util.mm_emotes[x]
+                except KeyError:
+                    emoji = "?"
             else:
                 if i == 10 and not text_output:
                     break
