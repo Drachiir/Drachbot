@@ -47,6 +47,7 @@ def elo(playername, rank):
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                    ["player_id", "player_name", "player_slot", "game_result", "elo_change"]]
     if playername is not None:
+        playername2 = None
         playerid = legion_api.getid(playername)
         if playerid == 0:
             return 'Player ' + str(playername) + ' not found.'
@@ -56,7 +57,8 @@ def elo(playername, rank):
         for game in history_raw:
             for player2 in game["players_data"]:
                 if player2["player_id"] == playerid:
-                    playername = player2["player_name"]
+                    if not playername2:
+                        playername2 = player2["player_name"]
                     if player2["game_result"] == "won":
                         history_list.append("W")
                         win_count += 1
@@ -78,7 +80,7 @@ def elo(playername, rank):
         except KeyError:
             current = 0
         return util.get_ranked_emote(current), util.get_ranked_emote(peak), peak, current
-    
+
     if rank == 0:
         url = 'https://apiv2.legiontd2.com/players/stats?limit=100&sortBy=overallElo&sortDirection=-1'
         api_response = requests.get(url, headers=header)
@@ -86,7 +88,7 @@ def elo(playername, rank):
         for i, player in enumerate(leaderboard):
             if player["_id"] == playerid:
                 rank_emote, peak_emote, peak, current = get_current_and_peak_rating_emote(player)
-                embed = discord.Embed(color=0xFFD136, description="**"+playername + '** is rank ' + str(i+1) + ' with ' + str(
+                embed = discord.Embed(color=0xFFD136, description="**"+playername2 + '** is rank ' + str(i+1) + ' with ' + str(
                     current) + " " + rank_emote+' elo\nPeak: ' + str(peak) + " " + peak_emote+' and ' + str(
                     round((player['secondsPlayed'] / 60)/60)) + ' hours.\n' + \
                     str(win_count) + ' Win - '+str(len(history_raw)-win_count)+' Lose (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
@@ -95,7 +97,7 @@ def elo(playername, rank):
         else:
             player = legion_api.getstats(playerid)
             rank_emote, peak_emote, peak, current = get_current_and_peak_rating_emote(player)
-            embed = discord.Embed(color=0xFFD136, description="**"+playername + '** has ' + str(current) + " " + rank_emote +
+            embed = discord.Embed(color=0xFFD136, description="**"+playername2 + '** has ' + str(current) + " " + rank_emote +
                 ' elo\nPeak: ' + str(peak) + " " + peak_emote + ' and ' +
                 str(round((player['secondsPlayed'] / 60) / 60)) + ' hours.\n' + \
                 str(win_count) + ' W - '+str(len(history_raw)-win_count)+' L (Elo change: ' + elochange(elo_change)+")\n"+"-".join(history_list))
