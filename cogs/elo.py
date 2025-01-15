@@ -65,6 +65,9 @@ def elo(playername, rank):
                     else:
                         history_list.append("L")
                     elo_change += player2["elo_change"]
+        if not playername2:
+            playername2 = playername.capitalize()
+
     def elochange(n):
         if n >=0:
             return "+" + str(n)
@@ -81,7 +84,7 @@ def elo(playername, rank):
             current = 0
         return util.get_ranked_emote(current), util.get_ranked_emote(peak), peak, current
 
-    if rank == 0:
+    if not rank:
         url = 'https://apiv2.legiontd2.com/players/stats?limit=100&sortBy=overallElo&sortDirection=-1'
         api_response = requests.get(url, headers=header)
         leaderboard = json.loads(api_response.text)
