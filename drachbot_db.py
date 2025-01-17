@@ -33,9 +33,8 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
         print('All '+str(expected)+' required games pulled.')
     return games_count
 
+@db.atomic()
 def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", req_columns=None, skip_stats=False):
-    if db.is_closed():
-        db.connect()
     if req_columns is None:
         req_columns = []
     patch_list = []
