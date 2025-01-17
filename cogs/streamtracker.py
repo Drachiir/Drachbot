@@ -14,7 +14,7 @@ import legion_api
 import jinja2
 from jinja2 import Environment, FileSystemLoader
 
-from peewee_pg import GameData, PlayerData
+from peewee_pg import GameData, PlayerData, db
 
 if platform.system() == "Linux":
     shared_folder = "/shared/"
@@ -22,6 +22,8 @@ else:
     shared_folder = "shared/"
 
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
+    if db.is_closed():
+        db.connect()
     try:
         if not os.path.isfile("sessions/session_" + playername + ".json"):
             leaderboard = legion_api.get_leaderboard(99)
