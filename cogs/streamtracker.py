@@ -67,6 +67,8 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 session_dict = json.load(f)
                 if not session_dict.get("history"):
                     session_dict["history"] = []
+                if not session_dict.get("player_id"):
+                    session_dict["player_id"] = legion_api.getid(playername)
                 live = session_dict["live"]
                 initial_elo = session_dict["int_elo"]
                 initial_wins = session_dict["int_wins"]
