@@ -46,6 +46,8 @@ class PlayerProfile(BaseModel):
     avatar_url = TextField(null=True)
     country = TextField(null=True)
     guild_tag = TextField(null=True)
+    elo = IntegerField(null=True)
+    rank = IntegerField(null=True)
     total_games_played = IntegerField()
     ranked_wins_current_season = IntegerField()
     ranked_losses_current_season = IntegerField()
@@ -190,9 +192,9 @@ def save_game(data):
             except Exception:
                 traceback.print_exc()
 
-# if __name__ == '__main__':
+# if __name__ == '__main__': #"incomenchill": false, "votedmode": null "availablemode": 6,
 #     migrator = PostgresqlMigrator(db)
 #     migrate(
-#         migrator.add_column('playerprofile', 'guild_tag', TextField(null=True))
+#         migrator.add_column('playerprofile', 'rank', IntegerField(null=True))
 #     )
 #     quit()
