@@ -59,8 +59,8 @@ def get_leaderboard(num):
     return json.loads(api_response.text)
 
 def getid(playername):
-    with db.atomic():
-        try:
+    try:
+        with db.atomic():
             profile_data_query = (PlayerProfile
                                   .select(PlayerProfile.player_id)
                                   .where(fn.LOWER(PlayerProfile.player_name) == fn.LOWER(playername))
@@ -68,8 +68,14 @@ def getid(playername):
             rows = list(profile_data_query)
             if len(rows) == 1:
                 return rows[0]["player_id"]
-        except (InterfaceError, OperationalError, Psycopg2OperationalError) as e:
-            print(f"Database error: {e}")
+    except InterfaceError as e:
+        print(f"InterfaceError: {e}")
+        # Try reconnecting if the connection was closed
+        if db.is_closed():
+            db.connect()
+            return getid(playername)  # Retry the function after reconnecting
+    except (OperationalError, Psycopg2OperationalError) as e:
+        print(f"Database error: {e}")
     #Get id by api if not found in db
     request_type = 'players/byName/'
     url = 'https://apiv2.legiontd2.com/' + request_type + playername

@@ -22,7 +22,6 @@ else:
     shared_folder = "shared/"
 
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
-    playerid = legion_api.getid(playername)
     try:
         if not os.path.isfile("sessions/session_" + playername + ".json"):
             leaderboard = legion_api.get_leaderboard(99)
@@ -41,6 +40,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
             else:
                 initial_rank = ""
                 current_rank = ""
+                playerid = legion_api.getid(playername)
                 stats = legion_api.getstats(playerid)
                 initial_elo = stats["overallElo"]
                 current_elo = stats["overallElo"]
@@ -84,6 +84,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 initial_losses = session_dict["int_losses"]
                 if update:
                     skip_stats = False
+                    playerid = legion_api.getid(playername)
                     stats = legion_api.getstats(playerid)
                     current_elo = stats["overallElo"]
                     try:
@@ -106,6 +107,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     else:
                         current_losses = session_dict["current_losses"]
             if live:
+                playerid = legion_api.getid(playername)
                 initial_games = initial_wins + initial_losses
                 current_games = current_wins + current_losses
                 req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
