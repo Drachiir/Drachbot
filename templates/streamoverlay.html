@@ -60,22 +60,13 @@
 			color: #b8b8b3;
 			white-space: nowrap;
         }
-    .greenEloText{
-        color: #00e300;
+    .eloText{
+        color: white;
         text-shadow:
         -1px -1px 0 black,
         1px -1px 0 black,
         -1px 1px 0 black,
         1px 1px 0 black;
-        font-weight: 600;
-    }
-    .redEloText{
-        color: #e30000;
-        text-shadow:
-        -1px -1px 0 #dcdcdc,
-        1px -1px 0 #dcdcdc,
-        -1px 1px 0 #dcdcdc,
-        1px 1px 0 #dcdcdc;
         font-weight: 600;
     }
     </style>
@@ -108,19 +99,19 @@
         </div>
     </div>
 </div>
-<div style="display: flex; flex-wrap: wrap; padding-top: 5px; gap: 4px">
+<div style="display: flex; flex-wrap: wrap; padding-top: 5px; gap: 1px">
     {% for game in history %}
         {% for player in game["players_data"] %}
             {% if player["player_id"] == playerid %}
                 {% set won = True if player["game_result"] == "won" else False %}
-                <div style="position: relative; width: 40px; height: 40px;">
+                <div style="position: relative; width: 40px; height: 40px; border: 3px solid {{ '#00e600' if won else 'red' }}; border-radius: 8px">
                     {% if player["megamind"] %}
-                        <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 8px" width="18" height="18" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
+                        <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 5px" width="18" height="18" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
                     {% endif %}
                     {% set prefix = "+" if player["elo_change"] > 0 else "" %}
-                    <r class="{{ "greenEloText" if won else "redEloText" }}" style="top: 23%;left: 4px; position: absolute; font-size: 20px; z-index: 99">{{ prefix }}{{ player["elo_change"] }}</r>
+                    <r class="eloText" style="top: 23%;left: 4px; position: absolute; font-size: 20px; z-index: 99;">{{ prefix }}{{ player["elo_change"] }}</r>
                     <img
-                        style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px"
+                        style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px"
                         src="https://cdn.legiontd2.com/icons/Items/{{ player['legion'] }}.png">
                 </div>
             {% endif %}
