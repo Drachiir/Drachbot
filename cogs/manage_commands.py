@@ -94,7 +94,7 @@ class ManageCommands(commands.Cog):
         if ctx.author.name == "drachir_":
             print("test")
             try:
-                cogs.streamtracker.stream_overlay("drachir")
+                cogs.streamtracker.stream_overlay("drachir", update=True)
             except Exception:
                 traceback.print_exc()
         else:

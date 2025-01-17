@@ -8,7 +8,7 @@ from pathlib import Path
 import legion_api
 import peewee_pg
 import util
-from peewee_pg import PlayerProfile, GameData, PlayerData
+from peewee_pg import PlayerProfile, GameData, PlayerData, db
 from playhouse.postgres_ext import *
 import datetime
 from datetime import datetime, timezone
@@ -34,6 +34,8 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
     return games_count
 
 def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", req_columns=None, skip_stats=False):
+    if db.is_closed():
+        db.connect()
     if req_columns is None:
         req_columns = []
     patch_list = []
