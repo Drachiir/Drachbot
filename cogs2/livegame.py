@@ -52,10 +52,14 @@ def handler(message) -> None:
                 for acc in accounts:
                     for p in players:
                         if p.split(":")[0] == acc and os.path.isfile(f"sessions/session_{acc}.json"):
-                            with open(f"sessions/session_{acc}.json", "r") as f:
-                                session = json.load(f)
-                            if session["live"]:
-                                cogs.streamtracker.stream_overlay(acc, update=True)
+                            mod_date = datetime.utcfromtimestamp(os.path.getmtime(f'sessions/session_{acc}.json'))
+                            date_diff = datetime.now() - mod_date
+                            minutes_diff = date_diff.total_seconds() / 60
+                            if minutes_diff > 2:
+                                with open(f"sessions/session_{acc}.json", "r") as f:
+                                    session = json.load(f)
+                                if session["live"]:
+                                    cogs.streamtracker.stream_overlay(acc, update=True)
     elif str(message.channel) == "game-results":
         gameid_result = ""
         embeds = message.embeds
@@ -94,7 +98,7 @@ def handler(message) -> None:
                                 session = json.load(f)
                             if session["live"]:
                                 cogs.streamtracker.stream_overlay(acc, elo_change=elo_change)
-                                time.sleep(15)
+                                time.sleep(16)
                                 cogs.streamtracker.stream_overlay(acc, update=True)
                     elif acc in desc3[2]:
                         elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
@@ -103,7 +107,7 @@ def handler(message) -> None:
                                 session = json.load(f)
                             if session["live"]:
                                 cogs.streamtracker.stream_overlay(acc, elo_change=elo_change)
-                                time.sleep(15)
+                                time.sleep(16)
                                 cogs.streamtracker.stream_overlay(acc, update=True)
 
 class Livegame(commands.Cog):
