@@ -9,21 +9,39 @@ import functools
 import json
 import os
 
-import drachbot_db
 import legion_api
 import jinja2
 from jinja2 import Environment, FileSystemLoader
-
-from peewee_pg import GameData, PlayerData, db
 
 if platform.system() == "Linux":
     shared_folder = "/shared/"
 else:
     shared_folder = "shared/"
 
+# Was pretty cool but caused some issues idk how to fix
+#
+# <div style="display: flex; flex-wrap: wrap; padding-top: 5px; gap: 1px">
+#     {% for game in history %}
+#         {% for player in game["players_data"] %}
+#             {% if player["player_id"] == playerid %}
+#                 {% set won = True if player["game_result"] == "won" else False %}
+#                 <div style="position: relative; width: 40px; height: 40px; border: 2px solid {{ '#00e600' if won else 'red' }}; border-radius: 8px">
+#                     {% if player["megamind"] %}
+#                         <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 5px" width="18" height="18" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
+#                     {% endif %}
+#                     {% set prefix = "+" if player["elo_change"] > 0 else "" %}
+#                     {% set left_gap = "1px" if player["elo_change"] > 0 else "2px" %}
+#                     <r class="eloText" style="top: 22%;left: {{ left_gap }}; position: absolute; font-size: 21px; z-index: 99;">{{ prefix }}{{ player["elo_change"] }}</r>
+#                     <img
+#                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px"
+#                         src="https://cdn.legiontd2.com/icons/Items/{{ player['legion'] }}.png">
+#                 </div>
+#             {% endif %}
+#         {% endfor %}
+#     {% endfor %}
+# </div>
+
 def stream_overlay(playername, stream_started_at="", elo_change=0, update = False):
-    if db.is_closed():
-        db.connect()
     try:
         if not os.path.isfile("sessions/session_" + playername + ".json"):
             leaderboard = legion_api.get_leaderboard(99)
@@ -107,17 +125,18 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     else:
                         current_losses = session_dict["current_losses"]
             if live:
-                initial_games = initial_wins + initial_losses
-                current_games = current_wins + current_losses
-                req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
-                                PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change],
-                               ["game_id", "date", "version", "ending_wave", "game_elo"],
-                               ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change"]]
-                games = current_games-initial_games if current_games-initial_games < 5 else 5
-                if update and games > 0:
-                    history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True)
-                else:
-                    history = session_dict["history"]
+                # initial_games = initial_wins + initial_losses
+                # current_games = current_wins + current_losses
+                # req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                #                 PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change],
+                #                ["game_id", "date", "version", "ending_wave", "game_elo"],
+                #                ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change"]]
+                # games = current_games-initial_games if current_games-initial_games < 5 else 5
+                # if update and games > 0:
+                #     history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True)
+                # else:
+                #     history = session_dict["history"]
+                history = []
                 with open("sessions/session_" + playername + ".json", "w") as f:
                     session_dict = {"player_id": playerid, "started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
                                     "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": history}
