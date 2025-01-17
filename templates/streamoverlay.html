@@ -60,6 +60,11 @@
 			color: #b8b8b3;
 			white-space: nowrap;
         }
+    .strokeText{
+        -webkit-text-stroke: 3px black;
+        paint-order: stroke fill;
+        font-weight: 400;
+    }
     </style>
     <title>Streamtracker by Drachbot</title>
 </head>
@@ -89,6 +94,28 @@
             <r {{ rgb }}>{{ winrate }}%</r>
         </div>
     </div>
+</div>
+<div style="display: flex; flex-wrap: wrap; padding-top: 5px; gap: 2px">
+    {% for game in history %}
+        {% for player in game["players_data"] %}
+            {% if player["player_id"] == playerid %}
+                {% set won = True if player["game_result"] == "won" else False %}
+                <div style="position: relative; width: 40px; height: 40px; border-radius: 8px">
+                    {% if player["megamind"] %}
+                        <img style="top: 0;left: 0; position: absolute; z-index: 0" width="12" height="12" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
+                    {% endif %}
+                    {% set prefix = "+" if player["elo_change"] > 0 else "" %}
+                    <r class="strokeText" style="top: 24%;left: 7px; position: absolute; color: white; font-size: 16px; z-index: 99">{{ prefix }}{{ player["elo_change"] }}</r>
+                    <img
+                        style="width: 40px; height: 40px; object-fit: cover;"
+                        src="https://cdn.legiontd2.com/icons/Items/{{ player['legion'] }}.png">
+                    <div
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: {{ 'rgba(0, 255, 0, 0.6)' if won else 'rgba(255, 0, 0, 0.6)' }}; mix-blend-mode: multiply; pointer-events: none;">
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
 </div>
 </body>
 </html>
