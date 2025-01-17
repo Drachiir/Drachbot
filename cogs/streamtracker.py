@@ -83,6 +83,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 initial_wins = session_dict["int_wins"]
                 initial_losses = session_dict["int_losses"]
                 if update:
+                    skip_stats = False
                     stats = legion_api.getstats(playerid)
                     current_elo = stats["overallElo"]
                     try:
@@ -94,6 +95,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     except Exception:
                         current_losses = 0
                 else:
+                    skip_stats = True
                     current_elo = session_dict["current_elo"] + elo_change
                     if elo_change > 0:
                         current_wins = session_dict["current_wins"] + 1
@@ -111,7 +113,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                                ["game_id", "date", "version", "ending_wave", "game_elo"],
                                ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change"]]
                 games = current_games-initial_games if current_games-initial_games < 5 else 5
-                history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True)
+                history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True, skip_stats=skip_stats)
                 with open("sessions/session_" + playername + ".json", "w") as f:
                     session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
                                     "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": history}

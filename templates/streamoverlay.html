@@ -60,12 +60,22 @@
 			color: #b8b8b3;
 			white-space: nowrap;
         }
-    .strokeText{
+    .greenEloText{
+        color: #00e300;
         text-shadow:
         -1px -1px 0 black,
         1px -1px 0 black,
         -1px 1px 0 black,
         1px 1px 0 black;
+        font-weight: 600;
+    }
+    .redEloText{
+        color: #e30000;
+        text-shadow:
+        -1px -1px 0 white,
+        1px -1px 0 white,
+        -1px 1px 0 white,
+        1px 1px 0 white;
         font-weight: 600;
     }
     </style>
@@ -105,10 +115,10 @@
                 {% set won = True if player["game_result"] == "won" else False %}
                 <div style="position: relative; width: 40px; height: 40px;">
                     {% if player["megamind"] %}
-                        <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 8px" width="12" height="12" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
+                        <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 8px" width="18" height="18" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
                     {% endif %}
                     {% set prefix = "+" if player["elo_change"] > 0 else "" %}
-                    <r class="strokeText" style="top: 24%;left: 7px; position: absolute; color: {{ "rgb(0, 255, 0)" if won else "rgb(255, 0, 0)" }}; font-size: 18px; z-index: 99">{{ prefix }}{{ player["elo_change"] }}</r>
+                    <r class="{{ "greenEloText" if won else "redEloText" }}" style="top: 24%;left: 7px; position: absolute; font-size: 18px; z-index: 99">{{ prefix }}{{ player["elo_change"] }}</r>
                     <img
                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px"
                         src="https://cdn.legiontd2.com/icons/Items/{{ player['legion'] }}.png">
