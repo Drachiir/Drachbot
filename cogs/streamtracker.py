@@ -35,7 +35,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     current_wins = player["rankedWinsThisSeason"]
                     initial_losses = player["rankedLossesThisSeason"]
                     current_losses = player["rankedLossesThisSeason"]
-                    live = False
+                    playerid = player["profile"][0]["_id"]
                     break
             else:
                 initial_rank = ""
@@ -58,7 +58,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     current_losses = 0
             live = False
             with open("sessions/session_" + playername + ".json", "w") as f:
-                session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
+                session_dict = {"player_id": playerid, "started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
                                 "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins,
                                 "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": []}
                 json.dump(session_dict, f, default=str)
@@ -67,23 +67,21 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 session_dict = json.load(f)
                 if not session_dict.get("history"):
                     session_dict["history"] = []
-                try:
-                    initial_rank = session_dict["int_rank"]
-                    leaderboard = legion_api.get_leaderboard(99)
-                    for i, player in enumerate(leaderboard):
-                        if player["profile"][0]["playerName"].casefold() == playername.casefold():
-                            current_rank = "#"+str(i + 1)
-                            break
-                    else:
-                        current_rank = ""
-                except Exception:
-                    initial_rank = ""
                 live = session_dict["live"]
                 initial_elo = session_dict["int_elo"]
                 initial_wins = session_dict["int_wins"]
                 initial_losses = session_dict["int_losses"]
+                initial_rank = session_dict["int_rank"]
+                current_rank = session_dict["current_rank"]
+                playerid = session_dict["player_id"]
                 if update:
-                    playerid = legion_api.getid(playername)
+                    leaderboard = legion_api.get_leaderboard(99)
+                    for i, player in enumerate(leaderboard):
+                        if player["profile"][0]["playerName"].casefold() == playername.casefold():
+                            current_rank = "#" + str(i + 1)
+                            break
+                    else:
+                        current_rank = ""
                     stats = legion_api.getstats(playerid)
                     current_elo = stats["overallElo"]
                     try:
@@ -105,7 +103,6 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                     else:
                         current_losses = session_dict["current_losses"]
             if live:
-                playerid = legion_api.getid(playername)
                 initial_games = initial_wins + initial_losses
                 current_games = current_wins + current_losses
                 req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
@@ -118,7 +115,7 @@ def stream_overlay(playername, stream_started_at="", elo_change=0, update = Fals
                 else:
                     history = session_dict["history"]
                 with open("sessions/session_" + playername + ".json", "w") as f:
-                    session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
+                    session_dict = {"player_id": playerid, "started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
                                     "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": history}
                     json.dump(session_dict, f, default=str)
     except Exception:
