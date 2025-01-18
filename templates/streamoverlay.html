@@ -107,5 +107,25 @@
         </div>
     </div>
 </div>
+<div style="display: flex; flex-wrap: wrap; padding-top: 5px; gap: 1px">
+    {% for game in history %}
+        {% for player in game["players_data"] %}
+            {% if player["player_id"] == playerid %}
+                {% set won = True if player["game_result"] == "won" else False %}
+                <div style="position: relative; width: 40px; height: 40px; border: 2px solid {{ '#00e600' if won else 'red' }}; border-radius: 8px">
+                    {% if player["megamind"] %}
+                        <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 5px" width="18" height="18" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
+                    {% endif %}
+                    {% set prefix = "+" if player["elo_change"] > 0 else "" %}
+                    {% set left_gap = "1px" if player["elo_change"] > 0 else "2px" %}
+                    <r class="eloText" style="top: 22%;left: {{ left_gap }}; position: absolute; font-size: 21px; z-index: 99;">{{ prefix }}{{ player["elo_change"] }}</r>
+                    <img
+                        style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px"
+                        src="https://cdn.legiontd2.com/icons/Items/{{ player['legion'] }}.png">
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</div>
 </body>
 </html>

@@ -9,7 +9,7 @@ import traceback
 from datetime import datetime
 from discord.ext import commands
 import legion_api
-import cogs.streamtracker
+from streamoverlay import stream_overlay
 import util
 
 with open('Files/json/Secrets.json') as f:
@@ -59,7 +59,7 @@ def handler(message) -> None:
                                 with open(f"sessions/session_{acc}.json", "r") as f:
                                     session = json.load(f)
                                 if session["live"]:
-                                    cogs.streamtracker.stream_overlay(acc, update=True)
+                                    stream_overlay(acc, update=True)
     elif str(message.channel) == "game-results":
         gameid_result = ""
         embeds = message.embeds
@@ -97,31 +97,32 @@ def handler(message) -> None:
                             with open(f"sessions/session_{acc}.json", "r") as f:
                                 session = json.load(f)
                             if session["live"]:
-                                cogs.streamtracker.stream_overlay(acc, elo_change=elo_change)
+                                stream_overlay(acc, elo_change=elo_change)
                                 time.sleep(16)
-                                cogs.streamtracker.stream_overlay(acc, update=True)
+                                stream_overlay(acc, update=True)
                     elif acc in desc3[2]:
                         elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
                         if os.path.isfile(f"sessions/session_{acc}.json"):
                             with open(f"sessions/session_{acc}.json", "r") as f:
                                 session = json.load(f)
                             if session["live"]:
-                                cogs.streamtracker.stream_overlay(acc, elo_change=elo_change)
+                                stream_overlay(acc, elo_change=elo_change)
                                 time.sleep(16)
-                                cogs.streamtracker.stream_overlay(acc, update=True)
+                                stream_overlay(acc, update=True)
 
 class Livegame(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-        self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=100)
+        self.pool = concurrent.futures.ProcessPoolExecutor(max_workers=16)
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        try:
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(self.pool, functools.partial(handler, message))
-        except Exception:
-            traceback.print_exc()
+        if str(message.channel) in ["game-starts", "game-results"]:
+            try:
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(self.pool, handler, message)
+            except Exception:
+                traceback.print_exc()
 
     def cog_unload(self):
         self.pool.shutdown(wait=True)

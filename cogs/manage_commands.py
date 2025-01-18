@@ -9,8 +9,7 @@ from discord.ext import commands
 import os
 from datetime import datetime, timedelta, timezone, time
 from peewee_pg import db
-import cogs.streamtracker
-import cogs.scheduled_tasks
+from streamoverlay import stream_overlay
 import legion_api
 import cogs.scheduled_tasks as s_tasks
 import util
@@ -94,7 +93,9 @@ class ManageCommands(commands.Cog):
         if ctx.author.name == "drachir_":
             print("test")
             try:
-                cogs.streamtracker.stream_overlay("drachir", update=True)
+                loop = asyncio.get_running_loop()
+                with concurrent.futures.ProcessPoolExecutor() as pool:
+                    await loop.run_in_executor(pool, stream_overlay,"drachir", True)
             except Exception:
                 traceback.print_exc()
         else:
