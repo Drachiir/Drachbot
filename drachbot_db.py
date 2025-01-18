@@ -14,7 +14,6 @@ import datetime
 from datetime import datetime, timezone
 
 def get_games_loop(playerid, offset, expected, timeout_limit = 1):
-    print("Starting get_games_loop, expecting " + str(expected) + " games.")
     data = legion_api.pullgamedata(playerid, offset, expected)
     count = data[0]
     games_count = data[1]
@@ -25,12 +24,10 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
         count += data[0]
         games_count += data[1]
         if timeout == timeout_limit:
-            print('Timeout while pulling games.')
             break
         offset += 50
         data = legion_api.pullgamedata(playerid, offset, expected)
-    else:
-        print('All '+str(expected)+' required games pulled.')
+
     return games_count
 
 @db.atomic()

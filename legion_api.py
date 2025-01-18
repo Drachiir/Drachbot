@@ -108,14 +108,13 @@ def pullgamedata(playerid, offset, expected):
     ranked_count = 0
     games_count = 0
     url = 'https://apiv2.legiontd2.com/players/matchHistory/' + str(playerid) + '?limit=' + str(50) + '&offset=' + str(offset) + '&countResults=false'
-    print('Pulling ' + str(50) + ' games from API...')
     api_response = requests.get(url, headers=header)
     raw_data = json.loads(api_response.text)
-    print('Saving ranked games.')
     for x in raw_data:
         if ranked_count == expected:
             break
         if (raw_data == {'message': 'Internal server error'}) or (raw_data == {'err': 'Entry not found.'}):
+            print(f"API fail: {url}")
             break
         if (x['queueType'] == 'Normal'):
             if GameData.get_or_none(GameData.game_id == x["_id"]) is None:
