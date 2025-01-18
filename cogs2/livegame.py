@@ -59,7 +59,8 @@ def handler(message) -> None:
                                 with open(f"sessions/session_{acc}.json", "r") as f:
                                     session = json.load(f)
                                 if session["live"]:
-                                    stream_overlay(acc, update=True)
+                                    with concurrent.futures.ProcessPoolExecutor() as pool:
+                                        pool.submit(functools.partial(stream_overlay, acc, True))
     elif str(message.channel) == "game-results":
         gameid_result = ""
         embeds = message.embeds
@@ -79,7 +80,7 @@ def handler(message) -> None:
             for game in livegame_files:
                 if game.split("_")[0] == gameid_result:
                     os.remove(path + game)
-            #Dirty copy for 1v1
+            # Dirty copy for 1v1
             livegame_files1v1 = [pos_json for pos_json in os.listdir(path2) if pos_json.endswith('.txt')]
             for game in livegame_files1v1:
                 if game.split("_")[0] == gameid_result:
@@ -97,23 +98,27 @@ def handler(message) -> None:
                             with open(f"sessions/session_{acc}.json", "r") as f:
                                 session = json.load(f)
                             if session["live"]:
-                                stream_overlay(acc, elo_change=elo_change)
+                                with concurrent.futures.ProcessPoolExecutor() as pool:
+                                    pool.submit(functools.partial(stream_overlay, acc, elo_change=elo_change))
                                 time.sleep(16)
-                                stream_overlay(acc, update=True)
+                                with concurrent.futures.ProcessPoolExecutor() as pool:
+                                    pool.submit(functools.partial(stream_overlay, acc, True))
                     elif acc in desc3[2]:
                         elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
                         if os.path.isfile(f"sessions/session_{acc}.json"):
                             with open(f"sessions/session_{acc}.json", "r") as f:
                                 session = json.load(f)
                             if session["live"]:
-                                stream_overlay(acc, elo_change=elo_change)
+                                with concurrent.futures.ProcessPoolExecutor() as pool:
+                                    pool.submit(functools.partial(stream_overlay, acc, elo_change=elo_change))
                                 time.sleep(16)
-                                stream_overlay(acc, update=True)
+                                with concurrent.futures.ProcessPoolExecutor() as pool:
+                                    pool.submit(functools.partial(stream_overlay, acc, True))
 
 class Livegame(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-        self.pool = concurrent.futures.ProcessPoolExecutor(max_workers=16)
+        self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=100)
 
     @commands.Cog.listener()
     async def on_message(self, message):
