@@ -114,7 +114,7 @@ def pullgamedata(playerid, offset, expected):
         if ranked_count == expected:
             break
         if (raw_data == {'message': 'Internal server error'}) or (raw_data == {'err': 'Entry not found.'}):
-            print(f"API fail: {url}")
+            print(f"API fail: {url}\n{raw_data}")
             break
         if x['queueType'] == 'Normal':
             ranked_count += 1
