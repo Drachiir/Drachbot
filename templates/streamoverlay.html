@@ -62,19 +62,16 @@
         }
     .eloText{
         color: white;
+		font-size: 22px;
         text-shadow:
-        -1px -1px 0 black,
-        1px -1px 0 black,
-        -1px 1px 0 black,
-        1px 1px 0 black,
-        0px -1px 0 black,
-        0px 1px 0 black,
-        -1px 0px 0 black,
-        1px 0px 0 black,
-        -2px -2px 0 black,
-        2px -2px 0 black,
-        -2px 2px 0 black,
-        2px 2px 0 black;
+		2px 2px 0 #000,  /* Bottom-right */
+		-2px 2px 0 #000, /* Bottom-left */
+		2px -2px 0 #000, /* Top-right */
+		-2px -2px 0 #000, /* Top-left */
+		0px 2px 0 #000,  /* Bottom */
+		2px 0px 0 #000,  /* Right */
+		0px -2px 0 #000, /* Top */
+		-2px 0px 0 #000; /* Left */
         font-weight: 500;
     }
     .containerHistoryInner{
@@ -86,7 +83,7 @@
     .containerHistory{
         background: rgba(12, 12, 12, 0.97);
         max-width: max-content;
-        padding: 4px;
+        padding: 5px;
         white-space: nowrap;
         border-radius: 8px;
     }
@@ -133,8 +130,7 @@
                             <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 5px" width="16" height="16" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
                         {% endif %}
                         {% set prefix = "+" if player["elo_change"] > 0 else "" %}
-                        {% set left_gap = "2px" if player["elo_change"] > 0 else "2px" %}
-                        <r class="eloText" style="top: 22%;left: {{ left_gap }}; position: absolute; font-size: 21px; z-index: 99;">{{ prefix }}{{ player["elo_change"] }}</r>
+                        <r class="eloText" style="top: 22%;left: 2px; position: absolute; z-index: 99;">{{ prefix }}{{ player["elo_change"] }}</r>
                         <img
                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px"
                             src="https://cdn.legiontd2.com/icons/Items/{{ player['legion'] }}.png">
