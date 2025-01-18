@@ -108,7 +108,7 @@ class PlayerData(BaseModel):
     megamind = BooleanField()
     champ_location = TextField()  # "chosenChampionLocation"
 
-
+@db.atomic()
 def save_game(data):
     date_format = "%Y-%m-%dT%H:%M:%S"
     pids = []

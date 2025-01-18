@@ -116,15 +116,12 @@ def pullgamedata(playerid, offset, expected):
         if (raw_data == {'message': 'Internal server error'}) or (raw_data == {'err': 'Entry not found.'}):
             print(f"API fail: {url}")
             break
-        if (x['queueType'] == 'Normal'):
-            if GameData.get_or_none(GameData.game_id == x["_id"]) is None:
-                ranked_count += 1
-                try:
-                    peewee_pg.save_game(x)
-                except peewee.IntegrityError as e:
-                    print(e)
-                    print(f"Peewee Integrity Error: {x["_id"]}")
-                    break
+        if x['queueType'] == 'Normal':
+            ranked_count += 1
+            try:
+                peewee_pg.save_game(x)
+            except Exception:
+                break
         games_count += 1
     return [ranked_count, games_count]
 
@@ -172,7 +169,7 @@ def get_recent_games(calls=2, time_delta=3):
             print("api fail", history_raw)
             continue
         for game in history_raw:
-            if (game['queueType'] == 'Normal'):
+            if game['queueType'] == 'Normal':
                 if game["gameElo"] < 1600:
                     temp = 50
                     break
@@ -180,7 +177,10 @@ def get_recent_games(calls=2, time_delta=3):
                     timeout_count = 0
                     add_game_count(game["gameElo"])
                     ranked_count += 1
-                    peewee_pg.save_game(game)
+                    try:
+                        peewee_pg.save_game(game)
+                    except Exception:
+                        pass
                 else:
                     temp += 1
         if temp == 50:
