@@ -101,12 +101,12 @@ def stream_overlay(playername, update = False, stream_started_at="", elo_change=
             if live:
                 initial_games = initial_wins + initial_losses
                 current_games = current_wins + current_losses
-                req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
-                                PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change],
-                               ["game_id", "date", "version", "ending_wave", "game_elo"],
-                               ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change"]]
                 games = current_games-initial_games if current_games-initial_games < 5 else 5
                 if update and games > 0:
+                    req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
+                                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change],
+                                   ["game_id", "date", "version", "ending_wave", "game_elo"],
+                                   ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change"]]
                     history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True)
                 else:
                     history = session_dict["history"]
