@@ -256,10 +256,10 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
     match mastermind:
         case 'All':
             return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind", transparency=transparent)
-        case mastermind if mastermind in case_list:
-            return image_generators.create_image_stats_specific(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind", specific_value=mastermind, transparency=transparent)
         case 'Megamind':
             return image_generators.create_image_stats(masterminds_dict, games, playerid, avg_gameelo, patches, "Mastermind", True, megamind_count, transparency=transparent)
+        case mastermind if mastermind in case_list:
+            return image_generators.create_image_stats_specific(masterminds_dict, games, playerid, avg_gameelo, patches, mode="Mastermind", specific_value=mastermind, transparency=transparent)
 
 class MMstats(commands.Cog):
     def __init__(self, client: commands.Bot):
