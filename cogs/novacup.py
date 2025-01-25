@@ -29,13 +29,13 @@ def novacup(division):
                     team_dict[row[1]] = [row[2],row[3],row[4]]
             except Exception:
                 continue
-    newIndex = sorted(team_dict, key=lambda x: int(team_dict[x][2]), reverse=True)
+    newIndex = sorted(team_dict, key=lambda x: float(team_dict[x][2]), reverse=True)
     team_dict = {k: team_dict[k] for k in newIndex}
     month = datetime.now()
     if division == "1":
         elo = 0
         for i, t in enumerate(team_dict):
-            elo += int(team_dict[t][2])
+            elo += float(team_dict[t][2])
             if i == 7:
                 break
         title = str(month.strftime("%B")) + " Nova Cup Division 1 ("+str(round(elo/8))+util.get_ranked_emote(round(elo/8))+")"
@@ -43,16 +43,16 @@ def novacup(division):
         elo = 0
         for i, t in enumerate(team_dict):
             if 7 < i < 16:
-                elo += int(team_dict[t][2])
+                elo += float(team_dict[t][2])
         title = str(month.strftime("%B")) + " Nova Cup Division 2 ("+str(round(elo/8))+util.get_ranked_emote(round(elo/8))+")"
     embed = discord.Embed(color=util.random_color(), title=title)
     embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/Tournaments/NovaCup/NovaCup_00.png")
     count = 1
     for team in team_dict:
         if count < 9 and division == "1":
-            embed.add_field(name=str(count) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + team_dict[team][2]+util.get_ranked_emote(int(team_dict[team][2])), inline=False)
+            embed.add_field(name=str(count) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + team_dict[team][2]+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
         if count >= 9 and division == "2":
-            embed.add_field(name=str(count-8) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + team_dict[team][2]+util.get_ranked_emote(int(team_dict[team][2])), inline=False)
+            embed.add_field(name=str(count-8) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + team_dict[team][2]+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
         count +=1
         if count == 17:
             break
