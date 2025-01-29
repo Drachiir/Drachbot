@@ -44,14 +44,14 @@ def handler(message) -> None:
         if len(players) == 4 or len(players) == 2:
             players_new = get_game_elo(players)
             save_live_game(gameid, players_new)
-            with open("Files/whitelist.txt", "r") as f:
-                data = f.readlines()
+            with open("Files/streamers.json", "r") as f:
+                data = json.load(f)
             for entry in data:
-                playername = entry.split("|")[1].replace("\n", "")
-                accounts = playername.split(",") if "," in playername else [playername]
-                for acc in accounts:
+                accounts = data[entry]["player_ids"]
+                for i, acc in enumerate(accounts):
+                    player_name = data[entry]["display_names"][i]
                     for p in players:
-                        if p.split(":")[0] == acc and os.path.isfile(f"sessions/session_{acc}.json"):
+                        if p.split(":")[0] == player_name and os.path.isfile(f"sessions/session_{acc}.json"):
                             mod_date = datetime.utcfromtimestamp(os.path.getmtime(f'sessions/session_{acc}.json'))
                             date_diff = datetime.now() - mod_date
                             minutes_diff = date_diff.total_seconds() / 60
@@ -86,13 +86,13 @@ def handler(message) -> None:
                 if game.split("_")[0] == gameid_result:
                     os.remove(path2 + game)
         if "elo" in desc:
-            with open("Files/whitelist.txt", "r") as f:
-                data = f.readlines()
+            with open("Files/streamers.json", "r") as f:
+                data = json.load(f)
             for entry in data:
-                playername = entry.split("|")[1].replace("\n", "")
-                accounts = playername.split(",") if "," in playername else [playername]
-                for acc in accounts:
-                    if acc in desc3[1]:
+                accounts = data[entry]["player_ids"]
+                for i, acc in enumerate(accounts):
+                    player_name = data[entry]["display_names"][i]
+                    if player_name in desc3[1]:
                         elo_change = int(desc3[0].split(" elo")[0].split("(")[1])
                         if os.path.isfile(f"sessions/session_{acc}.json"):
                             with open(f"sessions/session_{acc}.json", "r") as f:
@@ -103,7 +103,7 @@ def handler(message) -> None:
                                 time.sleep(16)
                                 with concurrent.futures.ProcessPoolExecutor() as pool:
                                     pool.submit(functools.partial(stream_overlay, acc, True))
-                    elif acc in desc3[2]:
+                    elif player_name in desc3[2]:
                         elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
                         if os.path.isfile(f"sessions/session_{acc}.json"):
                             with open(f"sessions/session_{acc}.json", "r") as f:

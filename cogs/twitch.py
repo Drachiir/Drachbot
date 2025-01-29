@@ -15,14 +15,11 @@ from twitchAPI.object.eventsub import StreamOnlineEvent, StreamOfflineEvent, Cha
 import asyncio
 import json
 
+import legion_api
 import util
 
 with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
-    f.close()
-
-with open("Files/streamers.txt", "r") as f:
-    data = f.readlines()
     f.close()
 
 class TwitchHandler(commands.Cog):
@@ -35,13 +32,21 @@ class TwitchHandler(commands.Cog):
                 self.messages: dict = json.load(f)
         else:
             self.messages: dict = {}
-            for n in data:
-                string = n.replace("\n", "").split("|")
-                self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
         self.twitch_names = []
-        for n in data:
-            string = n.replace("\n", "").split("|")
-            self.twitch_names.append(string[0])
+        if os.path.isfile("Files/streamers.json"):
+            with open("Files/streamers.json", "r") as f:
+                streamers = json.load(f)
+            for streamer in streamers:
+                active_flag = streamers[streamer]["active_flag"]
+                ingame_ids = streamers[streamer]["player_ids"]
+                self.messages[streamer] = {
+                    "live": False,
+                    "noti_sent": False,
+                    "noti_string": active_flag,
+                    "ingame_ids": ingame_ids,
+                    "last_msg": {}
+                }
+                self.twitch_names.append(streamer)
     
     async def cog_check(self, ctx:commands.Context):
         if ctx.author.name == "drachir_":
@@ -115,17 +120,25 @@ class TwitchHandler(commands.Cog):
     
     @tasks.loop(seconds=5.0)
     async def message(self):
+        with open("Files/streamers.json", "r") as f:
+            streamers = json.load(f)
         for streamer in self.messages:
             try:
                 if self.messages[streamer]["live"] and self.messages[streamer]["noti_sent"] == False:
                     rank = 0
                     end_string = ""
-                    if self.messages[streamer]["ingame_name"] != " ":
+                    if self.messages[streamer]["ingame_ids"]:
                         loop = asyncio.get_running_loop()
-                        if "," in self.messages[streamer]["ingame_name"]:
-                            accounts = self.messages[streamer]["ingame_name"].split(",")
-                        else:
-                            accounts = [self.messages[streamer]["ingame_name"]]
+                        try:
+                            with concurrent.futures.ThreadPoolExecutor() as pool:
+                                for i, player_id in enumerate(self.messages[streamer]["ingame_ids"]):
+                                    api_profile = await loop.run_in_executor(legion_api.getprofile, player_id)
+                                    player_name = api_profile["playerName"]
+                                    streamers[streamer]["display_names"][i] = player_name
+                                pool.shutdown()
+                        except Exception:
+                            pass
+                        accounts = self.messages[streamer]["ingame_ids"]
                         for acc in accounts:
                             if os.path.isfile(f'sessions/session_{acc}.json'):
                                 mod_date = datetime.utcfromtimestamp(os.path.getmtime(f'sessions/session_{acc}.json'))
@@ -159,7 +172,7 @@ class TwitchHandler(commands.Cog):
                                 json.dump(session, f)
                                 f.close()
                             end_string = f'Start elo: {session["int_elo"]}{util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
-                    if self.messages[streamer]["noti_string"] == "X":
+                    if self.messages[streamer]["noti_string"] == "X" or (rank < 2000 and rank):
                         self.messages[streamer]["noti_sent"] = True
                         return
                     embed = discord.Embed(color=util.random_color(), title=self.messages[streamer]["title"],description=end_string, url='https://www.twitch.tv/'+streamer)
@@ -196,10 +209,7 @@ class TwitchHandler(commands.Cog):
                 elif self.messages[streamer]["noti_sent"] and self.messages[streamer]["live"] == False:
                     print("editing message")
                     end_string = ""
-                    if "," in self.messages[streamer]["ingame_name"]:
-                        accounts = self.messages[streamer]["ingame_name"].split(",")
-                    else:
-                        accounts = [self.messages[streamer]["ingame_name"]]
+                    accounts = self.messages[streamer]["ingame_ids"]
                     for acc in accounts:
                         if os.path.isfile("sessions/session_" + acc + ".json"):
                             with open("sessions/session_"+acc+".json", "r") as f:
@@ -284,27 +294,50 @@ class TwitchHandler(commands.Cog):
             traceback.print_exc()
             await ctx.message.add_reaction("❌")
     
-    #twitchname|ign|discord_name|Y/X/
+    #twitchname|ign|Y/X/
     @commands.command()
     async def add_streamer(self, ctx: commands.Context):
         try:
-            text = ctx.message.content[14:].split("|")
-            with open("Files/streamers.txt", "a") as f:
-                f.write(f"\n{text[0]}|{text[3]}|{text[1]}")
-            with open("Files/whitelist.txt", "a") as f:
-                f.write(f"\n{text[2]}|{text[1]}|{text[0]}")
-            with open("Files/streamers.txt", "r") as f:
-                data = f.readlines()
-            for n in data:
-                string = n.replace("\n", "").split("|")
-                if string[0] not in self.twitch_names:
-                    self.twitch_names.append(string[0])
-                    self.messages[string[0]] = {"live": False, "noti_sent": False, "noti_string": string[1], "ingame_name": string[2], "last_msg": {}}
-                    users = await first(self.twitchclient.get_users(logins=[string[0]]))
-                    await self.eventsub.listen_stream_online(users.id, self.on_online)
-                    await self.eventsub.listen_stream_offline(users.id, self.on_offline)
-                    await self.eventsub.listen_channel_update(users.id, self.on_change)
-                    print(f'added {string[0]} to the eventsub')
+            text = ctx.message.content[14:].split("|")  # Assumes input format: twitchname|ign|Y/X/
+            twitch_name = text[0].strip()
+            ign = text[1].strip()
+            active_flag = text[2].strip().upper()
+
+            json_file = "Files/streamers.json"
+            with open(json_file, "r") as f:
+                data = json.load(f)
+
+            if any(streamer["username"] == twitch_name for streamer in data):
+                await ctx.send(f"Streamer `{twitch_name}` is already in the list.")
+                return
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                player_id = await loop.run_in_executor(pool, legion_api.getid, ign)
+                pool.shutdown()
+            new_streamer = {
+                "active_flag": active_flag,
+                "display_name": ign,
+                "player_ids": [player_id]
+            }
+            data[twitch_name] = new_streamer
+
+            with open(json_file, "w") as f:
+                json.dump(data, f, indent=4)
+
+            if twitch_name not in self.twitch_names:
+                self.twitch_names.append(twitch_name)
+                self.messages[twitch_name] = {
+                    "live": False,
+                    "noti_sent": False,
+                    "noti_string": active_flag,
+                    "ingame_ids": [player_id],
+                    "last_msg": {}
+                }
+                users = await first(self.twitchclient.get_users(logins=[twitch_name]))
+                await self.eventsub.listen_stream_online(users.id, self.on_online)
+                await self.eventsub.listen_stream_offline(users.id, self.on_offline)
+                await self.eventsub.listen_channel_update(users.id, self.on_change)
+                print(f"Added {twitch_name} to the eventsub")
             await ctx.message.add_reaction("✅")
         except Exception:
             traceback.print_exc()
@@ -315,7 +348,7 @@ class TwitchHandler(commands.Cog):
         text = ctx.message.content[13:]
         streamer = text.split(" ")[0]
         title = text.split(" ")[1]
-        self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": " ", "ingame_name": " ", "last_msg": {}, "title": title, "stream_started_at": ""}
+        self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": " ", "ingame_ids": [], "last_msg": {}, "title": title, "stream_started_at": ""}
         
     @commands.command()
     async def mock_offline(self, ctx: commands.Context):

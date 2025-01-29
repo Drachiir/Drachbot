@@ -15,12 +15,12 @@ if platform.system() == "Linux":
 else:
     shared_folder = "shared/"
 
-def stream_overlay(playername, update = False, stream_started_at="", elo_change=0):
+def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0):
     try:
-        if not os.path.isfile("sessions/session_" + playername + ".json"):
+        if not os.path.isfile("sessions/session_" + playerid + ".json"):
             leaderboard = legion_api.get_leaderboard(99)
             for i, player in enumerate(leaderboard):
-                if player["profile"][0]["playerName"].casefold() == playername.casefold():
+                if player["profile"][0]["_id"] == playerid:
                     initial_rank = "#"+str(i+1)
                     current_rank = "#"+str(i + 1)
                     initial_elo = player["overallElo"]
@@ -29,12 +29,10 @@ def stream_overlay(playername, update = False, stream_started_at="", elo_change=
                     current_wins = player["rankedWinsThisSeason"]
                     initial_losses = player["rankedLossesThisSeason"]
                     current_losses = player["rankedLossesThisSeason"]
-                    playerid = player["profile"][0]["_id"]
                     break
             else:
                 initial_rank = ""
                 current_rank = ""
-                playerid = legion_api.getid(playername)
                 stats = legion_api.getstats(playerid)
                 initial_elo = stats["overallElo"]
                 current_elo = stats["overallElo"]
@@ -51,29 +49,26 @@ def stream_overlay(playername, update = False, stream_started_at="", elo_change=
                     initial_losses = 0
                     current_losses = 0
             live = False
-            with open("sessions/session_" + playername + ".json", "w") as f:
-                session_dict = {"player_id": playerid, "started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
+            with open("sessions/session_" + playerid + ".json", "w") as f:
+                session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
                                 "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins,
                                 "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": []}
                 json.dump(session_dict, f, default=str)
         else:
-            with open("sessions/session_" + playername + ".json", "r") as f:
+            with open("sessions/session_" + playerid + ".json", "r") as f:
                 session_dict = json.load(f)
                 if not session_dict.get("history"):
                     session_dict["history"] = []
-                if not session_dict.get("player_id"):
-                    session_dict["player_id"] = legion_api.getid(playername)
                 live = session_dict["live"]
                 initial_elo = session_dict["int_elo"]
                 initial_wins = session_dict["int_wins"]
                 initial_losses = session_dict["int_losses"]
                 initial_rank = session_dict["int_rank"]
                 current_rank = session_dict["current_rank"]
-                playerid = session_dict["player_id"]
                 if update:
                     leaderboard = legion_api.get_leaderboard(99)
                     for i, player in enumerate(leaderboard):
-                        if player["profile"][0]["playerName"].casefold() == playername.casefold():
+                        if player["profile"][0]["_id"] == playerid:
                             current_rank = "#" + str(i + 1)
                             break
                     else:
@@ -110,13 +105,13 @@ def stream_overlay(playername, update = False, stream_started_at="", elo_change=
                     history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True)
                 else:
                     history = session_dict["history"]
-                with open("sessions/session_" + playername + ".json", "w") as f:
-                    session_dict = {"player_id": playerid, "started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
+                with open("sessions/session_" + playerid + ".json", "w") as f:
+                    session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
                                     "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": history}
                     json.dump(session_dict, f, default=str)
     except Exception:
         traceback.print_exc()
-        print(f"Couldn't create session for: {playername}")
+        print(f"Couldn't create session for: {playerid}")
         return None
     wins = current_wins-initial_wins
     losses = current_losses-initial_losses
@@ -166,6 +161,6 @@ def stream_overlay(playername, update = False, stream_started_at="", elo_change=
                                 initial_elo=initial_elo, initial_rank=initial_rank, current_rank=current_rank,
                                 wins=wins, losses=losses, current_elo=current_elo, winrate=winrate,
                                 elo_diff=elo_diff, elo_str=elo_str, rgb=rgb, rgb2=rgb2, playerid=playerid, history=session_dict["history"])
-    with open(shared_folder+playername+'_output.html', "w") as f:
+    with open(shared_folder+playerid+'_output.html', "w") as f:
         f.write(html_file)
-    return playername+'_output.html'
+    return playerid+'_output.html'
