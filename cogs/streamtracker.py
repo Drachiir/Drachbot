@@ -21,7 +21,7 @@ class Streamtracker(commands.Cog):
         await interaction.response.defer(ephemeral=False, thinking=True)
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
-                player_id = loop.run_in_executor(pool, legion_api.getid, player_name)
+                player_id = await loop.run_in_executor(pool, legion_api.getid, player_name)
                 with open("Files/streamers.json", "r") as f:
                     data = json.load(f)
                 for streamer in data:
