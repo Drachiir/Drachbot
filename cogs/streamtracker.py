@@ -21,14 +21,14 @@ class Streamtracker(commands.Cog):
         await interaction.response.defer(ephemeral=False, thinking=True)
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:
-                player_id = legion_api.getid(player_name)
+                player_id = loop.run_in_executor(pool, legion_api.getid, player_name)
                 with open("Files/streamers.json", "r") as f:
                     data = json.load(f)
                 for streamer in data:
                     if player_id in data[streamer]["player_ids"]:
                         await loop.run_in_executor(pool, functools.partial(stream_overlay, player_id, True))
                         pool.shutdown()
-                        await interaction.followup.send("https://overlay.drachbot.site/" + player_id + '_output.html')
+                        await interaction.followup.send(f"https://overlay.drachbot.site/{player_id}_output.html")
                         return
             except Exception:
                 traceback.print_exc()

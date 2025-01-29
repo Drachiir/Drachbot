@@ -82,10 +82,10 @@ def getid(playername):
     try:
         api_response = requests.get(url, headers=header)
         if 'Limit Exceeded' in api_response.text:
-            return 1
+            return "1"
         api_response.raise_for_status()
     except requests.exceptions.HTTPError:
-        return 0
+        return ""
     else:
         playerid = json.loads(api_response.text)
         return playerid['_id']
