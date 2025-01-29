@@ -137,6 +137,7 @@ class TwitchHandler(commands.Cog):
                                     streamers[streamer]["display_names"][i] = player_name
                                 pool.shutdown()
                         except Exception:
+                            print(f"Something wrong getting the name from {streamer}")
                             pass
                         accounts = self.messages[streamer]["ingame_ids"]
                         for acc in accounts:
@@ -348,7 +349,8 @@ class TwitchHandler(commands.Cog):
         text = ctx.message.content[13:]
         streamer = text.split(" ")[0]
         title = text.split(" ")[1]
-        self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": " ", "ingame_ids": [], "last_msg": {}, "title": title, "stream_started_at": ""}
+        playerid = text.split(" ")[2]
+        self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": "", "ingame_ids": [playerid], "last_msg": {}, "title": title, "stream_started_at": ""}
         
     @commands.command()
     async def mock_offline(self, ctx: commands.Context):
