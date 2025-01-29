@@ -133,7 +133,7 @@ class TwitchHandler(commands.Cog):
                         try:
                             with concurrent.futures.ThreadPoolExecutor() as pool:
                                 for i, player_id in enumerate(self.messages[streamer]["ingame_ids"]):
-                                    api_profile = await loop.run_in_executor(loop, legion_api.getprofile, player_id)
+                                    api_profile = await loop.run_in_executor(pool, legion_api.getprofile, player_id)
                                     player_name = api_profile["playerName"]
                                     if streamers[streamer]["display_names"][i] != player_name:
                                         streamers[streamer]["display_names"][i] = player_name
