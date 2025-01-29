@@ -125,7 +125,7 @@ def pullgamedata(playerid, offset, expected):
         games_count += 1
     return [ranked_count, games_count]
 
-
+@db.atomic()
 def get_recent_games(calls=2, time_delta=3):
     date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     date_after = (datetime.now(tz=timezone.utc) - timedelta(minutes=time_delta+10)).strftime("%Y-%m-%d %H:%M:%S")
