@@ -140,8 +140,9 @@ class TwitchHandler(commands.Cog):
                                         streamers_changed = True
                                 pool.shutdown()
                         except Exception:
+                            traceback.print_exc()
                             print(f"Something wrong getting the name from {streamer}")
-                            pass
+                            continue
                         accounts = self.messages[streamer]["ingame_ids"]
                         for acc in accounts:
                             if os.path.isfile(f'sessions/session_{acc}.json'):
