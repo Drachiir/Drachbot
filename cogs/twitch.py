@@ -122,6 +122,7 @@ class TwitchHandler(commands.Cog):
     async def message(self):
         with open("Files/streamers.json", "r") as f:
             streamers = json.load(f)
+        streamers_changed = False
         for streamer in self.messages:
             try:
                 if self.messages[streamer]["live"] and self.messages[streamer]["noti_sent"] == False:
@@ -134,7 +135,9 @@ class TwitchHandler(commands.Cog):
                                 for i, player_id in enumerate(self.messages[streamer]["ingame_ids"]):
                                     api_profile = await loop.run_in_executor(legion_api.getprofile, player_id)
                                     player_name = api_profile["playerName"]
-                                    streamers[streamer]["display_names"][i] = player_name
+                                    if streamers[streamer]["display_names"][i] != player_name:
+                                        streamers[streamer]["display_names"][i] = player_name
+                                        streamers_changed = True
                                 pool.shutdown()
                         except Exception:
                             print(f"Something wrong getting the name from {streamer}")
@@ -266,6 +269,10 @@ class TwitchHandler(commands.Cog):
             except Exception:
                 self.messages[streamer]["live"] = False
                 traceback.print_exc()
+
+        if streamers_changed:
+            with open("Files/streamers.json", "w") as f:
+                json.dump(streamers, f)
     
     @commands.command()
     async def start(self, ctx:commands.Context):
@@ -350,6 +357,19 @@ class TwitchHandler(commands.Cog):
         streamer = text.split(" ")[0]
         title = text.split(" ")[1]
         playerid = text.split(" ")[2]
+        with open("Files/streamers.json", "r") as f:
+            streamers = json.load(f)
+        streamers[streamer] = {
+            "active_flag": "",
+            "display_names": [
+                ""
+            ],
+            "player_ids": [
+                playerid
+            ]
+        }
+        with open("Files/streamers.json", "w") as f:
+            json.dump(streamers, f)
         self.messages[streamer] = {"live": True, "noti_sent": False, "noti_string": "", "ingame_ids": [playerid], "last_msg": {}, "title": title, "stream_started_at": ""}
         
     @commands.command()
