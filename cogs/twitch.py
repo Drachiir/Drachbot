@@ -316,7 +316,7 @@ class TwitchHandler(commands.Cog):
             with open(json_file, "r") as f:
                 data = json.load(f)
 
-            if any(streamer["username"] == twitch_name for streamer in data):
+            if twitch_name in data:
                 await ctx.send(f"Streamer `{twitch_name}` is already in the list.")
                 return
             loop = asyncio.get_running_loop()
