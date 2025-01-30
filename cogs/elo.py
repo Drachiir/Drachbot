@@ -146,7 +146,7 @@ def gamestats(playername):
         winrate = wins / (wins + loses)
     except ZeroDivisionError:
         return str(playername).capitalize() +' has no ranked games played this season.'
-    return str(playername).capitalize() + ("'s stats(Season 2024):\n"
+    return str(playername).capitalize() + ("'s stats(Season 2025):\n"
         "Elo: ") + str(stats['overallElo']) + '(Peak: ' + str(stats['overallPeakEloThisSeason']) + (')\n'
         'Games played: ') + str(wins + loses) + ('\n'
         'Winrate: ') + str(round(winrate * 100)) + ('%\n'

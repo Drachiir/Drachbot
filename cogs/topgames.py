@@ -95,7 +95,7 @@ def get_top_games(oneversusone=False):
 class RefreshButton(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 5.0, commands.BucketType.member)
     
     @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -104,7 +104,7 @@ class RefreshButton(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, get_top_games)
@@ -117,7 +117,7 @@ class RefreshButton(discord.ui.View):
 class RefreshButton2(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 5.0, commands.BucketType.member)
 
     @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refresh2')
     async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -126,7 +126,7 @@ class RefreshButton2(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(get_top_games, oneversusone=True))
