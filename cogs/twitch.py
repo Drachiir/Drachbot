@@ -20,7 +20,6 @@ import util
 
 with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
-    f.close()
 
 with open("Files/streamers.json", "r") as f:
     streamers = json.load(f)
