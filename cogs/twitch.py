@@ -22,7 +22,7 @@ with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
 
 with open("Files/streamers.json", "r") as f:
-    streamers = json.load(f)
+    streamers_initial = json.load(f)
 
 class TwitchHandler(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -34,9 +34,9 @@ class TwitchHandler(commands.Cog):
                 self.messages: dict = json.load(f)
         else:
             self.messages: dict = {}
-            for streamer in streamers:
-                active_flag = streamers[streamer]["active_flag"]
-                ingame_ids = streamers[streamer]["player_ids"]
+            for streamer in streamers_initial:
+                active_flag = streamers_initial[streamer]["active_flag"]
+                ingame_ids = streamers_initial[streamer]["player_ids"]
                 self.messages[streamer] = {
                     "live": False,
                     "noti_sent": False,
@@ -45,7 +45,7 @@ class TwitchHandler(commands.Cog):
                     "last_msg": {}
                 }
         self.twitch_names = []
-        for streamer in streamers:
+        for streamer in streamers_initial:
             self.twitch_names.append(streamer)
     
     async def cog_check(self, ctx:commands.Context):
@@ -242,9 +242,9 @@ class TwitchHandler(commands.Cog):
                                     winrate = round(wins/(wins+losses)*100)
                                 except ZeroDivisionError:
                                     winrate = 0
-                                end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
-                                    f'End elo: {session["current_elo"]}{util.get_ranked_emote(session["current_elo"])}({elo_prefix}{elo_change}) {session["current_rank"]}'
-                                    f'\n{wins}W-{losses}L, WR: {winrate}%')
+                                end_string = (f'`Start: {session["int_elo"]}`{util.get_ranked_emote(session["int_elo"])}`{session["int_rank"]}`\n'
+                                    f'`End:   {session["current_elo"]}`{util.get_ranked_emote(session["current_elo"])}`{session["current_rank"]}`'
+                                    f'\n`{wins}W-{losses}L, WR: {winrate}%, {elo_prefix}{elo_change} Elo`')
                             else:
                                 end_string = ""
                         else:
