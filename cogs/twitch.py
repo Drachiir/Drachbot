@@ -22,6 +22,9 @@ with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
     f.close()
 
+with open("Files/streamers.json", "r") as f:
+    streamers = json.load(f)
+
 class TwitchHandler(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
@@ -32,10 +35,6 @@ class TwitchHandler(commands.Cog):
                 self.messages: dict = json.load(f)
         else:
             self.messages: dict = {}
-        self.twitch_names = []
-        if os.path.isfile("Files/streamers.json"):
-            with open("Files/streamers.json", "r") as f:
-                streamers = json.load(f)
             for streamer in streamers:
                 active_flag = streamers[streamer]["active_flag"]
                 ingame_ids = streamers[streamer]["player_ids"]
@@ -46,7 +45,9 @@ class TwitchHandler(commands.Cog):
                     "ingame_ids": ingame_ids,
                     "last_msg": {}
                 }
-                self.twitch_names.append(streamer)
+        self.twitch_names = []
+        for streamer in streamers:
+            self.twitch_names.append(streamer)
     
     async def cog_check(self, ctx:commands.Context):
         if ctx.author.name == "drachir_":
