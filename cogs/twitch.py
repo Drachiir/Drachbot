@@ -242,9 +242,9 @@ class TwitchHandler(commands.Cog):
                                     winrate = round(wins/(wins+losses)*100)
                                 except ZeroDivisionError:
                                     winrate = 0
-                                end_string = (f'`Start: {session["int_elo"]}`{util.get_ranked_emote(session["int_elo"])}`{session["int_rank"]}`\n'
-                                    f'`End:   {session["current_elo"]}`{util.get_ranked_emote(session["current_elo"])}`{session["current_rank"]}`'
-                                    f'\n`{wins}W-{losses}L, WR: {winrate}%, {elo_prefix}{elo_change} Elo`')
+                                end_string = (f'Start Elo: {session["int_elo"]} {util.get_ranked_emote(session["int_elo"])} {session["int_rank"]}\n'
+                                    f'End Elo: {session["current_elo"]} {util.get_ranked_emote(session["current_elo"])} {session["current_rank"]}'
+                                    f'\n{wins}W-{losses}L, WR: {winrate}%, {elo_prefix}{elo_change} Elo')
                             else:
                                 end_string = ""
                         else:
