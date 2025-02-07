@@ -325,7 +325,7 @@ class TwitchHandler(commands.Cog):
                 pool.shutdown()
             new_streamer = {
                 "active_flag": active_flag,
-                "display_name": ign,
+                "display_names": [ign],
                 "player_ids": [player_id]
             }
             data[twitch_name] = new_streamer
