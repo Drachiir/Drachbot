@@ -70,7 +70,6 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
     if 'nova cup' in playerid:
         playerid = 'all'
     patches = []
-    print('starting elcringo command...')
     for game in history_raw:
         patches.append(game["version"])
         ending_wave_list.append(game["ending_wave"])

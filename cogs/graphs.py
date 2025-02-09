@@ -164,7 +164,6 @@ def statsgraph(playernames: list, games, min_elo, patch, key: discord.app_comman
             return 'API limit reached.'
         playerids.add(playerid)
     players_dict = dict()
-    print("Starting stats graph command...")
     patches = []
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
                     PlayerData.player_id, PlayerData.player_slot, PlayerData.player_elo, PlayerData.elo_change, PlayerData.workers_per_wave,
