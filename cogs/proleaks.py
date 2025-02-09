@@ -64,7 +64,9 @@ def proleaks(games, min_elo, patch, sort="date", openers=False):
                         champ_location = player["champ_location"]
                     else:
                         champ_location = None
-                    opener_key = player["opener"].replace(" ", "")
+                    opener_key = player["opener"].replace(" ", "").split(",")
+                    opener_key = list(set(opener_key))
+                    opener_key = ",".join(sorted(opener_key))
                     if opener_key not in opener_dict:
                         opener_dict[opener_key] = {"Count": 0, "Data": []}
                     opener_dict[opener_key]["Count"] += 1
