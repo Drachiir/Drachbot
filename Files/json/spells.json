@@ -238,5 +238,13 @@
     "iconPath": "Icons/SpreadTheWealth.png",
     "name": "Spread the Wealth",
     "tooltip": ""
+  },
+  {
+    "_id": "black_market_powerup_id",
+    "category": "spells",
+    "enabled": true,
+    "iconPath": "Icons/BlackMarket.png",
+    "name": "Black Market",
+    "tooltip": ""
   }
 ]
