@@ -28,30 +28,30 @@ with open('Files/json/Secrets.json') as f:
     secret_file = json.load(f)
     f.close()
 
-task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
-task_times3 = datetime.time(datetime.now(timezone.utc)+timedelta(minutes=10))
-task_times4 = datetime.time(datetime.now(timezone.utc)+timedelta(minutes=15))
+# task_times2 = datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))
+# task_times3 = datetime.time(datetime.now(timezone.utc)+timedelta(minutes=10))
+# task_times4 = datetime.time(datetime.now(timezone.utc)+timedelta(minutes=15))
 
-# task_times2=[
-#     time(hour=4, minute=45, second=0, tzinfo=timezone.utc),
-#     time(hour=10, minute=45, second=0, tzinfo=timezone.utc),
-#     time(hour=16, minute=45, second=0, tzinfo=timezone.utc),
-#     time(hour=22, minute=45, second=0, tzinfo=timezone.utc)
-# ]
-#
-# task_times3=[
-#     time(hour=4, minute=50, second=0, tzinfo=timezone.utc),
-#     time(hour=10, minute=50, second=0, tzinfo=timezone.utc),
-#     time(hour=16, minute=50, second=0, tzinfo=timezone.utc),
-#     time(hour=22, minute=50, second=0, tzinfo=timezone.utc)
-# ]
-#
-# task_times4=[
-#     time(hour=4, minute=55, second=0, tzinfo=timezone.utc),
-#     time(hour=10, minute=55, second=0, tzinfo=timezone.utc),
-#     time(hour=16, minute=55, second=0, tzinfo=timezone.utc),
-#     time(hour=22, minute=55, second=0, tzinfo=timezone.utc)
-# ]
+task_times2=[
+    time(hour=4, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=45, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=45, second=0, tzinfo=timezone.utc)
+]
+
+task_times3=[
+    time(hour=4, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=50, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=50, second=0, tzinfo=timezone.utc)
+]
+
+task_times4=[
+    time(hour=4, minute=55, second=0, tzinfo=timezone.utc),
+    time(hour=10, minute=55, second=0, tzinfo=timezone.utc),
+    time(hour=16, minute=55, second=0, tzinfo=timezone.utc),
+    time(hour=22, minute=55, second=0, tzinfo=timezone.utc)
+]
 
 if platform.system() == "Linux":
     shared_folder_livegames = "/shared/livegames/"
@@ -70,8 +70,8 @@ def get_current_patches(only_current = False):
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
     if only_current:
-        return ["12.01", "12.00", "11.11", "11.10", "11.09", "11.08" ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"]
-        #return [patches[3].replace("\n", "")]
+        #return ["12.01", "12.00", "11.11", "11.10", "11.09", "11.08" ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"]
+        return [patches[3].replace("\n", "")]
     else:
         return patches[0].replace("\n", "")
 
