@@ -16,9 +16,10 @@ import drachbot_db
 import util
 import legion_api
 from peewee_pg import GameData, PlayerData
+import msgpack
 
 
-def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000, data_only = False, transparent = False, rollstats = False):
+def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_cost = 0, max_cost = 2000, data_only = False, transparent = False, rollstats = False, max_elo=9001):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
@@ -64,7 +65,7 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
                     PlayerData.player_id, PlayerData.player_elo, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.spell, PlayerData.fighters],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                    ["player_id", "player_elo", "player_slot", "game_result", "legion", "spell", "fighters"]]
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns, max_elo=max_elo)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -214,20 +215,21 @@ class Unitstats(commands.Cog):
                         traceback.print_exc()
                         break
                     for elo in elos:
-                        data = await loop.run_in_executor(pool, functools.partial(unitstats, "all", 0, elo, patch, data_only=True))
+                        max_elo = elo+199
+                        if elo == 2800:
+                            max_elo = 9001
+                        data = await loop.run_in_executor(pool, functools.partial(unitstats, "all", 0, elo, patch, data_only=True, max_elo=max_elo))
                         for file in os.listdir(f"{util.shared2_folder}data/unitstats/"):
                             if file.startswith(patch) and int(file.split("_")[1]) == elo:
                                 os.remove(f"{util.shared2_folder}data/unitstats/{file}")
-                        with open(f"{util.shared2_folder}data/unitstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
-                            json.dump(data[0], f)
-                            f.close()
-                        data = await loop.run_in_executor(pool, functools.partial(unitstats, "all", 0, elo, patch, data_only=True, rollstats=True))
+                        with open(f"{util.shared2_folder}data/unitstats/{patch}_{elo}_{data[1]}_{data[2]}.msgpack", "wb") as f:
+                            f.write(msgpack.packb(data[0], default=str))
+                        data = await loop.run_in_executor(pool, functools.partial(unitstats, "all", 0, elo, patch, data_only=True, rollstats=True, max_elo=max_elo))
                         for file in os.listdir(f"{util.shared2_folder}data/rollstats/"):
                             if file.startswith(patch) and int(file.split("_")[1]) == elo:
                                 os.remove(f"{util.shared2_folder}data/rollstats/{file}")
-                        with open(f"{util.shared2_folder}data/rollstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
-                            json.dump(data[0], f)
-                            f.close()
+                        with open(f"{util.shared2_folder}data/rollstats/{patch}_{elo}_{data[1]}_{data[2]}.msgpack", "wb") as f:
+                            f.write(msgpack.packb(data[0], default=str))
             print("[WEBSITE]: Unit / Roll Stats Website data update success!")
         except Exception:
             traceback.print_exc()

@@ -12,8 +12,9 @@ import functools
 import drachbot_db
 import util
 from peewee_pg import GameData, PlayerData
+import msgpack
 
-def gamestats(games, min_elo, patch, sort="date", playerid = "all", option = "send"):
+def gamestats(games, min_elo, patch, sort="date", playerid = "all", option = "send", max_elo=9001):
     gameelo_list = []
     if option == "send":
         col1 = PlayerData.mercs_sent_per_wave
@@ -31,7 +32,7 @@ def gamestats(games, min_elo, patch, sort="date", playerid = "all", option = "se
                    ["game_id", "date", "version", "ending_wave", "game_elo", "game_length"],
                    ["player_id", "player_slot", "game_result", "player_elo", "workers_per_wave", "mercs_sent_per_wave", "build_per_wave",
                     "leaks_per_wave", "kingups_sent_per_wave", "fighter_value_per_wave", "income_per_wave"]]
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns, max_elo=max_elo)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -112,10 +113,12 @@ class Gamestats(commands.Cog):
                         if file.startswith(patch):
                             os.remove(f"{util.shared2_folder}data/gamestats/{file}")
                     for elo in elos:
-                        data = await loop.run_in_executor(pool, functools.partial(gamestats, 0, elo, patch))
-                        with open(f"{util.shared2_folder}data/gamestats/{patch}_{elo}_{data[3]}_{data[4]}.json", "w") as f:
-                            json.dump({"Wave1Stats": data[1], "GameLength": data[2], "WaveDict": data[0]}, f)
-                            f.close()
+                        max_elo = elo+199
+                        if elo == 2800:
+                            max_elo = 9001
+                        data = await loop.run_in_executor(pool, functools.partial(gamestats, 0, elo, patch, max_elo=max_elo))
+                        with open(f"{util.shared2_folder}data/gamestats/{patch}_{elo}_{data[3]}_{data[4]}.msgpack", "wb") as f:
+                            f.write(msgpack.packb({"Wave1Stats": data[1], "GameLength": data[2], "WaveDict": data[0]}, default=str))
             print("[WEBSITE]: Game Stats Website data update success!")
         except Exception:
             traceback.print_exc()

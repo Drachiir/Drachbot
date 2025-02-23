@@ -31,7 +31,7 @@ def get_games_loop(playerid, offset, expected, timeout_limit = 1):
     return games_count
 
 @db.atomic()
-def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", req_columns=None, skip_stats=False):
+def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_than_wave10 = False, sort_by = "date", req_columns=None, skip_stats=False, max_elo = 9001):
     if req_columns is None:
         req_columns = []
     patch_list = []
@@ -184,29 +184,22 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
                         temp_data = {}
     else:
         raw_data = []
-        if patch in ["12", "11", "10"]:
+        if patch in ["13", "12", "11", "10"]:
             expr = GameData.version.startswith("v" + patch)
-            if games == 0:
-                games = GameData.select().where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
         elif patch != "0":
             if len(patch_list) == 1:
                 expr = fn.Substr(GameData.version, 2, len(patch_list[0])).in_(patch_list)
             else:
                 expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
-            if games == 0:
-                games = GameData.select().where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
         else:
-            if games == 0:
-                games = GameData.select().where((GameData.queue == "Normal") & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave)).count()
             expr = True
-        if games > 200000:
-            games = 200000
+        games_limit = 200000
         game_data_query = (PlayerData
                            .select(*req_columns[0])
                            .join(GameData)
-                           .where((GameData.queue == "Normal") & expr & (GameData.game_elo >= min_elo) & (GameData.ending_wave >= earliest_wave))
+                           .where((GameData.queue == "Normal") & expr & ((GameData.game_elo >= min_elo) & (GameData.game_elo <= max_elo)) & (GameData.ending_wave >= earliest_wave))
                            .order_by(sort_arg.desc(), GameData.id.desc(), PlayerData.player_slot)
-                           .limit(games * 4)).dicts()
+                           .limit(games_limit * 4)).dicts()
         for i, row in enumerate(game_data_query.iterator()):
             p_data = {}
             for field in req_columns[2]:

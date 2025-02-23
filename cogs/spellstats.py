@@ -16,6 +16,7 @@ import drachbot_db
 import util
 import legion_api
 from peewee_pg import GameData, PlayerData
+import msgpack
 
 shifts = [
     (-1.0, -0.5), (0.0, -1.0), (1.0, -0.5),
@@ -33,7 +34,7 @@ else:
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
 
-def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all", data_only = False, transparent = False):
+def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all", data_only = False, transparent = False, max_elo=9001):
     spell_dict = {}
     spellname = spellname.lower()
     with open('Files/json/spells.json', 'r') as f:
@@ -71,7 +72,7 @@ def spellstats(playername, games, min_elo, patch, sort="date", spellname = "all"
                     PlayerData.opener, PlayerData.spell, PlayerData.workers_per_wave, PlayerData.spell_location, PlayerData.build_per_wave],
                    ["game_id", "date", "version", "ending_wave", "game_elo", "spell_choices"],
                    ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave", "spell_location", "build_per_wave"]]
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, req_columns=req_columns)
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, req_columns=req_columns, max_elo=max_elo)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -222,13 +223,15 @@ class Spellstats(commands.Cog):
                         traceback.print_exc()
                         break
                     for elo in elos:
-                        data = await loop.run_in_executor(pool, functools.partial(spellstats, "all", 0, elo, patch, data_only=True))
+                        max_elo = elo+199
+                        if elo == 2800:
+                            max_elo = 9001
+                        data = await loop.run_in_executor(pool, functools.partial(spellstats, "all", 0, elo, patch, data_only=True, max_elo=max_elo))
                         for file in os.listdir(f"{shared2_folder}data/spellstats/"):
                             if file.startswith(patch) and int(file.split("_")[1]) == elo:
                                 os.remove(f"{shared2_folder}data/spellstats/{file}")
-                        with open(f"{shared2_folder}data/spellstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
-                            json.dump(data[0], f)
-                            f.close()
+                        with open(f"{shared2_folder}data/spellstats/{patch}_{elo}_{data[1]}_{data[2]}.msgpack", "wb") as f:
+                            f.write(msgpack.packb(data[0], default=str))
             print("[WEBSITE]: Spell Stats Website data update success!")
         except Exception:
             traceback.print_exc()

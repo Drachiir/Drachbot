@@ -17,6 +17,7 @@ import drachbot_db
 import util
 import legion_api
 from peewee_pg import GameData, PlayerData
+import msgpack
 
 if platform.system() == "Linux":
     shared_folder = "/shared/Images/"
@@ -25,7 +26,7 @@ else:
     shared_folder = "shared/Images/"
     shared2_folder = "shared2/"
 
-def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data_only = False, transparent = False):
+def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data_only = False, transparent = False, max_elo=9001):
     unit_dict = {}
     unit = unit.lower()
     with open('Files/json/units.json', 'r') as f:
@@ -65,7 +66,7 @@ def openstats(playername, games, min_elo, patch, sort="date", unit = "all", data
                     PlayerData.spell, PlayerData.workers_per_wave, PlayerData.build_per_wave],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                    ["player_id", "player_slot", "game_result", "player_elo", "legion", "spell", "workers_per_wave", "build_per_wave"]]
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns, max_elo=max_elo)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:
@@ -232,13 +233,15 @@ class Openstats(commands.Cog):
                         traceback.print_exc()
                         break
                     for elo in elos:
-                        data = await loop.run_in_executor(pool, functools.partial(openstats, "all", 0, elo, patch, data_only=True))
+                        max_elo = elo+199
+                        if elo == 2800:
+                            max_elo = 9001
+                        data = await loop.run_in_executor(pool, functools.partial(openstats, "all", 0, elo, patch, data_only=True, max_elo=max_elo))
                         for file in os.listdir(f"{shared2_folder}data/openstats/"):
                             if file.startswith(patch) and int(file.split("_")[1]) == elo:
                                 os.remove(f"{shared2_folder}data/openstats/{file}")
-                        with open(f"{shared2_folder}data/openstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
-                            json.dump(data[0], f)
-                            f.close()
+                        with open(f"{shared2_folder}data/openstats/{patch}_{elo}_{data[1]}_{data[2]}.msgpack", "wb") as f:
+                            f.write(msgpack.packb(data[0], default=str))
             print("[WEBSITE]: Open Stats Website data update success!")
         except Exception:
             traceback.print_exc()

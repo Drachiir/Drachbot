@@ -16,6 +16,7 @@ import drachbot_db
 import util
 import legion_api
 from peewee_pg import GameData, PlayerData
+import msgpack
 
 def get_roll(unit_dict, unit_name):
     if unit_name == "kingpin":
@@ -318,27 +319,28 @@ class MMstats(commands.Cog):
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
                 for patch in patches:
-                    try:
-                        _ = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, 1800, patch, data_only=True))
-                    except Exception:
-                        print("Database error, stopping website update....")
-                        traceback.print_exc()
-                        break
+                    # try:
+                    #     _ = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, 1800, patch, data_only=True))
+                    # except Exception:
+                    #     print("Database error, stopping website update....")
+                    #     traceback.print_exc()
+                    #     break
                     for elo in elos:
-                        data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, data_only=True))
+                        max_elo = elo+199
+                        if elo == 2800:
+                            max_elo = 9001
+                        data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, data_only=True, max_elo=max_elo))
                         for file in os.listdir(f"{util.shared2_folder}data/mmstats/"):
                             if file.startswith(patch) and int(file.split("_")[1]) == elo:
                                 os.remove(f"{util.shared2_folder}data/mmstats/{file}")
-                        with open(f"{util.shared2_folder}data/mmstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
-                            json.dump(data[0], f)
-                            f.close()
-                        data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, mastermind="Megamind", data_only=True))
+                        with open(f"{util.shared2_folder}data/mmstats/{patch}_{elo}_{data[1]}_{data[2]}.msgpack", "wb") as f:
+                            f.write(msgpack.packb(data[0], default=str))
+                        data = await loop.run_in_executor(pool, functools.partial(mmstats, "all", 0, elo, patch, mastermind="Megamind", data_only=True, max_elo=max_elo))
                         for file in os.listdir(f"{util.shared2_folder}data/megamindstats/"):
                             if file.startswith(patch) and int(file.split("_")[1]) == elo:
                                 os.remove(f"{util.shared2_folder}data/megamindstats/{file}")
-                        with open(f"{util.shared2_folder}data/megamindstats/{patch}_{elo}_{data[1]}_{data[2]}.json", "w") as f:
-                            json.dump(data[0], f)
-                            f.close()
+                        with open(f"{util.shared2_folder}data/megamindstats/{patch}_{elo}_{data[1]}_{data[2]}.msgpack", "wb") as f:
+                            f.write(msgpack.packb(data[0], default=str))
             print("[WEBSITE]: MM Stats Website data update success!")
         except Exception:
             traceback.print_exc()
