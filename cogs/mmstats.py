@@ -34,7 +34,7 @@ def get_roll(unit_dict, unit_name):
         unit_name = unit_dict[unit_name]["upgradesFrom"]
     return unit_name
 
-def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", data_only = False, transparent = False):
+def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", data_only = False, transparent = False, max_elo = 9001):
     if playername == 'all':
         playerid = 'all'
     else:
@@ -74,7 +74,7 @@ def mmstats(playername, games, min_elo, patch, mastermind = 'All', sort="date", 
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                    ["player_id", "player_slot", "game_result", "player_elo", "legion", "opener", "spell", "workers_per_wave", "megamind", "build_per_wave",
                     "champ_location"]]
-    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns)
+    history_raw = drachbot_db.get_matchistory(playerid, games, min_elo, patch, sort_by=sort, earlier_than_wave10=True, req_columns=req_columns, max_elo=max_elo)
     if type(history_raw) == str:
         return history_raw
     if len(history_raw) == 0:

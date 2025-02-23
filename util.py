@@ -256,7 +256,7 @@ def get_icons_image(type, name):
         case _:
             image_path = "Files/icons/Granddaddy.png"
 
-    image_url = f"https://cdn.legiontd2.com/icons/{image_path.split("/")[2]}"
+    image_url = f"https://cdn.legiontd2.com/{image_path.split("/")[1]}/{image_path.split("/")[2]}"
     try:
         return Image.open(open(image_path, "rb"))
     except Exception:
