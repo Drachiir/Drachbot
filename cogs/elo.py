@@ -344,7 +344,7 @@ def matchhistory_viewer(playername:str):
                     PlayerData.player_id, PlayerData.player_name, PlayerData.player_elo, PlayerData.player_slot, PlayerData.game_result, PlayerData.elo_change],
                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                    ["player_id", "player_name", "player_elo", "player_slot", "game_result", "elo_change"]]
-    history_raw = drachbot_db.get_matchistory(playerid, 5, earlier_than_wave10=True, req_columns=req_columns)
+    history_raw = drachbot_db.get_matchistory(playerid, 5, earlier_than_wave10=True, req_columns=req_columns, include_wave_one_finishes=True)
     if len(history_raw) == 0:
         return "No games found."
     embed = discord.Embed(color=0x1cce3a, title="Match History")

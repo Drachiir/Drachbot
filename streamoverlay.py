@@ -102,7 +102,7 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
                                     PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change],
                                    ["game_id", "date", "version", "ending_wave", "game_elo"],
                                    ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change"]]
-                    history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True)
+                    history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True, include_wave_one_finishes=True)
                 else:
                     history = session_dict["history"]
                 with open("sessions/session_" + playerid + ".json", "w") as f:
