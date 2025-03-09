@@ -124,8 +124,14 @@
         {% for game in history %}
             {% for player in game["players_data"] %}
                 {% if player["player_id"] == playerid %}
-                    {% set won = True if player["game_result"] == "won" else False %}
-                    <div style="position: relative; width: 40px; height: 40px; border: 3px solid {{ '#00e600' if won else 'red' }}; border-radius: 8px">
+                    {% if player["game_result"] == "won" %}
+                        {% set result_color = "#00e600" %}
+                    {% elif player["game_result"] == "lost" %}
+                        {% set result_color = "red" %}
+                    {% else %}
+                        {% set result_color = "#aeaeae" %}
+                    {% endif %}
+                    <div style="position: relative; width: 40px; height: 40px; border: 3px solid {{ result_color }}; border-radius: 8px">
                         {% if player["megamind"] %}
                             <img style="top: 0;left: 0; position: absolute; z-index: 0; border-radius: 5px" width="16" height="16" src="https://cdn.legiontd2.com/icons/Items/Megamind.png">
                         {% endif %}
