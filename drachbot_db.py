@@ -36,7 +36,7 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
         req_columns = []
     patch_list = []
     if earlier_than_wave10:
-        earliest_wave = 2
+        earliest_wave = 1
     else:
         earliest_wave = 11
     if sort_by == "date":
