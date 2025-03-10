@@ -1,8 +1,8 @@
 [
   {
-    "_id": "677d7b74871361c6c766352a",
+    "_id": "67cef427a9cd653069fc04eb",
     "unitId": "proton_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "generator_ability_id",
       "ionic_force_proton_ability_id"
@@ -60,9 +60,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766352b",
+    "_id": "67cef427a9cd653069fc04ee",
     "unitId": "atom_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "generator_ability_id",
       "ionic_force_aspd_ability_id"
@@ -122,9 +122,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663530",
+    "_id": "67cef427a9cd653069fc04f2",
     "unitId": "aqua_spirit_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "water_bounce_ability_id"
     ],
@@ -181,9 +181,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663535",
+    "_id": "67cef427a9cd653069fc04f7",
     "unitId": "rogue_wave_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "deluge_ability_id"
     ],
@@ -242,9 +242,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766353b",
+    "_id": "67cef427a9cd653069fc0503",
     "unitId": "windhawk_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.22",
@@ -299,9 +299,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663545",
+    "_id": "67cef427a9cd653069fc0512",
     "unitId": "violet_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "blue_wind_ability_id"
     ],
@@ -360,9 +360,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766354d",
+    "_id": "67cef427a9cd653069fc051b",
     "unitId": "mudman_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "harden_ability_id",
       "harden_hidden_ability_id"
@@ -420,9 +420,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663555",
+    "_id": "67cef427a9cd653069fc0524",
     "unitId": "golem_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "harden_ability_id",
       "harden_hidden_ability_id"
@@ -482,9 +482,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766355f",
+    "_id": "67cef427a9cd653069fc052c",
     "unitId": "disciple_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "mana_burst_ability_id",
       "intellect_ability_id",
@@ -543,9 +543,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663568",
+    "_id": "67cef427a9cd653069fc0531",
     "unitId": "starcaller_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "amplify_magic_oracle_ability_id",
       "enhanced_mana_burst_ability_id",
@@ -608,9 +608,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766356f",
+    "_id": "67cef427a9cd653069fc053d",
     "unitId": "fire_elemental_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "combustion_ability_id"
     ],
@@ -669,9 +669,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766357a",
+    "_id": "67cef427a9cd653069fc0548",
     "unitId": "fenix_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "enhanced_molten_shield_ability_id",
       "overheat_ability_id"
@@ -731,9 +731,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663580",
+    "_id": "67cef427a9cd653069fc0551",
     "unitId": "peewee_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "booster_ability_id"
     ],
@@ -790,9 +790,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663588",
+    "_id": "67cef427a9cd653069fc055c",
     "unitId": "veteran_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "stimpack_ability_id"
     ],
@@ -851,9 +851,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663595",
+    "_id": "67cef427a9cd653069fc0563",
     "unitId": "bazooka_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": ".76",
@@ -908,9 +908,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76635a1",
+    "_id": "67cef427a9cd653069fc056e",
     "unitId": "pyro_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "pyro_splash_ability_id",
       "pyromancy_air_ability_id"
@@ -970,9 +970,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76635a8",
+    "_id": "67cef427a9cd653069fc0574",
     "unitId": "zeus_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "power_surge_ability_id",
       "high_voltage_ability_id"
@@ -1032,9 +1032,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76635b2",
+    "_id": "67cef427a9cd653069fc057b",
     "unitId": "aps_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "energize_oracle_ability_id",
       "energize_ability_id"
@@ -1092,9 +1092,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76635cb",
+    "_id": "67cef427a9cd653069fc057d",
     "unitId": "mps_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "mythium_core_oracle_ability_id",
       "overcharge_ability_id"
@@ -1154,9 +1154,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76635d2",
+    "_id": "67cef427a9cd653069fc0582",
     "unitId": "tempest_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "anti_air_turret_ability_id"
     ],
@@ -1213,9 +1213,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76635dc",
+    "_id": "67cef427a9cd653069fc058b",
     "unitId": "leviathan_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "aerial_command_oracle_ability_id",
       "bombardier_ability_id",
@@ -1276,9 +1276,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76635e6",
+    "_id": "67cef427a9cd653069fc0593",
     "unitId": "berserker_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "brawler_ramping_ability_id"
     ],
@@ -1335,9 +1335,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76635ef",
+    "_id": "67cef427a9cd653069fc059d",
     "unitId": "fatalizer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "death_stare_ramping_ability_id"
     ],
@@ -1396,9 +1396,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76635f4",
+    "_id": "67cef427a9cd653069fc05a0",
     "unitId": "millennium_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "explosive_shells_ability_id",
       "explosive_shells_air_ability_id"
@@ -1456,9 +1456,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76635ff",
+    "_id": "67cef427a9cd653069fc05ab",
     "unitId": "doomsday_machine_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "detonation_ability_id",
       "detonation_flying_ability_id"
@@ -1518,9 +1518,68 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663612",
+    "_id": "67cef427a9cd653069fc05b7",
+    "unitId": "reactor_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "reception_ability_id"
+    ],
+    "armorType": "Fortified",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "420.34",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-98.63",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-2.14",
+    "categoryClass": "Special",
+    "description": "Stationary building that provides power to Mechs",
+    "descriptionId": "reactor_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_invulnerable,flags_mechanical",
+    "goldBounty": "",
+    "goldCost": "50",
+    "goldValue": "",
+    "hp": "100",
+    "iconPath": "Icons/Reactor.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/d179a31264dd456291972c4dffce3c74",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "mech_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "270",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Reactor",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "mech_legion_id..50.Reactor",
+    "splashPath": "Splashes/Reactor.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Stationary building that provides power to Mechs",
+    "totalValue": "50",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc05b9",
     "unitId": "buzz_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "anaphylaxis_ability_id"
     ],
@@ -1577,9 +1636,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766361d",
+    "_id": "67cef427a9cd653069fc05c1",
     "unitId": "consort_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "paraphylaxis_ability_id"
     ],
@@ -1638,9 +1697,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663621",
+    "_id": "67cef427a9cd653069fc05cc",
     "unitId": "ranger_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "accuracy_ability_id"
     ],
@@ -1697,9 +1756,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663626",
+    "_id": "67cef427a9cd653069fc05d3",
     "unitId": "daphne_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "precision_ability_id",
       "mark_target_ability_id",
@@ -1760,9 +1819,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766362f",
+    "_id": "67cef427a9cd653069fc05dc",
     "unitId": "wileshroom_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "cell_regrowth_ability_id"
     ],
@@ -1819,9 +1878,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663630",
+    "_id": "67cef427a9cd653069fc05de",
     "unitId": "canopie_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "cell_regrowth_canopie_ability_id"
     ],
@@ -1880,9 +1939,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663639",
+    "_id": "67cef427a9cd653069fc05f1",
     "unitId": "honeyflower_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "fragrance_splash_damage_ability_id",
       "fragrance_splash_damage_boss_ability_id"
@@ -1940,9 +1999,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766363f",
+    "_id": "67cef427a9cd653069fc05f7",
     "unitId": "deathcap_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "noxious_scent_splash_damage_ability_id",
       "noxious_scent_splash_damage_boss_ability_id"
@@ -2002,9 +2061,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766364f",
+    "_id": "67cef427a9cd653069fc0601",
     "unitId": "antler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "thick_hide_ability_id"
     ],
@@ -2061,9 +2120,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663658",
+    "_id": "67cef427a9cd653069fc0607",
     "unitId": "whitemane_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "council_oracle_ability_id",
       "council_ability_id",
@@ -2125,9 +2184,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766365c",
+    "_id": "67cef427a9cd653069fc060a",
     "unitId": "banana_bunk_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "barbs_ability_id"
     ],
@@ -2184,9 +2243,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663661",
+    "_id": "67cef427a9cd653069fc060c",
     "unitId": "banana_haven_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "thorns_ability_id",
       "tribal_warfare_ability_id"
@@ -2246,9 +2305,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663669",
+    "_id": "67cef427a9cd653069fc0611",
     "unitId": "bone_warrior_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "frenzy_ability_id"
     ],
@@ -2305,9 +2364,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766366b",
+    "_id": "67cef427a9cd653069fc0613",
     "unitId": "bone_crusher_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "frenzy_ability_id"
     ],
@@ -2366,9 +2425,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c766366f",
+    "_id": "67cef427a9cd653069fc0616",
     "unitId": "fire_archer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "flaming_arrows_ability_id",
       "frenzy_ability_id"
@@ -2428,9 +2487,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663674",
+    "_id": "67cef427a9cd653069fc0619",
     "unitId": "dark_mage_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "mindwarp_ability_id",
       "frenzy_ability_id",
@@ -2491,9 +2550,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663678",
+    "_id": "67cef427a9cd653069fc061d",
     "unitId": "gargoyle_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "stone_form_new_ability_id"
     ],
@@ -2550,9 +2609,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663680",
+    "_id": "67cef427a9cd653069fc0629",
     "unitId": "green_devil_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "granite_skin_ability_id"
     ],
@@ -2611,9 +2670,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663686",
+    "_id": "67cef427a9cd653069fc062f",
     "unitId": "gateguard_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "hound_ability_id"
     ],
@@ -2670,9 +2729,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663690",
+    "_id": "67cef427a9cd653069fc0638",
     "unitId": "harbinger_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "summon_cerberus_ability_id"
     ],
@@ -2731,9 +2790,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663694",
+    "_id": "67cef427a9cd653069fc063e",
     "unitId": "butcher_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "leech_oracle_ability_id",
       "leech_ability_id"
@@ -2791,9 +2850,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663697",
+    "_id": "67cef427a9cd653069fc0640",
     "unitId": "head_chef_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "cannibalism_oracle_ability_id",
       "cannibalism_ability_id",
@@ -2854,9 +2913,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76636a2",
+    "_id": "67cef427a9cd653069fc064a",
     "unitId": "nightmare_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.89",
@@ -2911,9 +2970,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636ab",
+    "_id": "67cef427a9cd653069fc0655",
     "unitId": "doppelganger_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "shadow_walker_ability_id"
     ],
@@ -2972,9 +3031,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76636ae",
+    "_id": "67cef427a9cd653069fc0657",
     "unitId": "lord_of_death_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "raise_juggernaut_ability_id",
       "intellect_lod_ability_id"
@@ -3032,9 +3091,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636b2",
+    "_id": "67cef427a9cd653069fc0660",
     "unitId": "hades_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "conjure_thanatos_ability_id",
       "necromancy_ability_id",
@@ -3095,9 +3154,66 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76636c0",
+    "_id": "67cef427a9cd653069fc0665",
+    "unitId": "hound_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": ".87",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.1500",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-15.06",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-51.12",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-95.95",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Special",
+    "description": "High damage melee pet",
+    "descriptionId": "hound_unit_description",
+    "dmgBase": "25",
+    "dmgExpected": "27.50",
+    "dmgMax": "30",
+    "dps": "23.91",
+    "flags": "flags_ground,flags_organic,flags_summoned,flags_undead",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "295",
+    "iconPath": "Icons/OldHound.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "forsaken_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "300",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Old Hound",
+    "radius": "Small",
+    "rangeText": "Melee",
+    "sortOrder": "forsaken_legion_id...Old Hound",
+    "splashPath": "Splashes/OldHound.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "High damage melee pet",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0674",
     "unitId": "chaos_hound_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".97",
@@ -3152,9 +3268,68 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636ce",
+    "_id": "67cef427a9cd653069fc067e",
+    "unitId": "diabolic_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "summon_imp_ability_id"
+    ],
+    "armorType": "Swift",
+    "aspdInverted": ".74",
+    "attackMode": "Ranged",
+    "attackRange": "400",
+    "attackSpeed": "1.3500",
+    "attackType": "Pierce",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-27.75",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "33.30",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-80.98",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Special",
+    "description": "Demonic spellcaster pet.",
+    "descriptionId": "diabolic_unit_description",
+    "dmgBase": "72",
+    "dmgExpected": "75.00",
+    "dmgMax": "78",
+    "dps": "55.56",
+    "flags": "flags_ground,flags_organic,flags_summoned,flags_undead",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "1385",
+    "iconPath": "Icons/Diabolic.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "forsaken_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "300",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Diabolic",
+    "radius": "Small",
+    "rangeText": "Medium",
+    "sortOrder": "forsaken_legion_id...Diabolic",
+    "splashPath": "Splashes/Diabolic.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Demonic spellcaster pet.",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0684",
     "unitId": "crab_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".87",
@@ -3209,9 +3384,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636d2",
+    "_id": "67cef427a9cd653069fc068d",
     "unitId": "hopper_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": ".83",
@@ -3266,9 +3441,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636d5",
+    "_id": "67cef427a9cd653069fc068e",
     "unitId": "scorpion_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": ".99",
@@ -3323,9 +3498,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636dd",
+    "_id": "67cef427a9cd653069fc069d",
     "unitId": "quill_shooter_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.67",
@@ -3380,9 +3555,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636e4",
+    "_id": "67cef427a9cd653069fc06aa",
     "unitId": "flying_chicken_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.08",
@@ -3437,9 +3612,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636ea",
+    "_id": "67cef427a9cd653069fc06af",
     "unitId": "rocko_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "impale_villain_ability_id"
     ],
@@ -3496,9 +3671,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636ee",
+    "_id": "67cef427a9cd653069fc06b6",
     "unitId": "mantis_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.39",
@@ -3553,9 +3728,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636f4",
+    "_id": "67cef427a9cd653069fc06bf",
     "unitId": "dire_toad_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "feast_ability_id"
     ],
@@ -3612,9 +3787,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76636f9",
+    "_id": "67cef427a9cd653069fc06c6",
     "unitId": "wale_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": ".89",
@@ -3669,9 +3844,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663700",
+    "_id": "67cef427a9cd653069fc06d2",
     "unitId": "granddaddy_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "boss_status_ability_id"
     ],
@@ -3728,9 +3903,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663705",
+    "_id": "67cef427a9cd653069fc06d9",
     "unitId": "carapace_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "deflection_ability_id"
     ],
@@ -3787,9 +3962,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766370a",
+    "_id": "67cef427a9cd653069fc06dc",
     "unitId": "kobra_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.54",
@@ -3844,9 +4019,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663713",
+    "_id": "67cef427a9cd653069fc06ec",
     "unitId": "skyfish_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": "1.69",
@@ -3901,9 +4076,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766371a",
+    "_id": "67cef427a9cd653069fc06f0",
     "unitId": "wale_chief_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "poison_tipped_pole_active_ability_id",
       "start_with_0_mana_ability_id",
@@ -3963,9 +4138,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766371b",
+    "_id": "67cef427a9cd653069fc06f6",
     "unitId": "killer_slug_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": "1.23",
@@ -4020,9 +4195,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766372b",
+    "_id": "67cef427a9cd653069fc0700",
     "unitId": "octopus_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.54",
@@ -4077,9 +4252,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663735",
+    "_id": "67cef427a9cd653069fc0708",
     "unitId": "drill_golem_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": "1.57",
@@ -4134,9 +4309,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663746",
+    "_id": "67cef427a9cd653069fc0711",
     "unitId": "sludge_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "blobs_ability_id"
     ],
@@ -4193,9 +4368,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766374c",
+    "_id": "67cef427a9cd653069fc0715",
     "unitId": "cardinal_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.13",
@@ -4250,9 +4425,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663752",
+    "_id": "67cef427a9cd653069fc0718",
     "unitId": "maccabeus_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "insatiable_hunger_ability_id",
       "boss_status_ability_id",
@@ -4311,9 +4486,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663753",
+    "_id": "67cef427a9cd653069fc071b",
     "unitId": "snail_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".93",
@@ -4368,9 +4543,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663756",
+    "_id": "67cef427a9cd653069fc071d",
     "unitId": "lizard_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": ".75",
@@ -4425,9 +4600,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766375e",
+    "_id": "67cef427a9cd653069fc071e",
     "unitId": "fiend_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.32",
@@ -4482,9 +4657,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663765",
+    "_id": "67cef427a9cd653069fc0728",
     "unitId": "brute_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "maul_ability_id",
       "maul_boss_ability_id"
@@ -4542,9 +4717,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766376d",
+    "_id": "67cef427a9cd653069fc072b",
     "unitId": "dragon_turtle_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": ".96",
@@ -4599,9 +4774,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663771",
+    "_id": "67cef427a9cd653069fc0735",
     "unitId": "hermit_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "healing_aura_ability_id",
       "healing_aura_boss_ability_id"
@@ -4659,9 +4834,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663772",
+    "_id": "67cef427a9cd653069fc073c",
     "unitId": "dino_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": ".74",
@@ -4716,9 +4891,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663782",
+    "_id": "67cef427a9cd653069fc0743",
     "unitId": "safety_mole_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "protection_aura_ability_id"
     ],
@@ -4775,9 +4950,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766379d",
+    "_id": "67cef427a9cd653069fc074b",
     "unitId": "drake_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.06",
@@ -4832,9 +5007,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76637aa",
+    "_id": "67cef427a9cd653069fc0753",
     "unitId": "mimic_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "plunder_ability_id"
     ],
@@ -4891,9 +5066,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76637b4",
+    "_id": "67cef427a9cd653069fc0757",
     "unitId": "pack_leader_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "leadership_ability_id",
       "leadership_boss_ability_id"
@@ -4951,9 +5126,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76637be",
+    "_id": "67cef427a9cd653069fc076f",
     "unitId": "centaur_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "cleave_ability_id"
     ],
@@ -5010,9 +5185,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76637c1",
+    "_id": "67cef427a9cd653069fc0777",
     "unitId": "four_eyes_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "duelist_ramping_ability_id",
       "death_stare_ramping_boss_ability_id"
@@ -5070,9 +5245,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76637d0",
+    "_id": "67cef427a9cd653069fc077d",
     "unitId": "shaman_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "blood_rush_ability_id"
     ],
@@ -5129,9 +5304,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76637d7",
+    "_id": "67cef427a9cd653069fc0785",
     "unitId": "ghost_knight_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "evasion_ability_id"
     ],
@@ -5188,9 +5363,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76637e3",
+    "_id": "67cef427a9cd653069fc078e",
     "unitId": "kraken_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "boss_status_ability_id"
     ],
@@ -5247,9 +5422,358 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766381e",
+    "_id": "67cef427a9cd653069fc0795",
+    "unitId": "janus_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "boss_status_ability_id"
+    ],
+    "armorType": "Immaterial",
+    "aspdInverted": "2.00",
+    "attackMode": "Ranged",
+    "attackRange": "600",
+    "attackSpeed": "0.5000",
+    "attackType": "Pure",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "95.27",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-11.13",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-58.80",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-2.14",
+    "categoryClass": "Special",
+    "description": "The great king of Nova",
+    "descriptionId": "janus_unit_description",
+    "dmgBase": "50",
+    "dmgExpected": "50.00",
+    "dmgMax": "50",
+    "dps": "100.00",
+    "flags": "flags_boss,flags_building,flags_ground",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "3000",
+    "iconPath": "Icons/Janus.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/b8f8eaea344847e3bbe15b1aa7987e08",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "2.000",
+    "moveSpeed": "270",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Janus",
+    "radius": "Gigantic",
+    "rangeText": "Long",
+    "sortOrder": "aspect_legion_id...Janus",
+    "splashPath": "Splashes/Janus.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "The great king of Nova",
+    "totalValue": "",
+    "unitClass": "King",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc079b",
+    "unitId": "worker_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "deliver_ability_id",
+      "harvest_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "1.00",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "1.0000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-2.37",
+    "avgCost": "9.61",
+    "avgCostDiff": "420.34",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-82.23",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-98.63",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-36.57",
+    "categoryClass": "Passive",
+    "description": "Increases mythium production rate by 1 per 10 seconds",
+    "descriptionId": "worker_unit_description",
+    "dmgBase": "10",
+    "dmgExpected": "10.00",
+    "dmgMax": "10",
+    "dps": "10.00",
+    "flags": "flags_ghost,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "50",
+    "goldValue": "",
+    "hp": "100",
+    "iconPath": "Icons/Worker.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/7ccd3a7d3ab04d9280558d08eea3a767",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.0000",
+    "moveSpeed": "175",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Worker",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..50.Worker",
+    "splashPath": "Splashes/Worker.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Increases mythium production rate by 1 per 10 seconds",
+    "totalValue": "50",
+    "unitClass": "Worker",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07a5",
+    "unitId": "town_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "accept_mythium_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Town",
+    "descriptionId": "town_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/Town.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.2500",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Town",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Town",
+    "splashPath": "Splashes/Town.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Town",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07b1",
+    "unitId": "barracks_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": ".80",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-21.89",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-80.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Barracks",
+    "descriptionId": "barracks_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "11.00",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/Barracks.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "0.010",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Barracks",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Barracks",
+    "splashPath": "Splashes/Barracks.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Barracks",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07b7",
+    "unitId": "advbarracks_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Advanced Barracks",
+    "descriptionId": "advbarracks_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/AdvancedBarracks.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "0.010",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Advanced Barracks",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Advanced Barracks",
+    "splashPath": "Splashes/AdvancedBarracks.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Advanced Barracks",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07bb",
+    "unitId": "king_upgrader_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Spellbook",
+    "descriptionId": "spellbook_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/KingUpgrader.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "0.0100",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "King Upgrader",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...King Upgrader",
+    "splashPath": "Splashes/KingUpgrader.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Spellbook",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07c0",
     "unitId": "legion_lord_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "feast_ability_id"
     ],
@@ -5306,9 +5830,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663822",
+    "_id": "67cef427a9cd653069fc07c3",
     "unitId": "element_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -5363,9 +5887,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663833",
+    "_id": "67cef427a9cd653069fc07ca",
     "unitId": "forsaken_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -5420,9 +5944,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663837",
+    "_id": "67cef427a9cd653069fc07d0",
     "unitId": "grove_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -5477,9 +6001,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663841",
+    "_id": "67cef427a9cd653069fc07d5",
     "unitId": "mech_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -5534,9 +6058,125 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663862",
+    "_id": "67cef427a9cd653069fc07dc",
+    "unitId": "punching_bag_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "frenzy_ability_id"
+    ],
+    "armorType": "Immaterial",
+    "aspdInverted": ".80",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.2500",
+    "attackType": "Pierce",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-21.89",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "1273.38",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Standard",
+    "description": "Its shell is pretty soft, and its claws aren't that sharp.",
+    "descriptionId": "crab_unit_description",
+    "dmgBase": "0",
+    "dmgExpected": ".00",
+    "dmgMax": "0",
+    "dps": ".00",
+    "flags": "flags_ground,flags_organic",
+    "goldBounty": "3",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "100000",
+    "iconPath": "Icons/PunchingBag.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "0",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Punching Bag",
+    "radius": "Small",
+    "rangeText": "Melee",
+    "sortOrder": "aspect_legion_id...Punching Bag",
+    "splashPath": "Splashes/PunchingBag.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Its shell is pretty soft, and its claws aren't that sharp.",
+    "totalValue": "",
+    "unitClass": "Creature",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07e1",
+    "unitId": "mythium_dummy_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Immaterial",
+    "aspdInverted": ".80",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-21.89",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-92.89",
+    "avgHp": "7281.29",
+    "avgHpDiff": "1273.38",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Standard",
+    "description": "Its shell is pretty soft, and its claws aren't that sharp.",
+    "descriptionId": "crab_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "4.00",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ghost,flags_ground,flags_harvestable,flags_invulnerable,flags_mechanical,flags_unselectable",
+    "goldBounty": "0",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "100000",
+    "iconPath": "Icons/MythiumDummy.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.03000",
+    "moveSpeed": "0",
+    "moveType": "None",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Mythium Dummy",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Mythium Dummy",
+    "splashPath": "Splashes/MythiumDummy.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Its shell is pretty soft, and its claws aren't that sharp.",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07e4",
     "unitId": "undead_dragon_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "intellect_pet_ability_id"
     ],
@@ -5593,9 +6233,66 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663874",
+    "_id": "67cef427a9cd653069fc07eb",
+    "unitId": "wave_in_progress_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Immaterial",
+    "aspdInverted": ".80",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-21.89",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-92.89",
+    "avgHp": "7281.29",
+    "avgHpDiff": "1273.38",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Standard",
+    "description": "Its shell is pretty soft, and its claws aren't that sharp.",
+    "descriptionId": "crab_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "4.00",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ghost,flags_invulnerable,flags_unselectable",
+    "goldBounty": "0",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "100000",
+    "iconPath": "Icons/WaveInProgress.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "",
+    "moveType": "None",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Wave In Progress",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Wave In Progress",
+    "splashPath": "Splashes/WaveInProgress.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Its shell is pretty soft, and its claws aren't that sharp.",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc07f1",
     "unitId": "fire_lord_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "molten_shield_ability_id",
       "overheat_ability_id"
@@ -5653,9 +6350,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766387d",
+    "_id": "67cef427a9cd653069fc07f4",
     "unitId": "scorpion_king_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "boss_status_ability_id"
     ],
@@ -5712,9 +6409,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766387f",
+    "_id": "67cef427a9cd653069fc07f9",
     "unitId": "giant_quadrapus_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "boss_status_ability_id"
     ],
@@ -5771,9 +6468,417 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76638b7",
+    "_id": "67cef427a9cd653069fc07fc",
+    "unitId": "test_mercenary_1_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "1.00",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.0000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-2.37",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-81.34",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-98.63",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-36.57",
+    "categoryClass": "Passive",
+    "description": "Increases mythium production rate by 1 per 10 seconds",
+    "descriptionId": "worker_unit_description",
+    "dmgBase": "10",
+    "dmgExpected": "10.50",
+    "dmgMax": "11",
+    "dps": "10.50",
+    "flags": "flags_ghost,flags_invulnerable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "100",
+    "iconPath": "Icons/TestMercenary.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "175",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "20",
+    "name": "Test Mercenary",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "aspect_legion_id...Test Mercenary",
+    "splashPath": "Splashes/TestMercenary.png",
+    "stockMax": "3",
+    "stockTime": "3",
+    "tooltip": "Increases mythium production rate by 1 per 10 seconds",
+    "totalValue": "",
+    "unitClass": "Mercenary",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0803",
+    "unitId": "test_mercenary_2_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "1.00",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.0000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-2.37",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-81.34",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-98.63",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-36.57",
+    "categoryClass": "Passive",
+    "description": "Increases mythium production rate by 1 per 10 seconds",
+    "descriptionId": "worker_unit_description",
+    "dmgBase": "10",
+    "dmgExpected": "10.50",
+    "dmgMax": "11",
+    "dps": "10.50",
+    "flags": "flags_ghost,flags_invulnerable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "100",
+    "iconPath": "Icons/TestMercenary2.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "175",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "60",
+    "name": "Test Mercenary 2",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "aspect_legion_id...Test Mercenary 2",
+    "splashPath": "Splashes/TestMercenary2.png",
+    "stockMax": "3",
+    "stockTime": "3",
+    "tooltip": "Increases mythium production rate by 1 per 10 seconds",
+    "totalValue": "",
+    "unitClass": "Mercenary",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0809",
+    "unitId": "test_barracks_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": ".80",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-21.89",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-80.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Barracks",
+    "descriptionId": "barracks_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "11.00",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/TestBarracks.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Test Barracks",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Test Barracks",
+    "splashPath": "Splashes/TestBarracks.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Barracks",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0811",
+    "unitId": "test_fighter_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "water_bounce_ability_id"
+    ],
+    "armorType": "Arcane",
+    "aspdInverted": "1.18",
+    "attackMode": "Ranged",
+    "attackRange": "450",
+    "attackSpeed": "0.8490",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "15.21",
+    "avgCost": "9.61",
+    "avgCostDiff": "420.34",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-72.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-96.43",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "Has a bouncing attack. ",
+    "descriptionId": "aqua_spirit_unit_description",
+    "dmgBase": "14",
+    "dmgExpected": "15.50",
+    "dmgMax": "17",
+    "dps": "18.26",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "50",
+    "goldValue": "",
+    "hp": "260",
+    "iconPath": "Icons/TestFighter.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00000",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Test Fighter",
+    "radius": "Small",
+    "rangeText": "Medium",
+    "sortOrder": "aspect_legion_id..50.Test Fighter",
+    "splashPath": "Splashes/TestFighter.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Has a bouncing attack. ",
+    "totalValue": "50",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0817",
+    "unitId": "test_builder_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "89.19",
+    "categoryClass": "Passive",
+    "description": "Default description for Element Builder",
+    "descriptionId": "element_builder_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_invulnerable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/TestBuilder.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "522",
+    "moveType": "Hover",
+    "mp": "",
+    "mspdText": "Very Fast",
+    "mythiumCost": "",
+    "name": "Test Builder",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Test Builder",
+    "splashPath": "Splashes/TestBuilder.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Element Builder",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0820",
+    "unitId": "test_fighter_upgrade_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "water_bounce_ability_id"
+    ],
+    "armorType": "Arcane",
+    "aspdInverted": "1.18",
+    "attackMode": "Ranged",
+    "attackRange": "450",
+    "attackSpeed": "0.8490",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "15.21",
+    "avgCost": "100.00",
+    "avgCostDiff": ".00",
+    "avgDmg": "15.50",
+    "avgDmgDiff": ".00",
+    "avgHp": "260.00",
+    "avgHpDiff": ".00",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "Has a bouncing attack that makes enemies more vulnerable to ability damage.",
+    "descriptionId": "rogue_wave_unit_description",
+    "dmgBase": "14",
+    "dmgExpected": "15.50",
+    "dmgMax": "17",
+    "dps": "18.26",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "50",
+    "goldValue": "",
+    "hp": "260",
+    "iconPath": "Icons/TestFighterUpgrade.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Test Fighter Upgrade",
+    "radius": "Small",
+    "rangeText": "Medium",
+    "sortOrder": "aspect_legion_id..50.Test Fighter Upgrade",
+    "splashPath": "Splashes/TestFighterUpgrade.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Has a bouncing attack that makes enemies more vulnerable to ability damage.",
+    "totalValue": "100",
+    "unitClass": "Fighter",
+    "upgradesFrom": [
+      "units test_fighter_unit_id"
+    ]
+  },
+  {
+    "_id": "67cef427a9cd653069fc0821",
+    "unitId": "test_worker_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "deliver_ability_id",
+      "harvest_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "1.00",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.0000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-2.37",
+    "avgCost": "9.61",
+    "avgCostDiff": "420.34",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-81.34",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-98.63",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-36.57",
+    "categoryClass": "Passive",
+    "description": "Increases mythium production rate by 1 per 10 seconds",
+    "descriptionId": "worker_unit_description",
+    "dmgBase": "10",
+    "dmgExpected": "10.50",
+    "dmgMax": "11",
+    "dps": "10.50",
+    "flags": "flags_ghost,flags_invulnerable",
+    "goldBounty": "",
+    "goldCost": "50",
+    "goldValue": "",
+    "hp": "100",
+    "iconPath": "Icons/TestWorker.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/7ccd3a7d3ab04d9280558d08eea3a767",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "175",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Test Worker",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "aspect_legion_id..50.Test Worker",
+    "splashPath": "Splashes/TestWorker.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Increases mythium production rate by 1 per 10 seconds",
+    "totalValue": "50",
+    "unitClass": "Worker",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0828",
     "unitId": "skyking_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "boss_status_ability_id"
     ],
@@ -5830,9 +6935,66 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76638c4",
+    "_id": "67cef427a9cd653069fc082c",
+    "unitId": "test_mercenary_3_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "1.00",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.0000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-2.37",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-81.34",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-98.63",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-36.57",
+    "categoryClass": "Passive",
+    "description": "Increases mythium production rate by 1 per 10 seconds",
+    "descriptionId": "worker_unit_description",
+    "dmgBase": "10",
+    "dmgExpected": "10.50",
+    "dmgMax": "11",
+    "dps": "10.50",
+    "flags": "flags_ghost,flags_invulnerable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "100",
+    "iconPath": "Icons/TestMercenary3.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00",
+    "moveSpeed": "175",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "60",
+    "name": "Test Mercenary 3",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "aspect_legion_id...Test Mercenary 3",
+    "splashPath": "Splashes/TestMercenary3.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Increases mythium production rate by 1 per 10 seconds",
+    "totalValue": "",
+    "unitClass": "Mercenary",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0833",
     "unitId": "earthking_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "boss_status_ability_id"
     ],
@@ -5889,9 +7051,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76638d1",
+    "_id": "67cef427a9cd653069fc0838",
     "unitId": "mastermind_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -5946,9 +7108,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76638d4",
+    "_id": "67cef427a9cd653069fc0841",
     "unitId": "legion_king_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "boss_status_ability_id",
       "feast_ability_id"
@@ -6006,9 +7168,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76638dc",
+    "_id": "67cef427a9cd653069fc0848",
     "unitId": "chaos_hound_harbinger_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".97",
@@ -6063,9 +7225,69 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76638f0",
+    "_id": "67cef427a9cd653069fc084c",
+    "unitId": "worker_x2_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "deliver_ability_id",
+      "harvest_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "1.00",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "1.0000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-2.37",
+    "avgCost": "9.61",
+    "avgCostDiff": "420.34",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-82.23",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-98.63",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-36.57",
+    "categoryClass": "Passive",
+    "description": "Increases mythium production rate by 2 to send more mercenaries.",
+    "descriptionId": "worker_x2_unit_description",
+    "dmgBase": "10",
+    "dmgExpected": "10.00",
+    "dmgMax": "10",
+    "dps": "10.00",
+    "flags": "flags_ghost,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "50",
+    "goldValue": "",
+    "hp": "100",
+    "iconPath": "Icons/2xWorkers.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/7ccd3a7d3ab04d9280558d08eea3a767",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.0000",
+    "moveSpeed": "175",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "2x Workers",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..50.2x Workers",
+    "splashPath": "Splashes/2xWorkers.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Increases mythium production rate by 2 to send more mercenaries.",
+    "totalValue": "50",
+    "unitClass": "Worker",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc084f",
     "unitId": "giant_snail_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".93",
@@ -6120,9 +7342,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76638f5",
+    "_id": "67cef427a9cd653069fc0853",
     "unitId": "sea_serpent_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "ambush_ability_id"
     ],
@@ -6179,9 +7401,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663900",
+    "_id": "67cef427a9cd653069fc0858",
     "unitId": "deepcoiler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "ambush_ability_id"
     ],
@@ -6240,9 +7462,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663906",
+    "_id": "67cef427a9cd653069fc085e",
     "unitId": "pollywog_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.10",
@@ -6297,9 +7519,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766390b",
+    "_id": "67cef427a9cd653069fc0867",
     "unitId": "seraphin_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "adapt_into_devilfish_ability_id"
     ],
@@ -6358,9 +7580,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663912",
+    "_id": "67cef427a9cd653069fc086f",
     "unitId": "devilfish_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "adapt_into_seraphin_ability_id"
     ],
@@ -6419,9 +7641,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663915",
+    "_id": "67cef427a9cd653069fc0874",
     "unitId": "angler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "junior_fisherman_ability_id",
       "mana_transfer_on_upgrade_ability_id",
@@ -6480,9 +7702,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663918",
+    "_id": "67cef427a9cd653069fc0879",
     "unitId": "bounty_hunter_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "commercial_fisherman_ability_id",
       "mana_transfer_on_upgrade_ability_id",
@@ -6543,9 +7765,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663926",
+    "_id": "67cef427a9cd653069fc087f",
     "unitId": "kingpin_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "elite_fisherman_ability_id",
       "mana_transfer_on_upgrade_ability_id",
@@ -6606,9 +7828,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663932",
+    "_id": "67cef427a9cd653069fc0883",
     "unitId": "grarl_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "delicacy_hardcoded_ability_id"
     ],
@@ -6665,9 +7887,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663939",
+    "_id": "67cef427a9cd653069fc0889",
     "unitId": "king_claw_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "shell_shock_ability_id"
     ],
@@ -6726,9 +7948,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663945",
+    "_id": "67cef427a9cd653069fc0890",
     "unitId": "ocean_templar_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "resonance_oracle_ability_id",
       "resonance_ability_id",
@@ -6790,9 +8012,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663950",
+    "_id": "67cef427a9cd653069fc0897",
     "unitId": "priestess_of_the_abyss_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "burst_attack_ability_id",
       "invigorate_ability_id"
@@ -6850,9 +8072,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663953",
+    "_id": "67cef427a9cd653069fc0899",
     "unitId": "azeria_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "invigorate_azeria_ability_id",
       "echostrike_azeria_ability_id"
@@ -6912,9 +8134,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663964",
+    "_id": "67cef427a9cd653069fc089b",
     "unitId": "eggsack_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "incubation_ability_id",
       "ambernite_shell_ability_id",
@@ -6973,9 +8195,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c766396e",
+    "_id": "67cef427a9cd653069fc08a4",
     "unitId": "hydra_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "hydralings_ability_id",
       "hydra_hidden_ability_id"
@@ -7033,9 +8255,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663977",
+    "_id": "67cef427a9cd653069fc08af",
     "unitId": "atlantean_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -7090,9 +8312,294 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639a1",
+    "_id": "67cef427a9cd653069fc08b2",
+    "unitId": "cave_flag_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Element Builder",
+    "descriptionId": "element_builder_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/CaveFlag.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.0000",
+    "moveSpeed": "0",
+    "moveType": "Hover",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Cave Flag",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Cave Flag",
+    "splashPath": "Splashes/CaveFlag.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Element Builder",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc08ba",
+    "unitId": "lane_flag_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Element Builder",
+    "descriptionId": "element_builder_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/LaneFlag.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.0000",
+    "moveSpeed": "0",
+    "moveType": "Hover",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Lane Flag",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Lane Flag",
+    "splashPath": "Splashes/LaneFlag.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Element Builder",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc08bb",
+    "unitId": "corridor_gate_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Element Builder",
+    "descriptionId": "element_builder_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/CorridorGate.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.2000",
+    "moveSpeed": "0",
+    "moveType": "Hover",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Corridor Gate",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Corridor Gate",
+    "splashPath": "Splashes/CorridorGate.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Element Builder",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc08bf",
+    "unitId": "mercenary_flag_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Element Builder",
+    "descriptionId": "element_builder_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/MercenaryFlag.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.0000",
+    "moveSpeed": "0",
+    "moveType": "Hover",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Mercenary Flag",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Mercenary Flag",
+    "splashPath": "Splashes/MercenaryFlag.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Element Builder",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc08c3",
+    "unitId": "mercenary_attack_flag_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Element Builder",
+    "descriptionId": "element_builder_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/MercenaryAttackFlag.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "0.7000",
+    "moveSpeed": "0",
+    "moveType": "Hover",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Mercenary Attack Flag",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Mercenary Attack Flag",
+    "splashPath": "Splashes/MercenaryAttackFlag.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Element Builder",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc08ca",
     "unitId": "siege_ram_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "deflection_ability_id"
     ],
@@ -7149,9 +8656,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639a9",
+    "_id": "67cef427a9cd653069fc08ce",
     "unitId": "hydraling_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "hydra_hidden_ability_id"
     ],
@@ -7208,9 +8715,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639ad",
+    "_id": "67cef427a9cd653069fc08d1",
     "unitId": "looter_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": "1.11",
@@ -7265,9 +8772,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639b0",
+    "_id": "67cef427a9cd653069fc08d8",
     "unitId": "pack_rat_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "treasure_hunt_ability_id"
     ],
@@ -7326,9 +8833,71 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76639b6",
+    "_id": "67cef427a9cd653069fc08db",
+    "unitId": "pack_rat_nest_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "treasure_hunt_effect_ability_id",
+      "undo_treasure_hunt_ability_id"
+    ],
+    "armorType": "Swift",
+    "aspdInverted": ".77",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "1.3000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-24.82",
+    "avgCost": "128.89",
+    "avgCostDiff": "-41.81",
+    "avgDmg": "42.94",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "1016.11",
+    "avgHpDiff": "-36.03",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Special",
+    "description": "Your Pack Rat abandons this wave's battle. When the wave ends, it returns and you gain +$1 mythium.",
+    "descriptionId": "treasure_hunt_description",
+    "dmgBase": "0",
+    "dmgExpected": ".00",
+    "dmgMax": "0",
+    "dps": ".00",
+    "flags": "flags_ground,flags_organic",
+    "goldBounty": "",
+    "goldCost": "65",
+    "goldValue": "",
+    "hp": "650",
+    "iconPath": "Icons/PackRat(Footprints).png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "Tier-1",
+    "isEnabled": false,
+    "legionId": "nomad_legion_id",
+    "modelScale": "0.0800",
+    "moveSpeed": "0",
+    "moveType": "None",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Pack Rat (Footprints)",
+    "radius": "Tiny",
+    "rangeText": "Short",
+    "sortOrder": "nomad_legion_id.T1.65.Pack Rat (Footprints)",
+    "splashPath": "Splashes/PackRat(Footprints).png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Your Pack Rat abandons this wave's battle. When the wave ends, it returns and you gain +11 mythium.",
+    "totalValue": "75",
+    "unitClass": "Fighter",
+    "upgradesFrom": [
+      "units looter_unit_id"
+    ]
+  },
+  {
+    "_id": "67cef427a9cd653069fc08dd",
     "unitId": "nomad_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -7383,9 +8952,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639b7",
+    "_id": "67cef427a9cd653069fc08e0",
     "unitId": "ogre_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": "1.11",
@@ -7440,9 +9009,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639c2",
+    "_id": "67cef427a9cd653069fc08e4",
     "unitId": "harpy_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "acrobatics_harpy_ability_id",
       "crimson_claws_harpy_ability_id"
@@ -7500,9 +9069,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639cb",
+    "_id": "67cef427a9cd653069fc08e5",
     "unitId": "sky_queen_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "acrobatics_ability_id",
       "crimson_claws_ability_id"
@@ -7562,9 +9131,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76639d0",
+    "_id": "67cef427a9cd653069fc08e7",
     "unitId": "froggo_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": "1.23",
@@ -7619,9 +9188,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639d9",
+    "_id": "67cef427a9cd653069fc08eb",
     "unitId": "witch_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "summon_froggo_ability_id",
       "advanced_necromancy_ability_id"
@@ -7679,9 +9248,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639dd",
+    "_id": "67cef427a9cd653069fc08ee",
     "unitId": "warg_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.09",
@@ -7736,9 +9305,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c76639e7",
+    "_id": "67cef427a9cd653069fc08f1",
     "unitId": "lioness_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "entourage_ability_id"
     ],
@@ -7797,9 +9366,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76639f5",
+    "_id": "67cef427a9cd653069fc08f5",
     "unitId": "alpha_male_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "dominion_ability_id",
       "dominion_hidden_ability_id"
@@ -7859,9 +9428,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c76639fc",
+    "_id": "67cef427a9cd653069fc08f8",
     "unitId": "desert_pilgrim_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "chain_heal_ability_id"
     ],
@@ -7918,9 +9487,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663a00",
+    "_id": "67cef427a9cd653069fc08ff",
     "unitId": "lost_chieftain_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "gaia_shield_ability_id"
     ],
@@ -7979,9 +9548,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663a08",
+    "_id": "67cef427a9cd653069fc0902",
     "unitId": "sand_badger_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": ".77",
@@ -8036,9 +9605,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663a14",
+    "_id": "67cef427a9cd653069fc0907",
     "unitId": "iron_scales_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": ".77",
@@ -8095,9 +9664,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663a1d",
+    "_id": "67cef427a9cd653069fc090c",
     "unitId": "red_eyes_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "thunderous_charge_ability_id",
       "start_with_0_mana_ability_id"
@@ -8157,9 +9726,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663a26",
+    "_id": "67cef427a9cd653069fc0910",
     "unitId": "great_boar_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "stampede_ability_id",
       "start_with_0_mana_ability_id"
@@ -8217,9 +9786,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663a2c",
+    "_id": "67cef427a9cd653069fc0913",
     "unitId": "cannoneer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Swift",
     "aspdInverted": ".65",
@@ -8274,9 +9843,351 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663a7b",
+    "_id": "67cef427a9cd653069fc091c",
+    "unitId": "hybrid_t1_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": "1.20",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "17.16",
+    "avgCost": "9.61",
+    "avgCostDiff": "87.32",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-72.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-81.64",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "Builds a random Tier $1 fighter",
+    "descriptionId": "hybrid_t1_description",
+    "dmgBase": "",
+    "dmgExpected": "15.50",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "18",
+    "goldValue": "",
+    "hp": "1337",
+    "iconPath": "Icons/HybridT1.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.000000",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Hybrid T1",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..18.Hybrid T1",
+    "splashPath": "Splashes/HybridT1.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Builds a random Tier 1 fighter",
+    "totalValue": "18",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0928",
+    "unitId": "hybrid_t2_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": "1.20",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "17.16",
+    "avgCost": "9.61",
+    "avgCostDiff": "368.31",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-72.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-81.64",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "|desc(hybrid_t1,2)",
+    "descriptionId": "hybrid_t2_description",
+    "dmgBase": "",
+    "dmgExpected": "15.50",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "45",
+    "goldValue": "",
+    "hp": "1337",
+    "iconPath": "Icons/HybridT2.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00000",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Hybrid T2",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..45.Hybrid T2",
+    "splashPath": "Splashes/HybridT2.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Builds a random Tier 2 fighter",
+    "totalValue": "45",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc092f",
+    "unitId": "hybrid_t3_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": "1.20",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "17.16",
+    "avgCost": "9.61",
+    "avgCostDiff": "784.58",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-72.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-81.64",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "|desc(hybrid_t1,3)",
+    "descriptionId": "hybrid_t3_description",
+    "dmgBase": "",
+    "dmgExpected": "15.50",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "85",
+    "goldValue": "",
+    "hp": "1337",
+    "iconPath": "Icons/HybridT3.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00000",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Hybrid T3",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..85.Hybrid T3",
+    "splashPath": "Splashes/HybridT3.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Builds a random Tier 3 fighter",
+    "totalValue": "85",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0934",
+    "unitId": "hybrid_t4_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": "1.20",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "17.16",
+    "avgCost": "9.61",
+    "avgCostDiff": "1252.89",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-72.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-81.64",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "|desc(hybrid_t1,4)",
+    "descriptionId": "hybrid_t4_description",
+    "dmgBase": "",
+    "dmgExpected": "15.50",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "130",
+    "goldValue": "",
+    "hp": "1337",
+    "iconPath": "Icons/HybridT4.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00000",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Hybrid T4",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..130.Hybrid T4",
+    "splashPath": "Splashes/HybridT4.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Builds a random Tier 4 fighter",
+    "totalValue": "130",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc093a",
+    "unitId": "hybrid_t5_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": "1.20",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "17.16",
+    "avgCost": "9.61",
+    "avgCostDiff": "1752.41",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-72.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-81.64",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "|desc(hybrid_t1,5)",
+    "descriptionId": "hybrid_t5_description",
+    "dmgBase": "",
+    "dmgExpected": "15.50",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "178",
+    "goldValue": "",
+    "hp": "1337",
+    "iconPath": "Icons/HybridT5.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00000",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Hybrid T5",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..178.Hybrid T5",
+    "splashPath": "Splashes/HybridT5.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Builds a random Tier 5 fighter",
+    "totalValue": "178",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc093d",
+    "unitId": "hybrid_t6_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": "1.20",
+    "attackMode": "None",
+    "attackRange": "100",
+    "attackSpeed": "",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "17.16",
+    "avgCost": "9.61",
+    "avgCostDiff": "2512.11",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-72.45",
+    "avgHp": "7281.29",
+    "avgHpDiff": "-81.64",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "3.30",
+    "categoryClass": "Standard",
+    "description": "|desc(hybrid_t1,6)",
+    "descriptionId": "hybrid_t6_description",
+    "dmgBase": "",
+    "dmgExpected": "15.50",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "251",
+    "goldValue": "",
+    "hp": "1337",
+    "iconPath": "Icons/HybridT6.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.00000",
+    "moveSpeed": "285",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Hybrid T6",
+    "radius": "Small",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id..251.Hybrid T6",
+    "splashPath": "Splashes/HybridT6.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Builds a random Tier 6 fighter",
+    "totalValue": "251",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0946",
     "unitId": "masked_spirit_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "spectral_scream_ability_id"
     ],
@@ -8333,9 +10244,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663a85",
+    "_id": "67cef427a9cd653069fc0949",
     "unitId": "hell_raiser_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "tantrum_ability_id",
       "spectral_scream_ability_id"
@@ -8395,9 +10306,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663aa5",
+    "_id": "67cef427a9cd653069fc0950",
     "unitId": "false_maiden_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "spectral_scream_ability_id"
     ],
@@ -8456,9 +10367,71 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663ab7",
+    "_id": "67cef427a9cd653069fc0956",
+    "unitId": "hell_raiser_buffed_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "tantrum_ability_id",
+      "spectral_scream_ability_id"
+    ],
+    "armorType": "Swift",
+    "aspdInverted": "1.06",
+    "attackMode": "Ranged",
+    "attackRange": "600",
+    "attackSpeed": "0.94000",
+    "attackType": "Pierce",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "3.49",
+    "avgCost": "128.89",
+    "avgCostDiff": "66.81",
+    "avgDmg": "42.94",
+    "avgDmgDiff": "18.76",
+    "avgHp": "1016.11",
+    "avgHpDiff": "47.62",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Special",
+    "description": "Has a fiery temper. Alternates between stronger and weaker forms.",
+    "descriptionId": "hell_raiser_unit_description",
+    "dmgBase": "51",
+    "dmgExpected": "51.00",
+    "dmgMax": "51",
+    "dps": "54.26",
+    "flags": "flags_flying",
+    "goldBounty": "",
+    "goldCost": "120",
+    "goldValue": "",
+    "hp": "1500",
+    "iconPath": "Icons/HellRaiser.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/8cd31783386546e9982d385dd867c5a8",
+    "infoTier": "Tier-1",
+    "isEnabled": false,
+    "legionId": "shrine_legion_id",
+    "modelScale": "0.98000",
+    "moveSpeed": "300",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Hell Raiser",
+    "radius": "Tiny",
+    "rangeText": "Long",
+    "sortOrder": "shrine_legion_id.T1UU.120.Hell Raiser",
+    "splashPath": "Splashes/HellRaiser.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Has a fiery temper. Alternates between stronger and weaker forms.",
+    "totalValue": "215",
+    "unitClass": "Fighter",
+    "upgradesFrom": [
+      "units false_maiden_unit_id"
+    ]
+  },
+  {
+    "_id": "67cef427a9cd653069fc095e",
     "unitId": "shrine_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -8513,9 +10486,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663ace",
+    "_id": "67cef427a9cd653069fc0965",
     "unitId": "nekomata_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "spirit_offering_ability_id"
     ],
@@ -8572,9 +10545,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663add",
+    "_id": "67cef427a9cd653069fc096d",
     "unitId": "infiltrator_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "arm_with_shuriken_ability_id",
       "throw_shuriken_ability_id",
@@ -8636,9 +10609,68 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663aee",
+    "_id": "67cef427a9cd653069fc0972",
+    "unitId": "town_prophet_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "accept_mythium_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Town",
+    "descriptionId": "town_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/Town(ProphetReroll).png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.2500",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Town (Prophet Reroll)",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Town (Prophet Reroll)",
+    "splashPath": "Splashes/Town(ProphetReroll).png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Town",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0977",
     "unitId": "orchid_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "shuriken_cyclone_ability_id",
       "throw_shuriken_cyclone_ability_id",
@@ -8702,9 +10734,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663afe",
+    "_id": "67cef427a9cd653069fc097d",
     "unitId": "blob_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Arcane",
     "aspdInverted": "1.38",
@@ -8759,9 +10791,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b02",
+    "_id": "67cef427a9cd653069fc0981",
     "unitId": "eternal_wanderer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "shallow_grave_ability_id"
     ],
@@ -8818,9 +10850,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b07",
+    "_id": "67cef427a9cd653069fc0988",
     "unitId": "samurai_soul_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "shallow_grave_red_ability_id"
     ],
@@ -8879,9 +10911,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b0a",
+    "_id": "67cef427a9cd653069fc098f",
     "unitId": "yozora_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "wintry_touch_ability_id",
       "wintry_touch_boss_ability_id",
@@ -8940,9 +10972,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b0f",
+    "_id": "67cef427a9cd653069fc0995",
     "unitId": "arctaire_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "frozen_veil_ability_id",
       "frozen_veil_boss_ability_id",
@@ -9003,9 +11035,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b11",
+    "_id": "67cef427a9cd653069fc099a",
     "unitId": "soul_gate_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "dimensional_rift_ability_id",
       "blood_price_ability_id",
@@ -9064,9 +11096,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b14",
+    "_id": "67cef427a9cd653069fc09a0",
     "unitId": "hell_gate_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "dimensional_chasm_ability_id",
       "blood_price_ability_id",
@@ -9127,9 +11159,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b19",
+    "_id": "67cef427a9cd653069fc09a6",
     "unitId": "hellion_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.35",
@@ -9184,9 +11216,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b1b",
+    "_id": "67cef427a9cd653069fc09ac",
     "unitId": "elite_hellion_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.72",
@@ -9241,9 +11273,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b22",
+    "_id": "67cef427a9cd653069fc09b3",
     "unitId": "nightcrawler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.12",
@@ -9298,9 +11330,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b26",
+    "_id": "67cef427a9cd653069fc09b5",
     "unitId": "elite_nightcrawler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Natural",
     "aspdInverted": "1.43",
@@ -9355,9 +11387,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b29",
+    "_id": "67cef427a9cd653069fc09bd",
     "unitId": "chained_fist_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".91",
@@ -9412,9 +11444,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b2f",
+    "_id": "67cef427a9cd653069fc09c0",
     "unitId": "oathbreaker_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "unchained_rage_activation_ability_id"
     ],
@@ -9473,9 +11505,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b32",
+    "_id": "67cef427a9cd653069fc09c8",
     "unitId": "divine_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -9530,9 +11562,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b38",
+    "_id": "67cef427a9cd653069fc09ca",
     "unitId": "golden_buckler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "deflection_ability_id"
     ],
@@ -9589,9 +11621,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b3a",
+    "_id": "67cef427a9cd653069fc09d1",
     "unitId": "royal_guard_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "deflection_ability_id"
     ],
@@ -9650,9 +11682,68 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b42",
+    "_id": "67cef427a9cd653069fc09d7",
+    "unitId": "town_no_reroll_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "accept_mythium_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Town",
+    "descriptionId": "town_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/Town.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.2500",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Town",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Town",
+    "splashPath": "Splashes/Town.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Town",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc09d9",
     "unitId": "sacred_steed_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "mana_blessing_ability_id",
       "mana_blessing_self_buff_ability_id"
@@ -9710,9 +11801,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b49",
+    "_id": "67cef427a9cd653069fc09df",
     "unitId": "pegasus_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "mana_miracle_ability_id",
       "mana_miracle_self_buff_ability_id"
@@ -9772,9 +11863,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b4b",
+    "_id": "67cef427a9cd653069fc09e4",
     "unitId": "hybrid_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -9829,9 +11920,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b4e",
+    "_id": "67cef427a9cd653069fc09e8",
     "unitId": "chaos_builder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "",
     "aspdInverted": "",
@@ -9886,9 +11977,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b55",
+    "_id": "67cef427a9cd653069fc09ed",
     "unitId": "elite_archer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "Multishot_ability_id"
     ],
@@ -9945,9 +12036,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b57",
+    "_id": "67cef427a9cd653069fc09f6",
     "unitId": "trinity_archer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "hypershot_ability_id"
     ],
@@ -10006,9 +12097,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b5a",
+    "_id": "67cef427a9cd653069fc0a04",
     "unitId": "thanatos_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "intellect_thanatos_ability_id"
     ],
@@ -10065,9 +12156,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b60",
+    "_id": "67cef427a9cd653069fc0a0c",
     "unitId": "imp_mercenary_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "diabolic_duo_ability_id"
     ],
@@ -10124,9 +12215,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b64",
+    "_id": "67cef427a9cd653069fc0a10",
     "unitId": "radiant_halo_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "particle_wave_ability_id",
       "particle_wave_boss_ability_id",
@@ -10185,9 +12276,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b66",
+    "_id": "67cef427a9cd653069fc0a16",
     "unitId": "arc_of_justice_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "purification_beam_boss_ability_id",
       "purification_beam_ability_id",
@@ -10248,9 +12339,68 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b6f",
+    "_id": "67cef427a9cd653069fc0a1a",
+    "unitId": "town_redraw_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "accept_mythium_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Town",
+    "descriptionId": "town_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/Town(Redraw).png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.2500",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Town (Redraw)",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Town (Redraw)",
+    "splashPath": "Splashes/Town(Redraw).png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Town",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0a1f",
     "unitId": "holy_avenger_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "aegis_ability_id",
       "disable_mana_regen_tower_only_ability_id",
@@ -10309,9 +12459,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b71",
+    "_id": "67cef427a9cd653069fc0a26",
     "unitId": "sovereign_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "final_judgment_ability_id",
       "disable_mana_regen_tower_only_ability_id",
@@ -10372,9 +12522,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b74",
+    "_id": "67cef427a9cd653069fc0a2b",
     "unitId": "gatling_gun_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": "2.50",
@@ -10429,9 +12579,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b7b",
+    "_id": "67cef427a9cd653069fc0a32",
     "unitId": "vulcan_cannon_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": "2.50",
@@ -10488,9 +12638,68 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b86",
+    "_id": "67cef427a9cd653069fc0a3b",
+    "unitId": "town_yolo_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "accept_mythium_ability_id"
+    ],
+    "armorType": "",
+    "aspdInverted": "",
+    "attackMode": "None",
+    "attackRange": "",
+    "attackSpeed": "",
+    "attackType": "",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-100.00",
+    "avgCost": "9.61",
+    "avgCostDiff": "-100.00",
+    "avgDmg": "56.26",
+    "avgDmgDiff": "-100.00",
+    "avgHp": "7281.29",
+    "avgHpDiff": "37.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Passive",
+    "description": "Default description for Town",
+    "descriptionId": "town_unit_description",
+    "dmgBase": "",
+    "dmgExpected": "",
+    "dmgMax": "",
+    "dps": "",
+    "flags": "flags_building,flags_ground,flags_invulnerable,flags_unselectable",
+    "goldBounty": "",
+    "goldCost": "",
+    "goldValue": "",
+    "hp": "10000",
+    "iconPath": "Icons/Town.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "",
+    "isEnabled": false,
+    "legionId": "aspect_legion_id",
+    "modelScale": "1.2500",
+    "moveSpeed": "",
+    "moveType": "",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Town",
+    "radius": "Medium",
+    "rangeText": "Short",
+    "sortOrder": "aspect_legion_id...Town",
+    "splashPath": "Splashes/Town.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Default description for Town",
+    "totalValue": "",
+    "unitClass": "None",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0a41",
     "unitId": "seadragon_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "life_exchange_ability_id"
     ],
@@ -10547,9 +12756,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b89",
+    "_id": "67cef427a9cd653069fc0a4f",
     "unitId": "lifebinder_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "soul_transfer_ability_id"
     ],
@@ -10608,9 +12817,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b8c",
+    "_id": "67cef427a9cd653069fc0a51",
     "unitId": "seedling_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "razor_leaf_ability_id"
     ],
@@ -10667,9 +12876,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b8f",
+    "_id": "67cef427a9cd653069fc0a58",
     "unitId": "chloropixie_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "early_harvest_ability_id"
     ],
@@ -10728,9 +12937,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b92",
+    "_id": "67cef427a9cd653069fc0a5d",
     "unitId": "sakura_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "superbloom_ability_id"
     ],
@@ -10789,9 +12998,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b95",
+    "_id": "67cef427a9cd653069fc0a61",
     "unitId": "cursed_casket_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "start_with_0_mana_ability_id",
       "iron_hail_ability_id"
@@ -10849,9 +13058,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663b9a",
+    "_id": "67cef427a9cd653069fc0a69",
     "unitId": "cage_of_pain_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "start_with_0_mana_ability_id",
       "sword_rain_ability_id"
@@ -10911,9 +13120,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663b9f",
+    "_id": "67cef427a9cd653069fc0a6e",
     "unitId": "iron_maiden_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "start_with_0_mana_ability_id",
       "blade_storm_ability_id"
@@ -10973,9 +13182,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663ba3",
+    "_id": "67cef427a9cd653069fc0a73",
     "unitId": "dancing_snake_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Immaterial",
     "aspdInverted": ".87",
@@ -11030,9 +13239,129 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bab",
+    "_id": "67cef427a9cd653069fc0a7b",
+    "unitId": "annihilator_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "plasma_bolts_ability_id"
+    ],
+    "armorType": "Fortified",
+    "aspdInverted": "2.00",
+    "attackMode": "Ranged",
+    "attackRange": "800",
+    "attackSpeed": "0.50000",
+    "attackType": "Pierce",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "95.27",
+    "avgCost": "199.55",
+    "avgCostDiff": "-4.78",
+    "avgDmg": "52.91",
+    "avgDmgDiff": "-20.62",
+    "avgHp": "1640.91",
+    "avgHpDiff": "-26.87",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Special",
+    "description": "Unique unit for |proper(campaign_2_7)",
+    "descriptionId": "annihilator_unit_description",
+    "dmgBase": "42",
+    "dmgExpected": "42.00",
+    "dmgMax": "42",
+    "dps": "84.00",
+    "flags": "flags_ghost,flags_ground",
+    "goldBounty": "",
+    "goldCost": "190",
+    "goldValue": "",
+    "hp": "1200",
+    "iconPath": "Icons/Annihilator.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/601750df3bb54a1d8d2c5123159d8674",
+    "infoTier": "Tier-5",
+    "isEnabled": false,
+    "legionId": "mastermind_legion_id",
+    "modelScale": "1.04000",
+    "moveSpeed": "0",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Annihilator",
+    "radius": "Small",
+    "rangeText": "Long",
+    "sortOrder": "mastermind_legion_id.T5.190.Annihilator",
+    "splashPath": "Splashes/Annihilator.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Unique unit for Victra",
+    "totalValue": "190",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0a84",
+    "unitId": "giga_annihilator_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "plasma_bolts_upgrade_ability_id"
+    ],
+    "armorType": "Fortified",
+    "aspdInverted": "2.00",
+    "attackMode": "Ranged",
+    "attackRange": "800",
+    "attackSpeed": "0.50000",
+    "attackType": "Pierce",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "95.27",
+    "avgCost": "551.82",
+    "avgCostDiff": "-3.95",
+    "avgDmg": "134.18",
+    "avgDmgDiff": "-18.02",
+    "avgHp": "4320.91",
+    "avgHpDiff": "-19.00",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "-100.00",
+    "categoryClass": "Special",
+    "description": "|desc(annihilator_unit)",
+    "descriptionId": "giga_annihilator_unit_description",
+    "dmgBase": "110",
+    "dmgExpected": "110.00",
+    "dmgMax": "110",
+    "dps": "220.00",
+    "flags": "flags_ghost,flags_ground",
+    "goldBounty": "",
+    "goldCost": "340",
+    "goldValue": "",
+    "hp": "3500",
+    "iconPath": "Icons/GigaAnnihilator.png",
+    "incomeBonus": "",
+    "infoSketchfab": "https://sketchfab.com/models/c8317e81c6b64da2badd8cfe9e57f682",
+    "infoTier": "Tier-5",
+    "isEnabled": false,
+    "legionId": "mastermind_legion_id",
+    "modelScale": "1.12000",
+    "moveSpeed": "0",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Very Slow",
+    "mythiumCost": "",
+    "name": "Giga Annihilator",
+    "radius": "Small",
+    "rangeText": "Long",
+    "sortOrder": "mastermind_legion_id.T5U.340.Giga Annihilator",
+    "splashPath": "Splashes/GigaAnnihilator.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Unique unit for Victra",
+    "totalValue": "530",
+    "unitClass": "Fighter",
+    "upgradesFrom": [
+      "units annihilator_unit_id"
+    ]
+  },
+  {
+    "_id": "67cef427a9cd653069fc0a8b",
     "unitId": "slime_larva_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "mini_slime_ability_id"
     ],
@@ -11089,9 +13418,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663baf",
+    "_id": "67cef427a9cd653069fc0a94",
     "unitId": "slime_siren_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "slime_propagation_ability_id",
       "slime_propagation_mana_on_attack_ability_id",
@@ -11153,9 +13482,66 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663bb4",
+    "_id": "67cef427a9cd653069fc0a9b",
+    "unitId": "mini_slime_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Arcane",
+    "aspdInverted": ".81",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.23000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-20.92",
+    "avgCost": "46.36",
+    "avgCostDiff": "7.84",
+    "avgDmg": "21.91",
+    "avgDmgDiff": "-40.66",
+    "avgHp": "353.64",
+    "avgHpDiff": "-63.24",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Special",
+    "description": "Spawned from a |proper(slime_larva_unit)",
+    "descriptionId": "mini_slime_unit_description",
+    "dmgBase": "13",
+    "dmgExpected": "13.00",
+    "dmgMax": "13",
+    "dps": "10.57",
+    "flags": "flags_ground,flags_summoned",
+    "goldBounty": "",
+    "goldCost": "50",
+    "goldValue": "",
+    "hp": "130",
+    "iconPath": "Icons/MiniSlime.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "Tier-2",
+    "isEnabled": false,
+    "legionId": "mastermind_legion_id",
+    "modelScale": "0.50000",
+    "moveSpeed": "300",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Mini Slime",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "mastermind_legion_id.T2.50.Mini Slime",
+    "splashPath": "Splashes/MiniSlime.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Spawned from a Slime Larva",
+    "totalValue": "50",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0aa0",
     "unitId": "needler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "rapid_fire_ability_id",
       "start_with_0_mana_ability_id",
@@ -11214,9 +13600,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bc0",
+    "_id": "67cef427a9cd653069fc0aa9",
     "unitId": "shadow_dancer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "shadowbreeder_ability_id"
     ],
@@ -11273,9 +13659,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bc4",
+    "_id": "67cef427a9cd653069fc0ab0",
     "unitId": "dread_knight_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "hatebreeder_ability_id"
     ],
@@ -11334,9 +13720,123 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663bce",
+    "_id": "67cef427a9cd653069fc0ab7",
+    "unitId": "shadow_dancer_clone_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Fortified",
+    "aspdInverted": "1.42",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "0.70500",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "38.64",
+    "avgCost": "286.43",
+    "avgCostDiff": "-5.74",
+    "avgDmg": "86.86",
+    "avgDmgDiff": "-20.56",
+    "avgHp": "2308.57",
+    "avgHpDiff": "-7.74",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Special",
+    "description": "Has a chance to clone itself with every attack.",
+    "descriptionId": "shadow_dancer_unit_description",
+    "dmgBase": "69",
+    "dmgExpected": "69.00",
+    "dmgMax": "69",
+    "dps": "97.87",
+    "flags": "flags_ground,flags_summoned",
+    "goldBounty": "",
+    "goldCost": "270",
+    "goldValue": "",
+    "hp": "2130",
+    "iconPath": "Icons/ShadowDancer.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "Tier-6",
+    "isEnabled": false,
+    "legionId": "mastermind_legion_id",
+    "modelScale": "1.040000",
+    "moveSpeed": "300",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Shadow Dancer",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "mastermind_legion_id.T6.270.Shadow Dancer",
+    "splashPath": "Splashes/ShadowDancer.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Has a chance to clone itself with every attack.",
+    "totalValue": "270",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0ac0",
+    "unitId": "dread_knight_clone_unit_id",
+    "version": "12.02",
+    "abilities": [],
+    "armorType": "Fortified",
+    "aspdInverted": "1.42",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "0.70500",
+    "attackType": "Magic",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "38.64",
+    "avgCost": "286.43",
+    "avgCostDiff": "44.89",
+    "avgDmg": "86.86",
+    "avgDmgDiff": "80.76",
+    "avgHp": "2308.57",
+    "avgHpDiff": "115.28",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Special",
+    "description": "Wields a massive greatsword that cleaves the fabric of reality.",
+    "descriptionId": "dread_knight_unit_description",
+    "dmgBase": "157",
+    "dmgExpected": "157.00",
+    "dmgMax": "157",
+    "dps": "222.70",
+    "flags": "flags_ground,flags_summoned",
+    "goldBounty": "",
+    "goldCost": "415",
+    "goldValue": "",
+    "hp": "4970",
+    "iconPath": "Icons/DreadKnight.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "Tier-6",
+    "isEnabled": false,
+    "legionId": "mastermind_legion_id",
+    "modelScale": "1.08000",
+    "moveSpeed": "300",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Dread Knight",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "mastermind_legion_id.T6U.415.Dread Knight",
+    "splashPath": "Splashes/DreadKnight.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Wields a massive greatsword that cleaves the fabric of reality.",
+    "totalValue": "415",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0ac8",
     "unitId": "treant_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "exuberance_ability_id"
     ],
@@ -11393,9 +13893,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bd0",
+    "_id": "67cef427a9cd653069fc0ad1",
     "unitId": "tree_of_life_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "devotion_ability_id"
     ],
@@ -11454,9 +13954,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663bd1",
+    "_id": "67cef427a9cd653069fc0ad7",
     "unitId": "tree_of_knowledge_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "forbidden_fruit_ability_id",
       "forbidden_fruit_mana_on_attack_ability_id",
@@ -11518,9 +14018,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663bd3",
+    "_id": "67cef427a9cd653069fc0ae0",
     "unitId": "howler_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "wolf_pack_ability_id"
     ],
@@ -11577,9 +14077,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bd4",
+    "_id": "67cef427a9cd653069fc0ae8",
     "unitId": "sunfang_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "wolf_pack_ability_id"
     ],
@@ -11638,9 +14138,129 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663bd9",
+    "_id": "67cef427a9cd653069fc0af1",
+    "unitId": "pulsebot_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "emp_ability_id"
+    ],
+    "armorType": "Fortified",
+    "aspdInverted": ".95",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.05000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-7.25",
+    "avgCost": "286.43",
+    "avgCostDiff": "-30.17",
+    "avgDmg": "86.86",
+    "avgDmgDiff": "-17.11",
+    "avgHp": "2308.57",
+    "avgHpDiff": "1.79",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Standard",
+    "description": "Every attack releases a shockwave that deals bonus splash damage.",
+    "descriptionId": "pulsebot_unit_description",
+    "dmgBase": "72",
+    "dmgExpected": "72.00",
+    "dmgMax": "72",
+    "dps": "68.57",
+    "flags": "flags_ground",
+    "goldBounty": "",
+    "goldCost": "200",
+    "goldValue": "",
+    "hp": "2350",
+    "iconPath": "Icons/Pulsebot.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "Tier-6",
+    "isEnabled": false,
+    "legionId": "mastermind_legion_id",
+    "modelScale": "1.02000",
+    "moveSpeed": "300",
+    "moveType": "Ground",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Pulsebot",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "mastermind_legion_id.B6.200.Pulsebot",
+    "splashPath": "Splashes/Pulsebot.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Every attack releases a shockwave that deals bonus splash damage.",
+    "totalValue": "200",
+    "unitClass": "Fighter",
+    "upgradesFrom": []
+  },
+  {
+    "_id": "67cef427a9cd653069fc0afa",
+    "unitId": "skybot_unit_id",
+    "version": "12.02",
+    "abilities": [
+      "emp_ability_id"
+    ],
+    "armorType": "Fortified",
+    "aspdInverted": ".74",
+    "attackMode": "Melee",
+    "attackRange": "100",
+    "attackSpeed": "1.35000",
+    "attackType": "Impact",
+    "avgAspd": "1.02",
+    "avgAspdDiff": "-27.75",
+    "avgCost": "678.33",
+    "avgCostDiff": "-18.18",
+    "avgDmg": "212.00",
+    "avgDmgDiff": "-15.57",
+    "avgHp": "5504.44",
+    "avgHpDiff": "-17.34",
+    "avgMspd": "275.91",
+    "avgMspdDiff": "8.73",
+    "categoryClass": "Standard",
+    "description": "Flying. Specialized for combat, its increase in power is matched only by the truculence of its upgraded AI",
+    "descriptionId": "skybot_unit_description",
+    "dmgBase": "179",
+    "dmgExpected": "179.00",
+    "dmgMax": "179",
+    "dps": "132.59",
+    "flags": "flags_flying",
+    "goldBounty": "",
+    "goldCost": "355",
+    "goldValue": "",
+    "hp": "4550",
+    "iconPath": "Icons/Skybot.png",
+    "incomeBonus": "",
+    "infoSketchfab": "",
+    "infoTier": "Tier-6",
+    "isEnabled": false,
+    "legionId": "mastermind_legion_id",
+    "modelScale": "1.20000",
+    "moveSpeed": "300",
+    "moveType": "Air",
+    "mp": "",
+    "mspdText": "Average",
+    "mythiumCost": "",
+    "name": "Skybot",
+    "radius": "Tiny",
+    "rangeText": "Melee",
+    "sortOrder": "mastermind_legion_id.B6U.355.Skybot",
+    "splashPath": "Splashes/Skybot.png",
+    "stockMax": "",
+    "stockTime": "",
+    "tooltip": "Flying. Specialized for combat, its increase in power is matched only by the truculence of its upgraded AI",
+    "totalValue": "555",
+    "unitClass": "Fighter",
+    "upgradesFrom": [
+      "units pulsebot_unit_id"
+    ]
+  },
+  {
+    "_id": "67cef427a9cd653069fc0b02",
     "unitId": "dwarf_banker_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "disable_mana_regen_ability_id",
       "start_with_0_mana_ability_id",
@@ -11701,9 +14321,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bdb",
+    "_id": "67cef427a9cd653069fc0b0c",
     "unitId": "big_wig_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "disable_mana_regen_ability_id",
       "start_with_0_mana_ability_id",
@@ -11767,9 +14387,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663bdd",
+    "_id": "67cef427a9cd653069fc0b14",
     "unitId": "honey_bear_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "pot_o_honey_ability_id"
     ],
@@ -11826,9 +14446,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bde",
+    "_id": "67cef427a9cd653069fc0b1c",
     "unitId": "pirate_skeleton_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "secret_stash_placeholder_ability_id"
     ],
@@ -11885,9 +14505,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bdf",
+    "_id": "67cef427a9cd653069fc0b25",
     "unitId": "spectral_scallywag_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "unyielding_spirit_dodge_ability_id"
     ],
@@ -11946,9 +14566,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663be0",
+    "_id": "67cef427a9cd653069fc0b2b",
     "unitId": "crab_warlock_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "summon_crabling_ability_id"
     ],
@@ -12005,9 +14625,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663be4",
+    "_id": "67cef427a9cd653069fc0b31",
     "unitId": "crabomancer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "summon_pincer_ability_id"
     ],
@@ -12066,9 +14686,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663be5",
+    "_id": "67cef427a9cd653069fc0b3a",
     "unitId": "goblin_copter_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": "1.06",
@@ -12123,9 +14743,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663be7",
+    "_id": "67cef427a9cd653069fc0b3c",
     "unitId": "whirlybird_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "giga_boomstick_ability_id",
       "mana_on_attack_kill_whirlybird_ability_id",
@@ -12186,9 +14806,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663be8",
+    "_id": "67cef427a9cd653069fc0b3f",
     "unitId": "robo_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": "1.25",
@@ -12243,9 +14863,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663beb",
+    "_id": "67cef427a9cd653069fc0b48",
     "unitId": "warp_wing_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "plasma_decay_ability_id"
     ],
@@ -12302,9 +14922,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bed",
+    "_id": "67cef427a9cd653069fc0b51",
     "unitId": "void_manta_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "plasma_decay_tooltip_only_ability_id",
       "plasma_burst_ability_id"
@@ -12364,9 +14984,9 @@
     ]
   },
   {
-    "_id": "677d7b74871361c6c7663bf5",
+    "_id": "67cef427a9cd653069fc0b69",
     "unitId": "crabling_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".80",
@@ -12421,9 +15041,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bf7",
+    "_id": "67cef427a9cd653069fc0b73",
     "unitId": "pincer_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [],
     "armorType": "Fortified",
     "aspdInverted": ".80",
@@ -12478,9 +15098,9 @@
     "upgradesFrom": []
   },
   {
-    "_id": "677d7b74871361c6c7663bfa",
+    "_id": "67cef427a9cd653069fc0b7c",
     "unitId": "oathbreaker_final_form_unit_id",
-    "version": "12.00.1",
+    "version": "12.02",
     "abilities": [
       "unchained_rage_activation_final_form_ability_id"
     ],
@@ -12536,122 +15156,6 @@
     "unitClass": "Fighter",
     "upgradesFrom": [
       "units oathbreaker_unit_id"
-    ]
-  },
-  {
-    "_id": "",
-    "unitId": "crawling_catapult_unit_id",
-    "version": "12.00.1",
-    "abilities": [],
-    "armorType": "Fortified",
-    "aspdInverted": ".91",
-    "attackMode": "Ranged",
-    "attackRange": "700",
-    "attackSpeed": "1.100000",
-    "attackType": "Impact",
-    "avgAspd": "1.02",
-    "avgAspdDiff": "-11.15",
-    "avgCost": "128.89",
-    "avgCostDiff": "128.88",
-    "avgDmg": "42.94",
-    "avgDmgDiff": "88.62",
-    "avgHp": "1016.11",
-    "avgHpDiff": "160.80",
-    "avgMspd": "275.91",
-    "avgMspdDiff": "8.73",
-    "categoryClass": "Standard",
-    "description": "",
-    "descriptionId": "",
-    "dmgBase": "81",
-    "dmgExpected": "81.00",
-    "dmgMax": "81",
-    "dps": "73.64",
-    "flags": "flags_ground,flags_organic",
-    "goldBounty": "",
-    "goldCost": "265",
-    "goldValue": "",
-    "hp": "2650",
-    "iconPath": "Icons/CrawlingCatapult.png",
-    "incomeBonus": "",
-    "infoSketchfab": "",
-    "infoTier": "Tier-6",
-    "isEnabled": true,
-    "legionId": "mastermind_legion_id",
-    "modelScale": "1.550000",
-    "moveSpeed": "300",
-    "moveType": "Ground",
-    "mp": "",
-    "mspdText": "Average",
-    "mythiumCost": "",
-    "name": "Oathbreaker Final Form",
-    "radius": "Tiny",
-    "rangeText": "Long",
-    "sortOrder": "mastermind_legion_id.T6.265.Crawling Catapult",
-    "splashPath": "Splashes/CrawlingCatapult.png",
-    "stockMax": "",
-    "stockTime": "",
-    "tooltip": "Massively boosted stats. Plus, gains damage reduction when Unchained Rage is active.",
-    "totalValue": "265",
-    "unitClass": "Fighter",
-    "upgradesFrom": []
-  },
-  {
-    "_id": "",
-    "unitId": "wandering_trebuchet_unit_id",
-    "version": "12.00.1",
-    "abilities": [],
-    "armorType": "Fortified",
-    "aspdInverted": ".91",
-    "attackMode": "Ranged",
-    "attackRange": "700",
-    "attackSpeed": "1.100000",
-    "attackType": "Impact",
-    "avgAspd": "1.02",
-    "avgAspdDiff": "-11.15",
-    "avgCost": "128.89",
-    "avgCostDiff": "128.88",
-    "avgDmg": "42.94",
-    "avgDmgDiff": "88.62",
-    "avgHp": "1016.11",
-    "avgHpDiff": "160.80",
-    "avgMspd": "275.91",
-    "avgMspdDiff": "8.73",
-    "categoryClass": "Standard",
-    "description": "",
-    "descriptionId": "",
-    "dmgBase": "81",
-    "dmgExpected": "81.00",
-    "dmgMax": "81",
-    "dps": "73.64",
-    "flags": "flags_ground,flags_organic",
-    "goldBounty": "",
-    "goldCost": "425",
-    "goldValue": "",
-    "hp": "2650",
-    "iconPath": "Icons/WanderingTrebuchet.png",
-    "incomeBonus": "",
-    "infoSketchfab": "",
-    "infoTier": "Tier-6",
-    "isEnabled": true,
-    "legionId": "mastermind_legion_id",
-    "modelScale": "1.550000",
-    "moveSpeed": "300",
-    "moveType": "Ground",
-    "mp": "",
-    "mspdText": "Average",
-    "mythiumCost": "",
-    "name": "Wandering Trebuchet",
-    "radius": "Tiny",
-    "rangeText": "Long",
-    "sortOrder": "mastermind_legion_id.T6U.425.Wandering Trebuchet",
-    "splashPath": "Splashes/WanderingTrebuchet.png",
-    "stockMax": "",
-    "stockTime": "",
-    "tooltip": "",
-    "totalValue": "690",
-    "unitClass": "Fighter",
-    "upgradesFrom": [
-      "units crawling_catapult_unit_id"
     ]
   }
 ]
