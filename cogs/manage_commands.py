@@ -53,11 +53,11 @@ class ManageCommands(commands.Cog):
     @commands.command()
     async def update(self, ctx: commands.Context):
         if ctx.author.name == "drachir_":
-            content = ctx.message.content[8:]
+            content = ctx.message.content[8:].split(" ")
             try:
                 loop = asyncio.get_running_loop()
                 with concurrent.futures.ProcessPoolExecutor() as pool:
-                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, int(content)))
+                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, int(content[0]), int(content[1])))
                     pool.shutdown()
                 await ctx.send(embed=ladder_update)
             except Exception:
