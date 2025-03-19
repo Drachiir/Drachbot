@@ -33,7 +33,7 @@ with open('Files/json/Secrets.json') as f:
     f.close()
 
 utc = timezone.utc
-task_time = time(hour=1, minute=0, second=0, tzinfo=utc)
+task_time = time(hour=0, minute=0, second=0, tzinfo=utc)
 #task_time = datetime.time(datetime.now(utc)+timedelta(seconds=5))
 
 def reset_game1(json_data):
