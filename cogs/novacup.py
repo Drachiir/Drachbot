@@ -26,10 +26,10 @@ def novacup(division):
         for row in reader:
             try:
                 if row[1] != "Team Name" and row[1] != "" and row[1] not in team_dict:
-                    team_dict[row[1]] = [row[2],row[3],row[4]]
+                    team_dict[row[1]] = [row[2],row[3],int(float(row[4]))]
             except Exception:
                 continue
-    newIndex = sorted(team_dict, key=lambda x: float(team_dict[x][2]), reverse=True)
+    newIndex = sorted(team_dict, key=lambda x: team_dict[x][2], reverse=True)
     team_dict = {k: team_dict[k] for k in newIndex}
     month = datetime.now()
     if division == "1":
@@ -50,9 +50,9 @@ def novacup(division):
     count = 1
     for team in team_dict:
         if count < 9 and division == "1":
-            embed.add_field(name=str(count) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + team_dict[team][2]+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
+            embed.add_field(name=str(count) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + str(team_dict[team][2])+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
         if count >= 9 and division == "2":
-            embed.add_field(name=str(count-8) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + team_dict[team][2]+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
+            embed.add_field(name=str(count-8) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + str(team_dict[team][2])+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
         count +=1
         if count == 17:
             break
