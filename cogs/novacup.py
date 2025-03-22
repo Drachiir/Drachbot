@@ -26,36 +26,49 @@ def novacup(division):
         for row in reader:
             try:
                 if row[1] != "Team Name" and row[1] != "" and row[1] not in team_dict:
-                    team_dict[row[1]] = [row[2],row[3],int(float(row[4]))]
+                    team_dict[row[1]] = [row[2], row[3], int(float(row[4]))]
             except Exception:
                 continue
     newIndex = sorted(team_dict, key=lambda x: team_dict[x][2], reverse=True)
     team_dict = {k: team_dict[k] for k in newIndex}
     month = datetime.now()
+
+    # Setup values based on division
     if division == "1":
-        elo = 0
-        for i, t in enumerate(team_dict):
-            elo += float(team_dict[t][2])
-            if i == 7:
-                break
-        title = str(month.strftime("%B")) + " Nova Cup Division 1 ("+str(round(elo/8))+util.get_ranked_emote(round(elo/8))+")"
+        start, end, div_size = 0, 8, 8
+    elif division == "2":
+        start, end, div_size = 8, 16, 8
+    elif division == "3":
+        start, end, div_size = 16, 32, 16
     else:
-        elo = 0
-        for i, t in enumerate(team_dict):
-            if 7 < i < 16:
-                elo += float(team_dict[t][2])
-        title = str(month.strftime("%B")) + " Nova Cup Division 2 ("+str(round(elo/8))+util.get_ranked_emote(round(elo/8))+")"
-    embed = discord.Embed(color=util.random_color(), title=title)
-    embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/Tournaments/NovaCup/NovaCup_00.png")
-    count = 1
-    for team in team_dict:
-        if count < 9 and division == "1":
-            embed.add_field(name=str(count) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + str(team_dict[team][2])+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
-        if count >= 9 and division == "2":
-            embed.add_field(name=str(count-8) +". **"+ team + "**:", value=team_dict[team][0] + ", " + team_dict[team][1] + ", Elo: " + str(team_dict[team][2])+util.get_ranked_emote(float(team_dict[team][2])), inline=False)
-        count +=1
-        if count == 17:
-            break
+        return None  # Invalid division
+
+    # Calculate average elo for title
+    elo = sum([team_dict[t][2] for i, t in enumerate(team_dict) if start <= i < end])
+    avg_elo = round(elo / div_size)
+    title = f"{month.strftime('%B')} Nova Cup Division {division} ({avg_elo}{util.get_ranked_emote(avg_elo)})"
+
+    # Add fields based on division
+    if division == "3":
+        # One condensed block of text for Division 3
+        team_lines = []
+        for i, (team, data) in enumerate(list(team_dict.items())[start:end]):
+            elo = data[2]
+            teamname_fmt = team[:14].ljust(14)  # Cut or pad to 14 characters
+            team_line = f"`{i+1:>2}. {teamname_fmt}: {elo}`{util.get_ranked_emote(elo)}{data[0]}, {data[1]}"
+            team_lines.append(team_line)
+        # Create embed
+        embed = discord.Embed(color=util.random_color(), title=title, description="\n".join(team_lines))
+        embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/Tournaments/NovaCup/NovaCup_00.png")
+    else:
+        # One field per team for Div 1 and 2
+        embed = discord.Embed(color=util.random_color(), title=title)
+        embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/Tournaments/NovaCup/NovaCup_00.png")
+        for i, (team, data) in enumerate(list(team_dict.items())[start:end]):
+            elo = data[2]
+            value = f"{data[0]}, {data[1]}, Elo: `{elo}`{util.get_ranked_emote(elo)}"
+            embed.add_field(name=f"{i+1}. **{team}**:", value=value, inline=False)
+
     return embed
 
 
@@ -103,15 +116,38 @@ class RefreshButtonDiv2(discord.ui.View):
             traceback.print_exc()
 
 
+class RefreshButtonDiv3(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.cd_mapping = commands.CooldownMapping.from_cooldown(1.0, 10.0, commands.BucketType.member)
+
+    @discord.ui.button(label='Refresh', style=discord.ButtonStyle.blurple, custom_id='persistent_view:refreshdiv3')
+    async def callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.defer()
+            bucket = self.cd_mapping.get_bucket(interaction.message)
+            retry_after = bucket.update_rate_limit()
+            if retry_after:
+                return print(interaction.user.name + " likes to press buttons.")
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                response = await loop.run_in_executor(pool, functools.partial(novacup, "3"))
+                pool.shutdown()
+                await interaction.edit_original_response(embed=response)
+        except Exception:
+            traceback.print_exc()
+
+
 class Novacup(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
     
-    @app_commands.command(name="novacup", description="Shows current teams in each novacup division 1 or 2.")
+    @app_commands.command(name="novacup", description="Shows current teams in each novacup division 1, 2 or 3.")
     @app_commands.describe(division='Enter division.')
     @app_commands.choices(division=[
         discord.app_commands.Choice(name='1', value='1'),
-        discord.app_commands.Choice(name='2', value='2')
+        discord.app_commands.Choice(name='2', value='2'),
+        discord.app_commands.Choice(name='3', value='3'),
     ])
     async def novacup(self, interaction: discord.Interaction, division: discord.app_commands.Choice[str]):
         loop = asyncio.get_running_loop()
@@ -123,8 +159,10 @@ class Novacup(commands.Cog):
                 if type(response) == discord.Embed:
                     if division.value == "1":
                         await interaction.followup.send(embed=response, view=RefreshButtonDiv1())
-                    else:
+                    elif division.value == "2":
                         await interaction.followup.send(embed=response, view=RefreshButtonDiv2())
+                    else:
+                        await interaction.followup.send(embed=response, view=RefreshButtonDiv3())
                 else:
                     await interaction.followup.send(response)
             except Exception:
