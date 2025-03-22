@@ -66,7 +66,7 @@ def novacup(division):
         embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/Tournaments/NovaCup/NovaCup_00.png")
         for i, (team, data) in enumerate(list(team_dict.items())[start:end]):
             elo = data[2]
-            value = f"{data[0]}, {data[1]}, Elo: `{elo}`{util.get_ranked_emote(elo)}"
+            value = f"{data[0]}, {data[1]}, Elo: {elo}{util.get_ranked_emote(elo)}"
             embed.add_field(name=f"{i+1}. **{team}**:", value=value, inline=False)
 
     return embed
