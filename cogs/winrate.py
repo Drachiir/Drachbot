@@ -138,9 +138,13 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                 wins = winrate_dict[player_type][playerid2]["Masterminds"][mm2]["Wins"]
                 losses = games-wins
                 elo_change = winrate_dict[player_type][playerid2]["Masterminds"][mm2]["EloChange"]
+            try:
+                winrate = round(wins / games * 100, 1)
+            except ZeroDivisionError:
+                winrate = 0
         except KeyError:
             return f"No games {option} {playername2, mm2} found."
-        output_string = f"**{wins}W - {losses}L, {round(wins/games*100,1)}%WR, {elo_change:+} Elo**"
+        output_string = f"**{wins}W - {losses}L, {winrate}%WR, {elo_change:+} Elo**"
     else:
         if playerid2 == "all":
             target_dict = winrate_dict
@@ -148,13 +152,17 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
             target_dict = winrate_dict[player_type][playerid2]
         games = target_dict["Count"]
         wins = target_dict["Wins"]
+        try:
+            winrate = round(wins / games * 100, 1)
+        except ZeroDivisionError:
+            winrate = 0
         losses = games - wins
         elo_change = target_dict["EloChange"]
         if text_output:
             output_string = '(From ' + str(games) + ' ranked games, avg. elo: ' + str(avg_gameelo) + ")\n"
-            output_string += f"Total Stats: {wins}W - {losses}L, {round(wins / games * 100, 1)}% Winrate, {elo_change:+} Elo\n"
+            output_string += f"Total Stats: {wins}W - {losses}L, {winrate}% Winrate, {elo_change:+} Elo\n"
         else:
-            output_string = f"**Total Stats:** {wins}W - {losses}L, {round(wins / games * 100, 1)}% Winrate, {elo_change:+} Elo\n"
+            output_string = f"**Total Stats:** {wins}W - {losses}L, {winrate}% Winrate, {elo_change:+} Elo\n"
         if playerid2 == "all":
             target_dict = winrate_dict[player_type]
         else:
