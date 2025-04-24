@@ -2,6 +2,7 @@ import platform
 import random
 import string
 import json
+import traceback
 from difflib import SequenceMatcher
 from PIL import Image
 import discord
@@ -256,8 +257,10 @@ def get_icons_image(type, name):
             image_path = 'Files/icons/Items/' + name.replace(" ", "") + ".png"
         case _:
             image_path = "Files/icons/Granddaddy.png"
-
-    image_url = f"https://cdn.legiontd2.com/{image_path.split("/")[1]}/{image_path.split("/")[2]}"
+    try:
+        image_url = f"https://cdn.legiontd2.com/{"/".join(image_path.split("/")[1:])}"
+    except Exception:
+        pass
     try:
         return Image.open(open(image_path, "rb"))
     except Exception:
@@ -269,6 +272,7 @@ def get_icons_image(type, name):
                 f.write(response.content)
             return Image.open(open(image_path, "rb"))
         except Exception:
+            traceback.print_exc()
             return Image.open(open(fallback_path, "rb"))
 
 def validate_spell_input(spell):
