@@ -237,9 +237,9 @@ def reset():
         json_data = reset_game1(json_data)
         json_data = reset_game2(json_data)
         #json_data = reset_game3(json_data)
-        #json_data = reset_game4(json_data)
+        json_data = reset_game4(json_data)
         json_data = reset_game5(json_data)
-        json_data = reset_game6(json_data)
+        #json_data = reset_game6(json_data)
         with open("ltdle_data/ltdle.json", "w") as f:
             json.dump(json_data, f, indent=2)
             f.close()

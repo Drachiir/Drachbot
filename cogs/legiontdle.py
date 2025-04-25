@@ -1300,36 +1300,36 @@ class GameSelectionButtons(discord.ui.View):
     #     except Exception:
     #         traceback.print_exc()
     
-    # @discord.ui.button(label='Guess The Icon', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game4', emoji="🔍", row=2)
-    # async def callback4(self, interaction: discord.Interaction, button: discord.ui.Button):
-    #     await interaction.response.defer()
-    #     try:
-    #         loop = asyncio.get_running_loop()
-    #         with concurrent.futures.ThreadPoolExecutor() as pool:
-    #             with open("ltdle_data/ltdle.json", "r") as f:
-    #                 ltdle_data = json.load(f)
-    #                 f.close()
-    #             if not ltdle_data["game_4_selected_unit"]:
-    #                 await interaction.channel.send("This game is currently disabled.")
-    #                 return
-    #             else:
-    #                 played_check = check_if_played_today(interaction.user.name, 4)
-    #                 if type(played_check) == type(dict()):
-    #                     data = played_check
-    #                 else:
-    #                     await interaction.channel.send(played_check)
-    #                     return
-    #                 response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 4))
-    #                 pool.shutdown()
-    #                 if type(response) == list:
-    #                     if len(response) == 2:
-    #                         await interaction.channel.send(file=response[0], embed=response[1], view=ModalButton2())
-    #                     else:
-    #                         await interaction.channel.send(file=response[0], embed=response[1])
-    #                 else:
-    #                     await interaction.channel.send(response)
-    #     except Exception:
-    #         traceback.print_exc()
+    @discord.ui.button(label='Guess The Icon', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game4', emoji="🔍", row=2)
+    async def callback4(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        try:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                with open("ltdle_data/ltdle.json", "r") as f:
+                    ltdle_data = json.load(f)
+                    f.close()
+                if not ltdle_data["game_4_selected_unit"]:
+                    await interaction.channel.send("This game is currently disabled.")
+                    return
+                else:
+                    played_check = check_if_played_today(interaction.user.name, 4)
+                    if type(played_check) == type(dict()):
+                        data = played_check
+                    else:
+                        await interaction.channel.send(played_check)
+                        return
+                    response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 4))
+                    pool.shutdown()
+                    if type(response) == list:
+                        if len(response) == 2:
+                            await interaction.channel.send(file=response[0], embed=response[1], view=ModalButton2())
+                        else:
+                            await interaction.channel.send(file=response[0], embed=response[1])
+                    else:
+                        await interaction.channel.send(response)
+        except Exception:
+            traceback.print_exc()
     
     @discord.ui.button(label='Guess The Winner', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game5', emoji="👑", row=1)
     async def callback5(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -1365,39 +1365,39 @@ class GameSelectionButtons(discord.ui.View):
         except Exception:
             traceback.print_exc()
     
-    @discord.ui.button(label='Guess The End', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game6', emoji="🧠", row=2)
-    async def callback6(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-        try:
-            loop = asyncio.get_running_loop()
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                with open("ltdle_data/ltdle.json", "r") as f:
-                    ltdle_data = json.load(f)
-                    f.close()
-                if not ltdle_data["game_6_games"]:
-                    await interaction.channel.send("This game is currently disabled.")
-                    return
-                else:
-                    played_check = check_if_played_today(interaction.user.name, 6)
-                    if type(played_check) == type(dict()):
-                        data = played_check
-                    else:
-                        await interaction.channel.send(played_check)
-                        return
-                    if data["game5"]["image"] == -1:
-                        data["game5"]["image"] += 1
-                    update_user_data(data, data["name"])
-                    response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 6))
-                    pool.shutdown()
-                    if type(response) == list:
-                        if len(response) == 2:
-                            await interaction.channel.send(file=response[0], embed=response[1], view=ModalButtonWave())
-                        else:
-                            await interaction.channel.send(file=response[0], embed=response[1])
-                    else:
-                        await interaction.channel.send(response)
-        except Exception:
-            traceback.print_exc()
+    # @discord.ui.button(label='Guess The End', style=discord.ButtonStyle.grey, custom_id='persistent_view:Game6', emoji="🧠", row=2)
+    # async def callback6(self, interaction: discord.Interaction, button: discord.ui.Button):
+    #     await interaction.response.defer()
+    #     try:
+    #         loop = asyncio.get_running_loop()
+    #         with concurrent.futures.ThreadPoolExecutor() as pool:
+    #             with open("ltdle_data/ltdle.json", "r") as f:
+    #                 ltdle_data = json.load(f)
+    #                 f.close()
+    #             if not ltdle_data["game_6_games"]:
+    #                 await interaction.channel.send("This game is currently disabled.")
+    #                 return
+    #             else:
+    #                 played_check = check_if_played_today(interaction.user.name, 6)
+    #                 if type(played_check) == type(dict()):
+    #                     data = played_check
+    #                 else:
+    #                     await interaction.channel.send(played_check)
+    #                     return
+    #                 if data["game5"]["image"] == -1:
+    #                     data["game5"]["image"] += 1
+    #                 update_user_data(data, data["name"])
+    #                 response = await loop.run_in_executor(pool, functools.partial(ltdle, data, ltdle_data, 6))
+    #                 pool.shutdown()
+    #                 if type(response) == list:
+    #                     if len(response) == 2:
+    #                         await interaction.channel.send(file=response[0], embed=response[1], view=ModalButtonWave())
+    #                     else:
+    #                         await interaction.channel.send(file=response[0], embed=response[1])
+    #                 else:
+    #                     await interaction.channel.send(response)
+    #     except Exception:
+    #         traceback.print_exc()
 
 
 class RefreshButtonLtdleTotal(discord.ui.View):
