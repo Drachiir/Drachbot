@@ -175,9 +175,9 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             daily_score1 = 0
             daily_score2 = 0
             #daily_score3 = 0
-            #daily_score4 = 0
+            daily_score4 = 0
             daily_score5 = 0
-            daily_score6 = 0
+            #daily_score6 = 0
             with open("ltdle_data/ltdle.json", "r") as f:
                 ltdle_data = json.load(f)
                 f.close()
@@ -217,18 +217,18 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             # except Exception:
             #     daily_score3 = 0
             #     pass
-            # try:
-            #     if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-            #         if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
-            #             if p_data["game4"]["game_finished"]:
-            #                 daily_score4 = p_data["scores_dict"][p_data["game4"]["last_played"]][3]
-            #             else:
-            #                 daily_score4 = 0
-            #     else:
-            #         daily_score4 = 0
-            # except Exception:
-            #     daily_score4 = 0
-            #     pass
+            try:
+                if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+                    if datetime.strptime(p_data["game4"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+                        if p_data["game4"]["game_finished"]:
+                            daily_score4 = p_data["scores_dict"][p_data["game4"]["last_played"]][3]
+                        else:
+                            daily_score4 = 0
+                else:
+                    daily_score4 = 0
+            except Exception:
+                daily_score4 = 0
+                pass
             try:
                 if datetime.strptime(p_data["game5"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
                     if datetime.strptime(p_data["game5"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
@@ -241,21 +241,21 @@ def ltdle_leaderboard(daily, avg, game_mode = ["all","all"], sort = "dsc", seaso
             except Exception:
                 daily_score5 = 0
                 pass
-            try:
-                if datetime.strptime(p_data["game6"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
-                    if datetime.strptime(p_data["game6"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
-                        if p_data["game6"]["game_finished"]:
-                            daily_score6 = p_data["scores_dict"][p_data["game6"]["last_played"]][5]
-                        else:
-                            daily_score6 = 0
-                else:
-                    daily_score6 = 0
-            except Exception:
-                daily_score6 = 0
-                pass
-            if daily_score1 + daily_score2 + daily_score5 + daily_score6 == 0:
+            # try:
+            #     if datetime.strptime(p_data["game6"]["last_played"], "%m/%d/%Y") < datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y"):
+            #         if datetime.strptime(p_data["game6"]["last_played"], "%m/%d/%Y") == datetime.strptime(ltdle_data["next_reset"], "%m/%d/%Y") - timedelta(days=1):
+            #             if p_data["game6"]["game_finished"]:
+            #                 daily_score6 = p_data["scores_dict"][p_data["game6"]["last_played"]][5]
+            #             else:
+            #                 daily_score6 = 0
+            #     else:
+            #         daily_score6 = 0
+            # except Exception:
+            #     daily_score6 = 0
+            #     pass
+            if daily_score1 + daily_score2 + daily_score5 + daily_score4 == 0:
                 continue
-            scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score5, daily_score2, daily_score6))
+            scores.append((p_data["name"].capitalize().replace("_", ""), daily_score1, daily_score5, daily_score2, daily_score4))
         elif game_mode[0] != "all":
             try:
                 avg_pts = p_data[game_mode[1]]["score"]/p_data[game_mode[1]]["games_played"]
