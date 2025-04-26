@@ -72,7 +72,7 @@ def get_current_patches(only_current = False):
         patches = f.readlines()
     if only_current:
         #return ["12.01", "12.00", "11.11", "11.10", "11.09", "11.08" ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"]
-        return [patches[3].replace("\n", "")]
+        return patches[3].replace("\n", "").split(",")
     else:
         return patches[0].replace("\n", "")
 

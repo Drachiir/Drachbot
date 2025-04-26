@@ -151,7 +151,10 @@ def get_matchistory(playerid, games, min_elo=0, patch='0', update = 0, earlier_t
             if patch in ["12", "11", "10"]:
                 expr = GameData.version.startswith("v"+patch)
             elif patch != "0":
-                expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
+                if len(patch_list) == 1:
+                    expr = fn.Substr(GameData.version, 2, len(patch_list[0])).in_(patch_list)
+                else:
+                    expr = fn.Substr(GameData.version, 2, 5).in_(patch_list)
             else:
                 expr = True
             game_data_query = (PlayerData
