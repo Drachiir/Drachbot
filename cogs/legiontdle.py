@@ -1412,7 +1412,7 @@ class RefreshButtonLtdleTotal(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, False))
@@ -1434,7 +1434,7 @@ class RefreshButtonLtdleDaily(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, True, False))
@@ -1456,7 +1456,7 @@ class RefreshButtonLtdleAvg(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, False, True))
@@ -1478,7 +1478,7 @@ class RefreshButtonLtdleDailyAsc(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(ltdle_leaderboard, True, False, sort="asc"))

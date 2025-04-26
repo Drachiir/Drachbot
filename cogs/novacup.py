@@ -84,7 +84,7 @@ class RefreshButtonDiv1(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(novacup, "1"))
@@ -106,7 +106,7 @@ class RefreshButtonDiv2(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(novacup, "2"))
@@ -128,7 +128,7 @@ class RefreshButtonDiv3(discord.ui.View):
             bucket = self.cd_mapping.get_bucket(interaction.message)
             retry_after = bucket.update_rate_limit()
             if retry_after:
-                return print(interaction.user.name + " likes to press buttons.")
+                return
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 response = await loop.run_in_executor(pool, functools.partial(novacup, "3"))
