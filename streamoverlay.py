@@ -8,6 +8,7 @@ import legion_api
 import jinja2
 from jinja2 import Environment, FileSystemLoader
 
+import util
 from peewee_pg import GameData, PlayerData
 
 if platform.system() == "Linux":
@@ -99,9 +100,10 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
                 games = current_games-initial_games if current_games-initial_games < 5 else 5
                 if update and games > 0:
                     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
-                                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change],
+                                    PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change,
+                                    PlayerData.leaks_per_wave, PlayerData.workers_per_wave],
                                    ["game_id", "date", "version", "ending_wave", "game_elo"],
-                                   ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change"]]
+                                   ["player_id", "player_slot", "game_result", "legion", "megamind", "elo_change", "leaks_per_wave", "workers_per_wave"]]
                     history = drachbot_db.get_matchistory(playerid, games, req_columns=req_columns, earlier_than_wave10=True, include_wave_one_finishes=True)
                 else:
                     history = session_dict["history"]
@@ -163,4 +165,29 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
                                 elo_diff=elo_diff, elo_str=elo_str, rgb=rgb, rgb2=rgb2, playerid=playerid, history=session_dict["history"])
     with open(shared_folder+playerid+'_output.html', "w") as f:
         f.write(html_file)
+
+    template2 = enviorment.get_template("miscstatsoverlay.html")
+    leak = 0
+    worker10 = 0
+    waves = 0
+    for game in session_dict["history"]:
+        for player in game["players_data"]:
+            if player["player_id"] == playerid:
+                for i, wave in enumerate(player["leaks_per_wave"]):
+                    leak += util.calc_leak(wave, i+1)
+                    waves += 1
+                try:
+                    worker10 += player["workers_per_wave"][9]
+                except Exception:
+                    pass
+    try:
+        avg_leak = round(leak / waves, 1)
+        avg_worker10 = round(worker10 / len(session_dict["history"]), 1)
+    except Exception:
+        avg_leak = 0
+        avg_worker10 = 0
+    html_file2 = template2.render(playerid=playerid, avg_leak = avg_leak, avg_worker10 = avg_worker10)
+    with open(shared_folder+playerid+'_output2.html', "w") as f:
+        f.write(html_file2)
+
     return playerid+'_output.html'
