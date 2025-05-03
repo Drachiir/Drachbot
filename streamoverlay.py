@@ -109,7 +109,8 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
                     history = session_dict["history"]
                 with open("sessions/session_" + playerid + ".json", "w") as f:
                     session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
-                                    "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": history}
+                                    "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": history,
+                                    "avg_leak": session_dict["avg_leak"], "avg_worker10": session_dict["avg_worker10"]}
                     json.dump(session_dict, f, default=str)
     except Exception:
         traceback.print_exc()
@@ -186,7 +187,19 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
     except Exception:
         avg_leak = 0
         avg_worker10 = 0
-    html_file2 = template2.render(playerid=playerid, avg_leak = avg_leak, avg_worker10 = avg_worker10)
+
+    if not session_dict.get("avg_leak", 0) == 0:
+        leak_delta = avg_leak - session_dict.get("avg_leak", 0)
+        worker_delta = avg_worker10 - session_dict.get("avg_worker10", 0)
+    else:
+        leak_delta = 0
+        worker_delta = 0
+    session_dict["avg_leak"] = avg_leak
+    session_dict["avg_worker10"] = avg_worker10
+    with open("sessions/session_" + playerid + ".json", "w") as f:
+        json.dump(session_dict, f, default=str)
+
+    html_file2 = template2.render(playerid=playerid, avg_leak = avg_leak, avg_worker10 = avg_worker10, leak_delta = leak_delta, worker_delta = worker_delta)
     with open(shared_folder+playerid+'_output2.html', "w") as f:
         f.write(html_file2)
 
