@@ -97,7 +97,7 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
             if live:
                 initial_games = initial_wins + initial_losses
                 current_games = current_wins + current_losses
-                games = current_games-initial_games if current_games-initial_games < 5 else 5
+                games = current_games-initial_games
                 if update and games > 0:
                     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
                                     PlayerData.player_id, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.megamind, PlayerData.elo_change,

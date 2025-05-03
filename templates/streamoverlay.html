@@ -121,7 +121,7 @@
 <div style="height: 4px"></div>
 <div class="containerHistory">
     <div class="containerHistoryInner">
-        {% for game in history %}
+        {% for game in history[:5] %}
             {% for player in game["players_data"] %}
                 {% if player["player_id"] == playerid %}
                     {% if player["game_result"] == "won" %}
