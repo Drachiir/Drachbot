@@ -174,7 +174,7 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
         for player in game["players_data"]:
             if player["player_id"] == playerid:
                 for i, wave in enumerate(player["leaks_per_wave"]):
-                    leak += util.calc_leak(wave, i+1)
+                    leak += util.calc_leak(wave, i)
                     waves += 1
                 try:
                     worker10 += player["workers_per_wave"][9]
