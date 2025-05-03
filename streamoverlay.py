@@ -16,7 +16,7 @@ if platform.system() == "Linux":
 else:
     shared_folder = "shared/"
 
-def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0):
+def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0, new_game = False):
     try:
         if not os.path.isfile("sessions/session_" + playerid + ".json"):
             leaderboard = legion_api.get_leaderboard(99)
@@ -172,6 +172,7 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
     leak = 0
     worker10 = 0
     waves = 0
+    waves2 = 0
     for game in session_dict["history"]:
         for player in game["players_data"]:
             if player["player_id"] == playerid:
@@ -180,11 +181,12 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
                     waves += 1
                 try:
                     worker10 += player["workers_per_wave"][9]
+                    waves2 += 1
                 except Exception:
                     pass
     try:
         avg_leak = round(leak / waves, 1)
-        avg_worker10 = round(worker10 / len(session_dict["history"]), 1)
+        avg_worker10 = round(worker10 / waves2, 1)
     except Exception:
         avg_leak = 0
         avg_worker10 = 0
@@ -195,10 +197,12 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
     else:
         leak_delta = 0
         worker_delta = 0
-    session_dict["avg_leak"] = avg_leak
-    session_dict["avg_worker10"] = avg_worker10
-    with open("sessions/session_" + playerid + ".json", "w") as f:
-        json.dump(session_dict, f, default=str)
+
+    if new_game:
+        session_dict["avg_leak"] = avg_leak
+        session_dict["avg_worker10"] = avg_worker10
+        with open("sessions/session_" + playerid + ".json", "w") as f:
+            json.dump(session_dict, f, default=str)
 
     html_file2 = template2.render(playerid=playerid, avg_leak = avg_leak, avg_worker10 = avg_worker10, leak_delta = leak_delta, worker_delta = worker_delta)
     with open(shared_folder+playerid+'_output2.html', "w") as f:
