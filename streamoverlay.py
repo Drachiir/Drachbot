@@ -53,7 +53,8 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
             with open("sessions/session_" + playerid + ".json", "w") as f:
                 session_dict = {"started_at": stream_started_at, "int_rank": initial_rank, "current_rank": current_rank,
                                 "int_elo": initial_elo, "current_elo": current_elo, "int_wins": initial_wins, "current_wins": current_wins,
-                                "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": []}
+                                "int_losses": initial_losses, "current_losses": current_losses, "live": live,
+                                "avg_leak": 0, "avg_worker10": 0, "history": []}
                 json.dump(session_dict, f, default=str)
         else:
             with open("sessions/session_" + playerid + ".json", "r") as f:
@@ -109,8 +110,8 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
                     history = session_dict["history"]
                 with open("sessions/session_" + playerid + ".json", "w") as f:
                     session_dict = {"started_at": session_dict["started_at"], "int_rank": initial_rank, "current_rank": current_rank, "int_elo": initial_elo, "current_elo": current_elo,
-                                    "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live, "history": history,
-                                    "avg_leak": session_dict["avg_leak"], "avg_worker10": session_dict["avg_worker10"]}
+                                    "int_wins": initial_wins, "current_wins": current_wins, "int_losses": initial_losses, "current_losses": current_losses, "live": live,
+                                    "avg_leak": session_dict["avg_leak"], "avg_worker10": session_dict["avg_worker10"], "history": history}
                     json.dump(session_dict, f, default=str)
     except Exception:
         traceback.print_exc()
