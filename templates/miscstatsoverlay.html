@@ -94,7 +94,7 @@
 <div class="container">
     <div style="padding-top: 2px; padding-bottom: 2px;" class="container2">
         <div>
-            <r2>Leak% </r2><r2 style="font-weight: 400; font-size: 110%" class="{{ "redText" if leak_delta < 0 else "greenText" }}">{{ "{:+}".format(leak_delta) if leak_delta != 0 else "" }}</r2><br>
+            <r2>Leak% </r2><r2 style="font-weight: 400; font-size: 110%" class="{{ "greenText" if leak_delta < 0 else "redText" }}">{{ "{:+}".format(leak_delta) if leak_delta != 0 else "" }}</r2><br>
             <r style="
                 color: {% if avg_leak <= 12 %}
                     white
