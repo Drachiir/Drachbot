@@ -190,8 +190,8 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0)
         avg_worker10 = 0
 
     if not session_dict.get("avg_leak", 0) == 0:
-        leak_delta = avg_leak - session_dict.get("avg_leak", 0)
-        worker_delta = avg_worker10 - session_dict.get("avg_worker10", 0)
+        leak_delta = round(avg_leak - session_dict.get("avg_leak", 0), 1)
+        worker_delta = round(avg_worker10 - session_dict.get("avg_worker10", 0), 1)
     else:
         leak_delta = 0
         worker_delta = 0
