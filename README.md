@@ -2,7 +2,7 @@
 
 Discord bot with various commands related to the game Legion TD 2 using its API.
 
-Website: https://drachbot.site/
+Website: https://drach.bot/
 
 Official Discord: https://discord.gg/2nUVjEwESv
 
