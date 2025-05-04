@@ -126,7 +126,7 @@ def pullgamedata(playerid, offset, expected):
     return [ranked_count, games_count]
 
 @db.atomic()
-def get_recent_games(calls=2, time_delta=3):
+def get_recent_games(calls=2, time_delta=3, timeout_count_max = 1):
     date_now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     date_after = (datetime.now(tz=timezone.utc) - timedelta(minutes=time_delta+10)).strftime("%Y-%m-%d %H:%M:%S")
     date_now = date_now.replace(" ", "%20")
@@ -155,7 +155,7 @@ def get_recent_games(calls=2, time_delta=3):
                 ranks_dict[elo_bracket][2] += 1
                 break
     for i in range(calls):
-        if timeout_count == 1:
+        if timeout_count == timeout_count_max:
             break
         temp = 0
         url = (f'https://apiv2.legiontd2.com/games'

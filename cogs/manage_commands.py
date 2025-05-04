@@ -57,7 +57,7 @@ class ManageCommands(commands.Cog):
             try:
                 loop = asyncio.get_running_loop()
                 with concurrent.futures.ProcessPoolExecutor() as pool:
-                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, int(content[0]), int(content[1])))
+                    ladder_update = await loop.run_in_executor(pool, functools.partial(legion_api.get_recent_games, int(content[0]), int(content[1]), int(content[2])))
                     pool.shutdown()
                 await ctx.send(embed=ladder_update)
             except Exception:
