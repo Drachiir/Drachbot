@@ -102,7 +102,7 @@ def handler(message) -> None:
                                     pool.submit(functools.partial(stream_overlay, acc, elo_change=elo_change))
                                 time.sleep(16)
                                 with concurrent.futures.ProcessPoolExecutor() as pool:
-                                    pool.submit(functools.partial(stream_overlay, acc, update=True, new_game=True ))
+                                    pool.submit(functools.partial(stream_overlay, acc, update=True, new_game=True))
                     elif player_name in desc3[2]:
                         elo_change = int(desc3[1].split(" elo")[0].split("(")[-1])
                         if os.path.isfile(f"sessions/session_{acc}.json"):

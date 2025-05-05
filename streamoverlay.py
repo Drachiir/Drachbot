@@ -168,44 +168,44 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0,
     with open(shared_folder+playerid+'_output.html', "w") as f:
         f.write(html_file)
 
-    template2 = enviorment.get_template("miscstatsoverlay.html")
-    leak = 0
-    worker10 = 0
-    waves = 0
-    waves2 = 0
-    for game in session_dict["history"]:
-        for player in game["players_data"]:
-            if player["player_id"] == playerid:
-                for i, wave in enumerate(player["leaks_per_wave"]):
-                    leak += util.calc_leak(wave, i)
-                    waves += 1
-                try:
-                    worker10 += player["workers_per_wave"][9]
-                    waves2 += 1
-                except Exception:
-                    pass
-    try:
-        avg_leak = round(leak / waves, 1)
-        avg_worker10 = round(worker10 / waves2, 1)
-    except Exception:
-        avg_leak = 0
-        avg_worker10 = 0
-
-    if not session_dict.get("avg_leak", 0) == 0:
-        leak_delta = round(avg_leak - session_dict.get("avg_leak", 0), 1)
-        worker_delta = round(avg_worker10 - session_dict.get("avg_worker10", 0), 1)
-    else:
-        leak_delta = 0
-        worker_delta = 0
-
     if new_game:
+        template2 = enviorment.get_template("miscstatsoverlay.html")
+        leak = 0
+        worker10 = 0
+        waves = 0
+        waves2 = 0
+        for game in session_dict["history"]:
+            for player in game["players_data"]:
+                if player["player_id"] == playerid:
+                    for i, wave in enumerate(player["leaks_per_wave"]):
+                        leak += util.calc_leak(wave, i)
+                        waves += 1
+                    try:
+                        worker10 += player["workers_per_wave"][9]
+                        waves2 += 1
+                    except Exception:
+                        pass
+        try:
+            avg_leak = round(leak / waves, 1)
+            avg_worker10 = round(worker10 / waves2, 1)
+        except Exception:
+            avg_leak = 0
+            avg_worker10 = 0
+
+        if not session_dict.get("avg_leak", 0) == 0:
+            leak_delta = round(avg_leak - session_dict.get("avg_leak", 0), 1)
+            worker_delta = round(avg_worker10 - session_dict.get("avg_worker10", 0), 1)
+        else:
+            leak_delta = 0
+            worker_delta = 0
+
         session_dict["avg_leak"] = avg_leak
         session_dict["avg_worker10"] = avg_worker10
         with open("sessions/session_" + playerid + ".json", "w") as f:
             json.dump(session_dict, f, default=str)
 
-    html_file2 = template2.render(playerid=playerid, avg_leak = avg_leak, avg_worker10 = avg_worker10, leak_delta = leak_delta, worker_delta = worker_delta)
-    with open(shared_folder+playerid+'_output2.html', "w") as f:
-        f.write(html_file2)
+        html_file2 = template2.render(playerid=playerid, avg_leak = avg_leak, avg_worker10 = avg_worker10, leak_delta = leak_delta, worker_delta = worker_delta)
+        with open(shared_folder+playerid+'_output2.html', "w") as f:
+            f.write(html_file2)
 
     return playerid+'_output.html'
