@@ -193,7 +193,10 @@ def elcringo(playername, games, patch, min_elo, option, sort="date", saves = "Se
         avatar = "https://cdn.legiontd2.com/icons/Ogre.png"
     else:
         profile = legion_api.getprofile(playerid)
-        avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+        try:
+            avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+        except KeyError:
+            avatar = "https://cdn.legiontd2.com/icons/DefaultAvatar.png"
         playername = profile["playerName"]
     if playerid == 'all':
         saves = ''
