@@ -170,7 +170,7 @@ def stream_overlay(playerid, update = False, stream_started_at="", elo_change=0,
 
     template2 = enviorment.get_template("miscstatsoverlay.html")
 
-    if len(session_dict["history"] == 0):
+    if len(session_dict["history"]) == 0:
         html_file2 = template2.render(playerid=playerid, avg_leak = 0, avg_worker10 = 0, leak_delta = 0, worker_delta = 0)
         with open(shared_folder+playerid+'_output2.html', "w") as f:
             f.write(html_file2)
