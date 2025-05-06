@@ -16,7 +16,7 @@ class Streamtracker(commands.Cog):
         self.client = client
     
     @app_commands.command(name="streamtracker", description="Simple W/L and Elo tracker for your stream.")
-    async def streamtracker(self, interaction: discord.Interaction, player_name: str):
+    async def streamtracker(self, interaction: discord.Interaction, player_name: str, new_game: bool = False):
         loop = asyncio.get_running_loop()
         await interaction.response.defer(ephemeral=True, thinking=True)
         with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -26,7 +26,7 @@ class Streamtracker(commands.Cog):
                     data = json.load(f)
                 for streamer in data:
                     if player_id in data[streamer]["player_ids"]:
-                        await loop.run_in_executor(pool, functools.partial(stream_overlay, player_id, True))
+                        await loop.run_in_executor(pool, functools.partial(stream_overlay, player_id, update = True, new_game = new_game))
                         pool.shutdown()
                         await interaction.followup.send(f"https://overlay.drachbot.site/{player_id}_output.html", ephemeral=True)
                         return
