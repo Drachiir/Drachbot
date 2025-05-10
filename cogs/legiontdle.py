@@ -1555,7 +1555,7 @@ class Legiontdle(commands.Cog):
         discord.app_commands.Choice(name='Ascending', value='asc')
     ])
     async def legiontdle_stats(self, interaction: discord.Interaction, option: discord.app_commands.Choice[str], name: discord.User=None,
-                               game: discord.app_commands.Choice[str] = "all", sort: discord.app_commands.Choice[str] = "dsc", season: typing.Literal['current', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] = "current"):
+                               game: discord.app_commands.Choice[str] = "all", sort: discord.app_commands.Choice[str] = "dsc", season: typing.Literal['current', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'] = "current"):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             try:

@@ -4,7 +4,7 @@ import requests
 from legion_api import header
 
 calls = 200
-date = "17-03-25"
+date = "09-05-25"
 
 leaderboard_dir = f"leaderboard/leaderboard_{date}"
 parsed_dir = "shared2/leaderboard"
