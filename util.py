@@ -100,7 +100,7 @@ wave_emotes = const_file.get("wave_emotes")
 mm_emotes = const_file.get("mm_emotes")
 
 aura_spells = ["hero", "magician", "vampire"]
-buff_spells = ["hero", "magician", "vampire", "divine blessing", "glacial touch", "guardian angel", "protector", "pulverizer", "sorcerer", "titan", "villain"]
+buff_spells = ["hero", "magician", "vampire", "divine blessing", "glacial touch", "guardian angel", "protector", "pulverizer", "sorcerer", "titan", "villain", "executioner"]
 mm_list = ['LockIn', 'Greed', 'Redraw', 'Yolo', 'Fiesta', 'CashOut', 'Castle', 'Cartel', 'Chaos', 'Champion', 'DoubleLockIn', 'Kingsguard', 'Saboteur', 'Stash', 'Megamind']
 mm_choices = []
 for mm in mm_list:
