@@ -104,6 +104,9 @@ def unitstats(playername, games, min_elo, patch, sort="date", unit = "all", min_
                     elif fighter == "oathbreaker final form":
                         fighter_set.add("chained fist")
                         fighter_set.remove(fighter)
+                    elif fighter == "nucleus":
+                        fighter_set.add("proton")
+                        fighter_set.remove(fighter)
                     elif unit_dict[fighter]["upgradesFrom"]:
                         fighter_set.add(unit_dict[fighter]["upgradesFrom"])
                         fighter_set.remove(fighter)
