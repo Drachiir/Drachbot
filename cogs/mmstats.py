@@ -31,6 +31,8 @@ def get_roll(unit_dict, unit_name):
         unit_name = "eggsack"
     elif unit_name == "oathbreaker final form":
         unit_name = "chained fist"
+    elif unit_name == "nucleus":
+        unit_name = "proton"
     elif unit_dict[unit_name]["upgradesFrom"]:
         unit_name = unit_dict[unit_name]["upgradesFrom"]
     return unit_name
