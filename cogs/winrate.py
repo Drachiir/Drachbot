@@ -39,7 +39,10 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
         playername1 = "All"
     else:
         profile = legion_api.getprofile(playerid1)
-        avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+        try:
+            avatar = "https://cdn.legiontd2.com/" + profile['avatarUrl']
+        except KeyError:
+            avatar = "https://cdn.legiontd2.com/icons/DefaultAvatar.png"
         playername1 = profile["playerName"]
     req_columns = [[GameData.game_id, GameData.queue, GameData.date, GameData.version, GameData.ending_wave, GameData.game_elo, GameData.player_ids,
                     PlayerData.player_id, PlayerData.player_name, PlayerData.player_slot, PlayerData.game_result, PlayerData.legion, PlayerData.elo_change, PlayerData.party_size],
