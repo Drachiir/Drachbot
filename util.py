@@ -219,6 +219,8 @@ def get_icons_image(type, name):
                 image_path = "Files/icons/HellRaiser.png"
             if image_path == "Files/icons/Mps.png":
                 image_path = "Files/icons/MPS.png"
+            if image_path == "Files/icons/Skyfish.png":
+                image_path = "Files/icons/MetalDragon.png"
             if image_path == "Files/icons/PriestessOfTheAbyss.png":
                 image_path = "Files/icons/PriestessoftheAbyss.png"
             if image_path == "Files/icons/PackRat(footprints).png":
@@ -245,6 +247,8 @@ def get_icons_image(type, name):
                 image_path = "Files/splashes/HellRaiser.png"
             if image_path == "Files/splashes/Mps.png":
                 image_path = "Files/splashes/MPS.png"
+            if image_path == "Files/icons/Skyfish.png":
+                image_path = "Files/icons/MetalDragon.png"
             if image_path == "Files/splashes/PackRat(footprints).png":
                 image_path = "Files/splashes/PackRatNest.png"
             if image_path == "Files/splashes/ImpMercenary.png":
