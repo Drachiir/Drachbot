@@ -249,6 +249,8 @@ def get_icons_image(type, name):
                 image_path = "Files/splashes/MPS.png"
             if image_path == "Files/icons/Skyfish.png":
                 image_path = "Files/icons/MetalDragon.png"
+            if image_path == "Files/icons/Octopus.png":
+                image_path = "Files/icons/Quadrapus.png"
             if image_path == "Files/splashes/PackRat(footprints).png":
                 image_path = "Files/splashes/PackRatNest.png"
             if image_path == "Files/splashes/ImpMercenary.png":
