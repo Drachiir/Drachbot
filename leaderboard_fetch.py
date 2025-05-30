@@ -1,13 +1,20 @@
 import os
 import json
 import requests
-from legion_api import header
+from datetime import datetime
 
 calls = 200
-date = "09-05-25"
+today = datetime.today()
+date = today.strftime("%y-%m-%d")
 
-leaderboard_dir = f"leaderboard/leaderboard_{date}"
-parsed_dir = "shared2/leaderboard"
+with open('Files/json/Secrets.json', 'r') as f:
+    secret_file = json.load(f)
+    f.close()
+
+header = {'x-api-key': secret_file.get('apikey')}
+
+leaderboard_dir = f"/shared2/leaderboard/data/leaderboard_{date}"
+parsed_dir = "/shared2/leaderboard"
 os.makedirs(leaderboard_dir, exist_ok=True)
 os.makedirs(parsed_dir, exist_ok=True)
 
@@ -41,3 +48,11 @@ for file in os.listdir(leaderboard_dir):
 
 with open(f"{parsed_dir}/leaderboard_parsed_{date}.json", "w") as f:
     json.dump(parsed_data, f)
+    
+# Step to delete raw data files
+for file in os.listdir(leaderboard_dir):
+    file_path = os.path.join(leaderboard_dir, file)
+    try:
+        os.remove(file_path)
+    except Exception as e:
+        print(f"Error deleting {file_path}: {e}")
