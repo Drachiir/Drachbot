@@ -246,5 +246,13 @@
     "iconPath": "Icons/BlackMarket.png",
     "name": "Black Market",
     "tooltip": "Gain 56 income after Wave 13"
+  },
+  {
+    "_id": "lizard_army_powerup_id",
+    "category": "spells",
+    "enabled": true,
+    "iconPath": "Icons/LizardArmy.png",
+    "name": "Lizard Army",
+    "tooltip": "Gain 56 income after Wave 13"
   }
 ]
