@@ -38,6 +38,7 @@ def matchupstats(playerid, games, patch, min_elo = 0, max_elo = 9001):
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "Elo": 0, "Teammates": {}, "Enemies1": {}, "Enemies2": {}}
     for game in history_raw:
+        gameelo_list.append(game["game_elo"])
         for player in game["players_data"]:
             if playerid != "all" and playerid != player["player_id"]:
                 continue
