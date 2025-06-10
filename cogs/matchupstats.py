@@ -95,6 +95,10 @@ def matchupstats(playerid, games, patch, min_elo = 0, max_elo = 9001):
 class MatchupStats(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
+        self.website_data.start()
+
+    def cog_unload(self) -> None:
+        self.website_data.cancel()
 
     @tasks.loop(time=datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
