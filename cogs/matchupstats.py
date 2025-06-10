@@ -32,7 +32,8 @@ def matchupstats(playerid, games, patch, min_elo = 0, max_elo = 9001):
     if games == 0:
         return 'No games found.'
     gameelo_list = []
-    mmnames_list = util.mm_list
+    mmnames_list = util.mm_list[:]
+    mmnames_list.remove("Megamind")
     masterminds_dict = {}
     for x in mmnames_list:
         masterminds_dict[x] = {"Count": 0, "Wins": 0, "Elo": 0, "Teammates": {}, "Enemies1": {}, "Enemies2": {}}
@@ -100,7 +101,7 @@ class MatchupStats(commands.Cog):
     def cog_unload(self) -> None:
         self.website_data.cancel()
 
-    @tasks.loop(time=util.task_times2) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
+    @tasks.loop(time=datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.get_current_patches(only_current=True)
         elos = util.website_elos
