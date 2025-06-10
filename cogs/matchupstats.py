@@ -45,9 +45,11 @@ def matchupstats(playerid, games, patch, min_elo = 0, max_elo = 9001):
             teammate = game["players_data"][player_map[player["player_slot"]][0]]
             enemy1 = game["players_data"][player_map[player["player_slot"]][1]]
             enemy2 = game["players_data"][player_map[player["player_slot"]][2]]
-
-            masterminds_dict[player["legion"]]["Count"] += 1
-            masterminds_dict[player["legion"]]["Elo"] += player["player_elo"]
+            try:
+                masterminds_dict[player["legion"]]["Count"] += 1
+                masterminds_dict[player["legion"]]["Elo"] += player["player_elo"]
+            except Exception:
+                continue
 
             if not teammate["legion"] in masterminds_dict[player["legion"]]["Teammates"]:
                 masterminds_dict[player["legion"]]["Teammates"][teammate["legion"]] = {"Wins": 0, "Count": 0}
