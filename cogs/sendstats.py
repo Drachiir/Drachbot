@@ -129,7 +129,7 @@ class Sendstats(commands.Cog):
     def cog_unload(self) -> None:
         self.website_data.cancel()
     
-    @tasks.loop(time=datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5))) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
+    @tasks.loop(time=util.task_times4) #datetime.time(datetime.now(timezone.utc)+timedelta(seconds=5)) util.task_times2
     async def website_data(self):
         patches = util.get_current_patches(only_current=True)
         elos = util.website_elos
