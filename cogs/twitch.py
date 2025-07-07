@@ -118,7 +118,7 @@ class TwitchHandler(commands.Cog):
         except Exception:
             traceback.print_exc()
     
-    @tasks.loop(seconds=5.0)
+    @tasks.loop(seconds=1)
     async def message(self):
         with open("Files/streamers.json", "r") as f:
             streamers = json.load(f)
