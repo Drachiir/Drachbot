@@ -195,7 +195,8 @@ class Spellstats(commands.Cog):
             except AttributeError:
                 pass
             if not patch:
-                patch = util.get_current_patches()
+                player_patches = playername.lower() != "all"
+                patch = util.get_current_patches(player_patches=player_patches)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(spellstats, str(playername).lower(), games, min_elo, patch, sort=sort, spellname=spell, transparent=transparency))
                 pool.shutdown()

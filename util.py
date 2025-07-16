@@ -67,9 +67,11 @@ else:
 
 #0 = Current Patches, 1 = min elo, 2 = Ltdle min elo, 3 = Website data patch, 4 = Twitch noti ping threshold elo
 
-def get_current_patches(only_current = False):
+def get_current_patches(only_current = False, player_patches = False):
     with open(f"{shared2_folder}currents.txt", 'r') as f:
         patches = f.readlines()
+    if player_patches:
+        return patches[5].replace("\n", "")
     if only_current:
         #return ["12.05", "12.04", "12.03", "12.02", "12.01", "12.00", "11.11", "11.10", "11.09", "11.08" ,"11.07", "11.06", "11.05", "11.04", "11.03", "11.02", "11.01", "11.00"]
         return patches[3].replace("\n", "").split(",")

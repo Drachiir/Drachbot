@@ -257,7 +257,8 @@ class Elcringo(commands.Cog):
             except AttributeError:
                 pass
             if not patch:
-                patch = util.get_current_patches()
+                player_patches = playername.lower() != "all"
+                patch = util.get_current_patches(player_patches=player_patches)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(elcringo, playername, games, patch, min_elo, option, sort=sort, saves=saves))
                 pool.shutdown()

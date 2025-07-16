@@ -204,7 +204,8 @@ class Openstats(commands.Cog):
             except AttributeError:
                 pass
             if not patch:
-                patch = util.get_current_patches()
+                player_patches = playername.lower() != "all"
+                patch = util.get_current_patches(player_patches=player_patches)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(openstats, str(playername).lower(), games, min_elo, patch,
                                                                               sort=sort, unit=unit, transparent=transparency))

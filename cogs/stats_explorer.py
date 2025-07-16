@@ -177,7 +177,8 @@ class StatsExplorer(commands.Cog):
             except AttributeError:
                 pass
             if not patch:
-                patch = util.get_current_patches()
+                player_patches = playername.lower() != "all"
+                patch = util.get_current_patches(player_patches=player_patches)
             try:
                 unit = []
                 for i in [unit1,unit2,unit3,unit4]:

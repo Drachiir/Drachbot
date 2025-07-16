@@ -155,7 +155,8 @@ class Wave1(commands.Cog):
             except AttributeError:
                 pass
             if not patch:
-                patch = util.get_current_patches()
+                player_patches = playername.lower() != "all"
+                patch = util.get_current_patches(player_patches=player_patches)
             try:
                 response = await loop.run_in_executor(pool, functools.partial(wave1tendency, playername, option, games, min_elo, patch, sort))
                 pool.shutdown()

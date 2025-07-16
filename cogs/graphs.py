@@ -432,7 +432,7 @@ class Graphs(commands.Cog):
                            patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.')
     async def elo_graph(self, interaction: discord.Interaction, playername: str, games: int = 0, patch: str = ""):
         if not patch:
-            patch = util.get_current_patches()
+            patch = util.get_current_patches(player_patches=True)
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             await interaction.response.defer(ephemeral=False, thinking=True)

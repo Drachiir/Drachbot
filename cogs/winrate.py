@@ -270,7 +270,8 @@ class Winrate(commands.Cog):
         except AttributeError:
             pass
         if not patch:
-            patch = util.get_current_patches()
+            player_patches = playername.lower() != "all"
+            patch = util.get_current_patches(player_patches=player_patches)
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
