@@ -109,6 +109,7 @@ def reset_game4(json_data):
         new_name = "Imp"
     elif new_name == "Skyfish":
         new_name = "MetalDragon"
+        name = "metal_dragon"
     elif new_name == "octopus":
         new_name = "quadrapus"
     json_data["game_4_selected_unit"] = [new_name, []]
