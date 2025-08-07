@@ -108,7 +108,7 @@ def reset_game4(json_data):
     if new_name == "ImpMercenary":
         new_name = "Imp"
     elif new_name == "Skyfish":
-        new_name = "MetalDragon"
+        new_name = "Metaldragon"
         name = "metal_dragon"
     elif new_name == "octopus":
         new_name = "quadrapus"
