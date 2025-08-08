@@ -1,64 +1,145 @@
 import os
 import json
+import logging
 import requests
 from datetime import datetime
 
-calls = 200
+# ---------- Config ----------
+CALLS = 200
+BASE_DIR = "/shared2/leaderboard"
+DATA_DIR = os.path.join(BASE_DIR, "data")
+LOGS_DIR = os.path.join(BASE_DIR, "logs")
+SECRETS_PATH = "Files/json/Secrets.json"
+# ----------------------------
+
 today = datetime.today()
 date = today.strftime("%d-%m-%y")
-month_str = today.strftime("-%m-%y")  # e.g., "-05-25" for May 2025
+month_str = today.strftime("-%m-%y")  # e.g., "-08-25" for Aug 2025
 
-parsed_dir = "/shared2/leaderboard"
-# Check for a parsed file for the current month before doing anything else
-for fname in os.listdir(parsed_dir):
-    if fname.startswith("leaderboard_parsed_") and fname.endswith(".json") and month_str in fname:
-        print(f"Found existing parsed file for current month: {fname}. Exiting.")
-        exit(0)
+# Ensure dirs (so logging + listdir won't blow up)
+os.makedirs(BASE_DIR, exist_ok=True)
+os.makedirs(LOGS_DIR, exist_ok=True)
+os.makedirs(DATA_DIR, exist_ok=True)
 
-with open('Files/json/Secrets.json', 'r') as f:
-    secret_file = json.load(f)
+# ---------- Logging (per month) ----------
+log_file = os.path.join(LOGS_DIR, f"leaderboard{month_str}.log")
+logger = logging.getLogger("leaderboard")
+logger.setLevel(logging.INFO)
 
-header = {'x-api-key': secret_file.get('apikey')}
+# Avoid duplicate handlers if script is run multiple times in same process
+if not logger.handlers:
+    fh = logging.FileHandler(log_file, encoding="utf-8")
+    ch = logging.StreamHandler()
+    fmt = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
+    fh.setFormatter(fmt)
+    ch.setFormatter(fmt)
+    logger.addHandler(fh)
+    logger.addHandler(ch)
 
-leaderboard_dir = f"/shared2/leaderboard/data/leaderboard_{date}"
+logger.info("Script started")
+logger.info(f"Run date={date}, month_str={month_str}")
+# ----------------------------------------
+
+# Early bail if a parsed file for this month already exists
+parsed_dir = BASE_DIR
+existing = [
+    f for f in os.listdir(parsed_dir)
+    if f.startswith("leaderboard_parsed_") and f.endswith(".json") and month_str in f
+]
+if existing:
+    logger.info(f"Found existing parsed file for current month: {existing[0]}. Exiting early.")
+    raise SystemExit(0)
+
+# Load API key
+try:
+    with open(SECRETS_PATH, "r") as f:
+        secret_file = json.load(f)
+    apikey = secret_file.get("apikey")
+    if not apikey:
+        logger.error("API key missing in Secrets.json")
+        raise SystemExit(1)
+    logger.info("Secrets.json loaded.")
+except FileNotFoundError:
+    logger.error(f"Secrets.json not found at {SECRETS_PATH}")
+    raise SystemExit(1)
+except Exception as e:
+    logger.exception(f"Failed to load Secrets.json: {e}")
+    raise SystemExit(1)
+
+headers = {"x-api-key": apikey}
+
+leaderboard_dir = os.path.join(DATA_DIR, f"leaderboard_{date}")
 os.makedirs(leaderboard_dir, exist_ok=True)
-os.makedirs(parsed_dir, exist_ok=True)
+logger.info(f"Data directory: {leaderboard_dir}")
 
-for i in range(calls):
-    url = f'https://apiv2.legiontd2.com/players/stats?limit=1000&offset={i * 1000}&sortBy=overallElo&sortDirection=-1'
-    api_response = requests.get(url, headers=header)
-    data = json.loads(api_response.text)
-
-    with open(f"{leaderboard_dir}/leaderboard_data{i}.json", "w") as f:
-        json.dump(data, f)
-
-    print(f"{i + 1}/{calls}")
-
-parsed_data = []
-for file in os.listdir(leaderboard_dir):
-    with open(f"{leaderboard_dir}/{file}") as f:
-        data = json.load(f)
-
-    for player in data:
-        try:
-            elo = player["overallElo"]
-            wins = player["rankedWinsThisSeason"]
-            losses = player["rankedLossesThisSeason"]
-        except Exception:
-            continue
-
-        if wins + losses == 0:
-            continue
-
-        parsed_data.append([elo, wins, losses])
-
-with open(f"{parsed_dir}/leaderboard_parsed_{date}.json", "w") as f:
-    json.dump(parsed_data, f)
-
-# Step to delete raw data files
-for file in os.listdir(leaderboard_dir):
-    file_path = os.path.join(leaderboard_dir, file)
+# Fetch pages
+saved_files = 0
+for i in range(CALLS):
+    url = (
+        "https://apiv2.legiontd2.com/players/stats"
+        f"?limit=1000&offset={i * 1000}&sortBy=overallElo&sortDirection=-1"
+    )
     try:
-        os.remove(file_path)
+        resp = requests.get(url, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            logger.warning(f"API {i+1}/{CALLS} HTTP {resp.status_code} — skipping.")
+            continue
+        data = resp.json()
+        out_path = os.path.join(leaderboard_dir, f"leaderboard_data{i}.json")
+        with open(out_path, "w") as f:
+            json.dump(data, f)
+        saved_files += 1
+        if (i + 1) % 10 == 0 or i == 0:
+            logger.info(f"Saved {i+1}/{CALLS} -> {out_path}")
     except Exception as e:
-        print(f"Error deleting {file_path}: {e}")
+        logger.exception(f"API {i+1}/{CALLS} failed: {e}")
+
+logger.info(f"Fetch phase complete. Saved files: {saved_files}/{CALLS}")
+
+# Parse
+parsed_data = []
+entries = 0
+logger.info("Starting parse step...")
+for fname in os.listdir(leaderboard_dir):
+    if not fname.endswith(".json"):
+        continue
+    fpath = os.path.join(leaderboard_dir, fname)
+    try:
+        with open(fpath, "r") as f:
+            data = json.load(f)
+        for player in data:
+            try:
+                elo = player["overallElo"]
+                wins = player["rankedWinsThisSeason"]
+                losses = player["rankedLossesThisSeason"]
+            except Exception:
+                continue
+            if wins + losses == 0:
+                continue
+            parsed_data.append([elo, wins, losses])
+            entries += 1
+    except Exception as e:
+        logger.exception(f"Failed to parse {fpath}: {e}")
+
+parsed_path = os.path.join(parsed_dir, f"leaderboard_parsed_{date}.json")
+try:
+    with open(parsed_path, "w") as f:
+        json.dump(parsed_data, f)
+    logger.info(f"Parsed data saved: {parsed_path} (entries={entries})")
+except Exception as e:
+    logger.exception(f"Failed to write parsed file: {e}")
+    raise SystemExit(1)
+
+# Cleanup raw files
+logger.info("Cleaning up raw data files...")
+deleted = 0
+for fname in os.listdir(leaderboard_dir):
+    fpath = os.path.join(leaderboard_dir, fname)
+    try:
+        os.remove(fpath)
+        deleted += 1
+    except Exception as e:
+        logger.warning(f"Error deleting {fpath}: {e}")
+logger.info(f"Cleanup complete. Deleted {deleted} files from {leaderboard_dir}")
+
+logger.info("Script completed successfully.")
