@@ -15,7 +15,7 @@ from peewee_pg import GameData, PlayerData
 
 player_map = {1:[0,1],2:[1,0],5:[2,3],6:[3,2]}
 
-def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 0, sort = "Count", text_output = False, soloq = False):
+def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 0, sort = "Count", text_output = False, soloq = False, attach_game_ids = False):
     if playername1.casefold() != "all":
         try:
             playerid1 = util.validate_playername(playername1)
@@ -54,9 +54,17 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
     games = len(history_raw)
     if games == 0:
         return 'No games found.'
+
+    # Initialize game_ids list for collecting relevant game IDs
+    game_ids = []
+    
     gameelo_list = []
     patches = set()
     winrate_dict = {"Count": 0, "Wins": 0, "EloChange": 0, "Teammates":{}, "Enemies":{}, "Masterminds":{}}
+    
+    # Dictionary to store game IDs for each player
+    player_game_ids = {}
+    
     for game in history_raw:
         for player in game["players_data"]:
             if (playerid1 == player["player_id"] and not mm1) or (playerid1 == "all" and mm1 == player["legion"])\
@@ -70,6 +78,13 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                 winrate_dict["EloChange"] += player["elo_change"]
                 if player["game_result"] == "won":
                     winrate_dict["Wins"] += 1
+                
+                # Store game ID for player1
+                if attach_game_ids:
+                    if playerid1 not in player_game_ids:
+                        player_game_ids[playerid1] = set()
+                    player_game_ids[playerid1].add(game["game_id"])
+                
                 for player_slot in player_map:
                     if player["player_slot"] == player_slot:
                         continue
@@ -90,6 +105,13 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
                             gameelo_list.append(game["game_elo"])
                             patches.add(util.cleanup_version_string(game["version"]))
                         temp_legion = game["players_data"][player_map[player_slot][0]]["legion"]
+                    
+                    # Store game ID for the other player
+                    if attach_game_ids and temp_pid != "all":
+                        if temp_pid not in player_game_ids:
+                            player_game_ids[temp_pid] = set()
+                        player_game_ids[temp_pid].add(game["game_id"])
+                    
                     target_dict = winrate_dict[player_type]
                     if temp_pid not in target_dict:
                         target_dict[temp_pid] = {"Count": 1, "Wins": 0, "EloChange": 0, "Masterminds": {}, "PlayerName": game["players_data"][player_map[player_slot][0]]["player_name"]}
@@ -208,11 +230,41 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
             output_string += (f"{emoji}`{x_string}: {wins2}W{" "*(3-len(str(wins2)))} {losses2}L,{" "*(3-len(str(losses2)))}"
                               f" {round(wins2 / games2 * 100, 1)}%,{" "*(4-len(str(round(wins2 / games2 * 100, 1))))} "
                               f"{elo_change2}{" "*(4-len(str(elo_change2)))} Elo`\n")
+    
+    # Create game IDs file if attach_game_ids is True
+    game_ids_file = None
+    if attach_game_ids:
+        # Filter game_ids to only include those relevant to the specific player interaction
+        if playerid1 != "all" and playerid2 != "all":
+            # Both players specified - get intersection of their game IDs
+            player1_games = player_game_ids.get(playerid1, set())
+            player2_games = player_game_ids.get(playerid2, set())
+            relevant_game_ids = player1_games.intersection(player2_games)
+        elif playerid1 != "all":
+            # Only player1 specified - use their games
+            relevant_game_ids = player_game_ids.get(playerid1, set())
+        elif playerid2 != "all":
+            # Only player2 specified - use their games
+            relevant_game_ids = player_game_ids.get(playerid2, set())
+        else:
+            # Both are "all" - use all collected games
+            relevant_game_ids = set()
+            for games in player_game_ids.values():
+                relevant_game_ids.update(games)
+        
+        if relevant_game_ids:
+            game_ids_content = "\n".join(map(str, sorted(relevant_game_ids)))
+            with open("Files/game_ids.txt", "w", encoding="utf-8") as f:
+                f.write(game_ids_content)
+                f.close()
+            game_ids_file = "Files/game_ids.txt"
+    
     if text_output:
         with open("Files/temp.txt", "w", encoding="utf-8") as f:
             f.write(output_string.replace("`", ""))
             f.close()
         return "Files/temp.txt"
+    
     embed = discord.Embed(color=0x21eb1e, description='**(From ' + str(games) + ' ranked games, avg. elo: ' +
                                                       str(avg_gameelo) + " " + util.get_ranked_emote(avg_gameelo) + ")**\n"+output_string)
     if not mm1:
@@ -230,6 +282,10 @@ def winrate(playername1, playername2, option, mm1, mm2, games, patch, min_elo = 
         patches = patches[:9]
         patches.append("...")
     embed.set_footer(text='Patches: ' + ', '.join(patches))
+    
+    # Return both embed and game_ids_file if attach_game_ids is True
+    if attach_game_ids:
+        return embed, game_ids_file
     return embed
 
 class Winrate(commands.Cog):
@@ -239,7 +295,7 @@ class Winrate(commands.Cog):
     @app_commands.command(name="winrate", description="Shows player1's winrate against/with player2.")
     @app_commands.describe(playername1='Enter playername1.', playername2='Enter playername2 or all for 6 most common players', option='Against or with?', games='Enter amount of games or "0" for all available games on the DB(Default = 200 when no DB entry yet.)',
                            min_elo='Enter minium average game elo to include in the data set', patch='Enter patch e.g 10.01, multiple patches e.g 10.01,10.02,10.03.. or just "0" to include any patch.',
-                           sort="Sort by? (Only for playername2 = all)", text_output = "Output all the data into a text file.", soloq_only = "Only consider soloq games from player1. (Default = False)")
+                           sort="Sort by? (Only for playername2 = all)", text_output = "Output all the data into a text file.", soloq_only = "Only consider soloq games from player1. (Default = False)", attach_game_ids = "Attach a text file with all game IDs alongside the embed. (Default = False)")
     @app_commands.choices(option=[
         discord.app_commands.Choice(name='against', value='against'),
         discord.app_commands.Choice(name='with', value='with')
@@ -253,7 +309,7 @@ class Winrate(commands.Cog):
     ])
     async def winrate(self, interaction: discord.Interaction, playername1: str, playername2: str, option: discord.app_commands.Choice[str],
                       mm1: discord.app_commands.Choice[str] = None, mm2: discord.app_commands.Choice[str] = None, games: int = 0, min_elo: int = 0,
-                      patch: str = "", sort: discord.app_commands.Choice[str] = "Count", text_output: bool = False, soloq_only: bool = False):
+                      patch: str = "", sort: discord.app_commands.Choice[str] = "Count", text_output: bool = False, soloq_only: bool = False, attach_game_ids: bool = False):
         await interaction.response.defer(ephemeral=False, thinking=True)
         if playername1.split(",")[0].lower() == "all" and games == 0 and min_elo == 0 and not patch:
             min_elo = util.get_current_minelo()
@@ -275,10 +331,13 @@ class Winrate(commands.Cog):
         try:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ProcessPoolExecutor() as pool:
-                response = await loop.run_in_executor(pool, functools.partial(winrate, playername1, playername2, option.value, mm1, mm2, games, patch, min_elo=min_elo, sort=sort, text_output=text_output, soloq=soloq_only))
+                response = await loop.run_in_executor(pool, functools.partial(winrate, playername1, playername2, option.value, mm1, mm2, games, patch, min_elo=min_elo, sort=sort, text_output=text_output, soloq=soloq_only, attach_game_ids=attach_game_ids))
                 pool.shutdown()
                 if text_output:
                     await interaction.followup.send(file=discord.File(response, filename="temp.txt"))
+                elif attach_game_ids and isinstance(response, tuple):
+                    embed, game_ids_file = response
+                    await interaction.followup.send(embed=embed, file=discord.File(game_ids_file, filename="game_ids.txt"))
                 elif type(response) == discord.Embed:
                     await interaction.followup.send(embed=response)
                 else:

@@ -5,7 +5,7 @@ import requests
 from datetime import datetime
 
 # ---------- Config ----------
-CALLS = 200
+CALLS = 400
 BASE_DIR = "/shared2/leaderboard"
 DATA_DIR = os.path.join(BASE_DIR, "data")
 LOGS_DIR = os.path.join(BASE_DIR, "logs")
