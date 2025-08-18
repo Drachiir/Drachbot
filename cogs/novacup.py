@@ -13,27 +13,26 @@ import csv
 import util
 
 
-def novacup(division):
-    html = requests.get('https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pubhtml#', headers={'Cache-Control': 'no-cache'}).text
-    soup = BeautifulSoup(html, "lxml")
-    tables = soup.find_all("table")
-    with open("novacup.csv", "w", encoding="utf-8") as f:
-        wr = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
-        wr.writerows([[td.text for td in row.find_all("td")] for row in tables[0].find_all("tr")])
+def novacup(division: str):
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKndupwCvJdwYYzSNIm-olob9k4JYK4wIoSDXlxiYr2h7DFlO7NgveneoFtlBlZaMvQUP6QT1eAYkN/pub?gid=1138847821&single=true&output=csv"
+    response = requests.get(url, headers={'Cache-Control': 'no-cache'})
+    response.raise_for_status()
+
     team_dict = {}
-    with open("novacup.csv", encoding="utf-8", newline="") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            try:
-                if row[1] != "Team Name" and row[1] != "" and row[1] not in team_dict:
-                    team_dict[row[1]] = [row[2], row[3], int(float(row[4]))]
-            except Exception:
-                continue
+    reader = csv.reader(response.text.splitlines())
+    for row in reader:
+        try:
+            if row[1] != "Team Name" and row[1] != "" and row[1] not in team_dict:
+                team_dict[row[1]] = [row[2], row[3], int(float(row[4]))]
+        except Exception:
+            continue
+
+    # Sort by Elo descending
     newIndex = sorted(team_dict, key=lambda x: team_dict[x][2], reverse=True)
     team_dict = {k: team_dict[k] for k in newIndex}
     month = datetime.now()
 
-    # Setup values based on division
+    # Division setup
     if division == "1":
         start, end, div_size = 0, 8, 8
     elif division == "2":
@@ -41,27 +40,26 @@ def novacup(division):
     elif division == "3":
         start, end, div_size = 16, 32, 16
     else:
-        return None  # Invalid division
+        return None
 
-    # Calculate average elo for title
+    # Average Elo for title
     elo = sum([team_dict[t][2] for i, t in enumerate(team_dict) if start <= i < end])
     avg_elo = round(elo / div_size)
     title = f"{month.strftime('%B')} Nova Cup Division {division} ({avg_elo}{util.get_ranked_emote(avg_elo)})"
 
-    # Add fields based on division
+    # Embed formatting
     if division == "3":
-        # One condensed block of text for Division 3
+        # Division 3: single block
         team_lines = []
         for i, (team, data) in enumerate(list(team_dict.items())[start:end]):
             elo = data[2]
-            teamname_fmt = team[:14].ljust(14)  # Cut or pad to 14 characters
+            teamname_fmt = team[:14].ljust(14)
             team_line = f"`{i+1:>2}. {teamname_fmt}: {elo}`{util.get_ranked_emote(elo)}{data[0]}, {data[1]}"
             team_lines.append(team_line)
-        # Create embed
         embed = discord.Embed(color=util.random_color(), title=title, description="\n".join(team_lines))
         embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/Tournaments/NovaCup/NovaCup_00.png")
     else:
-        # One field per team for Div 1 and 2
+        # Div 1 & 2: one field per team
         embed = discord.Embed(color=util.random_color(), title=title)
         embed.set_thumbnail(url="https://cdn.legiontd2.com/icons/Tournaments/NovaCup/NovaCup_00.png")
         for i, (team, data) in enumerate(list(team_dict.items())[start:end]):
