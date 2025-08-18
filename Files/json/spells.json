@@ -254,5 +254,13 @@
     "iconPath": "Icons/LizardArmy.png",
     "name": "Lizard Army",
     "tooltip": "Gain 56 income after Wave 13"
+  },
+  {
+    "_id": "smite_powerup_id",
+    "category": "spells",
+    "enabled": true,
+    "iconPath": "Icons/Smite.png",
+    "name": "Smite",
+    "tooltip": "Gain 56 income after Wave 13"
   }
 ]
