@@ -15,16 +15,15 @@ from discord_timestamps import TimestampType
 
 import util
 
-def clean_top_games():
-    path = util.shared_folder_livegames
-    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith('.txt')]
+def clean_folder(path, max_diff, file_ext):
+    livegame_files = [pos_json for pos_json in os.listdir(path) if pos_json.endswith(file_ext)]
     livegame_files = sorted(livegame_files, key=lambda x: int(x.split("_")[1].split(".")[0]), reverse=True)
     for game in livegame_files:
         path2 = path + game
         mod_date = datetime.fromtimestamp(os.path.getmtime(path2), tz=timezone.utc)
         date_diff = datetime.now(tz=timezone.utc) - mod_date
         minutes_diff = date_diff.total_seconds() / 60
-        if minutes_diff > 35:
+        if minutes_diff > max_diff:
             os.remove(path2)
 
 
@@ -166,7 +165,9 @@ class Topgames(commands.Cog):
     async def clean(self):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
-            await loop.run_in_executor(pool, clean_top_games)
+            await loop.run_in_executor(pool, functools.partial(clean_folder, util.shared_folder_livegames, 35, '.txt'))
+            await loop.run_in_executor(pool, functools.partial(clean_folder, util.shared_folder_livegames1v1, 35, '.txt'))
+            await loop.run_in_executor(pool, functools.partial(clean_folder, util.shared_folder, 10080, '.png')) # 1 week old images clean up
             pool.shutdown()
 
 async def setup(bot:commands.Bot):
