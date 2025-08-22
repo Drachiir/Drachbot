@@ -45,6 +45,7 @@ class PlayerProfile(BaseModel):
     player_name = TextField()
     avatar_url = TextField(null=True)
     country = TextField(null=True)
+    city = TextField(null=True)
     guild_tag = TextField(null=True)
     elo = IntegerField(null=True)
     rank = IntegerField(null=True)
@@ -195,6 +196,6 @@ def save_game(data):
 # if __name__ == '__main__': #"incomenchill": false, "votedmode": null "availablemode": 6,
 #     migrator = PostgresqlMigrator(db)
 #     migrate(
-#         migrator.add_column('playerprofile', 'rank', IntegerField(null=True))
+#         migrator.add_column('playerprofile', 'city', TextField(null=True))
 #     )
 #     quit()
