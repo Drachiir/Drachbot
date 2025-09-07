@@ -443,5 +443,11 @@ class TwitchHandler(commands.Cog):
             print("TwitchSubCopy.json doesn't exist")
             await ctx.message.add_reaction("❌")
 
+        with open("Files/streamers.json", "r") as f:
+            streamers_initial = json.load(f)
+
+        for streamer in streamers_initial:
+            self.twitch_names.append(streamer)
+
 async def setup(bot:commands.Bot):
     await bot.add_cog(TwitchHandler(bot))
